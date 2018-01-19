@@ -174,6 +174,70 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		setProperty("WaitSync", waitSync);
 	}
 	
+	public boolean getWaitCursor() {
+		return getPropertyAsBoolean("WaitCursor");
+	}
+
+	public void setWaitCursor(boolean waitCursor) {
+		setProperty("WaitCursor", waitCursor);
+	}
+	
+	public boolean getWaitSilent() {
+		return getPropertyAsBoolean("WaitSilent");
+	}
+
+	public void setWaitSilent(boolean waitSilent) {
+		setProperty("WaitSilent", waitSilent);
+	}
+	
+	public boolean getWaitText() {
+		return getPropertyAsBoolean("WaitText");
+	}
+
+	public void setWaitText(boolean waitText) {
+		setProperty("WaitText", waitText);
+	}
+	
+	public String getTextToWait (){
+		return getPropertyAsString("TextToWait");
+	}
+	
+	public void setTextToWait (String textToWait){
+		setProperty("TextToWait", textToWait);
+	}
+	
+	public String getCoordXToWait (){
+		return getPropertyAsString("CoordXToWait");
+	}
+	
+	public void setCoordXToWait (String coordXToWait){
+		setProperty("CoordXToWait", coordXToWait);
+	}
+	
+	public String getCoordYToWait (){
+		return getPropertyAsString("CoordYToWait");
+	}
+	
+	public void setCoordYToWait (String coordYToWait){
+		setProperty("CoordYToWait", coordYToWait);
+	}
+	
+	public String getWaitTimeout() {
+		return getPropertyAsString("WaitTimeout");
+	}
+
+	public void setWaitTimeout(String waitTimeout) {
+		setProperty("WaitTimeout", waitTimeout);
+	}
+	
+	public boolean getDisconnect() {
+		return getPropertyAsBoolean("Disconnect");
+	}
+
+	public void setDisconnect(boolean disconnect) {
+		setProperty("Disconnect", disconnect);
+	}
+	
 	@Override
 	public void threadFinished() {
 		// TODO Auto-generated method stub

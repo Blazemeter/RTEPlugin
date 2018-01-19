@@ -49,7 +49,15 @@ public class RTESamplerGui extends AbstractSamplerGui {
             RTESamplerPanel.setCoordX(Integer.toString(RTESamplerTestElement.getCoordX()));
             RTESamplerPanel.setCoordY(Integer.toString(RTESamplerTestElement.getCoordY()));
             RTESamplerPanel.setPayloadContent(RTESamplerTestElement.getPayload());
+            RTESamplerPanel.setDisconnect(RTESamplerTestElement.getDisconnect());
+            RTESamplerPanel.setWaitCursor(RTESamplerTestElement.getWaitCursor());
+            RTESamplerPanel.setWaitSilent(RTESamplerTestElement.getWaitSilent());
             RTESamplerPanel.setWaitSync(RTESamplerTestElement.getWaitSync());
+            RTESamplerPanel.setWaitText(RTESamplerTestElement.getWaitText());
+            RTESamplerPanel.setWaitTimeout(RTESamplerTestElement.getWaitTimeout());
+            RTESamplerPanel.setCoordXWait(RTESamplerTestElement.getCoordXToWait());
+            RTESamplerPanel.setCoordYWait(RTESamplerTestElement.getCoordYToWait());
+            RTESamplerPanel.setTextWait(RTESamplerTestElement.getTextToWait());
         }
     }
 
@@ -71,7 +79,15 @@ public class RTESamplerGui extends AbstractSamplerGui {
             RTESamplerTestElement.setCoordX(Integer.parseInt(RTESamplerPanel.getCoordX()));
             RTESamplerTestElement.setCoordY(Integer.parseInt(RTESamplerPanel.getCoordY()));
             RTESamplerTestElement.setPayload(RTESamplerPanel.getPayloadContent());
+            RTESamplerTestElement.setDisconnect(RTESamplerPanel.getDisconnect());
+            RTESamplerTestElement.setWaitCursor(RTESamplerPanel.getWaitCursor());
+            RTESamplerTestElement.setWaitSilent(RTESamplerPanel.getWaitSilent());
             RTESamplerTestElement.setWaitSync(RTESamplerPanel.getWaitSync());
+            RTESamplerTestElement.setWaitText(RTESamplerPanel.getWaitText());
+            RTESamplerTestElement.setWaitTimeout(RTESamplerPanel.getWaitTimeout());
+            RTESamplerTestElement.setCoordXToWait(RTESamplerPanel.getCoordXWait());
+            RTESamplerTestElement.setCoordYToWait(RTESamplerPanel.getCoordYWait());
+            RTESamplerTestElement.setTextToWait(RTESamplerPanel.getTextWait());
         }
     }
 
