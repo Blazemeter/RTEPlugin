@@ -2,6 +2,8 @@
 package blazemeter.jmeter.plugins.RTEPlugin.sampler.gui;
 
 import java.awt.Component;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
@@ -56,11 +58,19 @@ public class RTESamplerPanel extends javax.swing.JPanel {
     private JCheckBox waitSilent = new JCheckBox("Silent?");
     private JCheckBox waitText = new JCheckBox("Text?");
     
-    private JLabel waitTimeoutLable = new JLabel();
-    private JTextField waitTimeout = new JTextField();
+    private JLabel waitTimeoutLableSync = new JLabel();
+    private JLabel waitTimeoutLableCursor = new JLabel();
+    private JLabel waitTimeoutLableSilent = new JLabel();
+    private JLabel waitTimeoutLableText = new JLabel();
+    private JTextField waitTimeoutSync = new JTextField();
+    private JTextField waitTimeoutCursor = new JTextField();
+    private JTextField waitTimeoutSilent = new JTextField();
+    private JTextField waitTimeoutText = new JTextField();
     
     private JTextField textWait = new JTextField();
+    private JLabel coordXWaitLabel = new JLabel();
     private JTextField coordXWait = new JTextField();
+    private JLabel coordYWaitLabel = new JLabel();
     private JTextField coordYWait = new JTextField();
     
     
@@ -83,6 +93,98 @@ public class RTESamplerPanel extends javax.swing.JPanel {
         fieldLabel.setText("Field: ");
         coordXLabel.setText("Coord X: ");
         coordYLabel.setText("Coord Y: ");
+        
+        waitSync.addItemListener(new ItemListener(){
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED){
+                	waitTimeoutSync.setEnabled(true);
+                }
+                else if(e.getStateChange() == ItemEvent.DESELECTED){
+                	waitTimeoutSync.setEnabled(false);
+                }
+                validate();
+                repaint();
+            }
+        });
+        
+        waitCursor.addItemListener(new ItemListener(){
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED){
+                	waitTimeoutCursor.setEnabled(true);
+                }
+                else if(e.getStateChange() == ItemEvent.DESELECTED){
+                	waitTimeoutCursor.setEnabled(false);
+                }
+                validate();
+                repaint();
+            }
+        });
+        
+        waitSilent.addItemListener(new ItemListener(){
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED){
+                	waitTimeoutSilent.setEnabled(true);
+                }
+                else if(e.getStateChange() == ItemEvent.DESELECTED){
+                	waitTimeoutSilent.setEnabled(false);
+                }
+                validate();
+                repaint();
+            }
+        });
+        
+        waitText.addItemListener(new ItemListener(){
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED){
+                	waitTimeoutText.setEnabled(true);
+                	textWait.setEnabled(true);
+                	coordXWait.setEnabled(true);
+                	coordYWait.setEnabled(true);
+                }
+                else if(e.getStateChange() == ItemEvent.DESELECTED){
+                	waitTimeoutText.setEnabled(false);
+                	textWait.setEnabled(false);
+                	coordXWait.setEnabled(false);
+                	coordYWait.setEnabled(false);
+                }
+                validate();
+                repaint();
+            }
+        });
+        
+        fillField.addItemListener(new ItemListener(){
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED){
+                	field.setEnabled(true);
+                }
+                else if(e.getStateChange() == ItemEvent.DESELECTED){
+                	field.setEnabled(false);
+                }
+                validate();
+                repaint();
+            }
+        });
+        
+        sendKey.addItemListener(new ItemListener(){
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED){
+                	coordX.setEnabled(true);
+                	coordY.setEnabled(true);
+                }
+                else if(e.getStateChange() == ItemEvent.DESELECTED){
+                	coordX.setEnabled(false);
+                	coordY.setEnabled(false);
+                }
+                validate();
+                repaint();
+            }
+        });
         
         bodyPanel.setViewportView(payloadContent);
 
@@ -146,7 +248,12 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 		
 		
 		waitPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Wait for:"));
-		waitTimeoutLable.setText("Timeout: ");
+		waitTimeoutLableSync.setText("Timeout: ");
+		waitTimeoutLableCursor.setText("Timeout: ");
+		waitTimeoutLableSilent.setText("Timeout: ");
+		waitTimeoutLableText.setText("Timeout: ");
+		coordXWaitLabel.setText("Coord X: ");
+        coordYWaitLabel.setText("Coord Y: ");
 		
 		
 		javax.swing.GroupLayout waitPanelLayout = new javax.swing.GroupLayout(waitPanel);
@@ -155,48 +262,70 @@ public class RTESamplerPanel extends javax.swing.JPanel {
         		waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(waitPanelLayout.createSequentialGroup()
                 .addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            		.addComponent(waitSync)
-            		.addComponent(waitCursor)
-            		.addComponent(waitSilent)
             		.addGroup(waitPanelLayout.createSequentialGroup()
-	                 		.addComponent(waitText)
-	                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(textWait,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-	                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-	             			.addComponent(coordXLabel)
-	             			.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(coordXWait,javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-	                      	.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(coordYLabel)
-	             			.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(coordYWait,javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
+                		.addComponent(waitSync)
+                		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                		.addComponent(waitTimeoutLableSync)
+                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(waitTimeoutSync,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
             		.addGroup(waitPanelLayout.createSequentialGroup()
-	                 		.addComponent(waitTimeoutLable)
-	                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(waitTimeout,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))))
-        );
-		
+        				.addComponent(waitCursor)
+                		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                		.addComponent(waitTimeoutLableCursor)
+                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(waitTimeoutCursor,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+            		.addGroup(waitPanelLayout.createSequentialGroup()
+        				.addComponent(waitSilent)
+                		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                		.addComponent(waitTimeoutLableSilent)
+                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(waitTimeoutSilent,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
+            		.addGroup(waitPanelLayout.createSequentialGroup()
+                 		.addComponent(waitText)
+                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(textWait,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+             			.addComponent(coordXWaitLabel)
+             			.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(coordXWait,javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                      	.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(coordYWaitLabel)
+             			.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(coordYWait,javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
+                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                 		.addComponent(waitTimeoutLableText)
+                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                 		.addComponent(waitTimeoutText,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))))
+            );
+	
         waitPanelLayout.setVerticalGroup(
 				waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(waitPanelLayout.createSequentialGroup()
                 .addGap(8, 8, 8)
-                .addComponent(waitSync)
+                .addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                		.addComponent(waitSync)
+                		.addComponent(waitTimeoutLableSync)
+                		.addComponent(waitTimeoutSync))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(waitCursor)
+                .addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                		.addComponent(waitCursor)
+                		.addComponent(waitTimeoutLableCursor)
+                		.addComponent(waitTimeoutCursor))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(waitSilent)
+                .addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                		.addComponent(waitSilent)
+                		.addComponent(waitTimeoutLableSilent)
+                		.addComponent(waitTimeoutSilent))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                 		.addComponent(waitText)
                 		.addComponent(textWait)
-                		.addComponent(coordXLabel)
+                		.addComponent(coordXWaitLabel)
                 		.addComponent(coordXWait)
-                		.addComponent(coordYLabel)
-                		.addComponent(coordYWait))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                		.addComponent(waitTimeoutLable)
-                		.addComponent(waitTimeout))
+                		.addComponent(coordYWaitLabel)
+                		.addComponent(coordYWait)
+                		.addComponent(waitTimeoutLableText)
+                		.addComponent(waitTimeoutText))
                 .addGap(8, 8, 8)
                 .addContainerGap())
         );
@@ -228,15 +357,27 @@ public class RTESamplerPanel extends javax.swing.JPanel {
     	field.setText("");
     	coordX.setText("");
     	coordY.setText("");
+    	coordX.setEnabled(false);
+    	coordY.setEnabled(false);
     	disconnect.setSelected(false);
     	waitCursor.setSelected(false);
     	waitSilent.setSelected(false);
     	waitSync.setSelected(false);
     	waitText.setSelected(false);
-    	waitTimeout.setText("");
+    	waitTimeoutSync.setText("");
+    	waitTimeoutCursor.setText("");
+    	waitTimeoutSilent.setText("");
+    	waitTimeoutText.setText("");
     	textWait.setText("");
     	coordXWait.setText("");
     	coordYWait.setText("");
+    	waitTimeoutSync.setEnabled(false);
+    	waitTimeoutCursor.setEnabled(false);
+    	waitTimeoutSilent.setEnabled(false);
+    	waitTimeoutText.setEnabled(false);
+    	textWait.setEnabled(false);
+    	coordXWait.setEnabled(false);
+    	coordYWait.setEnabled(false);
     	typingStyleComboBox.setSelectedItem(RTESampler.TYPING_STYLE_FAST);
     	fillField.setSelected(true);
     }
@@ -337,12 +478,36 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 		this.waitText.setSelected(waitText);
 	}
 	
-	public String getWaitTimeout() {
-		return this.waitTimeout.getText();
+	public String getWaitTimeoutSync() {
+		return this.waitTimeoutSync.getText();
 	}
 	
-	public void setWaitTimeout(String waitTimeout) {
-		this.waitTimeout.setText(waitTimeout);
+	public void setWaitTimeoutSync(String waitTimeoutSync) {
+		this.waitTimeoutSync.setText(waitTimeoutSync);
+	}
+	
+	public String getWaitTimeoutCursor() {
+		return this.waitTimeoutCursor.getText();
+	}
+	
+	public void setWaitTimeoutCursor(String waitTimeoutCursor) {
+		this.waitTimeoutCursor.setText(waitTimeoutCursor);
+	}
+	
+	public String getWaitTimeoutSilent() {
+		return this.waitTimeoutSilent.getText();
+	}
+	
+	public void setWaitTimeoutSilent(String waitTimeoutSilent) {
+		this.waitTimeoutSilent.setText(waitTimeoutSilent);
+	}
+	
+	public String getWaitTimeoutText() {
+		return this.waitTimeoutText.getText();
+	}
+	
+	public void setWaitTimeoutText(String waitTimeoutText) {
+		this.waitTimeoutText.setText(waitTimeoutText);
 	}
 
 	public void setTypingStyle(String typingStyle) {

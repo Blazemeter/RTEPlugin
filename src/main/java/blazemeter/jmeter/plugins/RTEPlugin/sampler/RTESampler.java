@@ -222,12 +222,36 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		setProperty("CoordYToWait", coordYToWait);
 	}
 	
-	public String getWaitTimeout() {
-		return getPropertyAsString("WaitTimeout");
+	public String getWaitTimeoutSync() {
+		return getPropertyAsString("WaitTimeoutSync");
 	}
 
-	public void setWaitTimeout(String waitTimeout) {
-		setProperty("WaitTimeout", waitTimeout);
+	public void setWaitTimeoutSync(String waitTimeoutSync) {
+		setProperty("WaitTimeoutSync", waitTimeoutSync);
+	}
+	
+	public String getWaitTimeoutCursor() {
+		return getPropertyAsString("WaitTimeoutCursor");
+	}
+
+	public void setWaitTimeoutCursor(String waitTimeoutCursor) {
+		setProperty("WaitTimeoutCursor", waitTimeoutCursor);
+	}
+	
+	public String getWaitTimeoutSilent() {
+		return getPropertyAsString("WaitTimeoutSilent");
+	}
+
+	public void setWaitTimeoutSilent(String waitTimeoutSilent) {
+		setProperty("WaitTimeoutSilent", waitTimeoutSilent);
+	}
+	
+	public String getWaitTimeoutText() {
+		return getPropertyAsString("WaitTimeoutText");
+	}
+
+	public void setWaitTimeoutText(String waitTimeoutText) {
+		setProperty("WaitTimeoutText", waitTimeoutText);
 	}
 	
 	public boolean getDisconnect() {

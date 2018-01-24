@@ -76,6 +76,12 @@
             <version>0.2</version>
             <scope>test</scope>
         </dependency>
+        
+        <dependency>
+            <groupId>org.tn5250j</groupId>
+            <artifactId>tn5250j</artifactId>
+            <version>0.7.5</version>
+		</dependency>
     </dependencies>
 
     <build>

@@ -54,7 +54,10 @@ public class RTESamplerGui extends AbstractSamplerGui {
             RTESamplerPanel.setWaitSilent(RTESamplerTestElement.getWaitSilent());
             RTESamplerPanel.setWaitSync(RTESamplerTestElement.getWaitSync());
             RTESamplerPanel.setWaitText(RTESamplerTestElement.getWaitText());
-            RTESamplerPanel.setWaitTimeout(RTESamplerTestElement.getWaitTimeout());
+            RTESamplerPanel.setWaitTimeoutSync(RTESamplerTestElement.getWaitTimeoutSync());
+            RTESamplerPanel.setWaitTimeoutCursor(RTESamplerTestElement.getWaitTimeoutCursor());
+            RTESamplerPanel.setWaitTimeoutSilent(RTESamplerTestElement.getWaitTimeoutSilent());
+            RTESamplerPanel.setWaitTimeoutText(RTESamplerTestElement.getWaitTimeoutText());
             RTESamplerPanel.setCoordXWait(RTESamplerTestElement.getCoordXToWait());
             RTESamplerPanel.setCoordYWait(RTESamplerTestElement.getCoordYToWait());
             RTESamplerPanel.setTextWait(RTESamplerTestElement.getTextToWait());
@@ -84,7 +87,10 @@ public class RTESamplerGui extends AbstractSamplerGui {
             RTESamplerTestElement.setWaitSilent(RTESamplerPanel.getWaitSilent());
             RTESamplerTestElement.setWaitSync(RTESamplerPanel.getWaitSync());
             RTESamplerTestElement.setWaitText(RTESamplerPanel.getWaitText());
-            RTESamplerTestElement.setWaitTimeout(RTESamplerPanel.getWaitTimeout());
+            RTESamplerTestElement.setWaitTimeoutSync(RTESamplerPanel.getWaitTimeoutSync());
+            RTESamplerTestElement.setWaitTimeoutCursor(RTESamplerPanel.getWaitTimeoutCursor());
+            RTESamplerTestElement.setWaitTimeoutSilent(RTESamplerPanel.getWaitTimeoutSilent());
+            RTESamplerTestElement.setWaitTimeoutText(RTESamplerPanel.getWaitTimeoutText());
             RTESamplerTestElement.setCoordXToWait(RTESamplerPanel.getCoordXWait());
             RTESamplerTestElement.setCoordYToWait(RTESamplerPanel.getCoordYWait());
             RTESamplerTestElement.setTextToWait(RTESamplerPanel.getTextWait());
