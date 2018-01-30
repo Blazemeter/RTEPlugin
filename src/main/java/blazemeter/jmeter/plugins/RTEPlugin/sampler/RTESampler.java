@@ -1,5 +1,11 @@
 package blazemeter.jmeter.plugins.RTEPlugin.sampler;
 
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
@@ -9,6 +15,16 @@ import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
+import org.tn5250j.Session5250;
+import org.tn5250j.SessionConfig;
+import org.tn5250j.framework.tn5250.Screen5250;
+import org.tn5250j.framework.tn5250.ScreenField;
+import org.tn5250j.framework.tn5250.ScreenFields;
+import org.tn5250j.framework.tn5250.ScreenPlanes;
+
+import org.tn5250j.event.ScreenListener;
+
+import org.tn5250j.TN5250jConstants;
 
 public class RTESampler extends AbstractSampler implements TestStateListener, ThreadListener  {
 	
@@ -49,8 +65,12 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     public static final String CONFIG_PROTOCOL = "RTEConnectionConfig.Protocol";
     public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.SSL_Type"; 
     public static final String CONFIG_TIMEOUT = "RTEConnectionConfig.Timeout"; 
-
-	public RTESampler() {
+    
+    protected static Map<String, Session5250> connectionList;
+    
+    private CountDownLatch openLatch = new CountDownLatch(1);
+    
+    public RTESampler() {
         super();
         setName("RTE");
     }
@@ -67,14 +87,203 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
         return getPropertyAsString(TestElement.NAME);
     }
   
+    private Session5250 getConnection(String connectionId) throws Exception {
+    	
+    	if (connectionList.containsKey(connectionId)){
+    		Session5250 session = connectionList.get(connectionId);
+    		        	
+        	if (!session.isConnected()){
+        		int connectionTimeout;
+            	
+            	try {
+            		connectionTimeout = Integer.parseInt(getTimeout());
+                } catch (NumberFormatException ex) {
+                    log.warn("Connection timeout is not a number; using the default connection timeout of " + DEFAULT_CONNECTION_TIMEOUT + "ms");
+                    connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+                }
+        		while (!session.isConnected() && connectionTimeout > 0){
+            		Thread.sleep(100);
+            		connectionTimeout = connectionTimeout - 100;
+            	}
+        	}
+        	
+        	
+    		return session;
+    		
+    	}
+    		
+    	
+    	String server = getServer();
+    	int port = getPort();
+    	
+    	Session5250 session = null;
+    	Properties sesProp = new Properties();
+    	SessionConfig sesConfig = new SessionConfig (server,server);
+    	session = new Session5250(sesProp , server, server, sesConfig);
+    	sesProp.setProperty(TN5250jConstants.SSL_TYPE, TN5250jConstants.SSL_TYPE_NONE);
+		sesProp.setProperty(TN5250jConstants.SESSION_HOST, server);
+    	
+    	session.connect();
+    	
+    	int connectionTimeout;
+    	
+    	try {
+    		connectionTimeout = Integer.parseInt(getTimeout());
+        } catch (NumberFormatException ex) {
+            log.warn("Connection timeout is not a number; using the default connection timeout of " + DEFAULT_CONNECTION_TIMEOUT + "ms");
+            connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+        }
+    	
+    	while (!session.isConnected() && connectionTimeout > 0){
+    		Thread.sleep(100);
+    		connectionTimeout = connectionTimeout - 100;
+    	}
+      	
+    	connectionList.put(connectionId, session);
+    	return session;
+	}
     
+   	private String screenToString(Screen5250 screen) {
+		String showme = getScreenAsString(screen);
+		String sb = "";
+		
+		for(int i=0;i<showme.length();i+=screen.getColumns()) {
+			sb += showme.substring(i, i+screen.getColumns());
+			sb += "\n";
+		}
+		return sb;
+	}
+
+	private String getScreenAsString(Screen5250 screen) {
+		char [] buffer = new char[screen.getScreenLength()];
+		screen.GetScreen(buffer, screen.getScreenLength(), TN5250jConstants.PLANE_TEXT);
+		return new String(buffer);
+	}
+        
     @Override
     public SampleResult sample(Entry entry) {
     	
     	SampleResult sampleResult = new SampleResult();
     	sampleResult.setSampleLabel(getName());
+    	sampleResult.sampleStart();
+    	Session5250 session = null;
+    	
+    	try {
+			session = getConnection(getConnectionId());
+		} catch (Exception e) {
+			sampleResult.setSuccessful(false);
+			sampleResult.setResponseMessage(e.getMessage());
+			sampleResult.setResponseData(e.getStackTrace().toString(),"utf-8");
+	    	sampleResult.sampleEnd();
+	    	e.printStackTrace();
+	    	return sampleResult;
+		}
+    	
+    	if (!session.isConnected()){
+    		sampleResult.setSuccessful(false);
+			sampleResult.setResponseMessage("Connection error");
+			sampleResult.setResponseData("Connection error","utf-8");
+	    	sampleResult.sampleEnd();
+    	}
+    	
+    	
+    	int waitCursor;
+    	int waitSilent;
+    	int waitSync;
+    	int waiyText;
+    	
+    	try {
+    		waitCursor = Integer.parseInt(getWaitTimeoutCursor());
+        } catch (NumberFormatException ex) {
+            log.warn("Cursor timeout is not a number; using the default cursor timeout of " + DEFAULT_RESPONSE_TIMEOUT + "ms");
+            waitCursor = DEFAULT_RESPONSE_TIMEOUT;
+        }
+    	try {
+    		waitSilent = Integer.parseInt(getWaitTimeoutSilent());
+        } catch (NumberFormatException ex) {
+            log.warn("Silent timeout is not a number; using the default Silent timeout of " + DEFAULT_RESPONSE_TIMEOUT + "ms");
+            waitSilent = DEFAULT_RESPONSE_TIMEOUT;
+        }
+    	try {
+    		waitSync = Integer.parseInt(getWaitTimeoutSync());
+        } catch (NumberFormatException ex) {
+            log.warn("Sync timeout is not a number; using the default Sync timeout of " + DEFAULT_RESPONSE_TIMEOUT + "ms");
+            waitSync = DEFAULT_RESPONSE_TIMEOUT;
+        }
+    	try {
+    		waiyText = Integer.parseInt(getWaitTimeoutText());
+        } catch (NumberFormatException ex) {
+            log.warn("Text timeout is not a number; using the default Text timeout of " + DEFAULT_RESPONSE_TIMEOUT + "ms");
+            waiyText = DEFAULT_RESPONSE_TIMEOUT;
+        }
+    	
+    	
+    	if (getType().equals(TYPE_FILL_FIELD)){
+    		ScreenFields sf = session.getScreen().getScreenFields();
+    		String s = getScreenAsString(session.getScreen());
+    		int cols = session.getScreen().getColumns();
+    		
+    		String text = "";
+    		
+    		boolean out = false;
+    		
+    		for (int i = 0; i < sf.getFieldCount() && !out; i++){
+    			if (!sf.getField(i).isBypassField()){
+    				
+    				int pos = sf.getField(i).startPos();
+    				int posIni = 0; 
+    				if (pos > cols)
+    					posIni = pos - cols;
+    				text =  s.substring(posIni, pos);
+    				if (text.contains(getField())){
+    					sf.getField(i).setString(getPayload());;
+    					out = true;
+    				}	
+    			}
+    		}
+    	}
+    	else if (getType().equals(TYPE_SEND_KEY)){
+    		session.getScreen().setCursor(getCoordX(), getCoordY());
+    		session.getScreen().sendKeys(getPayload());
+    		
+    	}
+    	else {
+    		sampleResult.setSuccessful(false);
+			sampleResult.setResponseMessage("Type error");
+			sampleResult.setResponseData("Type error","utf-8");
+	    	sampleResult.sampleEnd();
+    	}
+    	
+    	if (getWaitCursor()){
+    	
+	    	while (!session.getScreen().isCursorActive() && waitCursor > 0){
+	    		try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					sampleResult.setSuccessful(false);
+					sampleResult.setResponseMessage(e.getMessage());
+					sampleResult.setResponseData(e.getStackTrace().toString(),"utf-8");
+			    	sampleResult.sampleEnd();
+			    	e.printStackTrace();
+			    	return sampleResult;
+				}
+	    		waitCursor = waitCursor - 100;
+	    	}
+    	}
+    	
+    	
+    	
+    	sampleResult.setSuccessful(true);
+    	sampleResult.setResponseData(screenToString(session.getScreen()),"utf-8");
+    	sampleResult.sampleEnd();
+    	
     	return sampleResult;
 	}
+    
+    public boolean awaitOpen(int duration, TimeUnit unit) throws InterruptedException {
+        boolean res = this.openLatch.await(duration, unit);
+        return res;
+    }
 
     public String getServer(){
 		return getPropertyAsString(CONFIG_SERVER);
@@ -96,8 +305,8 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		return getPropertyAsString(CONFIG_SSL_TYPE);
 	}
     
-    public int getTimeout(){
-		return getPropertyAsInt(CONFIG_TIMEOUT);
+    public String getTimeout(){
+		return getPropertyAsString(CONFIG_TIMEOUT);
 	}
     
     public int getPort() {
@@ -262,6 +471,10 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		setProperty("Disconnect", disconnect);
 	}
 	
+	public String getConnectionId(){
+		return getThreadName() + getServer() + getPort();
+	}
+	
 	@Override
 	public void threadFinished() {
 		// TODO Auto-generated method stub
@@ -288,7 +501,7 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 
 	@Override
 	public void testStarted() {
-		// TODO Auto-generated method stub
+		connectionList =  new ConcurrentHashMap<String, Session5250>();
 		
 	}
 

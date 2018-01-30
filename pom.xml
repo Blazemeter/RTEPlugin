@@ -81,8 +81,12 @@
             <groupId>org.tn5250j</groupId>
             <artifactId>tn5250j</artifactId>
             <version>0.7.5</version>
-		</dependency>
+        </dependency>
+       
     </dependencies>
+    
+
+    
 
     <build>
         <plugins>
