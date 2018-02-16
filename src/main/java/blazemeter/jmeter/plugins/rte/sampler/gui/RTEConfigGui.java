@@ -1,5 +1,5 @@
 
-package blazemeter.jmeter.plugins.RTEPlugin.sampler.gui;
+package blazemeter.jmeter.plugins.rte.sampler.gui;
 
 import java.awt.BorderLayout;
 import org.apache.jmeter.config.Arguments;
@@ -13,7 +13,7 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import blazemeter.jmeter.plugins.RTEPlugin.sampler.RTESampler;
+import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
 
 
 
@@ -21,17 +21,17 @@ public class RTEConfigGui extends AbstractConfigGui {
 
     private RTEConfigPanel rteConfigPanelConfigPanel;
 
-    public RTEConfigGui() {
-        super();
-        init();
-        initFields();
+	public RTEConfigGui() {
+		super();
+		init();
+		initFields();
 
-        setLayout(new BorderLayout(0, 5));
-        setBorder(makeBorder());
+		setLayout(new BorderLayout(0, 5));
+		setBorder(makeBorder());
 
-        add(makeTitlePanel(), BorderLayout.NORTH);
-        add(rteConfigPanelConfigPanel, BorderLayout.CENTER);
-    }
+		add(makeTitlePanel(), BorderLayout.NORTH);
+		add(rteConfigPanelConfigPanel, BorderLayout.CENTER);
+	}
 
     @Override
     public String getStaticLabel() {

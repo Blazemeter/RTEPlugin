@@ -1,13 +1,8 @@
-package blazemeter.jmeter.plugins.RTEPlugin.sampler;
+package blazemeter.jmeter.plugins.rte.sampler;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-
-import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.testelement.property.CollectionProperty;
 import org.apache.jmeter.testelement.property.JMeterProperty;
@@ -16,9 +11,6 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 
 public class Inputs extends ConfigTestElement implements Serializable, Iterable<JMeterProperty> {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 5810149938611069868L;
 	public static final String INPUTS = "Inputs.inputs";
 
@@ -40,7 +32,6 @@ public class Inputs extends ConfigTestElement implements Serializable, Iterable<
 		setProperty(new CollectionProperty(INPUTS, coordInput));
 	}
 
-
 	public void addCoordInput(CoordInput input) {
 		TestElementProperty newInput = new TestElementProperty(input.getName(), input);
 		if (isRunningVersion()) {
@@ -51,7 +42,7 @@ public class Inputs extends ConfigTestElement implements Serializable, Iterable<
 
 	@Override
 	public PropertyIterator iterator() {
-	return getInputs().iterator();
+		return getInputs().iterator();
 	}
 
 }
