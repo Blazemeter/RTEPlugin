@@ -1,6 +1,7 @@
 
 package blazemeter.jmeter.plugins.RTEPlugin.sampler.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -16,12 +17,15 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
+import org.apache.jmeter.config.Argument;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.gui.ArgumentsPanel;
 import org.apache.jmeter.gui.util.JSyntaxTextArea;
 import org.apache.jmeter.protocol.http.gui.HTTPArgumentsPanel;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.gui.ObjectTableModel;
 import org.apache.jorphan.logging.LoggingManager;
+import org.apache.jorphan.reflect.Functor;
 import org.apache.log.Logger;
 
 import blazemeter.jmeter.plugins.RTEPlugin.sampler.RTESampler;
@@ -34,20 +38,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 	private JLabel typingStyleLabel = new JLabel();
 	private JComboBox typingStyleComboBox = new JComboBox();
 	
-    private ButtonGroup group = new ButtonGroup();
-    private JRadioButton fillField = new JRadioButton(RTESampler.TYPE_FILL_FIELD,true);
-    private JRadioButton sendKey = new JRadioButton(RTESampler.TYPE_SEND_KEY);
-    
-    private JLabel fieldLabel = new JLabel();
-    private JTextField field = new JTextField();
-    
-    private JLabel coordXLabel = new JLabel();
-    private JTextField coordX = new JTextField();
-    private JLabel coordYLabel = new JLabel();
-    private JTextField coordY = new JTextField();
-    
-    private JEditorPane payloadContent = new JEditorPane();
-	private JScrollPane bodyPanel = new JScrollPane();
+	private CoordInputPanel payloadPanel;
     
     private JCheckBox disconnect = new JCheckBox("Disconnect?");
     
@@ -75,6 +66,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
     
     
     public RTESamplerPanel() {
+    	payloadPanel = new CoordInputPanel("Payload");
         initComponents();
     }
 
@@ -85,14 +77,10 @@ public class RTESamplerPanel extends javax.swing.JPanel {
         
         typingStyleComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { RTESampler.TYPING_STYLE_FAST, RTESampler.TYPING_STYLE_HUMAN}));
         
-        group.add(fillField);
-        group.add(sendKey);
+
         
         typingStyleLabel.setText("Typing Style: ");
         disconnect.setText("Disconnect?");
-        fieldLabel.setText("Field: ");
-        coordXLabel.setText("Coord X: ");
-        coordYLabel.setText("Coord Y: ");
         
         waitSync.addItemListener(new ItemListener(){
             @Override
@@ -156,37 +144,6 @@ public class RTESamplerPanel extends javax.swing.JPanel {
             }
         });
         
-        fillField.addItemListener(new ItemListener(){
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if(e.getStateChange() == ItemEvent.SELECTED){
-                	field.setEnabled(true);
-                }
-                else if(e.getStateChange() == ItemEvent.DESELECTED){
-                	field.setEnabled(false);
-                }
-                validate();
-                repaint();
-            }
-        });
-        
-        sendKey.addItemListener(new ItemListener(){
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if(e.getStateChange() == ItemEvent.SELECTED){
-                	coordX.setEnabled(true);
-                	coordY.setEnabled(true);
-                }
-                else if(e.getStateChange() == ItemEvent.DESELECTED){
-                	coordX.setEnabled(false);
-                	coordY.setEnabled(false);
-                }
-                validate();
-                repaint();
-            }
-        });
-        
-        bodyPanel.setViewportView(payloadContent);
 
         javax.swing.GroupLayout requestPanelLayout = new javax.swing.GroupLayout(requestPanel);
         requestPanel.setLayout(requestPanelLayout);
@@ -198,23 +155,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 	                		.addComponent(typingStyleLabel)
 	                		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
 	            			.addComponent(typingStyleComboBox))
-	                 .addGroup(requestPanelLayout.createSequentialGroup()
-	                 		.addComponent(fillField)
-	                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	             			.addComponent(sendKey))
-	                 .addGroup(requestPanelLayout.createSequentialGroup()
-	                 		.addComponent(fieldLabel)
-	                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(field,javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-	                 		.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-	             			.addComponent(coordXLabel)
-	             			.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(coordX,javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-	                      	.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(coordYLabel)
-	             			.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-	                 		.addComponent(coordY,javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE))
-	                 .addComponent(bodyPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+	                 .addComponent(payloadPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 	                 .addComponent(disconnect)))
         );
 		
@@ -226,19 +167,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
                 		.addComponent(typingStyleLabel)
                 		.addComponent(typingStyleComboBox))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                		.addComponent(fillField)
-                		.addComponent(sendKey))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                	.addComponent(fieldLabel)
-                	.addComponent(field, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(coordXLabel)
-                    .addComponent(coordX, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(coordYLabel)
-                    .addComponent(coordY, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(bodyPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(payloadPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(disconnect))
@@ -353,12 +282,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
     }
 
     public void initFields() {
-    	payloadContent.setText("");
-    	field.setText("");
-    	coordX.setText("");
-    	coordY.setText("");
-    	coordX.setEnabled(false);
-    	coordY.setEnabled(false);
+    	payloadPanel.clear();
     	disconnect.setSelected(false);
     	waitCursor.setSelected(false);
     	waitSilent.setSelected(false);
@@ -379,41 +303,12 @@ public class RTESamplerPanel extends javax.swing.JPanel {
     	coordXWait.setEnabled(false);
     	coordYWait.setEnabled(false);
     	typingStyleComboBox.setSelectedItem(RTESampler.TYPING_STYLE_FAST);
-    	fillField.setSelected(true);
     }
     
-	public String getPayloadContent() {
-		return this.payloadContent.getText();
+	public CoordInputPanel getPayload() {
+		return this.payloadPanel;
 	}
 
-	public void setPayloadContent(String payloadContent2) {
-		this.payloadContent.setText(payloadContent2);
-	}
-
-	public String getField() {
-		return this.field.getText();
-	}
-
-	public void setField(String field) {
-		this.field.setText(field);
-	}
-	
-	public String getCoordX() {
-		return this.coordX.getText();
-	}
-
-	public void setCoordX(String coordX) {
-		this.coordX.setText(coordX);
-	}
-	
-	public String getCoordY() {
-		return this.coordY.getText();
-	}
-
-	public void setCoordY(String coordY) {
-		this.coordY.setText(coordY);
-	}
-	
 	public String getCoordYWait() {
 		return this.coordYWait.getText();
 	}
@@ -516,24 +411,5 @@ public class RTESamplerPanel extends javax.swing.JPanel {
     
     public String getTypingStyle() {
     	return (String) typingStyleComboBox.getSelectedItem();
-    }
-	
-    public void setType(String action) {
-    	if (action.equals(RTESampler.TYPE_FILL_FIELD)){
-    		fillField.setSelected(true);
-    	}else if(action.equals(RTESampler.TYPE_SEND_KEY)){
-    		sendKey.setSelected(true);
-    	} 		
-    }
-    
-    public String getType(){
-    	if (fillField.isSelected()){
-    		return RTESampler.TYPE_FILL_FIELD;
-    	}else if(sendKey.isSelected()){
-    		return RTESampler.TYPE_SEND_KEY;
-	    }else {
-			return RTESampler.TYPE_FILL_FIELD;
-		}
-    	
     }
 }

@@ -9,7 +9,7 @@
     <name>RTEPlugin Sampler as JMeter plugin</name>
 
     <properties>
-        <version.org.apache.jmeter.all>3.0</version.org.apache.jmeter.all>
+        <version.org.apache.jmeter.all>3.1</version.org.apache.jmeter.all>
 <!--         <version.org.apache.jmeter.all>2.13</version.org.apache.jmeter.all> -->
     </properties>
 

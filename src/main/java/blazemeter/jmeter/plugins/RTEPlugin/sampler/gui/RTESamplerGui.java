@@ -4,11 +4,14 @@ package blazemeter.jmeter.plugins.RTEPlugin.sampler.gui;
 import java.awt.BorderLayout;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.gui.ArgumentsPanel;
+import org.apache.jmeter.protocol.http.gui.HTTPArgumentsPanel;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
+import blazemeter.jmeter.plugins.RTEPlugin.sampler.Inputs;
 import blazemeter.jmeter.plugins.RTEPlugin.sampler.RTESampler;
 
 
@@ -44,11 +47,6 @@ public class RTESamplerGui extends AbstractSamplerGui {
         if (element instanceof RTESampler) {
             RTESampler RTESamplerTestElement = (RTESampler) element;   
             RTESamplerPanel.setTypingStyle(RTESamplerTestElement.getTypingStyle());
-            RTESamplerPanel.setType(RTESamplerTestElement.getType());
-            RTESamplerPanel.setField(RTESamplerTestElement.getField());
-            RTESamplerPanel.setCoordX(Integer.toString(RTESamplerTestElement.getCoordX()));
-            RTESamplerPanel.setCoordY(Integer.toString(RTESamplerTestElement.getCoordY()));
-            RTESamplerPanel.setPayloadContent(RTESamplerTestElement.getPayload());
             RTESamplerPanel.setDisconnect(RTESamplerTestElement.getDisconnect());
             RTESamplerPanel.setWaitCursor(RTESamplerTestElement.getWaitCursor());
             RTESamplerPanel.setWaitSilent(RTESamplerTestElement.getWaitSilent());
@@ -61,6 +59,10 @@ public class RTESamplerGui extends AbstractSamplerGui {
             RTESamplerPanel.setCoordXWait(RTESamplerTestElement.getCoordXToWait());
             RTESamplerPanel.setCoordYWait(RTESamplerTestElement.getCoordYToWait());
             RTESamplerPanel.setTextWait(RTESamplerTestElement.getTextToWait());
+            Inputs payload = RTESamplerTestElement.getPayload();
+            if (payload != null) {
+            	RTESamplerPanel.getPayload().configure(payload);
+            }
         }
     }
 
@@ -77,11 +79,6 @@ public class RTESamplerGui extends AbstractSamplerGui {
         if (te instanceof RTESampler) {
             RTESampler RTESamplerTestElement = (RTESampler) te;   
             RTESamplerTestElement.setTypingStyle(RTESamplerPanel.getTypingStyle());
-            RTESamplerTestElement.setType(RTESamplerPanel.getType());
-            RTESamplerTestElement.setField(RTESamplerPanel.getField());
-            RTESamplerTestElement.setCoordX(Integer.parseInt(RTESamplerPanel.getCoordX()));
-            RTESamplerTestElement.setCoordY(Integer.parseInt(RTESamplerPanel.getCoordY()));
-            RTESamplerTestElement.setPayload(RTESamplerPanel.getPayloadContent());
             RTESamplerTestElement.setDisconnect(RTESamplerPanel.getDisconnect());
             RTESamplerTestElement.setWaitCursor(RTESamplerPanel.getWaitCursor());
             RTESamplerTestElement.setWaitSilent(RTESamplerPanel.getWaitSilent());
@@ -94,6 +91,11 @@ public class RTESamplerGui extends AbstractSamplerGui {
             RTESamplerTestElement.setCoordXToWait(RTESamplerPanel.getCoordXWait());
             RTESamplerTestElement.setCoordYToWait(RTESamplerPanel.getCoordYWait());
             RTESamplerTestElement.setTextToWait(RTESamplerPanel.getTextWait());
+            
+            CoordInputPanel payload = RTESamplerPanel.getPayload();
+            if (payload != null) {
+            	RTESamplerTestElement.setPayload((Inputs)payload.createTestElement());
+            }
         }
     }
 

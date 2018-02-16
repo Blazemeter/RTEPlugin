@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
@@ -13,6 +14,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
+import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.tn5250j.Session5250;
@@ -20,6 +22,7 @@ import org.tn5250j.SessionConfig;
 import org.tn5250j.framework.tn5250.Screen5250;
 import org.tn5250j.framework.tn5250.ScreenField;
 import org.tn5250j.framework.tn5250.ScreenFields;
+import org.tn5250j.framework.tn5250.ScreenOIA;
 import org.tn5250j.framework.tn5250.ScreenPlanes;
 
 import org.tn5250j.event.ScreenListener;
@@ -217,59 +220,9 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
             waiyText = DEFAULT_RESPONSE_TIMEOUT;
         }
     	
+    	if (getWaitSync()){}
     	
-    	if (getType().equals(TYPE_FILL_FIELD)){
-    		ScreenFields sf = session.getScreen().getScreenFields();
-    		String s = getScreenAsString(session.getScreen());
-    		int cols = session.getScreen().getColumns();
-    		
-    		String text = "";
-    		
-    		boolean out = false;
-    		
-    		for (int i = 0; i < sf.getFieldCount() && !out; i++){
-    			if (!sf.getField(i).isBypassField()){
-    				
-    				int pos = sf.getField(i).startPos();
-    				int posIni = 0; 
-    				if (pos > cols)
-    					posIni = pos - cols;
-    				text =  s.substring(posIni, pos);
-    				if (text.contains(getField())){
-    					sf.getField(i).setString(getPayload());;
-    					out = true;
-    				}	
-    			}
-    		}
-    	}
-    	else if (getType().equals(TYPE_SEND_KEY)){
-    		session.getScreen().setCursor(getCoordX(), getCoordY());
-    		session.getScreen().sendKeys(getPayload());
-    		
-    	}
-    	else {
-    		sampleResult.setSuccessful(false);
-			sampleResult.setResponseMessage("Type error");
-			sampleResult.setResponseData("Type error","utf-8");
-	    	sampleResult.sampleEnd();
-    	}
-    	
-    	if (getWaitCursor()){
-    	
-	    	while (!session.getScreen().isCursorActive() && waitCursor > 0){
-	    		try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					sampleResult.setSuccessful(false);
-					sampleResult.setResponseMessage(e.getMessage());
-					sampleResult.setResponseData(e.getStackTrace().toString(),"utf-8");
-			    	sampleResult.sampleEnd();
-			    	e.printStackTrace();
-			    	return sampleResult;
-				}
-	    		waitCursor = waitCursor - 100;
-	    	}
-    	}
+    	if (getWaitCursor()){}
     	
     	
     	
@@ -367,12 +320,12 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		setProperty("CoordY", coordY);
 	}
 	
-	public String getPayload() {
-		return getPropertyAsString("Payload");
+	public Inputs getPayload() {
+		return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
 	}
-
-	public void setPayload(String payload) {
-		setProperty("Payload", payload);
+	
+	public void setPayload(Inputs payload) {
+		setProperty(new TestElementProperty(Inputs.INPUTS, payload));
 	}
 	
 	public boolean getWaitSync() {
