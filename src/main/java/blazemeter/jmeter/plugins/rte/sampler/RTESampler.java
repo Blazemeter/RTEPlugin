@@ -208,7 +208,6 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 			waiyText = DEFAULT_RESPONSE_TIMEOUT;
 		}
 
-		
 		for (JMeterProperty p : getPayload()){
 			CoordInput i = (CoordInput) p.getObjectValue();
 			int col=0;
