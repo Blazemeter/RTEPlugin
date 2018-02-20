@@ -1,0 +1,19 @@
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-ant
+
+variables:
+  MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
+
+cache:
+  paths:
+    - .m2/repository/
+build:
+  tags:
+    - docker
+  before_script:
+    - set -e
+    - ant -DmavenOpts=$MAVEN_OPTS -f tn5250j-build.xml
+  script: mvn --batch-mode clean verify
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 month
