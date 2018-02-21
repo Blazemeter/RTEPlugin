@@ -52,6 +52,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
 			RTESamplerPanel.setCoordXWait(RTESamplerTestElement.getCoordXToWait());
 			RTESamplerPanel.setCoordYWait(RTESamplerTestElement.getCoordYToWait());
 			RTESamplerPanel.setTextWait(RTESamplerTestElement.getTextToWait());
+			RTESamplerPanel.setTrigger(RTESamplerTestElement.getTrigger());
 			Inputs payload = RTESamplerTestElement.getPayload();
 			if (payload != null) {
 				RTESamplerPanel.getPayload().configure(payload);
@@ -84,6 +85,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
 			RTESamplerTestElement.setCoordXToWait(RTESamplerPanel.getCoordXWait());
 			RTESamplerTestElement.setCoordYToWait(RTESamplerPanel.getCoordYWait());
 			RTESamplerTestElement.setTextToWait(RTESamplerPanel.getTextWait());
+			RTESamplerTestElement.setTrigger(RTESamplerPanel.getTrigger());
 
 			CoordInputPanel payload = RTESamplerPanel.getPayload();
 			if (payload != null) {

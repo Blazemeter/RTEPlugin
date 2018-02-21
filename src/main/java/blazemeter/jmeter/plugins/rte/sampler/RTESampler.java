@@ -5,6 +5,8 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.jmeter.protocol.http.util.HTTPArgument;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -18,11 +20,18 @@ import org.tn5250j.Session5250;
 import org.tn5250j.SessionConfig;
 import org.tn5250j.framework.tn5250.Screen5250;
 import org.tn5250j.TN5250jConstants;
+import org.apache.jmeter.testelement.property.JMeterProperty;
+import org.apache.jmeter.testelement.property.PropertyIterator;
 
 public class RTESampler extends AbstractSampler implements TestStateListener, ThreadListener {
 
 	private static final long serialVersionUID = -8230648949935454790L;
 
+	public static final Trigger DEFAULT_TRIGGER = Trigger.ENTER;
+	public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
+	public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
+	public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
+	
 	protected static final Logger log = LoggingManager.getLoggerForClass();
 
 	protected static final int DEFAULT_CONNECTION_TIMEOUT = 20000; // 20 sec
@@ -36,17 +45,6 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 	public static final String TYPING_STYLE_FAST = "Fast";
 	public static final String TYPING_STYLE_HUMAN = "Human";
 
-	public static final String TYPE_FILL_FIELD = "Fill Field";
-	public static final String TYPE_SEND_KEY = "Send Key";
-
-	public static final String SSLTYPE_NONE = "NONE";
-	public static final String SSLTYPE_SSLV2 = "SSLv2";
-	public static final String SSLTYPE_SSLV3 = "SSLv3";
-	public static final String SSLTYPE_TLS = "TLS";
-
-	public static final String PROTOCOL_TN5250 = "TN5250";
-	public static final String PROTOCOL_TN3270 = "TN3270";
-
 	public static final String CONFIG_PORT = "RTEConnectionConfig.Port";
 	public static final String CONFIG_SERVER = "RTEConnectionConfig.Server";
 	public static final String CONFIG_USER = "RTEConnectionConfig.User";
@@ -54,6 +52,7 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 	public static final String CONFIG_PROTOCOL = "RTEConnectionConfig.Protocol";
 	public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.SSL_Type";
 	public static final String CONFIG_TIMEOUT = "RTEConnectionConfig.Timeout";
+	public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.Terminal_Type";
 
 	protected static Map<String, Session5250> connectionList;
 
@@ -209,12 +208,27 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 			waiyText = DEFAULT_RESPONSE_TIMEOUT;
 		}
 
-		if (getWaitSync()) {
+		
+		for (JMeterProperty p : getPayload()){
+			CoordInput i = (CoordInput) p.getObjectValue();
+			int col=0;
+			int row=0;
+			try {
+				col = Integer.parseInt(i.getColumn());
+			} catch (NumberFormatException ex) {
+				log.warn("Column is not a number; using the default column timeout of 0");
+			}
+			try {
+				row = Integer.parseInt(i.getRow());
+			} catch (NumberFormatException ex) {
+				log.warn("Row is not a number; using the default Row timeout of 0");
+			}
+			session.getScreen().setCursor(col, row);
+			session.getScreen().sendKeys(i.getInput());
 		}
-
-		if (getWaitCursor()) {
-		}
-
+		
+		session.getScreen().sendKeys("[enter]");
+		
 		sampleResult.setSuccessful(true);
 		sampleResult.setResponseData(screenToString(session.getScreen()), "utf-8");
 		sampleResult.sampleEnd();
@@ -239,12 +253,16 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		return getPropertyAsString(CONFIG_PASS);
 	}
 
-	public String getProtocol() {
-		return getPropertyAsString(CONFIG_PROTOCOL);
+	public TerminalType getTerminal() {
+		return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
+	}
+	
+	public Protocol getProtocol() {
+		return Protocol.valueOf(getPropertyAsString(CONFIG_PROTOCOL));
 	}
 
-	public String getSSLType() {
-		return getPropertyAsString(CONFIG_SSL_TYPE);
+	public SSLType getSSLType() {
+		return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
 	}
 
 	public String getTimeout() {
@@ -411,6 +429,16 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 	public void setDisconnect(boolean disconnect) {
 		setProperty("Disconnect", disconnect);
 	}
+	
+	public Trigger getTrigger() {
+		if (getPropertyAsString("Trigger").isEmpty())
+			return DEFAULT_TRIGGER;
+		return Trigger.valueOf(getPropertyAsString("Trigger"));
+	}
+
+	public void setTrigger(Trigger trigger) {
+		setProperty("Trigger", trigger.name());
+	}
 
 	public String getConnectionId() {
 		return getThreadName() + getServer() + getPort();
@@ -453,3 +481,4 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 	}
 
 }
+

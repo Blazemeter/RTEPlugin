@@ -13,7 +13,11 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
+import blazemeter.jmeter.plugins.rte.sampler.Protocol;
 import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
+import blazemeter.jmeter.plugins.rte.sampler.SSLType;
+import blazemeter.jmeter.plugins.rte.sampler.TerminalType;
+import blazemeter.jmeter.plugins.rte.sampler.Trigger;
 
 
 
@@ -50,10 +54,11 @@ public class RTEConfigGui extends AbstractConfigGui {
         	ConfigTestElement configTestElement = (ConfigTestElement) element;
             rteConfigPanelConfigPanel.setServer(configTestElement.getPropertyAsString(RTESampler.CONFIG_SERVER));
             rteConfigPanelConfigPanel.setPort(configTestElement.getPropertyAsString(RTESampler.CONFIG_PORT));
-            rteConfigPanelConfigPanel.setProtocol(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL));
+            rteConfigPanelConfigPanel.setProtocol(Protocol.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL)));
+            rteConfigPanelConfigPanel.setTerminal(TerminalType.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE)));
             rteConfigPanelConfigPanel.setUser(configTestElement.getPropertyAsString(RTESampler.CONFIG_USER));
             rteConfigPanelConfigPanel.setPass(configTestElement.getPropertyAsString(RTESampler.CONFIG_PASS));
-            rteConfigPanelConfigPanel.setSSLType(configTestElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE));
+            rteConfigPanelConfigPanel.setSSLType(SSLType.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE)));
             rteConfigPanelConfigPanel.setTimeout(configTestElement.getPropertyAsString(RTESampler.CONFIG_TIMEOUT));
            
         }
@@ -78,8 +83,9 @@ public class RTEConfigGui extends AbstractConfigGui {
         	configTestElement.setProperty(RTESampler.CONFIG_PORT, rteConfigPanelConfigPanel.getPort());
         	configTestElement.setProperty(RTESampler.CONFIG_USER, rteConfigPanelConfigPanel.getUser());
         	configTestElement.setProperty(RTESampler.CONFIG_PASS, rteConfigPanelConfigPanel.getPass());
-        	configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, rteConfigPanelConfigPanel.getProtocol());
-        	configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, rteConfigPanelConfigPanel.getSSLType());
+        	configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, rteConfigPanelConfigPanel.getProtocol().name());
+        	configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, rteConfigPanelConfigPanel.getSSLType().name());
+        	configTestElement.setProperty(RTESampler.CONFIG_TERMINAL_TYPE, rteConfigPanelConfigPanel.getTerminal().name());
         	configTestElement.setProperty(RTESampler.CONFIG_TIMEOUT, rteConfigPanelConfigPanel.getTimeout());
         	
         }

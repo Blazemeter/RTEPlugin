@@ -1,37 +1,45 @@
 
 package blazemeter.jmeter.plugins.rte.sampler.gui;
 
+import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+
+
 import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
+import blazemeter.jmeter.plugins.rte.sampler.Trigger;
 
 public class RTESamplerPanel extends javax.swing.JPanel {
 
 	private static final long serialVersionUID = 4739160923223292835L;
 
+	private static final String [] TYPING_STYLE = {RTESampler.TYPING_STYLE_FAST, RTESampler.TYPING_STYLE_HUMAN};
+	
 	private JPanel requestPanel = new JPanel();
-
 	private JLabel typingStyleLabel = new JLabel();
-	private JComboBox typingStyleComboBox = new JComboBox();
-
+	private JComboBox<String> typingStyleComboBox = new JComboBox<String>(TYPING_STYLE);
+	private JPanel triggerPanel = new JPanel();
+	private ButtonGroup triggersGroup = new ButtonGroup();
+	private Map<Trigger,JRadioButton> triggers = new HashMap<>();
 	private CoordInputPanel payloadPanel;
-
 	private JCheckBox disconnect = new JCheckBox("Disconnect?");
-
 	private JPanel waitPanel = new JPanel();
-
 	private JCheckBox waitSync = new JCheckBox("Sync?");
 	private JCheckBox waitCursor = new JCheckBox("Cursor?");
 	private JCheckBox waitSilent = new JCheckBox("Silent?");
 	private JCheckBox waitText = new JCheckBox("Text?");
-
 	private JLabel waitTimeoutLableSync = new JLabel();
 	private JLabel waitTimeoutLableCursor = new JLabel();
 	private JLabel waitTimeoutLableSilent = new JLabel();
@@ -40,7 +48,6 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 	private JTextField waitTimeoutCursor = new JTextField();
 	private JTextField waitTimeoutSilent = new JTextField();
 	private JTextField waitTimeoutText = new JTextField();
-
 	private JTextField textWait = new JTextField();
 	private JLabel coordXWaitLabel = new JLabel();
 	private JTextField coordXWait = new JTextField();
@@ -53,11 +60,8 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 	}
 
 	private void initComponents() {
-
+		
 		requestPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("RTE Message"));
-
-		typingStyleComboBox.setModel(new javax.swing.DefaultComboBoxModel(
-				new String[] { RTESampler.TYPING_STYLE_FAST, RTESampler.TYPING_STYLE_HUMAN }));
 
 		typingStyleLabel.setText("Typing Style: ");
 		disconnect.setText("Disconnect?");
@@ -119,7 +123,18 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 				repaint();
 			}
 		});
-
+		
+		triggerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Trigger"));
+		triggerPanel.setLayout(new GridLayout((int)Math.ceil(Trigger.values().length / 12), 12));
+				
+		Arrays.stream(Trigger.values()).forEach(t -> {
+			JRadioButton r = new JRadioButton(t.toString());
+			r.setActionCommand(t.toString());
+			triggerPanel.add(r);
+			triggers.put(t, r);
+			triggersGroup.add(r);
+		});
+		
 		javax.swing.GroupLayout requestPanelLayout = new javax.swing.GroupLayout(requestPanel);
 		requestPanel.setLayout(requestPanelLayout);
 		requestPanelLayout.setHorizontalGroup(requestPanelLayout
@@ -131,15 +146,19 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 										.addComponent(typingStyleComboBox))
 								.addComponent(payloadPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
 										javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(triggerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 								.addComponent(disconnect))));
 
 		requestPanelLayout.setVerticalGroup(requestPanelLayout
 				.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 				.addGroup(requestPanelLayout.createSequentialGroup().addGap(8, 8, 8)
 						.addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-								.addComponent(typingStyleLabel).addComponent(typingStyleComboBox))
+								.addComponent(typingStyleLabel)
+								.addComponent(typingStyleComboBox))
 						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
 						.addComponent(payloadPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+						.addComponent(triggerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
 						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
 						.addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
 								.addComponent(disconnect))
@@ -259,6 +278,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 		coordXWait.setEnabled(false);
 		coordYWait.setEnabled(false);
 		typingStyleComboBox.setSelectedItem(RTESampler.TYPING_STYLE_FAST);
+		triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
 	}
 
 	public CoordInputPanel getPayload() {
@@ -367,5 +387,17 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 
 	public String getTypingStyle() {
 		return (String) typingStyleComboBox.getSelectedItem();
+	}
+	
+	public void setTrigger(Trigger trigger) {
+		if (triggers.containsKey(trigger))
+			triggers.get(trigger).setSelected(true);
+		else
+			triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
+	}
+
+	public Trigger getTrigger() {
+		String trigger = triggersGroup.getSelection().getActionCommand();
+		return Trigger.valueOf(trigger);
 	}
 }
