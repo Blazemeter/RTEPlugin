@@ -1,0 +1,56 @@
+<project name="tn5250j" default="download-install">
+    <property name="mavenOpts" value=""/>
+    <property name="tn5250j.version" value="0.7.5"/>
+    <property name="workingDir" value="target/ant"/>
+    <property name="unzippedDir" value="${workingDir}/tn5250j-${tn5250j.version}"/>
+
+    <target name="check-installed">
+        <property name="mvn-check" value="mvn ${mavenOpts} dependency:get -Dartifact=org.tn5250j:tn5250j:${tn5250j.version}"/>
+        <exec osfamily="windows" executable="cmd" resultproperty="check.installed" output="NUL">
+            <arg line="/c '${mvn-check}'"/>
+        </exec>
+        <exec osfamily="unix" executable="sh" resultproperty="check.installed" output="/dev/null">
+            <arg line="-c '${mvn-check}'"/>
+        </exec>
+        <condition property="already.installed">
+            <equals arg1="0" arg2="${check.installed}"/>
+        </condition>
+    </target>
+
+    <target name="download">
+        <mkdir dir="target/ant"/>
+        <get src="https://github.com/tn5250j/tn5250j/archive/${tn5250j.version}.zip"
+             dest="${workingDir}/${tn5250j.version}.zip"
+             verbose="true"
+             usetimestamp="true"/>
+        <unzip src="${workingDir}/${tn5250j.version}.zip" dest="${workingDir}"/>
+    </target>
+
+    <target name="package">
+        <ant dir="${unzippedDir}">
+            <target name="package"/>
+        </ant>
+    </target>
+
+    <target name="install">
+        <property name="mvn-install"
+                  value="mvn ${mavenOpts} install:install-file -Dfile=${unzippedDir}/build/tn5250j.jar -DgroupId=org.tn5250j -DartifactId=tn5250j -Dversion=${tn5250j.version} -Dpackaging=jar"/>
+        <exec osfamily="windows" executable="cmd">
+            <arg line="/c '${mvn-install}'"/>
+        </exec>
+        <exec osfamily="unix" executable="sh">
+            <arg line="-c '${mvn-install}'"/>
+        </exec>
+    </target>
+
+    <target name="clean">
+        <delete dir="${workingDir}"/>
+    </target>
+
+    <target name="download-install" depends="check-installed" unless="already.installed">
+        <antcall target="download"/>
+        <antcall target="package"/>
+        <antcall target="install"/>
+        <antcall target="clean"/>
+    </target>
+</project>
