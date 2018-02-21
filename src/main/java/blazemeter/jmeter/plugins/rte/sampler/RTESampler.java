@@ -227,7 +227,7 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		}
 		
 		session.getScreen().sendKeys("[enter]");
-		
+
 		sampleResult.setSuccessful(true);
 		sampleResult.setResponseData(screenToString(session.getScreen()), "utf-8");
 		sampleResult.sampleEnd();
