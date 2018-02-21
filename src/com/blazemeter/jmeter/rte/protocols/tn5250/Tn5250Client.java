@@ -1,13 +1,13 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.RteProtocolClientListener;
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import net.infordata.em.crt5250.XI5250Field;
 
 import java.awt.event.KeyEvent;
 import java.util.List;
 
-public class Tn5250Client implements RteProtocolClientListener {
+public class Tn5250Client implements RteProtocolClient {
 
     private final ConfigurablePortEmulator em = new ConfigurablePortEmulator();
 

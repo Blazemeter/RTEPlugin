@@ -7,6 +7,11 @@ import net.infordata.em.tnprot.XITelnetEmulator;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
+/**
+ * This class was created because it's necessary to have an Emulator instance in which it could be possible to create
+ * an XITelnet instance with "port" attribute inside setActive method. Using setActive method from XI5250Emulator class
+ * the connection will be done always through port 23.
+ */
 public class ConfigurablePortEmulator extends XI5250Emulator {
 
     private int port;
@@ -19,8 +24,6 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
             if (activate == wasActive)
                 return;
 
-            //We have to use reflection because XI520Emulator class has ivTelnet as a private attribute without set and
-            // get methods
             if (activate) {
                 XITelnet ivTelnet = new XITelnet(getHost(),port);
                 setIvTelnet(ivTelnet);
@@ -38,6 +41,8 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
         firePropertyChange(ACTIVE, wasActive, isActive());
     }
 
+    //It was necessary to use reflection because XI520Emulator class has ivTelnet as a private attribute without set and
+    // get methods
     private void setIvTelnet(XITelnet ivTelnet) {
         Field target = getAccessibleIvTelnetField();
         try {
