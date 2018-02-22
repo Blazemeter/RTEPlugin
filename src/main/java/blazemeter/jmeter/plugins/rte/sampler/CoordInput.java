@@ -12,8 +12,7 @@ public class CoordInput extends AbstractTestElement implements Serializable {
 	public static final String COLUMN = "CoordInput.column";
 	public static final String ROW = "CoordInput.row";
 
-	public CoordInput() {
-	}
+	public CoordInput() {}
 
 	public CoordInput(String input, String column, String row) {
 		if (input != null) {

@@ -48,10 +48,12 @@ public class RTESamplerGui extends AbstractSamplerGui {
 			RTESamplerPanel.setWaitTimeoutSync(RTESamplerTestElement.getWaitTimeoutSync());
 			RTESamplerPanel.setWaitTimeoutCursor(RTESamplerTestElement.getWaitTimeoutCursor());
 			RTESamplerPanel.setWaitTimeoutSilent(RTESamplerTestElement.getWaitTimeoutSilent());
+			RTESamplerPanel.setWaitForSilent(RTESamplerTestElement.getWaitForSilent());
 			RTESamplerPanel.setWaitTimeoutText(RTESamplerTestElement.getWaitTimeoutText());
 			RTESamplerPanel.setCoordXWait(RTESamplerTestElement.getCoordXToWait());
 			RTESamplerPanel.setCoordYWait(RTESamplerTestElement.getCoordYToWait());
 			RTESamplerPanel.setTextWait(RTESamplerTestElement.getTextToWait());
+			RTESamplerPanel.setTrigger(RTESamplerTestElement.getTrigger());
 			Inputs payload = RTESamplerTestElement.getPayload();
 			if (payload != null) {
 				RTESamplerPanel.getPayload().configure(payload);
@@ -80,10 +82,12 @@ public class RTESamplerGui extends AbstractSamplerGui {
 			RTESamplerTestElement.setWaitTimeoutSync(RTESamplerPanel.getWaitTimeoutSync());
 			RTESamplerTestElement.setWaitTimeoutCursor(RTESamplerPanel.getWaitTimeoutCursor());
 			RTESamplerTestElement.setWaitTimeoutSilent(RTESamplerPanel.getWaitTimeoutSilent());
+			RTESamplerTestElement.setWaitForSilent(RTESamplerPanel.getWaitForSilent());
 			RTESamplerTestElement.setWaitTimeoutText(RTESamplerPanel.getWaitTimeoutText());
 			RTESamplerTestElement.setCoordXToWait(RTESamplerPanel.getCoordXWait());
 			RTESamplerTestElement.setCoordYToWait(RTESamplerPanel.getCoordYWait());
 			RTESamplerTestElement.setTextToWait(RTESamplerPanel.getTextWait());
+			RTESamplerTestElement.setTrigger(RTESamplerPanel.getTrigger());
 
 			CoordInputPanel payload = RTESamplerPanel.getPayload();
 			if (payload != null) {

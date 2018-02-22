@@ -1,7 +1,6 @@
 package blazemeter.jmeter.plugins.rte.sampler.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Rectangle;
@@ -18,14 +17,12 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.jmeter.config.Argument;
-import org.apache.jmeter.config.Arguments;
-import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.JMeterProperty;
@@ -37,8 +34,9 @@ import org.apache.jorphan.reflect.Functor;
 import blazemeter.jmeter.plugins.rte.sampler.CoordInput;
 import blazemeter.jmeter.plugins.rte.sampler.Inputs;
 
-public class CoordInputPanel extends AbstractConfigGui implements ActionListener {
+public class CoordInputPanel extends JPanel implements ActionListener {
 
+	private static final long serialVersionUID = -6184904133375045201L;
 	private static final String ADD = "add";
 	private static final String ADD_FROM_CLIPBOARD = "addFromClipboard";
 	private static final String DELETE = "delete";
@@ -85,7 +83,9 @@ public class CoordInputPanel extends AbstractConfigGui implements ActionListener
 		table.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer());
 		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		JMeterUtils.applyHiDPI(table);
-		return makeScrollPane(table);
+		JScrollPane pane = new JScrollPane(table);
+        pane.setPreferredSize(pane.getMinimumSize());
+        return pane;
 	}
 
 	private void initializeTableModel() {
@@ -155,19 +155,12 @@ public class CoordInputPanel extends AbstractConfigGui implements ActionListener
 		}
 	}
 
-	@Override
-	public String getLabelResource() {
-		return "Payload";
-	}
-
-	@Override
 	public TestElement createTestElement() {
 		Inputs inputs = new Inputs();
 		modifyTestElement(inputs);
 		return inputs;
 	}
 
-	@Override
 	public void modifyTestElement(TestElement element) {
 		GuiUtils.stopTableEditing(table);
 		if (element instanceof Inputs) {
@@ -184,13 +177,9 @@ public class CoordInputPanel extends AbstractConfigGui implements ActionListener
 				inputs.addCoordInput(input);
 			}
 		}
-		super.configureTestElement(element);
-
 	}
 
-	@Override
 	public void configure(TestElement el) {
-		super.configure(el);
 		if (el instanceof Inputs) {
 			tableModel.clearData();
 			for (JMeterProperty jMeterProperty : (Inputs) el) {
@@ -376,11 +365,6 @@ public class CoordInputPanel extends AbstractConfigGui implements ActionListener
 		return new CoordInput();
 	}
 
-	@Override
-	public void clearGui() {
-		super.clearGui();
-		clear();
-	}
 
 	public void clear() {
 		GuiUtils.stopTableEditing(table);
