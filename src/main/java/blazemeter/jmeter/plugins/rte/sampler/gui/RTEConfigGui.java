@@ -2,28 +2,20 @@
 package blazemeter.jmeter.plugins.rte.sampler.gui;
 
 import java.awt.BorderLayout;
-import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
-import org.apache.jmeter.config.gui.ArgumentsPanel;
-import org.apache.jmeter.protocol.http.gui.HTTPArgumentsPanel;
-import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.testelement.property.TestElementProperty;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+
 
 import blazemeter.jmeter.plugins.rte.sampler.Protocol;
 import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
 import blazemeter.jmeter.plugins.rte.sampler.SSLType;
 import blazemeter.jmeter.plugins.rte.sampler.TerminalType;
-import blazemeter.jmeter.plugins.rte.sampler.Trigger;
-
-
 
 public class RTEConfigGui extends AbstractConfigGui {
 
-    private RTEConfigPanel rteConfigPanelConfigPanel;
+	private static final long serialVersionUID = 8495980373764997386L;
+	private RTEConfigPanel rteConfigPanelConfigPanel;
 
 	public RTEConfigGui() {
 		super();

@@ -1,7 +1,6 @@
 package blazemeter.jmeter.plugins.rte.sampler.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Rectangle;
@@ -24,9 +23,6 @@ import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.jmeter.config.Argument;
-import org.apache.jmeter.config.Arguments;
-import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.JMeterProperty;
@@ -40,6 +36,7 @@ import blazemeter.jmeter.plugins.rte.sampler.Inputs;
 
 public class CoordInputPanel extends JPanel implements ActionListener {
 
+	private static final long serialVersionUID = -6184904133375045201L;
 	private static final String ADD = "add";
 	private static final String ADD_FROM_CLIPBOARD = "addFromClipboard";
 	private static final String DELETE = "delete";

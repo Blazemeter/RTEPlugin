@@ -15,13 +15,17 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.BorderFactory;
 
 
 
 import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
 import blazemeter.jmeter.plugins.rte.sampler.Trigger;
 
-public class RTESamplerPanel extends javax.swing.JPanel {
+public class RTESamplerPanel extends JPanel {
 
 	private static final long serialVersionUID = 4739160923223292835L;
 
@@ -43,10 +47,12 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 	private JLabel waitTimeoutLableSync = new JLabel();
 	private JLabel waitTimeoutLableCursor = new JLabel();
 	private JLabel waitTimeoutLableSilent = new JLabel();
+	private JLabel waitForLableSilent = new JLabel();
 	private JLabel waitTimeoutLableText = new JLabel();
 	private JTextField waitTimeoutSync = new JTextField();
 	private JTextField waitTimeoutCursor = new JTextField();
 	private JTextField waitTimeoutSilent = new JTextField();
+	private JTextField waitForSilent = new JTextField();
 	private JTextField waitTimeoutText = new JTextField();
 	private JTextField textWait = new JTextField();
 	private JLabel coordXWaitLabel = new JLabel();
@@ -61,7 +67,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 
 	private void initComponents() {
 		
-		requestPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("RTE Message"));
+		requestPanel.setBorder(BorderFactory.createTitledBorder("RTE Message"));
 
 		typingStyleLabel.setText("Typing Style: ");
 		disconnect.setText("Disconnect?");
@@ -124,7 +130,7 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 			}
 		});
 		
-		triggerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Trigger"));
+		triggerPanel.setBorder(BorderFactory.createTitledBorder("Trigger"));
 		triggerPanel.setLayout(new GridLayout((int)Math.ceil(Trigger.values().length / 12), 12));
 				
 		Arrays.stream(Trigger.values()).forEach(t -> {
@@ -135,124 +141,132 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 			triggersGroup.add(r);
 		});
 		
-		javax.swing.GroupLayout requestPanelLayout = new javax.swing.GroupLayout(requestPanel);
+		GroupLayout requestPanelLayout = new GroupLayout(requestPanel);
 		requestPanel.setLayout(requestPanelLayout);
 		requestPanelLayout.setHorizontalGroup(requestPanelLayout
-				.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+				.createParallelGroup(Alignment.LEADING)
 				.addGroup(requestPanelLayout.createSequentialGroup()
-						.addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+						.addGroup(requestPanelLayout.createParallelGroup(Alignment.LEADING)
 								.addGroup(requestPanelLayout.createSequentialGroup().addComponent(typingStyleLabel)
-										.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+										.addPreferredGap(ComponentPlacement.RELATED)
 										.addComponent(typingStyleComboBox))
-								.addComponent(payloadPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-								.addComponent(triggerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 								.addComponent(disconnect))));
 
 		requestPanelLayout.setVerticalGroup(requestPanelLayout
-				.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+				.createParallelGroup(Alignment.LEADING)
 				.addGroup(requestPanelLayout.createSequentialGroup().addGap(8, 8, 8)
-						.addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+						.addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
 								.addComponent(typingStyleLabel)
 								.addComponent(typingStyleComboBox))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-						.addComponent(payloadPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-						.addComponent(triggerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-						.addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
 								.addComponent(disconnect))
 						.addGap(8, 8, 8).addContainerGap()));
 
-		waitPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Wait for:"));
+		waitPanel.setBorder(BorderFactory.createTitledBorder("Wait for:"));
 		waitTimeoutLableSync.setText("Timeout: ");
 		waitTimeoutLableCursor.setText("Timeout: ");
 		waitTimeoutLableSilent.setText("Timeout: ");
+		waitForLableSilent.setText("Wait for Silent: ");
 		waitTimeoutLableText.setText("Timeout: ");
 		coordXWaitLabel.setText("Coord X: ");
 		coordYWaitLabel.setText("Coord Y: ");
 
-		javax.swing.GroupLayout waitPanelLayout = new javax.swing.GroupLayout(waitPanel);
+		GroupLayout waitPanelLayout = new GroupLayout(waitPanel);
 		waitPanel.setLayout(waitPanelLayout);
 		waitPanelLayout
-				.setHorizontalGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+				.setHorizontalGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
 						.addGroup(waitPanelLayout.createSequentialGroup()
-								.addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+								.addGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
 										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitSync)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+												.addPreferredGap(ComponentPlacement.UNRELATED)
 												.addComponent(waitTimeoutLableSync)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutSync, javax.swing.GroupLayout.PREFERRED_SIZE,
-														100, javax.swing.GroupLayout.PREFERRED_SIZE))
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(waitTimeoutSync, GroupLayout.PREFERRED_SIZE,
+														100, GroupLayout.PREFERRED_SIZE))
 										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitCursor)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+												.addPreferredGap(ComponentPlacement.UNRELATED)
 												.addComponent(waitTimeoutLableCursor)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutCursor, javax.swing.GroupLayout.PREFERRED_SIZE,
-														100, javax.swing.GroupLayout.PREFERRED_SIZE))
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(waitTimeoutCursor, GroupLayout.PREFERRED_SIZE,
+														100, GroupLayout.PREFERRED_SIZE))
 										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitSilent)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+												.addPreferredGap(ComponentPlacement.UNRELATED)
+												.addComponent(waitForLableSilent)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(waitForSilent, GroupLayout.PREFERRED_SIZE,
+														100, GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.UNRELATED)
 												.addComponent(waitTimeoutLableSilent)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutSilent, javax.swing.GroupLayout.PREFERRED_SIZE,
-														100, javax.swing.GroupLayout.PREFERRED_SIZE))
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(waitTimeoutSilent, GroupLayout.PREFERRED_SIZE,
+														100, GroupLayout.PREFERRED_SIZE))
 										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitText)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(textWait, javax.swing.GroupLayout.PREFERRED_SIZE, 100,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(textWait, GroupLayout.PREFERRED_SIZE, 100,
+														GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.UNRELATED)
 												.addComponent(coordXWaitLabel)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(coordXWait, javax.swing.GroupLayout.PREFERRED_SIZE, 50,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(coordXWait, GroupLayout.PREFERRED_SIZE, 50,
+														GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.RELATED)
 												.addComponent(coordYWaitLabel)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(coordYWait, javax.swing.GroupLayout.PREFERRED_SIZE, 50,
-														javax.swing.GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(coordYWait, GroupLayout.PREFERRED_SIZE, 50,
+														GroupLayout.PREFERRED_SIZE)
+												.addPreferredGap(ComponentPlacement.UNRELATED)
 												.addComponent(waitTimeoutLableText)
-												.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutText, javax.swing.GroupLayout.PREFERRED_SIZE,
-														100, javax.swing.GroupLayout.PREFERRED_SIZE)))));
+												.addPreferredGap(ComponentPlacement.RELATED)
+												.addComponent(waitTimeoutText, GroupLayout.PREFERRED_SIZE,
+														100, GroupLayout.PREFERRED_SIZE)))));
 
-		waitPanelLayout.setVerticalGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+		waitPanelLayout.setVerticalGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(waitPanelLayout.createSequentialGroup().addGap(8, 8, 8)
-						.addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
 								.addComponent(waitSync).addComponent(waitTimeoutLableSync)
 								.addComponent(waitTimeoutSync))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-						.addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
 								.addComponent(waitCursor).addComponent(waitTimeoutLableCursor)
 								.addComponent(waitTimeoutCursor))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-						.addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
 								.addComponent(waitSilent).addComponent(waitTimeoutLableSilent)
-								.addComponent(waitTimeoutSilent))
-						.addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-						.addGroup(waitPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+								.addComponent(waitTimeoutSilent)
+								.addComponent(waitForLableSilent)
+								.addComponent(waitForSilent))
+						.addPreferredGap(ComponentPlacement.UNRELATED)
+						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
 								.addComponent(waitText).addComponent(textWait).addComponent(coordXWaitLabel)
 								.addComponent(coordXWait).addComponent(coordYWaitLabel).addComponent(coordYWait)
 								.addComponent(waitTimeoutLableText).addComponent(waitTimeoutText))
 						.addGap(8, 8, 8).addContainerGap()));
 
-		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+		GroupLayout layout = new GroupLayout(this);
 		this.setLayout(layout);
-		layout.setHorizontalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+		layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
 				.addGroup(layout.createSequentialGroup().addContainerGap()
-						.addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-								.addComponent(requestPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-								.addComponent(waitPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
-										javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+						.addGroup(layout.createParallelGroup(Alignment.LEADING)
+								.addComponent(requestPanel, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+								.addComponent(waitPanel, GroupLayout.DEFAULT_SIZE,
+										GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 						.addContainerGap()));
-		layout.setVerticalGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+		layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
 				.addGroup(layout.createSequentialGroup().addContainerGap()
-						.addComponent(requestPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
-								javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE)
+						.addComponent(requestPanel, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
 						.addContainerGap()
-						.addComponent(waitPanel, javax.swing.GroupLayout.DEFAULT_SIZE,
-								javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE)
+						.addComponent(waitPanel, GroupLayout.DEFAULT_SIZE,
+								GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
 						.addContainerGap()));
 	}
 
@@ -371,6 +385,14 @@ public class RTESamplerPanel extends javax.swing.JPanel {
 
 	public void setWaitTimeoutSilent(String waitTimeoutSilent) {
 		this.waitTimeoutSilent.setText(waitTimeoutSilent);
+	}
+	
+	public String getWaitForSilent() {
+		return this.waitForSilent.getText();
+	}
+
+	public void setWaitForSilent(String waitForutSilent) {
+		this.waitForSilent.setText(waitForutSilent);
 	}
 
 	public String getWaitTimeoutText() {

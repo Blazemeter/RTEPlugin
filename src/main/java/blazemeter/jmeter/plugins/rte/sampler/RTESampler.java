@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.jmeter.protocol.http.util.HTTPArgument;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -21,7 +20,6 @@ import org.tn5250j.SessionConfig;
 import org.tn5250j.framework.tn5250.Screen5250;
 import org.tn5250j.TN5250jConstants;
 import org.apache.jmeter.testelement.property.JMeterProperty;
-import org.apache.jmeter.testelement.property.PropertyIterator;
 
 public class RTESampler extends AbstractSampler implements TestStateListener, ThreadListener {
 
@@ -412,6 +410,14 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 	public void setWaitTimeoutSilent(String waitTimeoutSilent) {
 		setProperty("WaitTimeoutSilent", waitTimeoutSilent);
 	}
+	
+	public String getWaitForSilent() {
+		return getPropertyAsString("WaitForSilent");
+	}
+
+	public void setWaitForSilent(String waitForSilent) {
+		setProperty("WaitForSilent", waitForSilent);
+	}
 
 	public String getWaitTimeoutText() {
 		return getPropertyAsString("WaitTimeoutText");
@@ -478,6 +484,5 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 		// TODO Auto-generated method stub
 
 	}
-
 }
 

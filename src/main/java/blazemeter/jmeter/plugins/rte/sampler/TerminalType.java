@@ -1,5 +1,8 @@
 package blazemeter.jmeter.plugins.rte.sampler;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 public enum TerminalType {
 	IBM_3278_2("IBM-3278-2","24x80",Protocol.TN3270),
 	IBM_3278_2_E("IBM-3278-2-E","24x80",Protocol.TN3270),
@@ -36,6 +39,13 @@ public enum TerminalType {
 
 	public Protocol getProtocol() {
 		return protocol;
+	}
+	
+	public static TerminalType[] findByProtocol (Protocol p){
+		return Arrays.stream(TerminalType.values())
+				.filter(t -> t.getProtocol().equals(p))
+				.collect(Collectors.toList())
+				.toArray(new TerminalType[0]);
 	}
 
 }
