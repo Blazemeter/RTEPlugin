@@ -1,4 +1,3 @@
-
 package com.blazemeter.jmeter.rte.sampler.gui;
 
 import com.blazemeter.jmeter.rte.sampler.Inputs;
@@ -9,104 +8,104 @@ import org.apache.jmeter.testelement.TestElement;
 
 public class RTESamplerGui extends AbstractSamplerGui {
 
-	private static final long serialVersionUID = 4024916662489960067L;
-	private RTESamplerPanel RTESamplerPanel;
+  private static final long serialVersionUID = 4024916662489960067L;
+  private RTESamplerPanel rteSamplerPanel;
 
-	public RTESamplerGui() {
-		super();
-		init();
-		initFields();
+  public RTESamplerGui() {
+    super();
+    init();
+    initFields();
 
-		setLayout(new BorderLayout(0, 5));
-		setBorder(makeBorder());
+    setLayout(new BorderLayout(0, 5));
+    setBorder(makeBorder());
 
-		add(makeTitlePanel(), BorderLayout.NORTH);
-		add(RTESamplerPanel, BorderLayout.CENTER);
-	}
+    add(makeTitlePanel(), BorderLayout.NORTH);
+    add(rteSamplerPanel, BorderLayout.CENTER);
+  }
 
-	@Override
-	public String getStaticLabel() {
-		return "RTE Sampler";
-	}
+  @Override
+  public String getStaticLabel() {
+    return "RTE Sampler";
+  }
 
-	@Override
-	public String getLabelResource() {
-		throw new IllegalStateException("This shouldn't be called"); //$NON-NLS-1$
-	}
+  @Override
+  public String getLabelResource() {
+    throw new IllegalStateException("This shouldn't be called"); //$NON-NLS-1$
+  }
 
-	@Override
-	public void configure(TestElement element) {
-		super.configure(element);
-		if (element instanceof RTESampler) {
-			RTESampler RTESamplerTestElement = (RTESampler) element;
-			RTESamplerPanel.setTypingStyle(RTESamplerTestElement.getTypingStyle());
-			RTESamplerPanel.setDisconnect(RTESamplerTestElement.getDisconnect());
-			RTESamplerPanel.setWaitCursor(RTESamplerTestElement.getWaitCursor());
-			RTESamplerPanel.setWaitSilent(RTESamplerTestElement.getWaitSilent());
-			RTESamplerPanel.setWaitSync(RTESamplerTestElement.getWaitSync());
-			RTESamplerPanel.setWaitText(RTESamplerTestElement.getWaitText());
-			RTESamplerPanel.setWaitTimeoutSync(RTESamplerTestElement.getWaitTimeoutSync());
-			RTESamplerPanel.setWaitTimeoutCursor(RTESamplerTestElement.getWaitTimeoutCursor());
-			RTESamplerPanel.setWaitTimeoutSilent(RTESamplerTestElement.getWaitTimeoutSilent());
-			RTESamplerPanel.setWaitForSilent(RTESamplerTestElement.getWaitForSilent());
-			RTESamplerPanel.setWaitTimeoutText(RTESamplerTestElement.getWaitTimeoutText());
-			RTESamplerPanel.setCoordXWait(RTESamplerTestElement.getCoordXToWait());
-			RTESamplerPanel.setCoordYWait(RTESamplerTestElement.getCoordYToWait());
-			RTESamplerPanel.setTextWait(RTESamplerTestElement.getTextToWait());
-			RTESamplerPanel.setTrigger(RTESamplerTestElement.getTrigger());
-			Inputs payload = RTESamplerTestElement.getPayload();
-			if (payload != null) {
-				RTESamplerPanel.getPayload().configure(payload);
-			}
-		}
-	}
+  @Override
+  public void configure(TestElement element) {
+    super.configure(element);
+    if (element instanceof RTESampler) {
+      RTESampler sampler = (RTESampler) element;
+      rteSamplerPanel.setTypingStyle(sampler.getTypingStyle());
+      rteSamplerPanel.setDisconnect(sampler.getDisconnect());
+      rteSamplerPanel.setWaitCursor(sampler.getWaitCursor());
+      rteSamplerPanel.setWaitSilent(sampler.getWaitSilent());
+      rteSamplerPanel.setWaitSync(sampler.getWaitSync());
+      rteSamplerPanel.setWaitText(sampler.getWaitText());
+      rteSamplerPanel.setWaitTimeoutSync(sampler.getWaitTimeoutSync());
+      rteSamplerPanel.setWaitTimeoutCursor(sampler.getWaitTimeoutCursor());
+      rteSamplerPanel.setWaitTimeoutSilent(sampler.getWaitTimeoutSilent());
+      rteSamplerPanel.setWaitForSilent(sampler.getWaitForSilent());
+      rteSamplerPanel.setWaitTimeoutText(sampler.getWaitTimeoutText());
+      rteSamplerPanel.setCoordXWait(sampler.getCoordXToWait());
+      rteSamplerPanel.setCoordYWait(sampler.getCoordYToWait());
+      rteSamplerPanel.setTextWait(sampler.getTextToWait());
+      rteSamplerPanel.setTrigger(sampler.getTrigger());
+      Inputs payload = sampler.getPayload();
+      if (payload != null) {
+        rteSamplerPanel.getPayload().configure(payload);
+      }
+    }
+  }
 
-	@Override
-	public TestElement createTestElement() {
-		RTESampler preproc = new RTESampler();
-		configureTestElement(preproc);
-		return preproc;
-	}
+  @Override
+  public TestElement createTestElement() {
+    RTESampler sampler = new RTESampler();
+    configureTestElement(sampler);
+    return sampler;
+  }
 
-	@Override
-	public void modifyTestElement(TestElement te) {
-		configureTestElement(te);
-		if (te instanceof RTESampler) {
-			RTESampler RTESamplerTestElement = (RTESampler) te;
-			RTESamplerTestElement.setTypingStyle(RTESamplerPanel.getTypingStyle());
-			RTESamplerTestElement.setDisconnect(RTESamplerPanel.getDisconnect());
-			RTESamplerTestElement.setWaitCursor(RTESamplerPanel.getWaitCursor());
-			RTESamplerTestElement.setWaitSilent(RTESamplerPanel.getWaitSilent());
-			RTESamplerTestElement.setWaitSync(RTESamplerPanel.getWaitSync());
-			RTESamplerTestElement.setWaitText(RTESamplerPanel.getWaitText());
-			RTESamplerTestElement.setWaitTimeoutSync(RTESamplerPanel.getWaitTimeoutSync());
-			RTESamplerTestElement.setWaitTimeoutCursor(RTESamplerPanel.getWaitTimeoutCursor());
-			RTESamplerTestElement.setWaitTimeoutSilent(RTESamplerPanel.getWaitTimeoutSilent());
-			RTESamplerTestElement.setWaitForSilent(RTESamplerPanel.getWaitForSilent());
-			RTESamplerTestElement.setWaitTimeoutText(RTESamplerPanel.getWaitTimeoutText());
-			RTESamplerTestElement.setCoordXToWait(RTESamplerPanel.getCoordXWait());
-			RTESamplerTestElement.setCoordYToWait(RTESamplerPanel.getCoordYWait());
-			RTESamplerTestElement.setTextToWait(RTESamplerPanel.getTextWait());
-			RTESamplerTestElement.setTrigger(RTESamplerPanel.getTrigger());
+  @Override
+  public void modifyTestElement(TestElement te) {
+    configureTestElement(te);
+    if (te instanceof RTESampler) {
+      RTESampler sampler = (RTESampler) te;
+      sampler.setTypingStyle(rteSamplerPanel.getTypingStyle());
+      sampler.setDisconnect(rteSamplerPanel.getDisconnect());
+      sampler.setWaitCursor(rteSamplerPanel.getWaitCursor());
+      sampler.setWaitSilent(rteSamplerPanel.getWaitSilent());
+      sampler.setWaitSync(rteSamplerPanel.getWaitSync());
+      sampler.setWaitText(rteSamplerPanel.getWaitText());
+      sampler.setWaitTimeoutSync(rteSamplerPanel.getWaitTimeoutSync());
+      sampler.setWaitTimeoutCursor(rteSamplerPanel.getWaitTimeoutCursor());
+      sampler.setWaitTimeoutSilent(rteSamplerPanel.getWaitTimeoutSilent());
+      sampler.setWaitForSilent(rteSamplerPanel.getWaitForSilent());
+      sampler.setWaitTimeoutText(rteSamplerPanel.getWaitTimeoutText());
+      sampler.setCoordXToWait(rteSamplerPanel.getCoordXWait());
+      sampler.setCoordYToWait(rteSamplerPanel.getCoordYWait());
+      sampler.setTextToWait(rteSamplerPanel.getTextWait());
+      sampler.setTrigger(rteSamplerPanel.getTrigger());
 
-			CoordInputPanel payload = RTESamplerPanel.getPayload();
-			if (payload != null) {
-				RTESamplerTestElement.setPayload((Inputs) payload.createTestElement());
-			}
-		}
-	}
+      CoordInputPanel payload = rteSamplerPanel.getPayload();
+      if (payload != null) {
+        sampler.setPayload((Inputs) payload.createTestElement());
+      }
+    }
+  }
 
-	@Override
-	public void clearGui() {
-		super.clearGui();
-		initFields();
-	}
+  @Override
+  public void clearGui() {
+    super.clearGui();
+    initFields();
+  }
 
-	private void init() {
-		RTESamplerPanel = new RTESamplerPanel();
-	}
+  private void init() {
+    rteSamplerPanel = new RTESamplerPanel();
+  }
 
-	private void initFields() {
-		RTESamplerPanel.initFields();
-	}
+  private void initFields() {
+    rteSamplerPanel.initFields();
+  }
 }

@@ -5,418 +5,407 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.Trigger;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.HashMap;
-
+import java.util.Map;
+import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.BorderFactory;
 
 public class RTESamplerPanel extends JPanel {
 
-	private static final long serialVersionUID = 4739160923223292835L;
+  private static final long serialVersionUID = 4739160923223292835L;
 
-	private static final String [] TYPING_STYLE = {RTESampler.TYPING_STYLE_FAST, RTESampler.TYPING_STYLE_HUMAN};
-	
-	private JPanel requestPanel = new JPanel();
-	private JLabel typingStyleLabel = new JLabel();
-	private JComboBox<String> typingStyleComboBox = new JComboBox<String>(TYPING_STYLE);
-	private JPanel triggerPanel = new JPanel();
-	private ButtonGroup triggersGroup = new ButtonGroup();
-	private Map<Trigger,JRadioButton> triggers = new HashMap<>();
-	private CoordInputPanel payloadPanel;
-	private JCheckBox disconnect = new JCheckBox("Disconnect?");
-	private JPanel waitPanel = new JPanel();
-	private JCheckBox waitSync = new JCheckBox("Sync?");
-	private JCheckBox waitCursor = new JCheckBox("Cursor?");
-	private JCheckBox waitSilent = new JCheckBox("Silent?");
-	private JCheckBox waitText = new JCheckBox("Text?");
-	private JLabel waitTimeoutLableSync = new JLabel();
-	private JLabel waitTimeoutLableCursor = new JLabel();
-	private JLabel waitTimeoutLableSilent = new JLabel();
-	private JLabel waitForLableSilent = new JLabel();
-	private JLabel waitTimeoutLableText = new JLabel();
-	private JTextField waitTimeoutSync = new JTextField();
-	private JTextField waitTimeoutCursor = new JTextField();
-	private JTextField waitTimeoutSilent = new JTextField();
-	private JTextField waitForSilent = new JTextField();
-	private JTextField waitTimeoutText = new JTextField();
-	private JTextField textWait = new JTextField();
-	private JLabel coordXWaitLabel = new JLabel();
-	private JTextField coordXWait = new JTextField();
-	private JLabel coordYWaitLabel = new JLabel();
-	private JTextField coordYWait = new JTextField();
+  private static final String[] TYPING_STYLE = {RTESampler.TYPING_STYLE_FAST,
+      RTESampler.TYPING_STYLE_HUMAN};
 
-	public RTESamplerPanel() {
-		payloadPanel = new CoordInputPanel("Payload");
-		initComponents();
-	}
+  private JPanel requestPanel = new JPanel();
+  private JLabel typingStyleLabel = new JLabel();
+  private JComboBox<String> typingStyleComboBox = new JComboBox<>(TYPING_STYLE);
+  private JPanel triggerPanel = new JPanel();
+  private ButtonGroup triggersGroup = new ButtonGroup();
+  private Map<Trigger, JRadioButton> triggers = new HashMap<>();
+  private CoordInputPanel payloadPanel;
+  private JCheckBox disconnect = new JCheckBox("Disconnect?");
+  private JPanel waitPanel = new JPanel();
+  private JCheckBox waitSync = new JCheckBox("Sync?");
+  private JCheckBox waitCursor = new JCheckBox("Cursor?");
+  private JCheckBox waitSilent = new JCheckBox("Silent?");
+  private JCheckBox waitText = new JCheckBox("Text?");
+  private JLabel waitTimeoutLableSync = new JLabel();
+  private JLabel waitTimeoutLableCursor = new JLabel();
+  private JLabel waitTimeoutLableSilent = new JLabel();
+  private JLabel waitForLableSilent = new JLabel();
+  private JLabel waitTimeoutLableText = new JLabel();
+  private JTextField waitTimeoutSync = new JTextField();
+  private JTextField waitTimeoutCursor = new JTextField();
+  private JTextField waitTimeoutSilent = new JTextField();
+  private JTextField waitForSilent = new JTextField();
+  private JTextField waitTimeoutText = new JTextField();
+  private JTextField textWait = new JTextField();
+  private JLabel coordXWaitLabel = new JLabel();
+  private JTextField coordXWait = new JTextField();
+  private JLabel coordYWaitLabel = new JLabel();
+  private JTextField coordYWait = new JTextField();
 
-	private void initComponents() {
-		
-		requestPanel.setBorder(BorderFactory.createTitledBorder("RTE Message"));
+  public RTESamplerPanel() {
+    payloadPanel = new CoordInputPanel("Payload");
+    initComponents();
+  }
 
-		typingStyleLabel.setText("Typing Style: ");
-		disconnect.setText("Disconnect?");
+  private void initComponents() {
 
-		waitSync.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					waitTimeoutSync.setEnabled(true);
-				} else if (e.getStateChange() == ItemEvent.DESELECTED) {
-					waitTimeoutSync.setEnabled(false);
-				}
-				validate();
-				repaint();
-			}
-		});
+    requestPanel.setBorder(BorderFactory.createTitledBorder("RTE Message"));
 
-		waitCursor.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					waitTimeoutCursor.setEnabled(true);
-				} else if (e.getStateChange() == ItemEvent.DESELECTED) {
-					waitTimeoutCursor.setEnabled(false);
-				}
-				validate();
-				repaint();
-			}
-		});
+    typingStyleLabel.setText("Typing Style: ");
+    disconnect.setText("Disconnect?");
 
-		waitSilent.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					waitTimeoutSilent.setEnabled(true);
-				} else if (e.getStateChange() == ItemEvent.DESELECTED) {
-					waitTimeoutSilent.setEnabled(false);
-				}
-				validate();
-				repaint();
-			}
-		});
+    waitSync.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutSync.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutSync.setEnabled(false);
+      }
+      validate();
+      repaint();
+    });
 
-		waitText.addItemListener(new ItemListener() {
-			@Override
-			public void itemStateChanged(ItemEvent e) {
-				if (e.getStateChange() == ItemEvent.SELECTED) {
-					waitTimeoutText.setEnabled(true);
-					textWait.setEnabled(true);
-					coordXWait.setEnabled(true);
-					coordYWait.setEnabled(true);
-				} else if (e.getStateChange() == ItemEvent.DESELECTED) {
-					waitTimeoutText.setEnabled(false);
-					textWait.setEnabled(false);
-					coordXWait.setEnabled(false);
-					coordYWait.setEnabled(false);
-				}
-				validate();
-				repaint();
-			}
-		});
-		
-		triggerPanel.setBorder(BorderFactory.createTitledBorder("Trigger"));
-		triggerPanel.setLayout(new GridLayout((int)Math.ceil(Trigger.values().length / 12), 12));
-				
-		Arrays.stream(Trigger.values()).forEach(t -> {
-			JRadioButton r = new JRadioButton(t.toString());
-			r.setActionCommand(t.toString());
-			triggerPanel.add(r);
-			triggers.put(t, r);
-			triggersGroup.add(r);
-		});
-		
-		GroupLayout requestPanelLayout = new GroupLayout(requestPanel);
-		requestPanel.setLayout(requestPanelLayout);
-		requestPanelLayout.setHorizontalGroup(requestPanelLayout
-				.createParallelGroup(Alignment.LEADING)
-				.addGroup(requestPanelLayout.createSequentialGroup()
-						.addGroup(requestPanelLayout.createParallelGroup(Alignment.LEADING)
-								.addGroup(requestPanelLayout.createSequentialGroup().addComponent(typingStyleLabel)
-										.addPreferredGap(ComponentPlacement.RELATED)
-										.addComponent(typingStyleComboBox))
-								.addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-								.addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-								.addComponent(disconnect))));
+    waitCursor.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutCursor.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutCursor.setEnabled(false);
+      }
+      validate();
+      repaint();
+    });
 
-		requestPanelLayout.setVerticalGroup(requestPanelLayout
-				.createParallelGroup(Alignment.LEADING)
-				.addGroup(requestPanelLayout.createSequentialGroup().addGap(8, 8, 8)
-						.addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(typingStyleLabel)
-								.addComponent(typingStyleComboBox))
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(disconnect))
-						.addGap(8, 8, 8).addContainerGap()));
+    waitSilent.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutSilent.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutSilent.setEnabled(false);
+      }
+      validate();
+      repaint();
+    });
 
-		waitPanel.setBorder(BorderFactory.createTitledBorder("Wait for:"));
-		waitTimeoutLableSync.setText("Timeout: ");
-		waitTimeoutLableCursor.setText("Timeout: ");
-		waitTimeoutLableSilent.setText("Timeout: ");
-		waitForLableSilent.setText("Wait for Silent: ");
-		waitTimeoutLableText.setText("Timeout: ");
-		coordXWaitLabel.setText("Coord X: ");
-		coordYWaitLabel.setText("Coord Y: ");
+    waitText.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutText.setEnabled(true);
+        textWait.setEnabled(true);
+        coordXWait.setEnabled(true);
+        coordYWait.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutText.setEnabled(false);
+        textWait.setEnabled(false);
+        coordXWait.setEnabled(false);
+        coordYWait.setEnabled(false);
+      }
+      validate();
+      repaint();
+    });
 
-		GroupLayout waitPanelLayout = new GroupLayout(waitPanel);
-		waitPanel.setLayout(waitPanelLayout);
-		waitPanelLayout
-				.setHorizontalGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(waitPanelLayout.createSequentialGroup()
-								.addGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
-										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitSync)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addComponent(waitTimeoutLableSync)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutSync, GroupLayout.PREFERRED_SIZE,
-														100, GroupLayout.PREFERRED_SIZE))
-										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitCursor)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addComponent(waitTimeoutLableCursor)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutCursor, GroupLayout.PREFERRED_SIZE,
-														100, GroupLayout.PREFERRED_SIZE))
-										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitSilent)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addComponent(waitForLableSilent)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(waitForSilent, GroupLayout.PREFERRED_SIZE,
-														100, GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addComponent(waitTimeoutLableSilent)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutSilent, GroupLayout.PREFERRED_SIZE,
-														100, GroupLayout.PREFERRED_SIZE))
-										.addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitText)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(textWait, GroupLayout.PREFERRED_SIZE, 100,
-														GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addComponent(coordXWaitLabel)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(coordXWait, GroupLayout.PREFERRED_SIZE, 50,
-														GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(coordYWaitLabel)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(coordYWait, GroupLayout.PREFERRED_SIZE, 50,
-														GroupLayout.PREFERRED_SIZE)
-												.addPreferredGap(ComponentPlacement.UNRELATED)
-												.addComponent(waitTimeoutLableText)
-												.addPreferredGap(ComponentPlacement.RELATED)
-												.addComponent(waitTimeoutText, GroupLayout.PREFERRED_SIZE,
-														100, GroupLayout.PREFERRED_SIZE)))));
+    triggerPanel.setBorder(BorderFactory.createTitledBorder("Trigger"));
+    triggerPanel.setLayout(new GridLayout((int) Math.ceil(Trigger.values().length / 12), 12));
 
-		waitPanelLayout.setVerticalGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
-				.addGroup(waitPanelLayout.createSequentialGroup().addGap(8, 8, 8)
-						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(waitSync).addComponent(waitTimeoutLableSync)
-								.addComponent(waitTimeoutSync))
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(waitCursor).addComponent(waitTimeoutLableCursor)
-								.addComponent(waitTimeoutCursor))
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(waitSilent).addComponent(waitTimeoutLableSilent)
-								.addComponent(waitTimeoutSilent)
-								.addComponent(waitForLableSilent)
-								.addComponent(waitForSilent))
-						.addPreferredGap(ComponentPlacement.UNRELATED)
-						.addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
-								.addComponent(waitText).addComponent(textWait).addComponent(coordXWaitLabel)
-								.addComponent(coordXWait).addComponent(coordYWaitLabel).addComponent(coordYWait)
-								.addComponent(waitTimeoutLableText).addComponent(waitTimeoutText))
-						.addGap(8, 8, 8).addContainerGap()));
+    Arrays.stream(Trigger.values()).forEach(t -> {
+      JRadioButton r = new JRadioButton(t.toString());
+      r.setActionCommand(t.toString());
+      triggerPanel.add(r);
+      triggers.put(t, r);
+      triggersGroup.add(r);
+    });
 
-		GroupLayout layout = new GroupLayout(this);
-		this.setLayout(layout);
-		layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
-				.addGroup(layout.createSequentialGroup().addContainerGap()
-						.addGroup(layout.createParallelGroup(Alignment.LEADING)
-								.addComponent(requestPanel, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-								.addComponent(waitPanel, GroupLayout.DEFAULT_SIZE,
-										GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-						.addContainerGap()));
-		layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
-				.addGroup(layout.createSequentialGroup().addContainerGap()
-						.addComponent(requestPanel, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
-						.addContainerGap()
-						.addComponent(waitPanel, GroupLayout.DEFAULT_SIZE,
-								GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
-						.addContainerGap()));
-	}
+    GroupLayout requestPanelLayout = new GroupLayout(requestPanel);
+    requestPanel.setLayout(requestPanelLayout);
+    requestPanelLayout.setHorizontalGroup(requestPanelLayout
+        .createParallelGroup(Alignment.LEADING)
+        .addGroup(requestPanelLayout.createSequentialGroup()
+            .addGroup(requestPanelLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(requestPanelLayout.createSequentialGroup().addComponent(typingStyleLabel)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(typingStyleComboBox))
+                .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE,
+                    GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+                    Short.MAX_VALUE)
+                .addComponent(disconnect))));
 
-	public void initFields() {
-		payloadPanel.clear();
-		disconnect.setSelected(false);
-		waitCursor.setSelected(false);
-		waitSilent.setSelected(false);
-		waitSync.setSelected(false);
-		waitText.setSelected(false);
-		waitTimeoutSync.setText("");
-		waitTimeoutCursor.setText("");
-		waitTimeoutSilent.setText("");
-		waitTimeoutText.setText("");
-		textWait.setText("");
-		coordXWait.setText("");
-		coordYWait.setText("");
-		waitTimeoutSync.setEnabled(false);
-		waitTimeoutCursor.setEnabled(false);
-		waitTimeoutSilent.setEnabled(false);
-		waitTimeoutText.setEnabled(false);
-		textWait.setEnabled(false);
-		coordXWait.setEnabled(false);
-		coordYWait.setEnabled(false);
-		typingStyleComboBox.setSelectedItem(RTESampler.TYPING_STYLE_FAST);
-		triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
-	}
+    requestPanelLayout.setVerticalGroup(requestPanelLayout
+        .createParallelGroup(Alignment.LEADING)
+        .addGroup(requestPanelLayout.createSequentialGroup().addGap(8, 8, 8)
+            .addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
+                .addComponent(typingStyleLabel)
+                .addComponent(typingStyleComboBox))
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
+                .addComponent(disconnect))
+            .addGap(8, 8, 8).addContainerGap()));
 
-	public CoordInputPanel getPayload() {
-		return this.payloadPanel;
-	}
+    waitPanel.setBorder(BorderFactory.createTitledBorder("Wait for:"));
+    waitTimeoutLableSync.setText("Timeout: ");
+    waitTimeoutLableCursor.setText("Timeout: ");
+    waitTimeoutLableSilent.setText("Timeout: ");
+    waitForLableSilent.setText("Wait for Silent: ");
+    waitTimeoutLableText.setText("Timeout: ");
+    coordXWaitLabel.setText("Coord X: ");
+    coordYWaitLabel.setText("Coord Y: ");
 
-	public String getCoordYWait() {
-		return this.coordYWait.getText();
-	}
+    GroupLayout waitPanelLayout = new GroupLayout(waitPanel);
+    waitPanel.setLayout(waitPanelLayout);
+    waitPanelLayout
+        .setHorizontalGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
+            .addGroup(waitPanelLayout.createSequentialGroup()
+                .addGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
+                    .addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitSync)
+                        .addPreferredGap(ComponentPlacement.UNRELATED)
+                        .addComponent(waitTimeoutLableSync)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(waitTimeoutSync, GroupLayout.PREFERRED_SIZE,
+                            100, GroupLayout.PREFERRED_SIZE))
+                    .addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitCursor)
+                        .addPreferredGap(ComponentPlacement.UNRELATED)
+                        .addComponent(waitTimeoutLableCursor)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(waitTimeoutCursor, GroupLayout.PREFERRED_SIZE,
+                            100, GroupLayout.PREFERRED_SIZE))
+                    .addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitSilent)
+                        .addPreferredGap(ComponentPlacement.UNRELATED)
+                        .addComponent(waitForLableSilent)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(waitForSilent, GroupLayout.PREFERRED_SIZE,
+                            100, GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(ComponentPlacement.UNRELATED)
+                        .addComponent(waitTimeoutLableSilent)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(waitTimeoutSilent, GroupLayout.PREFERRED_SIZE,
+                            100, GroupLayout.PREFERRED_SIZE))
+                    .addGroup(waitPanelLayout.createSequentialGroup().addComponent(waitText)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(textWait, GroupLayout.PREFERRED_SIZE, 100,
+                            GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(ComponentPlacement.UNRELATED)
+                        .addComponent(coordXWaitLabel)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(coordXWait, GroupLayout.PREFERRED_SIZE, 50,
+                            GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(coordYWaitLabel)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(coordYWait, GroupLayout.PREFERRED_SIZE, 50,
+                            GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(ComponentPlacement.UNRELATED)
+                        .addComponent(waitTimeoutLableText)
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addComponent(waitTimeoutText, GroupLayout.PREFERRED_SIZE,
+                            100, GroupLayout.PREFERRED_SIZE)))));
 
-	public void setCoordYWait(String coordY) {
-		this.coordYWait.setText(coordY);
-	}
+    waitPanelLayout.setVerticalGroup(waitPanelLayout.createParallelGroup(Alignment.LEADING)
+        .addGroup(waitPanelLayout.createSequentialGroup().addGap(8, 8, 8)
+            .addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
+                .addComponent(waitSync).addComponent(waitTimeoutLableSync)
+                .addComponent(waitTimeoutSync))
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
+                .addComponent(waitCursor).addComponent(waitTimeoutLableCursor)
+                .addComponent(waitTimeoutCursor))
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
+                .addComponent(waitSilent).addComponent(waitTimeoutLableSilent)
+                .addComponent(waitTimeoutSilent)
+                .addComponent(waitForLableSilent)
+                .addComponent(waitForSilent))
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addGroup(waitPanelLayout.createParallelGroup(Alignment.BASELINE)
+                .addComponent(waitText).addComponent(textWait).addComponent(coordXWaitLabel)
+                .addComponent(coordXWait).addComponent(coordYWaitLabel).addComponent(coordYWait)
+                .addComponent(waitTimeoutLableText).addComponent(waitTimeoutText))
+            .addGap(8, 8, 8).addContainerGap()));
 
-	public String getCoordXWait() {
-		return this.coordXWait.getText();
-	}
+    GroupLayout layout = new GroupLayout(this);
+    this.setLayout(layout);
+    layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
+        .addGroup(layout.createSequentialGroup().addContainerGap()
+            .addGroup(layout.createParallelGroup(Alignment.LEADING)
+                .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE,
+                    GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE,
+                    GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addContainerGap()));
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
+        .addGroup(layout.createSequentialGroup().addContainerGap()
+            .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+            .addContainerGap()
+            .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE)
+            .addContainerGap()));
+  }
 
-	public void setCoordXWait(String coordX) {
-		this.coordXWait.setText(coordX);
-	}
+  public void initFields() {
+    payloadPanel.clear();
+    disconnect.setSelected(false);
+    waitCursor.setSelected(false);
+    waitSilent.setSelected(false);
+    waitSync.setSelected(false);
+    waitText.setSelected(false);
+    waitTimeoutSync.setText("");
+    waitTimeoutCursor.setText("");
+    waitTimeoutSilent.setText("");
+    waitTimeoutText.setText("");
+    textWait.setText("");
+    coordXWait.setText("");
+    coordYWait.setText("");
+    waitTimeoutSync.setEnabled(false);
+    waitTimeoutCursor.setEnabled(false);
+    waitTimeoutSilent.setEnabled(false);
+    waitTimeoutText.setEnabled(false);
+    textWait.setEnabled(false);
+    coordXWait.setEnabled(false);
+    coordYWait.setEnabled(false);
+    typingStyleComboBox.setSelectedItem(RTESampler.TYPING_STYLE_FAST);
+    triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
+  }
 
-	public String getTextWait() {
-		return this.textWait.getText();
-	}
+  public CoordInputPanel getPayload() {
+    return this.payloadPanel;
+  }
 
-	public void setTextWait(String textWait) {
-		this.textWait.setText(textWait);
-	}
+  public String getCoordYWait() {
+    return this.coordYWait.getText();
+  }
 
-	public boolean getDisconnect() {
-		return this.disconnect.isSelected();
-	}
+  public void setCoordYWait(String coordY) {
+    this.coordYWait.setText(coordY);
+  }
 
-	public void setDisconnect(boolean disconnect) {
-		this.disconnect.setSelected(disconnect);
-	}
+  public String getCoordXWait() {
+    return this.coordXWait.getText();
+  }
 
-	public boolean getWaitSync() {
-		return this.waitSync.isSelected();
-	}
+  public void setCoordXWait(String coordX) {
+    this.coordXWait.setText(coordX);
+  }
 
-	public void setWaitSync(boolean waitSync) {
-		this.waitSync.setSelected(waitSync);
-	}
+  public String getTextWait() {
+    return this.textWait.getText();
+  }
 
-	public boolean getWaitCursor() {
-		return this.waitCursor.isSelected();
-	}
+  public void setTextWait(String textWait) {
+    this.textWait.setText(textWait);
+  }
 
-	public void setWaitCursor(boolean waitCursor) {
-		this.waitCursor.setSelected(waitCursor);
-	}
+  public boolean getDisconnect() {
+    return this.disconnect.isSelected();
+  }
 
-	public boolean getWaitSilent() {
-		return this.waitSilent.isSelected();
-	}
+  public void setDisconnect(boolean disconnect) {
+    this.disconnect.setSelected(disconnect);
+  }
 
-	public void setWaitSilent(boolean waitSilent) {
-		this.waitSilent.setSelected(waitSilent);
-	}
+  public boolean getWaitSync() {
+    return this.waitSync.isSelected();
+  }
 
-	public boolean getWaitText() {
-		return this.waitText.isSelected();
-	}
+  public void setWaitSync(boolean waitSync) {
+    this.waitSync.setSelected(waitSync);
+  }
 
-	public void setWaitText(boolean waitText) {
-		this.waitText.setSelected(waitText);
-	}
+  public boolean getWaitCursor() {
+    return this.waitCursor.isSelected();
+  }
 
-	public String getWaitTimeoutSync() {
-		return this.waitTimeoutSync.getText();
-	}
+  public void setWaitCursor(boolean waitCursor) {
+    this.waitCursor.setSelected(waitCursor);
+  }
 
-	public void setWaitTimeoutSync(String waitTimeoutSync) {
-		this.waitTimeoutSync.setText(waitTimeoutSync);
-	}
+  public boolean getWaitSilent() {
+    return this.waitSilent.isSelected();
+  }
 
-	public String getWaitTimeoutCursor() {
-		return this.waitTimeoutCursor.getText();
-	}
+  public void setWaitSilent(boolean waitSilent) {
+    this.waitSilent.setSelected(waitSilent);
+  }
 
-	public void setWaitTimeoutCursor(String waitTimeoutCursor) {
-		this.waitTimeoutCursor.setText(waitTimeoutCursor);
-	}
+  public boolean getWaitText() {
+    return this.waitText.isSelected();
+  }
 
-	public String getWaitTimeoutSilent() {
-		return this.waitTimeoutSilent.getText();
-	}
+  public void setWaitText(boolean waitText) {
+    this.waitText.setSelected(waitText);
+  }
 
-	public void setWaitTimeoutSilent(String waitTimeoutSilent) {
-		this.waitTimeoutSilent.setText(waitTimeoutSilent);
-	}
-	
-	public String getWaitForSilent() {
-		return this.waitForSilent.getText();
-	}
+  public String getWaitTimeoutSync() {
+    return this.waitTimeoutSync.getText();
+  }
 
-	public void setWaitForSilent(String waitForutSilent) {
-		this.waitForSilent.setText(waitForutSilent);
-	}
+  public void setWaitTimeoutSync(String waitTimeoutSync) {
+    this.waitTimeoutSync.setText(waitTimeoutSync);
+  }
 
-	public String getWaitTimeoutText() {
-		return this.waitTimeoutText.getText();
-	}
+  public String getWaitTimeoutCursor() {
+    return this.waitTimeoutCursor.getText();
+  }
 
-	public void setWaitTimeoutText(String waitTimeoutText) {
-		this.waitTimeoutText.setText(waitTimeoutText);
-	}
+  public void setWaitTimeoutCursor(String waitTimeoutCursor) {
+    this.waitTimeoutCursor.setText(waitTimeoutCursor);
+  }
 
-	public void setTypingStyle(String typingStyle) {
-		typingStyleComboBox.setSelectedItem(typingStyle);
-	}
+  public String getWaitTimeoutSilent() {
+    return this.waitTimeoutSilent.getText();
+  }
 
-	public String getTypingStyle() {
-		return (String) typingStyleComboBox.getSelectedItem();
-	}
-	
-	public void setTrigger(Trigger trigger) {
-		if (triggers.containsKey(trigger))
-			triggers.get(trigger).setSelected(true);
-		else
-			triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
-	}
+  public void setWaitTimeoutSilent(String waitTimeoutSilent) {
+    this.waitTimeoutSilent.setText(waitTimeoutSilent);
+  }
 
-	public Trigger getTrigger() {
-		String trigger = triggersGroup.getSelection().getActionCommand();
-		return Trigger.valueOf(trigger);
-	}
+  public String getWaitForSilent() {
+    return this.waitForSilent.getText();
+  }
+
+  public void setWaitForSilent(String waitForutSilent) {
+    this.waitForSilent.setText(waitForutSilent);
+  }
+
+  public String getWaitTimeoutText() {
+    return this.waitTimeoutText.getText();
+  }
+
+  public void setWaitTimeoutText(String waitTimeoutText) {
+    this.waitTimeoutText.setText(waitTimeoutText);
+  }
+
+  public void setTypingStyle(String typingStyle) {
+    typingStyleComboBox.setSelectedItem(typingStyle);
+  }
+
+  public String getTypingStyle() {
+    return (String) typingStyleComboBox.getSelectedItem();
+  }
+
+  public void setTrigger(Trigger trigger) {
+    if (triggers.containsKey(trigger)) {
+      triggers.get(trigger).setSelected(true);
+    } else {
+      triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
+    }
+  }
+
+  public Trigger getTrigger() {
+    String trigger = triggersGroup.getSelection().getActionCommand();
+    return Trigger.valueOf(trigger);
+  }
 }
