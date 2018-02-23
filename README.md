@@ -24,3 +24,7 @@ To build the plugin and run all tests just run `mvn clean verify`
 ## Usage
 
 To use the plugin install it (from `target` folder) in `lib/ext` folder of a jmeter installation, copy the `tn5250j.jar` to the same jmeter folder, run jmeter and check the new config and sampler elements available.
+
+## Contributing
+
+We are using a custom [checkstyle](http://checkstyle.sourceforge.net/index.html) configuration file which is based on google one, is advisable to use one of the [google style configuration files](https://github.com/google/styleguide) in IDEs to reduce the friction with checkstyle and automate styling.
