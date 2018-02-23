@@ -3,11 +3,12 @@ package com.blazemeter.jmeter.rte.core;
 import java.util.List;
 
 public interface RteProtocolClient {
-    void connect(String server, int port);
 
-    String send(List<CoordInput> input) throws InterruptedException;
+  void connect(String server, int port);
 
-    void disconnect();
+  String send(List<CoordInput> input) throws InterruptedException;
 
-    boolean isConnected();
+  void disconnect();
+
+  boolean isConnected();
 }

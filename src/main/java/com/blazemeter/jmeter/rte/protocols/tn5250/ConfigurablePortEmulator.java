@@ -1,11 +1,10 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tnprot.XITelnet;
 import net.infordata.em.tnprot.XITelnetEmulator;
-
-import java.io.IOException;
-import java.lang.reflect.Field;
 
 /**
  * This class was created because it's necessary to have an Emulator instance in which it could be possible to create
