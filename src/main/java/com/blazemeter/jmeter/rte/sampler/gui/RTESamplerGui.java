@@ -1,11 +1,11 @@
 
-package blazemeter.jmeter.plugins.rte.sampler.gui;
+package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.rte.sampler.Inputs;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.BorderLayout;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
-import blazemeter.jmeter.plugins.rte.sampler.Inputs;
-import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
 
 public class RTESamplerGui extends AbstractSamplerGui {
 

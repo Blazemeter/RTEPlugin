@@ -1,6 +1,10 @@
 
-package blazemeter.jmeter.plugins.rte.sampler.gui;
+package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.rte.sampler.Protocol;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import com.blazemeter.jmeter.rte.sampler.SSLType;
+import com.blazemeter.jmeter.rte.sampler.TerminalType;
 import java.awt.GridLayout;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,11 +22,6 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.BorderFactory;
 import org.apache.jmeter.util.JMeterUtils;
-
-import blazemeter.jmeter.plugins.rte.sampler.Protocol;
-import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
-import blazemeter.jmeter.plugins.rte.sampler.SSLType;
-import blazemeter.jmeter.plugins.rte.sampler.TerminalType;
 
 public class RTEConfigPanel extends JPanel {
 

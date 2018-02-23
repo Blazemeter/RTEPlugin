@@ -1,4 +1,4 @@
-package blazemeter.jmeter.plugins.rte.sampler;
+package com.blazemeter.jmeter.rte.sampler;
 
 import java.util.Map;
 import java.util.Properties;

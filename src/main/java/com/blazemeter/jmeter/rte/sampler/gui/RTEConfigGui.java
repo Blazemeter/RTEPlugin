@@ -1,16 +1,16 @@
 
-package blazemeter.jmeter.plugins.rte.sampler.gui;
+package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import com.blazemeter.jmeter.rte.sampler.SSLType;
+import com.blazemeter.jmeter.rte.sampler.TerminalType;
 import java.awt.BorderLayout;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.testelement.TestElement;
 
 
-import blazemeter.jmeter.plugins.rte.sampler.Protocol;
-import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
-import blazemeter.jmeter.plugins.rte.sampler.SSLType;
-import blazemeter.jmeter.plugins.rte.sampler.TerminalType;
+import com.blazemeter.jmeter.rte.sampler.Protocol;
 
 public class RTEConfigGui extends AbstractConfigGui {
 

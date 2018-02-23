@@ -1,5 +1,6 @@
-package blazemeter.jmeter.plugins.rte.sampler.gui;
+package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.rte.sampler.CoordInput;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -31,8 +32,7 @@ import org.apache.jorphan.gui.GuiUtils;
 import org.apache.jorphan.gui.ObjectTableModel;
 import org.apache.jorphan.reflect.Functor;
 
-import blazemeter.jmeter.plugins.rte.sampler.CoordInput;
-import blazemeter.jmeter.plugins.rte.sampler.Inputs;
+import com.blazemeter.jmeter.rte.sampler.Inputs;
 
 public class CoordInputPanel extends JPanel implements ActionListener {
 
