@@ -11,39 +11,38 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 
 public class Inputs extends ConfigTestElement implements Serializable, Iterable<JMeterProperty> {
 
-  public static final String INPUTS = "Inputs.inputs";
+	private static final long serialVersionUID = 5810149938611069868L;
+	public static final String INPUTS = "Inputs.inputs";
 
-  private static final long serialVersionUID = 5810149938611069868L;
+	public Inputs() {
+		setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInput>()));
+	}
 
-  public Inputs() {
-    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInput>()));
-  }
+	public CollectionProperty getInputs() {
+		return (CollectionProperty) getProperty(INPUTS);
+	}
 
-  private CollectionProperty getInputs() {
-    return (CollectionProperty) getProperty(INPUTS);
-  }
+	@Override
+	public void clear() {
+		super.clear();
+		setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInput>()));
+	}
 
-  @Override
-  public void clear() {
-    super.clear();
-    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInput>()));
-  }
+	public void setCoordInput(List<Inputs> coordInput) {
+		setProperty(new CollectionProperty(INPUTS, coordInput));
+	}
 
-  public void setCoordInput(List<Inputs> coordInput) {
-    setProperty(new CollectionProperty(INPUTS, coordInput));
-  }
+	public void addCoordInput(CoordInput input) {
+		TestElementProperty newInput = new TestElementProperty(input.getName(), input);
+		if (isRunningVersion()) {
+			this.setTemporary(newInput);
+		}
+		getInputs().addItem(newInput);
+	}
 
-  public void addCoordInput(CoordInput input) {
-    TestElementProperty newInput = new TestElementProperty(input.getName(), input);
-    if (isRunningVersion()) {
-      this.setTemporary(newInput);
-    }
-    getInputs().addItem(newInput);
-  }
-
-  @Override
-  public PropertyIterator iterator() {
-    return getInputs().iterator();
-  }
+	@Override
+	public PropertyIterator iterator() {
+		return getInputs().iterator();
+	}
 
 }
