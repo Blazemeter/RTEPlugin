@@ -1,6 +1,8 @@
 
-package blazemeter.jmeter.plugins.rte.sampler.gui;
+package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import com.blazemeter.jmeter.rte.sampler.Trigger;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -19,11 +21,6 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.BorderFactory;
-
-
-
-import blazemeter.jmeter.plugins.rte.sampler.RTESampler;
-import blazemeter.jmeter.plugins.rte.sampler.Trigger;
 
 public class RTESamplerPanel extends JPanel {
 
