@@ -1,6 +1,5 @@
-package com.blazemeter.jmeter.rte.sampler;
+package com.blazemeter.jmeter.rte.core;
 
-import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.function.Supplier;
 

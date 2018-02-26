@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.sampler.CoordInput;
+import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -87,7 +87,8 @@ public class CoordInputPanel extends JPanel implements ActionListener {
 
   private void initializeTableModel() {
     if (tableModel == null) {
-      tableModel = new ObjectTableModel(new String[]{"Value", "Column", "Row"}, CoordInput.class,
+      tableModel = new ObjectTableModel(new String[]{"Value", "Column", "Row"},
+          CoordInputRowGUI.class,
           new Functor[]{new Functor("getInput"), new Functor("getColumn"), new Functor("getRow")},
           new Functor[]{new Functor("setInput"), new Functor("setColumn"), new Functor("setRow")},
           new Class[]{String.class, String.class, String.class});
@@ -164,9 +165,9 @@ public class CoordInputPanel extends JPanel implements ActionListener {
       Inputs inputs = (Inputs) element;
       inputs.clear();
       @SuppressWarnings("unchecked")
-      Iterator<CoordInput> modelData = (Iterator<CoordInput>) tableModel.iterator();
+      Iterator<CoordInputRowGUI> modelData = (Iterator<CoordInputRowGUI>) tableModel.iterator();
       while (modelData.hasNext()) {
-        CoordInput input = modelData.next();
+        CoordInputRowGUI input = modelData.next();
         if (StringUtils.isEmpty(input.getInput()) && StringUtils.isEmpty(input.getColumn())
             && StringUtils.isEmpty(input.getRow())) {
           continue;
@@ -180,7 +181,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     if (el instanceof Inputs) {
       tableModel.clearData();
       for (JMeterProperty jMeterProperty : (Inputs) el) {
-        CoordInput input = (CoordInput) jMeterProperty.getObjectValue();
+        CoordInputRowGUI input = (CoordInputRowGUI) jMeterProperty.getObjectValue();
         tableModel.addRow(input);
       }
     }
@@ -327,7 +328,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
       for (String clipboardLine : clipboardLines) {
         String[] clipboardCols = clipboardLine.split(argDelimiter);
         if (clipboardCols.length > 0) {
-          CoordInput input = createArgumentFromClipboard(clipboardCols);
+          CoordInputRowGUI input = createArgumentFromClipboard(clipboardCols);
           tableModel.addRow(input);
         }
       }
@@ -356,8 +357,8 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     addFromClipboard(CLIPBOARD_LINE_DELIMITERS, CLIPBOARD_ARG_DELIMITERS);
   }
 
-  protected CoordInput createArgumentFromClipboard(String[] clipboardCols) {
-    CoordInput argument = makeNewArgument();
+  protected CoordInputRowGUI createArgumentFromClipboard(String[] clipboardCols) {
+    CoordInputRowGUI argument = makeNewArgument();
     argument.setInput(clipboardCols[0]);
     if (clipboardCols.length > 1) {
       argument.setColumn(clipboardCols[1]);
@@ -368,8 +369,8 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     return argument;
   }
 
-  private CoordInput makeNewArgument() {
-    return new CoordInput();
+  private CoordInputRowGUI makeNewArgument() {
+    return new CoordInputRowGUI();
   }
 
   public void clear() {

@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.awt.event.KeyEvent;
 import java.util.List;
 import net.infordata.em.crt5250.XI5250Field;
@@ -10,11 +11,11 @@ public class Tn5250Client implements RteProtocolClient {
 
   private final ConfigurablePortEmulator em = new ConfigurablePortEmulator();
 
-  public void connect(String server, int port) {
+  public void connect(String server, int port, TerminalType terminalType) throws RteIOException {
     em.setHost(server);
     em.setPort(port);
     em.setTerminalType(
-        "IBM-3179-2"); //This is the default option.
+        terminalType.getType()); //This is the default option.
     // To-do: support the other terminal-type option (IBM-3477-FC)
     em.setActive(true);
   }

@@ -1,9 +1,9 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.sampler.Protocol;
+import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.SSLType;
+import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import com.blazemeter.jmeter.rte.sampler.SSLType;
-import com.blazemeter.jmeter.rte.sampler.TerminalType;
 import java.awt.GridLayout;
 import java.util.Arrays;
 import java.util.HashMap;

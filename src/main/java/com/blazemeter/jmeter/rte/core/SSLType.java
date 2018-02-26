@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.sampler;
+package com.blazemeter.jmeter.rte.core;
 
 public enum SSLType {
   NONE("NONE"),

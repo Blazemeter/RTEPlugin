@@ -15,7 +15,7 @@ public class Inputs extends ConfigTestElement implements Serializable, Iterable<
   private static final long serialVersionUID = 5810149938611069868L;
 
   public Inputs() {
-    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInput>()));
+    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInputRowGUI>()));
   }
 
   public CollectionProperty getInputs() {
@@ -25,14 +25,14 @@ public class Inputs extends ConfigTestElement implements Serializable, Iterable<
   @Override
   public void clear() {
     super.clear();
-    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInput>()));
+    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInputRowGUI>()));
   }
 
   public void setCoordInput(List<Inputs> coordInput) {
     setProperty(new CollectionProperty(INPUTS, coordInput));
   }
 
-  public void addCoordInput(CoordInput input) {
+  public void addCoordInput(CoordInputRowGUI input) {
     TestElementProperty newInput = new TestElementProperty(input.getName(), input);
     if (isRunningVersion()) {
       this.setTemporary(newInput);

@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.rte.core.Trigger;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import com.blazemeter.jmeter.rte.sampler.Trigger;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
