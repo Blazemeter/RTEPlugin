@@ -58,7 +58,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   public RTESampler(Function<Protocol, RteProtocolClient> protocolFactory) {
-    super();
     setName("RTE");
     this.protocolFactory = protocolFactory;
   }
