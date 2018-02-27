@@ -4,7 +4,6 @@ import com.blazemeter.jmeter.rte.core.Trigger;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

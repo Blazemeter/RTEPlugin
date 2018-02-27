@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 public enum TerminalType {
   IBM_3278_2("IBM-3278-2", "24x80", Protocol.TN3270),
