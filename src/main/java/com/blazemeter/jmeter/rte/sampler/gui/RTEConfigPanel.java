@@ -1,9 +1,9 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.sampler.Protocol;
+import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.SSLType;
+import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import com.blazemeter.jmeter.rte.sampler.SSLType;
-import com.blazemeter.jmeter.rte.sampler.TerminalType;
 import java.awt.GridLayout;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,9 +39,9 @@ public class RTEConfigPanel extends JPanel {
   private JLabel protocolLabel = new JLabel();
   private JComboBox<Protocol> protocolComboBox = new JComboBox<>(Protocol.values());
 
-  private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<>(
+  private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<TerminalType>(
       TerminalType.findByProtocol(Protocol.TN5250));
-  private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<>(
+  private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<TerminalType>(
       TerminalType.findByProtocol(Protocol.TN3270));
 
   private JLabel terminalTypeLabel = new JLabel();
@@ -246,7 +246,7 @@ public class RTEConfigPanel extends JPanel {
     if (sslType.containsKey(ssl)) {
       sslType.get(ssl).setSelected(true);
     } else {
-      sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
+      sslType.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
     }
   }
 
@@ -278,5 +278,4 @@ public class RTEConfigPanel extends JPanel {
   public String getTimeout() {
     return connectionTimeout.getText();
   }
-
 }

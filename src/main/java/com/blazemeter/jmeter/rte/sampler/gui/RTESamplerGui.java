@@ -53,7 +53,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
       rteSamplerPanel.setCoordYWait(sampler.getCoordYToWait());
       rteSamplerPanel.setTextWait(sampler.getTextToWait());
       rteSamplerPanel.setTrigger(sampler.getTrigger());
-      Inputs payload = sampler.getPayload();
+      Inputs payload = sampler.getInputs();
       if (payload != null) {
         rteSamplerPanel.getPayload().configure(payload);
       }
@@ -62,9 +62,9 @@ public class RTESamplerGui extends AbstractSamplerGui {
 
   @Override
   public TestElement createTestElement() {
-    RTESampler sampler = new RTESampler();
-    configureTestElement(sampler);
-    return sampler;
+    RTESampler preproc = new RTESampler();
+    configureTestElement(preproc);
+    return preproc;
   }
 
   @Override

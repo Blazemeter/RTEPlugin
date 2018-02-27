@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
+import com.blazemeter.jmeter.rte.core.RteIOException;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import net.infordata.em.tn5250.XI5250Emulator;
@@ -41,10 +42,9 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
     firePropertyChange(ACTIVE, wasActive, isActive());
   }
 
-  /*
-  It was necessary to use reflection because XI520Emulator class has ivTelnet as a private attribute
-  without set and get methods
-   */
+  /*It was necessary to use reflection because XI520Emulator class has ivTelnet as a private
+  attribute without set and
+  get methods*/
   private void setIvTelnet(XITelnet ivTelnet) {
     Field target = getAccessibleIvTelnetField();
     try {
@@ -95,8 +95,9 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
       ConfigurablePortEmulator.this.disconnected();
     }
 
-    public final void catchedIOException(IOException ex) {
+    public final void catchedIOException(IOException ex) throws RteIOException {
       ConfigurablePortEmulator.this.catchedIOException(ex);
+      throw new RteIOException(ex);
     }
 
     public final void receivedData(byte[] buf, int len) {

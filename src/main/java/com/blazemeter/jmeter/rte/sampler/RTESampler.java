@@ -1,36 +1,31 @@
 package com.blazemeter.jmeter.rte.sampler;
 
+import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.SSLType;
+import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.Trigger;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
-import org.tn5250j.Session5250;
-import org.tn5250j.SessionConfig;
-import org.tn5250j.TN5250jConstants;
-import org.tn5250j.framework.tn5250.Screen5250;
 
-public class RTESampler extends AbstractSampler implements TestStateListener, ThreadListener {
-
-  public static final Trigger DEFAULT_TRIGGER = Trigger.ENTER;
-  public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
-  public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
-  public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
-
-  public static final String TYPING_STYLE_FAST = "Fast";
-  public static final String TYPING_STYLE_HUMAN = "Human";
+public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.Port";
   public static final String CONFIG_SERVER = "RTEConnectionConfig.Server";
@@ -40,26 +35,31 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
   public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.SSL_Type";
   public static final String CONFIG_TIMEOUT = "RTEConnectionConfig.Timeout";
   public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.Terminal_Type";
-
-  private static final long serialVersionUID = -8230648949935454790L;
+  public static final String TYPING_STYLE_FAST = "Fast";
+  public static final String TYPING_STYLE_HUMAN = "Human";
+  public static final Trigger DEFAULT_TRIGGER = Trigger.ENTER;
+  public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
+  public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
+  public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
 
   private static final Logger LOG = LoggingManager.getLoggerForClass();
-
   private static final int DEFAULT_CONNECTION_TIMEOUT = 20000; // 20 sec
   private static final int DEFAULT_RESPONSE_TIMEOUT = 20000; // 20 sec
-
   private static final int UNSPECIFIED_PORT = 0;
   private static final String UNSPECIFIED_PORT_AS_STRING = "0";
-
-  private static final int DEFAULT_RTE_PORT = 80;
-
-  private static Map<String, Session5250> connectionList;
-
-  private CountDownLatch openLatch = new CountDownLatch(1);
+  private static final int DEFAULT_RTE_PORT = 23;
+  private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
+      .withInitial(HashMap::new);
+  private final Function<Protocol, RteProtocolClient> protocolFactory;
+  private SampleResult sampleResult;
 
   public RTESampler() {
-    super();
+    this(p -> p.createProtocolClient());
+  }
+
+  public RTESampler(Function<Protocol, RteProtocolClient> protocolFactory) {
     setName("RTE");
+    this.protocolFactory = protocolFactory;
   }
 
   @Override
@@ -74,162 +74,131 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     return getPropertyAsString(TestElement.NAME);
   }
 
-  private Session5250 getConnection(String connectionId) throws Exception {
-
-    if (connectionList.containsKey(connectionId)) {
-      Session5250 session = connectionList.get(connectionId);
-
-      if (!session.isConnected()) {
-        int connectionTimeout;
-
-        try {
-          connectionTimeout = Integer.parseInt(getTimeout());
-        } catch (NumberFormatException ex) {
-          LOG.warn("Connection timeout is not a number; using the default connection timeout of "
-              + DEFAULT_CONNECTION_TIMEOUT + "ms");
-          connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-        }
-        while (!session.isConnected() && connectionTimeout > 0) {
-          Thread.sleep(100);
-          connectionTimeout = connectionTimeout - 100;
-        }
-      }
-
-      return session;
-
-    }
-
-    String server = getServer();
-    Properties sesProp = new Properties();
-    SessionConfig sesConfig = new SessionConfig(server, server);
-    Session5250 session = new Session5250(sesProp, server, server, sesConfig);
-    sesProp.setProperty(TN5250jConstants.SSL_TYPE, TN5250jConstants.SSL_TYPE_NONE);
-    sesProp.setProperty(TN5250jConstants.SESSION_HOST, server);
-
-    session.connect();
-
-    int connectionTimeout;
-    try {
-      connectionTimeout = Integer.parseInt(getTimeout());
-    } catch (NumberFormatException ex) {
-      LOG.warn("Connection timeout is not a number; using the default connection timeout of "
-          + DEFAULT_CONNECTION_TIMEOUT + "ms");
-      connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-    }
-
-    while (!session.isConnected() && connectionTimeout > 0) {
-      Thread.sleep(100);
-      connectionTimeout = connectionTimeout - 100;
-    }
-
-    connectionList.put(connectionId, session);
-    return session;
+  private String buildConnectionId() {
+    return getServer() + ": " + getPort();
   }
 
-  private String screenToString(Screen5250 screen) {
-    String screenWithoutNewLines = getScreenAsString(screen);
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < screenWithoutNewLines.length(); i += screen.getColumns()) {
-      sb.append(screenWithoutNewLines.substring(i, i + screen.getColumns()));
-      sb.append("\n");
+  private RteProtocolClient getClient() throws RteIOException, InterruptedException {
+
+    String clientId = buildConnectionId();
+
+    Map<String, RteProtocolClient> clients = connections.get();
+
+    if (clients.containsKey(clientId)) {
+      return clients.get(clientId);
     }
-    return sb.toString();
+
+    RteProtocolClient client = protocolFactory.apply(getProtocol());
+    clients.put(clientId, client);
+    client.connect(getServer(), getPort(), getTerminal());
+
+    //TODO Remove when the RTEClient supports waiting until the connection is finished
+    Thread.sleep(1000);
+
+    return client;
   }
 
-  private String getScreenAsString(Screen5250 screen) {
-    char[] buffer = new char[screen.getScreenLength()];
-    screen.GetScreen(buffer, screen.getScreenLength(), TN5250jConstants.PLANE_TEXT);
-    return new String(buffer);
+  private void closeConnections() {
+    connections.get().values().forEach(c -> {
+      c.disconnect();
+    });
+    connections.get().clear();
+  }
+
+  private void errorResult(String message, Throwable e) {
+    StringWriter sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
+    sampleResult.setDataType(SampleResult.TEXT);
+    sampleResult.setResponseCode(e.getClass().getName());
+    sampleResult.setResponseMessage(e.getMessage());
+    sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
+    sampleResult.setSuccessful(false);
+    sampleResult.sampleEnd();
+    LOG.error(message, e);
   }
 
   @Override
   public SampleResult sample(Entry entry) {
 
-    SampleResult sampleResult = new SampleResult();
+    sampleResult = new SampleResult();
     sampleResult.setSampleLabel(getName());
     sampleResult.sampleStart();
-    Session5250 session;
+    RteProtocolClient client = null;
 
     try {
-      session = getConnection(getConnectionId());
-    } catch (Exception e) {
-      sampleResult.setSuccessful(false);
-      sampleResult.setResponseMessage(e.getMessage());
-      StringWriter sw = new StringWriter();
-      e.printStackTrace(new PrintWriter(sw));
-      sampleResult.setResponseData(sw.toString(), "utf-8");
-      sampleResult.sampleEnd();
-      e.printStackTrace();
+      client = getClient();
+      sampleResult.connectEnd();
+    } catch (RteIOException e) {
+      errorResult("Error while establishing the connection", e);
+      return sampleResult;
+    } catch (InterruptedException e) {
+      errorResult("Error while establishing the connection", e);
+      closeConnections();
+      Thread.currentThread().interrupt();
       return sampleResult;
     }
 
-    if (!session.isConnected()) {
-      sampleResult.setSuccessful(false);
-      sampleResult.setResponseMessage("Connection error");
-      sampleResult.setResponseData("Connection error", "utf-8");
-      sampleResult.sampleEnd();
-    }
+    List<CoordInput> inputs = getCoordInputs();
 
-    for (JMeterProperty p : getPayload()) {
-      CoordInput i = (CoordInput) p.getObjectValue();
-      int col = 0;
-      int row = 0;
-      try {
-        col = Integer.parseInt(i.getColumn());
-      } catch (NumberFormatException ex) {
-        LOG.warn("Column is not a number; using the default column timeout of 0");
-      }
-      try {
-        row = Integer.parseInt(i.getRow());
-      } catch (NumberFormatException ex) {
-        LOG.warn("Row is not a number; using the default Row timeout of 0");
-      }
-      session.getScreen().setCursor(col, row);
-      session.getScreen().sendKeys(i.getInput());
-    }
+    String screen = "";
 
-    session.getScreen().sendKeys("[enter]");
+    try {
+      screen = client.send(inputs);
+    } catch (InterruptedException e) {
+      errorResult("Error while sending a message", e);
+      closeConnections();
+      Thread.currentThread().interrupt();
+      return sampleResult;
+    }
 
     sampleResult.setSuccessful(true);
-    sampleResult.setResponseData(screenToString(session.getScreen()), "utf-8");
+    sampleResult.setResponseData(screen, "utf-8");
     sampleResult.sampleEnd();
 
     return sampleResult;
   }
 
-  public boolean awaitOpen(int duration, TimeUnit unit) throws InterruptedException {
-    return this.openLatch.await(duration, unit);
+  private List<CoordInput> getCoordInputs() {
+    List<CoordInput> inputs = new ArrayList<>();
+
+    for (JMeterProperty p : getInputs()) {
+      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
+      inputs.add(new CoordInput(
+          new Position(Integer.parseInt(c.getColumn()), Integer.parseInt(c.getRow())),
+          c.getInput()));
+    }
+    return inputs;
   }
 
-  public String getServer() {
+  private String getServer() {
     return getPropertyAsString(CONFIG_SERVER);
   }
 
-  public String getUser() {
+  private String getUser() {
     return getPropertyAsString(CONFIG_USER);
   }
 
-  public String getPass() {
+  private String getPass() {
     return getPropertyAsString(CONFIG_PASS);
   }
 
-  public TerminalType getTerminal() {
+  private TerminalType getTerminal() {
     return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
   }
 
-  public Protocol getProtocol() {
+  private Protocol getProtocol() {
     return Protocol.valueOf(getPropertyAsString(CONFIG_PROTOCOL));
   }
 
-  public SSLType getSSLType() {
+  private SSLType getSSLType() {
     return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
   }
 
-  public String getTimeout() {
+  private String getTimeout() {
     return getPropertyAsString(CONFIG_TIMEOUT);
   }
 
-  public int getPort() {
+  private int getPort() {
     final int port = getPortIfSpecified();
     if (port == UNSPECIFIED_PORT) {
       return DEFAULT_RTE_PORT;
@@ -238,9 +207,9 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
   }
 
   private int getPortIfSpecified() {
-    String port = getPropertyAsString(CONFIG_PORT, UNSPECIFIED_PORT_AS_STRING);
+    String portS = getPropertyAsString(CONFIG_PORT, UNSPECIFIED_PORT_AS_STRING);
     try {
-      return Integer.parseInt(port.trim());
+      return Integer.parseInt(portS.trim());
     } catch (NumberFormatException e) {
       return UNSPECIFIED_PORT;
     }
@@ -254,39 +223,7 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     setProperty("TypingStyle", typingStyle);
   }
 
-  public String getType() {
-    return getPropertyAsString("Type");
-  }
-
-  public void setType(String type) {
-    setProperty("Type", type);
-  }
-
-  public String getField() {
-    return getPropertyAsString("Field");
-  }
-
-  public void setField(String field) {
-    setProperty("Field", field);
-  }
-
-  public int getCoordX() {
-    return getPropertyAsInt("CoordX");
-  }
-
-  public void setCoordX(int coordX) {
-    setProperty("CoordX", coordX);
-  }
-
-  public int getCoordY() {
-    return getPropertyAsInt("CoordY");
-  }
-
-  public void setCoordY(int coordY) {
-    setProperty("CoordY", coordY);
-  }
-
-  public Inputs getPayload() {
+  public Inputs getInputs() {
     return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
   }
 
@@ -409,43 +346,16 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     setProperty("Trigger", trigger.name());
   }
 
-  private String getConnectionId() {
+  public String getConnectionId() {
     return getThreadName() + getServer() + getPort();
   }
 
   @Override
   public void threadFinished() {
-    // TODO Auto-generated method stub
-
+    closeConnections();
   }
 
   @Override
   public void threadStarted() {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void testEnded() {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void testEnded(String arg0) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void testStarted() {
-    connectionList = new ConcurrentHashMap<>();
-  }
-
-  @Override
-  public void testStarted(String arg0) {
-    // TODO Auto-generated method stub
-
   }
 }
-

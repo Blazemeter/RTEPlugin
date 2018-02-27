@@ -1,8 +1,7 @@
-
 package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.rte.core.Trigger;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import com.blazemeter.jmeter.rte.sampler.Trigger;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.util.Arrays;
@@ -29,7 +28,7 @@ public class RTESamplerPanel extends JPanel {
 
   private JPanel requestPanel = new JPanel();
   private JLabel typingStyleLabel = new JLabel();
-  private JComboBox<String> typingStyleComboBox = new JComboBox<>(TYPING_STYLE);
+  private JComboBox<String> typingStyleComboBox = new JComboBox<String>(TYPING_STYLE);
   private JPanel triggerPanel = new JPanel();
   private ButtonGroup triggersGroup = new ButtonGroup();
   private Map<Trigger, JRadioButton> triggers = new HashMap<>();

@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.sampler;
+package com.blazemeter.jmeter.rte.core;
 
 public enum Trigger {
   F1,
@@ -38,4 +38,3 @@ public enum Trigger {
   SYSRQ,
   REST
 }
-

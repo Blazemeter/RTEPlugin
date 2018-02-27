@@ -17,5 +17,4 @@ public class CoordInput {
   public String getInput() {
     return input;
   }
-
 }

@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.sampler.CoordInput;
+import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -45,9 +45,11 @@ public class CoordInputPanel extends JPanel implements ActionListener {
   private JLabel tableLabel;
   private transient ObjectTableModel tableModel;
   private transient JTable table;
+  private JButton add;
   private JButton delete;
   private JButton up;
   private JButton down;
+  private JButton addFromClipboard;
 
   public CoordInputPanel() {
     this("Payload");
@@ -85,7 +87,8 @@ public class CoordInputPanel extends JPanel implements ActionListener {
 
   private void initializeTableModel() {
     if (tableModel == null) {
-      tableModel = new ObjectTableModel(new String[]{"Value", "Column", "Row"}, CoordInput.class,
+      tableModel = new ObjectTableModel(new String[]{"Value", "Column", "Row"},
+          CoordInputRowGUI.class,
           new Functor[]{new Functor("getInput"), new Functor("getColumn"), new Functor("getRow")},
           new Functor[]{new Functor("setInput"), new Functor("setColumn"), new Functor("setRow")},
           new Class[]{String.class, String.class, String.class});
@@ -100,11 +103,11 @@ public class CoordInputPanel extends JPanel implements ActionListener {
 
   private JPanel makeButtonPanel() {
 
-    JButton add = new JButton(JMeterUtils.getResString("add"));
+    add = new JButton(JMeterUtils.getResString("add"));
     add.setActionCommand(ADD);
     add.setEnabled(true);
 
-    JButton addFromClipboard = new JButton(JMeterUtils.getResString("add_from_clipboard"));
+    addFromClipboard = new JButton(JMeterUtils.getResString("add_from_clipboard"));
     addFromClipboard.setActionCommand("addFromClipboard");
     addFromClipboard.setEnabled(true);
 
@@ -135,7 +138,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     return buttonPanel;
   }
 
-  private void checkButtonsStatus() {
+  protected void checkButtonsStatus() {
     if (tableModel.getRowCount() == 0) {
       delete.setEnabled(false);
     } else {
@@ -156,15 +159,15 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     return inputs;
   }
 
-  private void modifyTestElement(TestElement element) {
+  public void modifyTestElement(TestElement element) {
     GuiUtils.stopTableEditing(table);
     if (element instanceof Inputs) {
       Inputs inputs = (Inputs) element;
       inputs.clear();
       @SuppressWarnings("unchecked")
-      Iterator<CoordInput> modelData = (Iterator<CoordInput>) tableModel.iterator();
+      Iterator<CoordInputRowGUI> modelData = (Iterator<CoordInputRowGUI>) tableModel.iterator();
       while (modelData.hasNext()) {
-        CoordInput input = modelData.next();
+        CoordInputRowGUI input = modelData.next();
         if (StringUtils.isEmpty(input.getInput()) && StringUtils.isEmpty(input.getColumn())
             && StringUtils.isEmpty(input.getRow())) {
           continue;
@@ -178,7 +181,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     if (el instanceof Inputs) {
       tableModel.clearData();
       for (JMeterProperty jMeterProperty : (Inputs) el) {
-        CoordInput input = (CoordInput) jMeterProperty.getObjectValue();
+        CoordInputRowGUI input = (CoordInputRowGUI) jMeterProperty.getObjectValue();
         tableModel.addRow(input);
       }
     }
@@ -325,7 +328,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
       for (String clipboardLine : clipboardLines) {
         String[] clipboardCols = clipboardLine.split(argDelimiter);
         if (clipboardCols.length > 0) {
-          CoordInput input = createArgumentFromClipboard(clipboardCols);
+          CoordInputRowGUI input = createArgumentFromClipboard(clipboardCols);
           tableModel.addRow(input);
         }
       }
@@ -350,12 +353,12 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     }
   }
 
-  private void addFromClipboard() {
+  protected void addFromClipboard() {
     addFromClipboard(CLIPBOARD_LINE_DELIMITERS, CLIPBOARD_ARG_DELIMITERS);
   }
 
-  private CoordInput createArgumentFromClipboard(String[] clipboardCols) {
-    CoordInput argument = makeNewArgument();
+  protected CoordInputRowGUI createArgumentFromClipboard(String[] clipboardCols) {
+    CoordInputRowGUI argument = makeNewArgument();
     argument.setInput(clipboardCols[0]);
     if (clipboardCols.length > 1) {
       argument.setColumn(clipboardCols[1]);
@@ -366,13 +369,12 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     return argument;
   }
 
-  private CoordInput makeNewArgument() {
-    return new CoordInput();
+  private CoordInputRowGUI makeNewArgument() {
+    return new CoordInputRowGUI();
   }
 
   public void clear() {
     GuiUtils.stopTableEditing(table);
     tableModel.clearData();
   }
-
 }

@@ -13,7 +13,6 @@ build:
     - docker
   before_script:
     - set -e
-    - ant -DmavenOpts=$MAVEN_OPTS -f tn5250j-build.xml
     - mvn $MAVEN_OPTS com.googlecode.maven-download-plugin:download-maven-plugin:1.4.0:wget -Ddownload.url=https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/$XTN5250_JAR
     - mvn $MAVEN_OPTS install:install-file -Dfile=target/$XTN5250_JAR -DgroupId=net.sourceforge.xtn5250 -DartifactId=xtn5250 -Dversion=$XTN5250_VERSION -Dpackaging=jar
   script: mvn --batch-mode clean verify
