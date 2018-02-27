@@ -3,11 +3,11 @@ package com.blazemeter.jmeter.rte.sampler;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.Trigger;
-import com.blazemeter.jmeter.rte.protocols.tn5250.RteIOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -28,8 +28,7 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-public class RTESampler extends AbstractSampler implements TestStateListener, ThreadListener,
-    LoopIterationListener {
+public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.Port";
   public static final String CONFIG_SERVER = "RTEConnectionConfig.Server";
@@ -52,7 +51,6 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
   private static final int UNSPECIFIED_PORT = 0;
   private static final String UNSPECIFIED_PORT_AS_STRING = "0";
   private static final int DEFAULT_RTE_PORT = 23;
-  private static final long serialVersionUID = -8230648949935454790L;
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
   private final Function<Protocol, RteProtocolClient> protocolFactory;
@@ -84,7 +82,7 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     return getServer() + ": " + getPort();
   }
 
-  private RteProtocolClient getClient() throws RteIOException {
+  private RteProtocolClient getClient() throws RteIOException, InterruptedException {
 
     String clientId = buildConnectionId();
 
@@ -98,16 +96,20 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     clients.put(clientId, client);
     client.connect(getServer(), getPort(), getTerminal());
 
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    //TODO Remove when the RTEClient supports waiting until the connection is finished
+    Thread.sleep(1000);
 
     return client;
   }
 
-  private void errorResult(Throwable e) {
+  private void closeConnections() {
+    connections.get().values().forEach(c -> {
+      c.disconnect();
+    });
+    connections.get().clear();
+  }
+
+  private void errorResult(String message, Throwable e) {
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));
     sampleResult.setDataType(SampleResult.TEXT);
@@ -115,6 +117,8 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     sampleResult.setResponseMessage(e.getMessage());
     sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
     sampleResult.setSuccessful(false);
+    sampleResult.sampleEnd();
+    LOG.error(message, e);
   }
 
   @Override
@@ -129,21 +133,26 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
       client = getClient();
       sampleResult.connectEnd();
     } catch (RteIOException e) {
-      e.printStackTrace();
-      errorResult(e);
-      sampleResult.sampleEnd();
+      errorResult("Error while establishing the connection", e);
+      return sampleResult;
+    } catch (InterruptedException e) {
+      errorResult("Error while establishing the connection", e);
+      closeConnections();
+      Thread.currentThread().interrupt();
+      return sampleResult;
     }
 
-    List<CoordInput> inputs = getInputs();
+    List<CoordInput> inputs = getCoordInputs();
 
     String screen = "";
 
     try {
       screen = client.send(inputs);
     } catch (InterruptedException e) {
-      e.printStackTrace();
-      errorResult(e);
-      sampleResult.sampleEnd();
+      errorResult("Error while sending a message", e);
+      closeConnections();
+      Thread.currentThread().interrupt();
+      return sampleResult;
     }
 
     sampleResult.setSuccessful(true);
@@ -153,10 +162,10 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     return sampleResult;
   }
 
-  private List<CoordInput> getInputs() {
+  private List<CoordInput> getCoordInputs() {
     List<CoordInput> inputs = new ArrayList<>();
 
-    for (JMeterProperty p : getPayload()) {
+    for (JMeterProperty p : getInputs()) {
       CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
       inputs.add(new CoordInput(
           new Position(Integer.parseInt(c.getColumn()), Integer.parseInt(c.getRow())),
@@ -165,35 +174,35 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     return inputs;
   }
 
-  public String getServer() {
+  private String getServer() {
     return getPropertyAsString(CONFIG_SERVER);
   }
 
-  public String getUser() {
+  private String getUser() {
     return getPropertyAsString(CONFIG_USER);
   }
 
-  public String getPass() {
+  private String getPass() {
     return getPropertyAsString(CONFIG_PASS);
   }
 
-  public TerminalType getTerminal() {
+  private TerminalType getTerminal() {
     return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
   }
 
-  public Protocol getProtocol() {
+  private Protocol getProtocol() {
     return Protocol.valueOf(getPropertyAsString(CONFIG_PROTOCOL));
   }
 
-  public SSLType getSSLType() {
+  private SSLType getSSLType() {
     return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
   }
 
-  public String getTimeout() {
+  private String getTimeout() {
     return getPropertyAsString(CONFIG_TIMEOUT);
   }
 
-  public int getPort() {
+  private int getPort() {
     final int port = getPortIfSpecified();
     if (port == UNSPECIFIED_PORT) {
       return DEFAULT_RTE_PORT;
@@ -201,7 +210,7 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     return port;
   }
 
-  public int getPortIfSpecified() {
+  private int getPortIfSpecified() {
     String portS = getPropertyAsString(CONFIG_PORT, UNSPECIFIED_PORT_AS_STRING);
     try {
       return Integer.parseInt(portS.trim());
@@ -218,7 +227,7 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
     setProperty("TypingStyle", typingStyle);
   }
 
-  public Inputs getPayload() {
+  public Inputs getInputs() {
     return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
   }
 
@@ -347,41 +356,10 @@ public class RTESampler extends AbstractSampler implements TestStateListener, Th
 
   @Override
   public void threadFinished() {
-    // TODO Auto-generated method stub
-
+    closeConnections();
   }
 
   @Override
   public void threadStarted() {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void testEnded() {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void testEnded(String arg0) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void testStarted() {
-    // TODO Auto-generated method stub
-  }
-
-  @Override
-  public void testStarted(String arg0) {
-    // TODO Auto-generated method stub
-
-  }
-
-  @Override
-  public void iterationStart(LoopIterationEvent loopIterationEvent) {
-    //TODO Auto-generated method stub
   }
 }

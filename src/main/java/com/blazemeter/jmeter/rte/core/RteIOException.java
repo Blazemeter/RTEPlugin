@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250;
+package com.blazemeter.jmeter.rte.core;
 
 public class RteIOException extends RuntimeException {
 

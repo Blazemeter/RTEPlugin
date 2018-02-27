@@ -29,9 +29,6 @@
 *.tar.gz
 *.rar
 
-/src/test/resources
-lib/kunststoff.LICENSE
-
 .metadata
 bin/
 tmp/

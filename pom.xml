@@ -19,11 +19,6 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.tn5250j</groupId>
-      <artifactId>tn5250j</artifactId>
-      <version>0.7.5</version>
-    </dependency>
-    <dependency>
       <groupId>net.sourceforge.xtn5250</groupId>
       <artifactId>xtn5250</artifactId>
       <version>1.19m</version>

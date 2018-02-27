@@ -44,8 +44,7 @@ public enum TerminalType {
   public static TerminalType[] findByProtocol(Protocol p) {
     return Arrays.stream(TerminalType.values())
         .filter(t -> t.getProtocol().equals(p))
-        .collect(Collectors.toList())
-        .toArray(new TerminalType[0]);
+        .toArray(TerminalType[]::new);
   }
 
 }

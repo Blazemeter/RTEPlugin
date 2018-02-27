@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.awt.event.KeyEvent;
@@ -15,22 +16,21 @@ public class Tn5250Client implements RteProtocolClient {
     em.setHost(server);
     em.setPort(port);
     em.setTerminalType(
-        terminalType.getType()); //This is the default option.
-    // To-do: support the other terminal-type option (IBM-3477-FC)
+        terminalType.getType());
     em.setActive(true);
   }
 
   public String send(List<CoordInput> input) throws InterruptedException {
     input.forEach(s -> {
-      //The values for row and column in getFieldFromPos are zero-indexed so we
-      // need to translate the core input values which are one-indexed.
+      /*The values for row and column in getFieldFromPos are zero-indexed so we
+      need to translate the core input values which are one-indexed.*/
       XI5250Field field = em
           .getFieldFromPos(s.getPosition().getColumn() - 1, s.getPosition().getRow() - 1);
       field.setString(s.getInput());
     });
     sendSpecialKey(KeyEvent.VK_ENTER);
     Thread
-        .sleep(3000); //Doing this "wait" to avoid getting empty screen. To-do: Replace with waiters
+        .sleep(3000); //Doing this "wait" to avoid getting empty screen. TODO: Replace with waiters
     return getScreen();
   }
 

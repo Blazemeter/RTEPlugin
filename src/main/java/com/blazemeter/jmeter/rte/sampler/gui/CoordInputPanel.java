@@ -208,7 +208,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
         moveDown();
         break;
       default:
-        break;
+        throw new UnsupportedOperationException(action);
     }
   }
 

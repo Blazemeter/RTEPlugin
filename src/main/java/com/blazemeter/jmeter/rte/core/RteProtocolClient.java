@@ -1,6 +1,5 @@
 package com.blazemeter.jmeter.rte.core;
 
-import com.blazemeter.jmeter.rte.protocols.tn5250.RteIOException;
 import java.util.List;
 
 public interface RteProtocolClient {

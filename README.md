@@ -8,8 +8,6 @@ This project implements a jmeter plugin to support RTE (remote terminal emulatio
 
 - [jdk 1.8+](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 - [maven 3.3+](https://maven.apache.org/)
-- [tn5250j library](https://github.com/tn5250j/tn5250j/archive/0.7.5.zip) installed in local maven repository:
-  - If not already installed, run build with [ant](http://ant.apache.org/) `ant -f tn5250j-build.xml`.
 - [xtn5250 library](https://sourceforge.net/projects/xtn5250/) installed in installed in local maven repository:
   - If not already installed, run 
     ```

@@ -68,62 +68,50 @@ public class RTESamplerPanel extends JPanel {
     typingStyleLabel.setText("Typing Style: ");
     disconnect.setText("Disconnect?");
 
-    waitSync.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(ItemEvent e) {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          waitTimeoutSync.setEnabled(true);
-        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-          waitTimeoutSync.setEnabled(false);
-        }
-        validate();
-        repaint();
+    waitSync.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutSync.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutSync.setEnabled(false);
       }
+      validate();
+      repaint();
     });
 
-    waitCursor.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(ItemEvent e) {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          waitTimeoutCursor.setEnabled(true);
-        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-          waitTimeoutCursor.setEnabled(false);
-        }
-        validate();
-        repaint();
+    waitCursor.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutCursor.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutCursor.setEnabled(false);
       }
+      validate();
+      repaint();
     });
 
-    waitSilent.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(ItemEvent e) {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          waitTimeoutSilent.setEnabled(true);
-        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-          waitTimeoutSilent.setEnabled(false);
-        }
-        validate();
-        repaint();
+    waitSilent.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutSilent.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutSilent.setEnabled(false);
       }
+      validate();
+      repaint();
     });
 
-    waitText.addItemListener(new ItemListener() {
-      @Override
-      public void itemStateChanged(ItemEvent e) {
-        if (e.getStateChange() == ItemEvent.SELECTED) {
-          waitTimeoutText.setEnabled(true);
-          textWait.setEnabled(true);
-          coordXWait.setEnabled(true);
-          coordYWait.setEnabled(true);
-        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-          waitTimeoutText.setEnabled(false);
-          textWait.setEnabled(false);
-          coordXWait.setEnabled(false);
-          coordYWait.setEnabled(false);
-        }
-        validate();
-        repaint();
+    waitText.addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED) {
+        waitTimeoutText.setEnabled(true);
+        textWait.setEnabled(true);
+        coordXWait.setEnabled(true);
+        coordYWait.setEnabled(true);
+      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+        waitTimeoutText.setEnabled(false);
+        textWait.setEnabled(false);
+        coordXWait.setEnabled(false);
+        coordYWait.setEnabled(false);
       }
+      validate();
+      repaint();
     });
 
     triggerPanel.setBorder(BorderFactory.createTitledBorder("Trigger"));
