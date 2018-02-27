@@ -29,8 +29,9 @@ public class Tn5250Client implements RteProtocolClient {
       field.setString(s.getInput());
     });
     sendSpecialKey(KeyEvent.VK_ENTER);
+    //TODO: Replace with waiters
     Thread
-        .sleep(3000); //Doing this "wait" to avoid getting empty screen. TODO: Replace with waiters
+        .sleep(3000); //Doing this "wait" to avoid getting empty screen.
     return getScreen();
   }
 
