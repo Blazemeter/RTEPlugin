@@ -4,7 +4,8 @@ import java.util.List;
 
 public interface RteProtocolClient {
 
-  void connect(String server, int port, TerminalType terminalType) throws RteIOException;
+  void connect(String server, int port, TerminalType terminalType)
+      throws RteIOException, InterruptedException;
 
   String send(List<CoordInput> input) throws InterruptedException;
 

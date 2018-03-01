@@ -43,8 +43,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
 
   private static final Logger LOG = LoggingManager.getLoggerForClass();
-  private static final int DEFAULT_CONNECTION_TIMEOUT = 20000; // 20 sec
-  private static final int DEFAULT_RESPONSE_TIMEOUT = 20000; // 20 sec
   private static final int UNSPECIFIED_PORT = 0;
   private static final String UNSPECIFIED_PORT_AS_STRING = "0";
   private static final int DEFAULT_RTE_PORT = 23;
@@ -54,7 +52,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private SampleResult sampleResult;
 
   public RTESampler() {
-    this(p -> p.createProtocolClient());
+    this(Protocol::createProtocolClient);
   }
 
   public RTESampler(Function<Protocol, RteProtocolClient> protocolFactory) {
@@ -91,17 +89,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     RteProtocolClient client = protocolFactory.apply(getProtocol());
     clients.put(clientId, client);
     client.connect(getServer(), getPort(), getTerminal());
-
-    //TODO Remove when the RTEClient supports waiting until the connection is finished
-    Thread.sleep(1000);
-
     return client;
   }
 
   private void closeConnections() {
-    connections.get().values().forEach(c -> {
-      c.disconnect();
-    });
+    connections.get().values().forEach(RteProtocolClient::disconnect);
     connections.get().clear();
   }
 
@@ -123,7 +115,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     sampleResult = new SampleResult();
     sampleResult.setSampleLabel(getName());
     sampleResult.sampleStart();
-    RteProtocolClient client = null;
+    RteProtocolClient client;
 
     try {
       client = getClient();
@@ -140,10 +132,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
     List<CoordInput> inputs = getCoordInputs();
 
-    String screen = "";
-
     try {
-      screen = client.send(inputs);
+      String screen = client.send(inputs);
+      sampleResult.setSuccessful(true);
+      sampleResult.setResponseData(screen, "utf-8");
+      sampleResult.sampleEnd();
+      return sampleResult;
     } catch (InterruptedException e) {
       errorResult("Error while sending a message", e);
       closeConnections();
@@ -151,11 +145,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       return sampleResult;
     }
 
-    sampleResult.setSuccessful(true);
-    sampleResult.setResponseData(screen, "utf-8");
-    sampleResult.sampleEnd();
-
-    return sampleResult;
   }
 
   private List<CoordInput> getCoordInputs() {
@@ -344,10 +333,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public void setTrigger(Trigger trigger) {
     setProperty("Trigger", trigger.name());
-  }
-
-  public String getConnectionId() {
-    return getThreadName() + getServer() + getPort();
   }
 
   @Override
