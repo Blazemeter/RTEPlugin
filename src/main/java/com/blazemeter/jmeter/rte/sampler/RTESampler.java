@@ -61,102 +61,15 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   @Override
-  public void setName(String name) {
-    if (name != null) {
-      setProperty(TestElement.NAME, name);
-    }
-  }
-
-  @Override
   public String getName() {
     return getPropertyAsString(TestElement.NAME);
   }
 
-  private String buildConnectionId() {
-    return getServer() + ": " + getPort();
-  }
-
-  private RteProtocolClient getClient() throws RteIOException, InterruptedException {
-
-    String clientId = buildConnectionId();
-
-    Map<String, RteProtocolClient> clients = connections.get();
-
-    if (clients.containsKey(clientId)) {
-      return clients.get(clientId);
-    }
-
-    RteProtocolClient client = protocolFactory.apply(getProtocol());
-    clients.put(clientId, client);
-    client.connect(getServer(), getPort(), getTerminal());
-    return client;
-  }
-
-  private void closeConnections() {
-    connections.get().values().forEach(RteProtocolClient::disconnect);
-    connections.get().clear();
-  }
-
-  private void errorResult(String message, Throwable e) {
-    StringWriter sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
-    sampleResult.setDataType(SampleResult.TEXT);
-    sampleResult.setResponseCode(e.getClass().getName());
-    sampleResult.setResponseMessage(e.getMessage());
-    sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    sampleResult.setSuccessful(false);
-    sampleResult.sampleEnd();
-    LOG.error(message, e);
-  }
-
   @Override
-  public SampleResult sample(Entry entry) {
-
-    sampleResult = new SampleResult();
-    sampleResult.setSampleLabel(getName());
-    sampleResult.sampleStart();
-    RteProtocolClient client;
-
-    try {
-      client = getClient();
-      sampleResult.connectEnd();
-    } catch (RteIOException e) {
-      errorResult("Error while establishing the connection", e);
-      return sampleResult;
-    } catch (InterruptedException e) {
-      errorResult("Error while establishing the connection", e);
-      closeConnections();
-      Thread.currentThread().interrupt();
-      return sampleResult;
+  public void setName(String name) {
+    if (name != null) {
+      setProperty(TestElement.NAME, name);
     }
-
-    List<CoordInput> inputs = getCoordInputs();
-
-    try {
-      String screen = client.send(inputs);
-      sampleResult.setSuccessful(true);
-      sampleResult.setResponseData(screen, "utf-8");
-      sampleResult.sampleEnd();
-      return sampleResult;
-    } catch (InterruptedException e) {
-      errorResult("Error while sending a message", e);
-      closeConnections();
-      Thread.currentThread().interrupt();
-      return sampleResult;
-    }
-
-  }
-
-  private List<CoordInput> getCoordInputs() {
-    List<CoordInput> inputs = new ArrayList<>();
-
-    for (JMeterProperty p : getInputs()) {
-      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
-      inputs.add(new CoordInput(
-          new Position(Integer.parseInt(c.getColumn()), Integer.parseInt(c.getRow())),
-          c.getInput()));
-    }
-    return inputs;
   }
 
   private String getServer() {
@@ -336,8 +249,93 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   @Override
+  public SampleResult sample(Entry entry) {
+
+    sampleResult = new SampleResult();
+    sampleResult.setSampleLabel(getName());
+    sampleResult.sampleStart();
+    RteProtocolClient client;
+
+    try {
+      client = getClient();
+      sampleResult.connectEnd();
+    } catch (RteIOException e) {
+      errorResult("Error while establishing the connection", e);
+      return sampleResult;
+    } catch (InterruptedException e) {
+      errorResult("Error while establishing the connection", e);
+      closeConnections();
+      Thread.currentThread().interrupt();
+      return sampleResult;
+    }
+
+    List<CoordInput> inputs = getCoordInputs();
+
+    try {
+      String screen = client.send(inputs);
+      sampleResult.setSuccessful(true);
+      sampleResult.setResponseData(screen, "utf-8");
+      sampleResult.sampleEnd();
+      return sampleResult;
+    } catch (InterruptedException e) {
+      errorResult("Error while sending a message", e);
+      closeConnections();
+      Thread.currentThread().interrupt();
+      return sampleResult;
+    }
+
+  }
+
+  private RteProtocolClient getClient() throws RteIOException, InterruptedException {
+    String clientId = buildConnectionId();
+    Map<String, RteProtocolClient> clients = connections.get();
+
+    if (clients.containsKey(clientId)) {
+      return clients.get(clientId);
+    }
+
+    RteProtocolClient client = protocolFactory.apply(getProtocol());
+    client.connect(getServer(), getPort(), getTerminal());
+    clients.put(clientId, client);
+    return client;
+  }
+
+  private String buildConnectionId() {
+    return getServer() + ": " + getPort();
+  }
+
+  private void errorResult(String message, Throwable e) {
+    StringWriter sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
+    sampleResult.setDataType(SampleResult.TEXT);
+    sampleResult.setResponseCode(e.getClass().getName());
+    sampleResult.setResponseMessage(e.getMessage());
+    sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
+    sampleResult.setSuccessful(false);
+    sampleResult.sampleEnd();
+    LOG.error(message, e);
+  }
+
+  private List<CoordInput> getCoordInputs() {
+    List<CoordInput> inputs = new ArrayList<>();
+
+    for (JMeterProperty p : getInputs()) {
+      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
+      inputs.add(new CoordInput(
+          new Position(Integer.parseInt(c.getColumn()), Integer.parseInt(c.getRow())),
+          c.getInput()));
+    }
+    return inputs;
+  }
+
+  @Override
   public void threadFinished() {
     closeConnections();
+  }
+
+  private void closeConnections() {
+    connections.get().values().forEach(RteProtocolClient::disconnect);
+    connections.get().clear();
   }
 
   @Override
