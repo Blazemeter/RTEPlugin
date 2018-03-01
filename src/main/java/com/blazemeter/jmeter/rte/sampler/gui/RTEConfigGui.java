@@ -42,11 +42,11 @@ public class RTEConfigGui extends AbstractConfigGui {
       ConfigTestElement configTestElement = (ConfigTestElement) element;
       rteConfigPanelConfigPanel
           .setServer(configTestElement.getPropertyAsString(RTESampler.CONFIG_SERVER));
-      rteConfigPanelConfigPanel
-          .setPort(configTestElement.getPropertyAsString(RTESampler.CONFIG_PORT));
+      rteConfigPanelConfigPanel.setPort(
+          configTestElement.getPropertyAsInt(RTESampler.CONFIG_PORT, RTESampler.DEFAULT_PORT));
       rteConfigPanelConfigPanel.setProtocol(
           Protocol.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL)));
-      rteConfigPanelConfigPanel.setTerminal(TerminalType
+      rteConfigPanelConfigPanel.setTerminalType(TerminalType
           .valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE)));
       rteConfigPanelConfigPanel
           .setUser(configTestElement.getPropertyAsString(RTESampler.CONFIG_USER));
@@ -87,7 +87,7 @@ public class RTEConfigGui extends AbstractConfigGui {
       configTestElement
           .setProperty(RTESampler.CONFIG_SSL_TYPE, rteConfigPanelConfigPanel.getSSLType().name());
       configTestElement.setProperty(RTESampler.CONFIG_TERMINAL_TYPE,
-          rteConfigPanelConfigPanel.getTerminal().name());
+          rteConfigPanelConfigPanel.getTerminalType().name());
       configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT,
           rteConfigPanelConfigPanel.getConnectionTimeout());
 

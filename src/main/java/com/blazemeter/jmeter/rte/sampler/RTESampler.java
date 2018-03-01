@@ -43,12 +43,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
   public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 30000;
+  public static final int DEFAULT_PORT = 23;
 
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
   private static final Logger LOG = LoggingManager.getLoggerForClass();
-  private static final int UNSPECIFIED_PORT = 0;
-  private static final String UNSPECIFIED_PORT_AS_STRING = "0";
-  private static final int DEFAULT_RTE_PORT = 23;
   private static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
@@ -64,22 +62,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     this.protocolFactory = protocolFactory;
   }
 
-  @Override
-  public String getName() {
-    return getPropertyAsString(TestElement.NAME);
-  }
-
-  @Override
-  public void setName(String name) {
-    if (name != null) {
-      setProperty(TestElement.NAME, name);
-    }
-  }
-
-  private String getServer() {
-    return getPropertyAsString(CONFIG_SERVER);
-  }
-
   private String getUser() {
     return getPropertyAsString(CONFIG_USER);
   }
@@ -88,41 +70,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     return getPropertyAsString(CONFIG_PASS);
   }
 
-  private TerminalType getTerminal() {
-    return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
-  }
-
-  private Protocol getProtocol() {
-    return Protocol.valueOf(getPropertyAsString(CONFIG_PROTOCOL));
-  }
-
   private SSLType getSSLType() {
     return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
-  }
-
-  private long getConnectionTimeout() {
-    return getPropertyAsLong(CONFIG_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT_MILLIS);
-  }
-
-  private long getStableTimeout() {
-    return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
-  }
-
-  private int getPort() {
-    final int port = getPortIfSpecified();
-    if (port == UNSPECIFIED_PORT) {
-      return DEFAULT_RTE_PORT;
-    }
-    return port;
-  }
-
-  private int getPortIfSpecified() {
-    String portS = getPropertyAsString(CONFIG_PORT, UNSPECIFIED_PORT_AS_STRING);
-    try {
-      return Integer.parseInt(portS.trim());
-    } catch (NumberFormatException e) {
-      return UNSPECIFIED_PORT;
-    }
   }
 
   public String getTypingStyle() {
@@ -131,10 +80,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public void setTypingStyle(String typingStyle) {
     setProperty("TypingStyle", typingStyle);
-  }
-
-  public Inputs getInputs() {
-    return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
   }
 
   public void setPayload(Inputs payload) {
@@ -294,6 +239,18 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   }
 
+  @Override
+  public String getName() {
+    return getPropertyAsString(TestElement.NAME);
+  }
+
+  @Override
+  public void setName(String name) {
+    if (name != null) {
+      setProperty(TestElement.NAME, name);
+    }
+  }
+
   private RteProtocolClient getClient()
       throws RteIOException, InterruptedException, TimeoutException {
     String clientId = buildConnectionId();
@@ -304,14 +261,38 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    client
-        .connect(getServer(), getPort(), getTerminal(), getConnectionTimeout(), getStableTimeout());
+    client.connect(getServer(), getPort(), getTerminalType(), getConnectionTimeout(),
+        getStableTimeout());
     clients.put(clientId, client);
     return client;
   }
 
+  private TerminalType getTerminalType() {
+    return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
+  }
+
+  private Protocol getProtocol() {
+    return Protocol.valueOf(getPropertyAsString(CONFIG_PROTOCOL));
+  }
+
+  private long getConnectionTimeout() {
+    return getPropertyAsLong(CONFIG_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+  }
+
+  private long getStableTimeout() {
+    return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
+  }
+
   private String buildConnectionId() {
-    return getServer() + ": " + getPort();
+    return getServer() + ":" + getPort();
+  }
+
+  private String getServer() {
+    return getPropertyAsString(CONFIG_SERVER);
+  }
+
+  private int getPort() {
+    return getPropertyAsInt(CONFIG_PORT, DEFAULT_PORT);
   }
 
   private void errorResult(String message, Throwable e) {
@@ -338,6 +319,15 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     return inputs;
   }
 
+  public Inputs getInputs() {
+    return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
+  }
+
+  private void closeConnections() {
+    connections.get().values().forEach(RteProtocolClient::disconnect);
+    connections.get().clear();
+  }
+
   @Override
   public void threadStarted() {
   }
@@ -345,11 +335,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   @Override
   public void threadFinished() {
     closeConnections();
-  }
-
-  private void closeConnections() {
-    connections.get().values().forEach(RteProtocolClient::disconnect);
-    connections.get().clear();
   }
 
 }

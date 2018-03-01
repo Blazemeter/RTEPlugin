@@ -222,12 +222,19 @@ public class RTEConfigPanel extends JPanel {
     server.setText(serverAddressParam);
   }
 
-  public String getPort() {
-    return port.getText();
+  public int getPort() {
+    String str = port.getText();
+    try {
+      return Integer.valueOf(str);
+    } catch (NumberFormatException e) {
+      LOG.debug("Invalid value for connection timeout (" + str + "), falling back to default value "
+          + RTESampler.DEFAULT_PORT);
+      return RTESampler.DEFAULT_PORT;
+    }
   }
 
-  public void setPort(String serverPortParam) {
-    port.setText(serverPortParam);
+  public void setPort(int portParam) {
+    port.setText(String.valueOf(portParam));
   }
 
   public String getPass() {
@@ -267,11 +274,11 @@ public class RTEConfigPanel extends JPanel {
     protocolComboBox.setSelectedItem(protocol);
   }
 
-  public TerminalType getTerminal() {
+  public TerminalType getTerminalType() {
     return (TerminalType) terminalTypeComboBox.getSelectedItem();
   }
 
-  public void setTerminal(TerminalType terminal) {
+  public void setTerminalType(TerminalType terminal) {
     terminalTypeComboBox.setSelectedItem(terminal);
   }
 
