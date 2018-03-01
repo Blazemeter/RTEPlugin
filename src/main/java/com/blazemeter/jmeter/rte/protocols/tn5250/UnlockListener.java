@@ -9,6 +9,10 @@ import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
 
+/**
+ * An {@link XI5250EmulatorListener} which allows waiting until the terminal is unlocked, and keeps
+ * in such state for a given period of time.
+ */
 public class UnlockListener implements XI5250EmulatorListener {
 
   private final long timeoutMillis;

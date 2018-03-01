@@ -23,6 +23,7 @@ public abstract class PacketStep {
     this.data = PacketData.fromHexDump(data);
   }
 
-  public abstract void process(ClientConnection clientConnection) throws IOException;
+  public abstract void process(ClientConnection clientConnection)
+      throws IOException, InterruptedException;
 
 }
