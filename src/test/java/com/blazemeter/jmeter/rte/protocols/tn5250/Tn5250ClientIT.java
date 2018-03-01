@@ -26,6 +26,8 @@ import org.junit.Test;
 public class Tn5250ClientIT {
 
   private static final int SERVER_PORT = 2323;
+  private static final int CONNECTION_TIMEOUT_MILLIS = 5000;
+  private static final int STABLE_TIMEOUT_MILLIS = 1000;
 
   private VirtualTcpService server;
   private Tn5250Client client = new Tn5250Client();
@@ -44,7 +46,8 @@ public class Tn5250ClientIT {
   @Test
   public void shouldGetInvalidCredentialsScreenWhenSendInvalidCreds() throws Exception {
     loadFlow("login-invalid-creds.yml");
-    client.connect("localhost", SERVER_PORT, TerminalType.IBM_3477_FC);
+    client.connect("localhost", SERVER_PORT, TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS,
+        STABLE_TIMEOUT_MILLIS);
     try {
       List<CoordInput> input = Arrays.asList(
           new CoordInput(new Position(53, 7), "TEST"),

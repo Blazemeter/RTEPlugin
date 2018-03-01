@@ -15,9 +15,8 @@ public class RTEConfigGui extends AbstractConfigGui {
   private RTEConfigPanel rteConfigPanelConfigPanel;
 
   public RTEConfigGui() {
-    super();
-    init();
-    initFields();
+    rteConfigPanelConfigPanel = new RTEConfigPanel();
+    rteConfigPanelConfigPanel.initFields();
 
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
@@ -56,7 +55,9 @@ public class RTEConfigGui extends AbstractConfigGui {
       rteConfigPanelConfigPanel.setSSLType(
           SSLType.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE)));
       rteConfigPanelConfigPanel
-          .setTimeout(configTestElement.getPropertyAsString(RTESampler.CONFIG_TIMEOUT));
+          .setConnectionTimeout(
+              configTestElement.getPropertyAsLong(RTESampler.CONFIG_CONNECTION_TIMEOUT,
+                  RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS));
 
     }
   }
@@ -87,8 +88,8 @@ public class RTEConfigGui extends AbstractConfigGui {
           .setProperty(RTESampler.CONFIG_SSL_TYPE, rteConfigPanelConfigPanel.getSSLType().name());
       configTestElement.setProperty(RTESampler.CONFIG_TERMINAL_TYPE,
           rteConfigPanelConfigPanel.getTerminal().name());
-      configTestElement
-          .setProperty(RTESampler.CONFIG_TIMEOUT, rteConfigPanelConfigPanel.getTimeout());
+      configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT,
+          rteConfigPanelConfigPanel.getConnectionTimeout());
 
     }
   }
@@ -96,14 +97,6 @@ public class RTEConfigGui extends AbstractConfigGui {
   @Override
   public void clearGui() {
     super.clearGui();
-    initFields();
-  }
-
-  private void init() {
-    rteConfigPanelConfigPanel = new RTEConfigPanel();
-  }
-
-  private void initFields() {
     rteConfigPanelConfigPanel.initFields();
   }
 }

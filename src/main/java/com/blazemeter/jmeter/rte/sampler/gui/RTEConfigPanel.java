@@ -20,10 +20,14 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import org.apache.jmeter.util.JMeterUtils;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
 
 public class RTEConfigPanel extends JPanel {
 
   private static final long serialVersionUID = -3671411083800369578L;
+  private static final Logger LOG = LoggingManager.getLoggerForClass();
+
   private JPanel connectionPanel = new JPanel();
   private JPanel sslPanel = new JPanel();
   private ButtonGroup sslTypeGroup = new ButtonGroup();
@@ -39,9 +43,9 @@ public class RTEConfigPanel extends JPanel {
   private JLabel protocolLabel = new JLabel();
   private JComboBox<Protocol> protocolComboBox = new JComboBox<>(Protocol.values());
 
-  private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<TerminalType>(
+  private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<>(
       TerminalType.findByProtocol(Protocol.TN5250));
-  private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<TerminalType>(
+  private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<>(
       TerminalType.findByProtocol(Protocol.TN3270));
 
   private JLabel terminalTypeLabel = new JLabel();
@@ -210,44 +214,36 @@ public class RTEConfigPanel extends JPanel {
     sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
   }
 
-  public void setServer(String serverAddressParam) {
-    server.setText(serverAddressParam);
-  }
-
   public String getServer() {
     return server.getText();
   }
 
-  public void setPort(String serverPortParam) {
-    port.setText(serverPortParam);
+  public void setServer(String serverAddressParam) {
+    server.setText(serverAddressParam);
   }
 
   public String getPort() {
     return port.getText();
   }
 
-  public void setPass(String passParam) {
-    pass.setText(passParam);
+  public void setPort(String serverPortParam) {
+    port.setText(serverPortParam);
   }
 
   public String getPass() {
     return pass.getText();
   }
 
-  public void setUser(String userParam) {
-    user.setText(userParam);
+  public void setPass(String passParam) {
+    pass.setText(passParam);
   }
 
   public String getUser() {
     return user.getText();
   }
 
-  public void setSSLType(SSLType ssl) {
-    if (sslType.containsKey(ssl)) {
-      sslType.get(ssl).setSelected(true);
-    } else {
-      sslType.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
-    }
+  public void setUser(String userParam) {
+    user.setText(userParam);
   }
 
   public SSLType getSSLType() {
@@ -255,27 +251,42 @@ public class RTEConfigPanel extends JPanel {
     return SSLType.valueOf(sslType);
   }
 
-  public void setProtocol(Protocol protocol) {
-    protocolComboBox.setSelectedItem(protocol);
+  public void setSSLType(SSLType ssl) {
+    if (sslType.containsKey(ssl)) {
+      sslType.get(ssl).setSelected(true);
+    } else {
+      sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
+    }
   }
 
   public Protocol getProtocol() {
     return (Protocol) protocolComboBox.getSelectedItem();
   }
 
-  public void setTerminal(TerminalType terminal) {
-    terminalTypeComboBox.setSelectedItem(terminal);
+  public void setProtocol(Protocol protocol) {
+    protocolComboBox.setSelectedItem(protocol);
   }
 
   public TerminalType getTerminal() {
     return (TerminalType) terminalTypeComboBox.getSelectedItem();
   }
 
-  public void setTimeout(String timeout) {
-    connectionTimeout.setText(timeout);
+  public void setTerminal(TerminalType terminal) {
+    terminalTypeComboBox.setSelectedItem(terminal);
   }
 
-  public String getTimeout() {
-    return connectionTimeout.getText();
+  public long getConnectionTimeout() {
+    String str = connectionTimeout.getText();
+    try {
+      return Long.valueOf(str);
+    } catch (NumberFormatException e) {
+      LOG.debug("Invalid value for connection timeout (" + str + "), falling back to default value "
+          + RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+      return RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS;
+    }
+  }
+
+  public void setConnectionTimeout(long timeout) {
+    connectionTimeout.setText("" + timeout);
   }
 }

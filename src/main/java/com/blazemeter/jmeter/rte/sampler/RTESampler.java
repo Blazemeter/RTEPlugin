@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
@@ -27,25 +28,28 @@ import org.apache.log.Logger;
 
 public class RTESampler extends AbstractSampler implements ThreadListener {
 
-  public static final String CONFIG_PORT = "RTEConnectionConfig.Port";
-  public static final String CONFIG_SERVER = "RTEConnectionConfig.Server";
-  public static final String CONFIG_USER = "RTEConnectionConfig.User";
-  public static final String CONFIG_PASS = "RTEConnectionConfig.Pass";
-  public static final String CONFIG_PROTOCOL = "RTEConnectionConfig.Protocol";
-  public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.SSL_Type";
-  public static final String CONFIG_TIMEOUT = "RTEConnectionConfig.Timeout";
-  public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.Terminal_Type";
+  public static final String CONFIG_PORT = "RTEConnectionConfig.port";
+  public static final String CONFIG_SERVER = "RTEConnectionConfig.server";
+  public static final String CONFIG_USER = "RTEConnectionConfig.user";
+  public static final String CONFIG_PASS = "RTEConnectionConfig.pass";
+  public static final String CONFIG_PROTOCOL = "RTEConnectionConfig.protocol";
+  public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.sslType";
+  public static final String CONFIG_CONNECTION_TIMEOUT = "RTEConnectionConfig.connectTimeout";
+  public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.terminalType";
   public static final String TYPING_STYLE_FAST = "Fast";
   public static final String TYPING_STYLE_HUMAN = "Human";
   public static final Trigger DEFAULT_TRIGGER = Trigger.ENTER;
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
+  public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 30000;
 
+  private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
   private static final Logger LOG = LoggingManager.getLoggerForClass();
   private static final int UNSPECIFIED_PORT = 0;
   private static final String UNSPECIFIED_PORT_AS_STRING = "0";
   private static final int DEFAULT_RTE_PORT = 23;
+  private static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
   private final Function<Protocol, RteProtocolClient> protocolFactory;
@@ -96,8 +100,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
   }
 
-  private String getTimeout() {
-    return getPropertyAsString(CONFIG_TIMEOUT);
+  private long getConnectionTimeout() {
+    return getPropertyAsLong(CONFIG_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+  }
+
+  private long getStableTimeout() {
+    return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
   }
 
   private int getPort() {
@@ -259,7 +267,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     try {
       client = getClient();
       sampleResult.connectEnd();
-    } catch (RteIOException e) {
+    } catch (RteIOException | TimeoutException e) {
       errorResult("Error while establishing the connection", e);
       return sampleResult;
     } catch (InterruptedException e) {
@@ -286,7 +294,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   }
 
-  private RteProtocolClient getClient() throws RteIOException, InterruptedException {
+  private RteProtocolClient getClient()
+      throws RteIOException, InterruptedException, TimeoutException {
     String clientId = buildConnectionId();
     Map<String, RteProtocolClient> clients = connections.get();
 
@@ -295,7 +304,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    client.connect(getServer(), getPort(), getTerminal());
+    client
+        .connect(getServer(), getPort(), getTerminal(), getConnectionTimeout(), getStableTimeout());
     clients.put(clientId, client);
     return client;
   }
@@ -329,6 +339,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   @Override
+  public void threadStarted() {
+  }
+
+  @Override
   public void threadFinished() {
     closeConnections();
   }
@@ -338,7 +352,4 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     connections.get().clear();
   }
 
-  @Override
-  public void threadStarted() {
-  }
 }
