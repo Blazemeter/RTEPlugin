@@ -44,6 +44,9 @@ public class ClientConnection implements Runnable {
       } else {
         LOGGER.error("Problem while processing requests from client. Closing connection.", e);
       }
+    } catch (InterruptedException e) {
+      LOGGER.trace("The thread has been interrupted", e);
+      Thread.currentThread().interrupt();
     } finally {
       try {
         close();

@@ -11,20 +11,29 @@ public class ServerPacket extends PacketStep {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ClientPacket.class);
 
+  private long delayMillis;
+
   public ServerPacket() {}
 
   public ServerPacket(String hexDump) {
     super(hexDump);
   }
 
+  public long getDelayMillis() {
+    return delayMillis;
+  }
+
+  public void setDelayMillis(long delayMillis) {
+    this.delayMillis = delayMillis;
+  }
+
   @Override
-  public void process(ClientConnection clientConnection) {
-    LOGGER.debug("sending {}", data);
-    try {
-      clientConnection.write(data.getBytes());
-    } catch (IOException e) {
-      e.printStackTrace();
+  public void process(ClientConnection clientConnection) throws IOException, InterruptedException {
+    LOGGER.debug("sending {} with {} millis delay", data, delayMillis);
+    if (delayMillis > 0) {
+      Thread.sleep(delayMillis);
     }
+    clientConnection.write(data.getBytes());
   }
 
   @Override

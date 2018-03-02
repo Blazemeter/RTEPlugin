@@ -15,9 +15,8 @@ public class RTEConfigGui extends AbstractConfigGui {
   private RTEConfigPanel rteConfigPanelConfigPanel;
 
   public RTEConfigGui() {
-    super();
-    init();
-    initFields();
+    rteConfigPanelConfigPanel = new RTEConfigPanel();
+    rteConfigPanelConfigPanel.initFields();
 
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
@@ -43,11 +42,11 @@ public class RTEConfigGui extends AbstractConfigGui {
       ConfigTestElement configTestElement = (ConfigTestElement) element;
       rteConfigPanelConfigPanel
           .setServer(configTestElement.getPropertyAsString(RTESampler.CONFIG_SERVER));
-      rteConfigPanelConfigPanel
-          .setPort(configTestElement.getPropertyAsString(RTESampler.CONFIG_PORT));
+      rteConfigPanelConfigPanel.setPort(
+          configTestElement.getPropertyAsInt(RTESampler.CONFIG_PORT, RTESampler.DEFAULT_PORT));
       rteConfigPanelConfigPanel.setProtocol(
           Protocol.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL)));
-      rteConfigPanelConfigPanel.setTerminal(TerminalType
+      rteConfigPanelConfigPanel.setTerminalType(TerminalType
           .valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE)));
       rteConfigPanelConfigPanel
           .setUser(configTestElement.getPropertyAsString(RTESampler.CONFIG_USER));
@@ -56,7 +55,9 @@ public class RTEConfigGui extends AbstractConfigGui {
       rteConfigPanelConfigPanel.setSSLType(
           SSLType.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE)));
       rteConfigPanelConfigPanel
-          .setTimeout(configTestElement.getPropertyAsString(RTESampler.CONFIG_TIMEOUT));
+          .setConnectionTimeout(
+              configTestElement.getPropertyAsLong(RTESampler.CONFIG_CONNECTION_TIMEOUT,
+                  RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS));
 
     }
   }
@@ -86,9 +87,9 @@ public class RTEConfigGui extends AbstractConfigGui {
       configTestElement
           .setProperty(RTESampler.CONFIG_SSL_TYPE, rteConfigPanelConfigPanel.getSSLType().name());
       configTestElement.setProperty(RTESampler.CONFIG_TERMINAL_TYPE,
-          rteConfigPanelConfigPanel.getTerminal().name());
-      configTestElement
-          .setProperty(RTESampler.CONFIG_TIMEOUT, rteConfigPanelConfigPanel.getTimeout());
+          rteConfigPanelConfigPanel.getTerminalType().name());
+      configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT,
+          rteConfigPanelConfigPanel.getConnectionTimeout());
 
     }
   }
@@ -96,14 +97,6 @@ public class RTEConfigGui extends AbstractConfigGui {
   @Override
   public void clearGui() {
     super.clearGui();
-    initFields();
-  }
-
-  private void init() {
-    rteConfigPanelConfigPanel = new RTEConfigPanel();
-  }
-
-  private void initFields() {
     rteConfigPanelConfigPanel.initFields();
   }
 }

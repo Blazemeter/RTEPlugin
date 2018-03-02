@@ -6,26 +6,41 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.awt.event.KeyEvent;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
 import net.infordata.em.crt5250.XI5250Field;
 
 public class Tn5250Client implements RteProtocolClient {
 
   private final ConfigurablePortEmulator em = new ConfigurablePortEmulator();
+  private ScheduledExecutorService stableTimeoutExecutor;
 
-  public void connect(String server, int port, TerminalType terminalType)
-      throws RteIOException, InterruptedException {
+  @Override
+  public boolean isConnected() {
+    return em.isActive();
+  }
+
+  @Override
+  public void connect(String server, int port, TerminalType terminalType, long timeoutMillis,
+      long stableTimeoutMillis)
+      throws RteIOException, InterruptedException, TimeoutException {
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
     em.setPort(port);
     em.setTerminalType(terminalType.getType());
-    em.setActive(true);
-    /*
-    TODO: Replace with proper blocking logic
-    Doing this "wait" to avoid getting NullPointerException when trying to send due to uninitialized
-    fields due to not received screen.
-     */
-    Thread.sleep(3000);
+    UnlockListener unlock = new UnlockListener(timeoutMillis, stableTimeoutMillis,
+        stableTimeoutExecutor);
+    em.addEmulatorListener(unlock);
+    try {
+      em.setActive(true);
+      unlock.await();
+    } finally {
+      em.removeEmulatorListener(unlock);
+    }
   }
 
+  @Override
   public String send(List<CoordInput> input) throws InterruptedException {
     input.forEach(s -> {
       /*
@@ -59,11 +74,9 @@ public class Tn5250Client implements RteProtocolClient {
             KeyEvent.CHAR_UNDEFINED));
   }
 
-  public boolean isConnected() {
-    return em.isActive();
-  }
-
+  @Override
   public void disconnect() {
+    stableTimeoutExecutor.shutdown();
     em.setActive(false);
   }
 
