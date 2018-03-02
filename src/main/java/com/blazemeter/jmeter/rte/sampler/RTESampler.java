@@ -229,6 +229,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       sampleResult.setResponseData(screen, "utf-8");
       sampleResult.sampleEnd();
       return sampleResult;
+    } catch (IllegalArgumentException e) {
+      errorResult("Error while sending message", e);
+      return sampleResult;
     } catch (InterruptedException e) {
       errorResult("Error while sending a message", e);
       closeConnections();
