@@ -2,10 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.*;
 import com.blazemeter.jmeter.rte.virtualservice.Flow;
 import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import com.google.common.base.Charsets;
@@ -67,7 +64,8 @@ public class Tn5250ClientIT {
   }
 
   private void connectToVirtualService() throws InterruptedException, TimeoutException {
-    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, TerminalType.IBM_3477_FC,
+    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, SSLType.NONE,
+        "pwd123",".", TerminalType.IBM_3477_FC,
         CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
@@ -86,7 +84,9 @@ public class Tn5250ClientIT {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, 2222, TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS,
+    client.connect(VIRTUAL_SERVER_HOST, 2222, SSLType.NONE,
+        "pwd123",".",
+        TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS,
         STABLE_TIMEOUT_MILLIS);
   }
 

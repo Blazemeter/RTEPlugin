@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.awt.event.KeyEvent;
 import java.util.List;
@@ -21,14 +22,26 @@ public class Tn5250Client implements RteProtocolClient {
     return em.isActive();
   }
 
+  public void connect(String server, int port, SSLType sslType, long timeoutMillis,
+                      long stableTimeoutMillis)
+      throws RteIOException, InterruptedException, TimeoutException {
+    connect(server, port, sslType, null, null, null,
+        timeoutMillis, stableTimeoutMillis);
+  }
+
   @Override
-  public void connect(String server, int port, TerminalType terminalType, long timeoutMillis,
-      long stableTimeoutMillis)
+  public void connect(String server, int port, SSLType sslType,
+                      String password, String keyStorePath,
+                      TerminalType terminalType, long timeoutMillis,
+                      long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
     em.setPort(port);
     em.setTerminalType(terminalType.getType());
+    em.setSslType(sslType);
+    em.setPassword(password);
+    em.setKeystorePath(keyStorePath);
     UnlockListener unlock = new UnlockListener(timeoutMillis, stableTimeoutMillis,
         stableTimeoutExecutor);
     em.addEmulatorListener(unlock);

@@ -1,8 +1,11 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.SSLType;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
+
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tnprot.XITelnet;
 import net.infordata.em.tnprot.XITelnetEmulator;
@@ -15,6 +18,10 @@ import net.infordata.em.tnprot.XITelnetEmulator;
 public class ConfigurablePortEmulator extends XI5250Emulator {
 
   private int port;
+  private SSLType sslType;
+  private String password;
+  private String keystorePath;
+
   /**
    * Since we need to make aware the sampler of any communication problem raised in xtn5250 library
    * we need to capture any exception on it and re throw it when an operation is used. If we had
@@ -34,31 +41,40 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
   }
 
   @Override
-  public void setActive(boolean activate) {
+    public void setActive(boolean activate) {
     boolean wasActive;
     synchronized (this) {
       wasActive = isActive();
       if (activate == wasActive) {
         return;
       }
-
       if (activate) {
-        XITelnet ivTelnet = new XITelnet(getHost(), port);
-        setIvTelnet(ivTelnet);
-        ivTelnet.setEmulator(new TelnetEmulator());
-        ivTelnet.connect();
+        if (sslType == SSLType.NONE) {
+          XITelnet ivTelnet = new XITelnet(getHost(), port);
+          setIvTelnet(ivTelnet);
+          ivTelnet.setEmulator(new TelnetEmulator());
+          ivTelnet.connect();
+        } else {
+          SSLTelnet ivTelnet = new SSLTelnet(getHost(),
+                            port, sslType, password, keystorePath);
+          setIvTelnet(ivTelnet);
+          ivTelnet.setEmulator(new TelnetEmulator());
+          ivTelnet.connect();
+        }
       } else {
         XITelnet ivTelnet = getIvTelnet();
         ivTelnet.disconnect();
         ivTelnet.setEmulator(null);
         setIvTelnet(null);
       }
-
     }
-
     firePropertyChange(ACTIVE, wasActive, isActive());
   }
 
+  /*
+  It was necessary to use reflection because XI520Emulator class
+  has ivTelnet as a private attribute without set and get methods
+  */
   private XITelnet getIvTelnet() {
     try {
       return (XITelnet) getAccessibleIvTelnetField().get(this);
@@ -111,6 +127,18 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
       pendingError = null;
       throw new RteIOException(ret);
     }
+  }
+
+  public void setSslType(SSLType sslType) {
+    this.sslType = sslType;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public void setKeystorePath(String keystorePath) {
+    this.keystorePath = keystorePath;
   }
 
   private class TelnetEmulator implements XITelnetEmulator {
