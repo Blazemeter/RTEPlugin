@@ -49,8 +49,8 @@ public class Tn5250ClientIT {
     loadFlow("login-invalid-creds.yml");
     connectToVirtualService();
     List<CoordInput> input = Arrays.asList(
-        new CoordInput(new Position(53, 7), "TEST"),
-        new CoordInput(new Position(53, 9), "PASS"));
+        new CoordInput(new Position(7, 53), "TEST"),
+        new CoordInput(new Position(9, 53), "PASS"));
     String screen = client.send(input);
     assertThat(screen)
         .isEqualTo(getFileContent("login-invalid-creds.txt"));

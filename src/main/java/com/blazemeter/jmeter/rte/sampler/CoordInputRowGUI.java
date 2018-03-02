@@ -1,30 +1,27 @@
 package com.blazemeter.jmeter.rte.sampler;
 
+import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Position;
 import java.io.Serializable;
 import org.apache.jmeter.testelement.AbstractTestElement;
+import org.apache.jmeter.testelement.property.IntegerProperty;
 import org.apache.jmeter.testelement.property.StringProperty;
 
 public class CoordInputRowGUI extends AbstractTestElement implements Serializable {
 
-  public static final String INPUT = "CoordInputRowGUI.input";
-  public static final String COLUMN = "CoordInputRowGUI.column";
-  public static final String ROW = "CoordInputRowGUI.row";
+  private static final String INPUT = "CoordInputRowGUI.input";
+  private static final String COLUMN = "CoordInputRowGUI.column";
+  private static final String ROW = "CoordInputRowGUI.row";
 
   private static final long serialVersionUID = 4525234536003480135L;
 
   public CoordInputRowGUI() {
   }
 
-  public CoordInputRowGUI(String input, String column, String row) {
-    if (input != null) {
-      setProperty(new StringProperty(INPUT, input));
-    }
-    if (column != null) {
-      setProperty(new StringProperty(COLUMN, column));
-    }
-    if (row != null) {
-      setProperty(new StringProperty(ROW, row));
-    }
+  public CoordInputRowGUI(int row, int column, String input) {
+    setRow(row);
+    setColumn(column);
+    setInput(input);
   }
 
   public String getInput() {
@@ -35,20 +32,24 @@ public class CoordInputRowGUI extends AbstractTestElement implements Serializabl
     setProperty(new StringProperty(INPUT, input));
   }
 
-  public String getRow() {
-    return getPropertyAsString(ROW);
+  public int getRow() {
+    return getPropertyAsInt(ROW, 1);
   }
 
-  public void setRow(String row) {
-    setProperty(new StringProperty(ROW, row));
+  public void setRow(int row) {
+    setProperty(new IntegerProperty(ROW, row));
   }
 
-  public String getColumn() {
-    return getPropertyAsString(COLUMN);
+  public int getColumn() {
+    return getPropertyAsInt(COLUMN, 1);
   }
 
-  public void setColumn(String column) {
-    setProperty(new StringProperty(COLUMN, column));
+  public void setColumn(int column) {
+    setProperty(new IntegerProperty(COLUMN, column));
+  }
+
+  public CoordInput toCoordInput() {
+    return new CoordInput(new Position(getRow(), getColumn()), getInput());
   }
 
 }

@@ -27,7 +27,7 @@ public class VirtualTcpService implements Runnable {
 
   public static final int DEFAULT_READ_BUFFER_SIZE = 2048;
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ClientPacket.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ClientPacket.class);
 
   private final int readBufferSize;
   private final ServerSocket server;
@@ -63,17 +63,17 @@ public class VirtualTcpService implements Runnable {
 
   @Override
   public void run() {
-    LOGGER.debug("Starting server on {} with flow: {}", server.getLocalPort(), flow);
-    LOGGER.info("Waiting for connections on {}", server.getLocalPort());
+    LOG.debug("Starting server on {} with flow: {}", server.getLocalPort(), flow);
+    LOG.info("Waiting for connections on {}", server.getLocalPort());
     while (!stopped) {
       try {
         addClient(new ClientConnection(server.accept(), readBufferSize, flow));
         clientConnection.run();
       } catch (IOException e) {
         if (stopped) {
-          LOGGER.trace("Received expected exception when server socket has been closed", e);
+          LOG.trace("Received expected exception when server socket has been closed", e);
         } else {
-          LOGGER.error("Problem waiting for client connection. Keep waiting.", e);
+          LOG.error("Problem waiting for client connection. Keep waiting.", e);
         }
       } finally {
         removeClient();
@@ -103,7 +103,7 @@ public class VirtualTcpService implements Runnable {
     }
     serverExecutorService.shutdown();
     if (!serverExecutorService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
-      LOGGER.warn("Server thread didn't stop after {} millis, interrupting it", timeoutMillis);
+      LOG.warn("Server thread didn't stop after {} millis, interrupting it", timeoutMillis);
       serverExecutorService.shutdownNow();
     }
   }
