@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.sampler;
 
 import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
@@ -230,6 +229,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       sampleResult.setResponseData(screen, "utf-8");
       sampleResult.sampleEnd();
       return sampleResult;
+    } catch (IllegalArgumentException e) {
+      errorResult("Error while sending message", e);
+      return sampleResult;
     } catch (InterruptedException e) {
       errorResult("Error while sending a message", e);
       closeConnections();
@@ -309,12 +311,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   private List<CoordInput> getCoordInputs() {
     List<CoordInput> inputs = new ArrayList<>();
-
     for (JMeterProperty p : getInputs()) {
       CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
-      inputs.add(new CoordInput(
-          new Position(Integer.parseInt(c.getColumn()), Integer.parseInt(c.getRow())),
-          c.getInput()));
+      inputs.add(c.toCoordInput());
     }
     return inputs;
   }

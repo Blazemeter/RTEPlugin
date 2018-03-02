@@ -14,7 +14,7 @@ import org.slf4j.MDC;
  */
 public class ClientConnection implements Runnable {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ClientConnection.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ClientConnection.class);
 
   private final Socket socket;
   private final Queue<PacketStep> flowSteps;
@@ -32,26 +32,26 @@ public class ClientConnection implements Runnable {
   public void run() {
     MDC.put("connectionId", getId());
     try {
-      LOGGER.info("starting new flow ...");
+      LOG.info("starting new flow ...");
       while (!flowSteps.isEmpty()) {
         PacketStep step = flowSteps.poll();
         step.process(this);
       }
-      LOGGER.info("flow completed!");
+      LOG.info("flow completed!");
     } catch (IOException e) {
       if (closed) {
-        LOGGER.trace("Received expected exception when server socket has been closed", e);
+        LOG.trace("Received expected exception when server socket has been closed", e);
       } else {
-        LOGGER.error("Problem while processing requests from client. Closing connection.", e);
+        LOG.error("Problem while processing requests from client. Closing connection.", e);
       }
     } catch (InterruptedException e) {
-      LOGGER.trace("The thread has been interrupted", e);
+      LOG.trace("The thread has been interrupted", e);
       Thread.currentThread().interrupt();
     } finally {
       try {
         close();
       } catch (IOException e) {
-        LOGGER.error("Problem when releasing client connection socket", e);
+        LOG.error("Problem when releasing client connection socket", e);
       }
       MDC.clear();
     }
@@ -67,15 +67,15 @@ public class ClientConnection implements Runnable {
 
   public ByteBuffer read() throws IOException {
     if (!readBuffer.hasRemaining()) {
-      LOGGER.trace("reading from socket");
+      LOG.trace("reading from socket");
       int count = socket.getInputStream().read(readBuffer.array(), readBuffer.position(),
           readBuffer.capacity() - readBuffer.position());
       if (count == -1) {
         return null;
       }
       readBuffer.limit(readBuffer.position() + count);
-      if (LOGGER.isTraceEnabled()) {
-        LOGGER.trace("read from socket: {}",
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("read from socket: {}",
             PacketData.fromBytes(readBuffer.array(), readBuffer.position(), count));
       }
     }

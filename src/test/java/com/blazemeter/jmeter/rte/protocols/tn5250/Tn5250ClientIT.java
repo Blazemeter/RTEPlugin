@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -49,8 +50,8 @@ public class Tn5250ClientIT {
     loadFlow("login-invalid-creds.yml");
     connectToVirtualService();
     List<CoordInput> input = Arrays.asList(
-        new CoordInput(new Position(53, 7), "TEST"),
-        new CoordInput(new Position(53, 9), "PASS"));
+        new CoordInput(new Position(7, 53), "TEST"),
+        new CoordInput(new Position(9, 53), "PASS"));
     String screen = client.send(input);
     assertThat(screen)
         .isEqualTo(getFileContent("login-invalid-creds.txt"));
@@ -84,6 +85,15 @@ public class Tn5250ClientIT {
   public void shouldThrowTimeoutExceptionWhenConnectAndServerIsTooSlow() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldThrowIllegalArgumentExceptionWhenSendIncorrectFieldPosition() throws Exception {
+    loadFlow("login-invalid-creds.yml");
+    connectToVirtualService();
+    List<CoordInput> input = Collections.singletonList(
+        new CoordInput(new Position(7, 1), "TEST"));
+    client.send(input);
   }
 
 }

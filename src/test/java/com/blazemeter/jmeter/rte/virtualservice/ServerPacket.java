@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ServerPacket extends PacketStep {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ClientPacket.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ClientPacket.class);
 
   private long delayMillis;
 
@@ -29,7 +29,7 @@ public class ServerPacket extends PacketStep {
 
   @Override
   public void process(ClientConnection clientConnection) throws IOException, InterruptedException {
-    LOGGER.debug("sending {} with {} millis delay", data, delayMillis);
+    LOG.debug("sending {} with {} millis delay", data, delayMillis);
     if (delayMillis > 0) {
       Thread.sleep(delayMillis);
     }

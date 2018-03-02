@@ -49,6 +49,11 @@ public class Tn5250Client implements RteProtocolClient {
        */
       XI5250Field field = em.getFieldFromPos(s.getPosition().getColumn() - 1,
           s.getPosition().getRow() - 1);
+      if (field == null) {
+        throw new IllegalArgumentException(
+            "No field at row " + s.getPosition().getRow() + " and column " + s.getPosition()
+                .getColumn());
+      }
       field.setString(s.getInput());
     });
     sendSpecialKey(KeyEvent.VK_ENTER);

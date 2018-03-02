@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ClientPacket extends PacketStep {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(ClientPacket.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ClientPacket.class);
 
   public ClientPacket() {
   }
@@ -23,15 +23,15 @@ public class ClientPacket extends PacketStep {
   public void process(ClientConnection clientConnection) throws IOException {
     ByteBuffer dataBuffer = ByteBuffer.wrap(data.getBytes());
     ByteBuffer readBuffer;
-    LOGGER.debug("Waiting for {}", data);
+    LOG.debug("Waiting for {}", data);
     while ((readBuffer = clientConnection.read()) != null) {
       int foundPos = findDataInBuffer(dataBuffer, readBuffer);
       if (foundPos != -1) {
-        if (foundPos != 0 && LOGGER.isTraceEnabled()) {
-          LOGGER.trace("ignoring received {}  before expected",
+        if (foundPos != 0 && LOG.isTraceEnabled()) {
+          LOG.trace("ignoring received {}  before expected",
               PacketData.fromBytes(readBuffer.array(), 0, foundPos));
         }
-        LOGGER.debug("received expected {}", data);
+        LOG.debug("received expected {}", data);
         readBuffer.compact();
         readBuffer.flip();
         return;
@@ -45,8 +45,8 @@ public class ClientPacket extends PacketStep {
           readBuffer.mark();
           readBuffer.position(relativePos);
         } else {
-          if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("ignoring received {} while waiting for {}",
+          if (LOG.isTraceEnabled()) {
+            LOG.trace("ignoring received {} while waiting for {}",
                 PacketData.fromBytes(readBuffer.array(), 0, readBuffer.limit()), data);
           }
           readBuffer.clear();
@@ -58,21 +58,21 @@ public class ClientPacket extends PacketStep {
   }
 
   private int findDataInBuffer(ByteBuffer dataBuffer, ByteBuffer readBuffer) {
-    if (LOGGER.isTraceEnabled()) {
-      LOGGER.trace("Searching for {} from {} in {} from {}", data, dataBuffer.position(),
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("Searching for {} from {} in {} from {}", data, dataBuffer.position(),
           PacketData.fromBytes(readBuffer.array(), 0, readBuffer.limit()), readBuffer.position());
     }
     while (dataBuffer.hasRemaining() && readBuffer.hasRemaining()) {
       if (readBuffer.get() != dataBuffer.get()) {
         if (dataBuffer.position() != 1) {
-          LOGGER.trace("Finish match at {} and {}", readBuffer.position() - 1,
+          LOG.trace("Finish match at {} and {}", readBuffer.position() - 1,
               dataBuffer.position() - 1);
           readBuffer.reset();
         }
         dataBuffer.rewind();
       } else if (dataBuffer.position() == 1) {
         readBuffer.mark();
-        LOGGER.trace("Start match at {}", readBuffer.position() - 1);
+        LOG.trace("Start match at {}", readBuffer.position() - 1);
       }
     }
     if (!dataBuffer.hasRemaining()) {
