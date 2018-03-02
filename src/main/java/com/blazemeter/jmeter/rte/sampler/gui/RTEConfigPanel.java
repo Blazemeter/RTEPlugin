@@ -227,7 +227,7 @@ public class RTEConfigPanel extends JPanel {
     try {
       return Integer.valueOf(str);
     } catch (NumberFormatException e) {
-      LOG.debug("Invalid value for connection timeout (" + str + "), falling back to default value "
+      LOG.debug("Invalid value for port (" + str + "), falling back to default value "
           + RTESampler.DEFAULT_PORT);
       return RTESampler.DEFAULT_PORT;
     }
