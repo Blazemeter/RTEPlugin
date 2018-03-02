@@ -29,6 +29,7 @@ public class Tn5250ClientIT {
   private static final int VIRTUAL_SERVER_PORT = 2323;
   private static final int CONNECTION_TIMEOUT_MILLIS = 5000;
   private static final int STABLE_TIMEOUT_MILLIS = 1000;
+  private static final long SERVER_STOP_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
   private VirtualTcpService server;
   private Tn5250Client client = new Tn5250Client();
@@ -42,19 +43,27 @@ public class Tn5250ClientIT {
   @After
   public void teardown() throws Exception {
     client.disconnect();
-    server.stop(TimeUnit.SECONDS.toMillis(10));
+    server.stop(SERVER_STOP_TIMEOUT);
   }
 
   @Test
   public void shouldGetInvalidCredentialsScreenWhenSendInvalidCreds() throws Exception {
-    loadFlow("login-invalid-creds.yml");
+    loadLoginInvalidCredsFlow();
     connectToVirtualService();
+    String screen = sendInvalidCreds();
+    assertThat(screen)
+        .isEqualTo(getFileContent("login-invalid-creds.txt"));
+  }
+
+  private void loadLoginInvalidCredsFlow() throws FileNotFoundException {
+    loadFlow("login-invalid-creds.yml");
+  }
+
+  private String sendInvalidCreds() throws InterruptedException {
     List<CoordInput> input = Arrays.asList(
         new CoordInput(new Position(7, 53), "TEST"),
         new CoordInput(new Position(9, 53), "PASS"));
-    String screen = client.send(input);
-    assertThat(screen)
-        .isEqualTo(getFileContent("login-invalid-creds.txt"));
+    return client.send(input);
   }
 
   private void connectToVirtualService() throws InterruptedException, TimeoutException {
@@ -89,11 +98,19 @@ public class Tn5250ClientIT {
 
   @Test(expected = IllegalArgumentException.class)
   public void shouldThrowIllegalArgumentExceptionWhenSendIncorrectFieldPosition() throws Exception {
-    loadFlow("login-invalid-creds.yml");
+    loadLoginInvalidCredsFlow();
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
         new CoordInput(new Position(7, 1), "TEST"));
     client.send(input);
+  }
+
+  @Test(expected = RteIOException.class)
+  public void shouldThrowRteIOExceptionWhenSendAndServerDown() throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    server.stop(SERVER_STOP_TIMEOUT);
+    sendInvalidCreds();
   }
 
 }

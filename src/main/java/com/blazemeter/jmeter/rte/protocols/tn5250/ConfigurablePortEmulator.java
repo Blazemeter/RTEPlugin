@@ -15,6 +15,23 @@ import net.infordata.em.tnprot.XITelnetEmulator;
 public class ConfigurablePortEmulator extends XI5250Emulator {
 
   private int port;
+  /**
+   * Since we need to make aware the sampler of any communication problem raised in xtn5250 library
+   * we need to capture any exception on it and re throw it when an operation is used. If we had
+   * just thrown an encapsulated error in catchedIOException and catchedException we could break
+   * some background thread, and the library has no simple way to capture such errors and rethrow
+   * them to client code.
+   */
+  private Throwable pendingError;
+
+  public synchronized void setPort(int port) {
+    if (port == this.port) {
+      return;
+    }
+
+    setActive(false);
+    this.port = port;
+  }
 
   @Override
   public void setActive(boolean activate) {
@@ -42,6 +59,14 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
     firePropertyChange(ACTIVE, wasActive, isActive());
   }
 
+  private XITelnet getIvTelnet() {
+    try {
+      return (XITelnet) getAccessibleIvTelnetField().get(this);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   /*It was necessary to use reflection because XI520Emulator class has ivTelnet as a private
   attribute without set and
   get methods*/
@@ -64,21 +89,28 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
     }
   }
 
-  private XITelnet getIvTelnet() {
-    try {
-      return (XITelnet) getAccessibleIvTelnetField().get(this);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+  @Override
+  protected void catchedIOException(IOException ex) {
+    setPendingError(ex);
+  }
+
+  private synchronized void setPendingError(Throwable ex) {
+    if (pendingError == null) {
+      pendingError = ex;
     }
   }
 
-  public synchronized void setPort(int port) {
-    if (port == this.port) {
-      return;
-    }
+  @Override
+  protected void catchedException(Throwable ex) {
+    setPendingError(ex);
+  }
 
-    setActive(false);
-    this.port = port;
+  public synchronized void throwAnyPendingError() {
+    if (pendingError != null) {
+      Throwable ret = pendingError;
+      pendingError = null;
+      throw new RteIOException(ret);
+    }
   }
 
   private class TelnetEmulator implements XITelnetEmulator {
@@ -95,9 +127,8 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
       ConfigurablePortEmulator.this.disconnected();
     }
 
-    public final void catchedIOException(IOException ex) throws RteIOException {
+    public final void catchedIOException(IOException ex) {
       ConfigurablePortEmulator.this.catchedIOException(ex);
-      throw new RteIOException(ex);
     }
 
     public final void receivedData(byte[] buf, int len) {
@@ -120,4 +151,5 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
       ConfigurablePortEmulator.this.remoteFlagsChanged(aIACOpt);
     }
   }
+
 }
