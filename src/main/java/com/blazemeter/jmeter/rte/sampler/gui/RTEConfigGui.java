@@ -43,7 +43,7 @@ public class RTEConfigGui extends AbstractConfigGui {
       rteConfigPanelConfigPanel
           .setServer(configTestElement.getPropertyAsString(RTESampler.CONFIG_SERVER));
       rteConfigPanelConfigPanel.setPort(
-          configTestElement.getPropertyAsInt(RTESampler.CONFIG_PORT, RTESampler.DEFAULT_PORT));
+          configTestElement.getPropertyAsString(RTESampler.CONFIG_PORT));
       rteConfigPanelConfigPanel.setProtocol(
           Protocol.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL)));
       rteConfigPanelConfigPanel.setTerminalType(TerminalType
@@ -56,8 +56,7 @@ public class RTEConfigGui extends AbstractConfigGui {
           SSLType.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE)));
       rteConfigPanelConfigPanel
           .setConnectionTimeout(
-              configTestElement.getPropertyAsLong(RTESampler.CONFIG_CONNECTION_TIMEOUT,
-                  RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS));
+              configTestElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT));
 
     }
   }

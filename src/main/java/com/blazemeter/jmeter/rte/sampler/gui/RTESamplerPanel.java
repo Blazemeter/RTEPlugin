@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.core.Trigger;
+import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
@@ -29,9 +29,9 @@ public class RTESamplerPanel extends JPanel {
   private JPanel requestPanel = new JPanel();
   private JLabel typingStyleLabel = new JLabel();
   private JComboBox<String> typingStyleComboBox = new JComboBox<String>(TYPING_STYLE);
-  private JPanel triggerPanel = new JPanel();
-  private ButtonGroup triggersGroup = new ButtonGroup();
-  private Map<Trigger, JRadioButton> triggers = new HashMap<>();
+  private JPanel actionsPanel = new JPanel();
+  private ButtonGroup actionsGroup = new ButtonGroup();
+  private Map<Action, JRadioButton> actions = new HashMap<>();
   private CoordInputPanel payloadPanel;
   private JCheckBox disconnect = new JCheckBox("Disconnect?");
   private JPanel waitPanel = new JPanel();
@@ -113,15 +113,15 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    triggerPanel.setBorder(BorderFactory.createTitledBorder("Trigger"));
-    triggerPanel.setLayout(new GridLayout((int) Math.ceil(Trigger.values().length / 12), 12));
+    actionsPanel.setBorder(BorderFactory.createTitledBorder("Actions"));
+    actionsPanel.setLayout(new GridLayout((int) Math.ceil(Action.values().length / 12), 12));
 
-    Arrays.stream(Trigger.values()).forEach(t -> {
+    Arrays.stream(Action.values()).forEach(t -> {
       JRadioButton r = new JRadioButton(t.toString());
       r.setActionCommand(t.toString());
-      triggerPanel.add(r);
-      triggers.put(t, r);
-      triggersGroup.add(r);
+      actionsPanel.add(r);
+      actions.put(t, r);
+      actionsGroup.add(r);
     });
 
     GroupLayout requestPanelLayout = new GroupLayout(requestPanel);
@@ -135,7 +135,7 @@ public class RTESamplerPanel extends JPanel {
                     .addComponent(typingStyleComboBox))
                 .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE,
                     GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+                .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
                     Short.MAX_VALUE)
                 .addComponent(disconnect))));
 
@@ -148,7 +148,7 @@ public class RTESamplerPanel extends JPanel {
             .addPreferredGap(ComponentPlacement.UNRELATED)
             .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
             .addPreferredGap(ComponentPlacement.UNRELATED)
-            .addComponent(triggerPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+            .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
             .addPreferredGap(ComponentPlacement.UNRELATED)
             .addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
                 .addComponent(disconnect))
@@ -276,7 +276,7 @@ public class RTESamplerPanel extends JPanel {
     coordXWait.setEnabled(false);
     coordYWait.setEnabled(false);
     typingStyleComboBox.setSelectedItem(RTESampler.TYPING_STYLE_FAST);
-    triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
+    actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);
   }
 
   public CoordInputPanel getPayload() {
@@ -395,16 +395,16 @@ public class RTESamplerPanel extends JPanel {
     return (String) typingStyleComboBox.getSelectedItem();
   }
 
-  public void setTrigger(Trigger trigger) {
-    if (triggers.containsKey(trigger)) {
-      triggers.get(trigger).setSelected(true);
+  public void setTrigger(Action action) {
+    if (actions.containsKey(action)) {
+      actions.get(action).setSelected(true);
     } else {
-      triggers.get(RTESampler.DEFAULT_TRIGGER).setSelected(true);
+      actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);
     }
   }
 
-  public Trigger getTrigger() {
-    String trigger = triggersGroup.getSelection().getActionCommand();
-    return Trigger.valueOf(trigger);
+  public Action getTrigger() {
+    String trigger = actionsGroup.getSelection().getActionCommand();
+    return Action.valueOf(trigger);
   }
 }

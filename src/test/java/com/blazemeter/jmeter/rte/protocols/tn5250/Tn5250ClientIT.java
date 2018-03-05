@@ -2,7 +2,12 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.blazemeter.jmeter.rte.core.*;
+import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.virtualservice.Flow;
 import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import com.google.common.base.Charsets;
@@ -60,7 +65,7 @@ public class Tn5250ClientIT {
     List<CoordInput> input = Arrays.asList(
         new CoordInput(new Position(7, 53), "TEST"),
         new CoordInput(new Position(9, 53), "PASS"));
-    return client.send(input);
+    return client.send(input, Action.ENTER);
   }
 
   private void connectToVirtualService() throws InterruptedException, TimeoutException {
@@ -102,7 +107,7 @@ public class Tn5250ClientIT {
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
         new CoordInput(new Position(7, 1), "TEST"));
-    client.send(input);
+    client.send(input, Action.ENTER);
   }
 
   @Test(expected = RteIOException.class)
