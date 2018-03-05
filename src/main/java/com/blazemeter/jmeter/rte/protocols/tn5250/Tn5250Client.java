@@ -34,8 +34,10 @@ public class Tn5250Client implements RteProtocolClient {
     em.addEmulatorListener(unlock);
     try {
       em.setActive(true);
+      em.throwAnyPendingError();
       unlock.await();
     } finally {
+      em.throwAnyPendingError();
       em.removeEmulatorListener(unlock);
     }
   }
@@ -59,6 +61,7 @@ public class Tn5250Client implements RteProtocolClient {
     sendSpecialKey(KeyEvent.VK_ENTER);
     //TODO: Replace with waiters
     Thread.sleep(3000); //Doing this "wait" to avoid getting empty screen.
+    em.throwAnyPendingError();
     return getScreen();
   }
 
@@ -83,6 +86,7 @@ public class Tn5250Client implements RteProtocolClient {
   public void disconnect() {
     stableTimeoutExecutor.shutdown();
     em.setActive(false);
+    em.throwAnyPendingError();
   }
 
 }

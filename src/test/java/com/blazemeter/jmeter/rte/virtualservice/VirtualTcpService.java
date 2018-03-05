@@ -101,10 +101,9 @@ public class VirtualTcpService implements Runnable {
         clientConnection.close();
       }
     }
-    serverExecutorService.shutdown();
+    serverExecutorService.shutdownNow();
     if (!serverExecutorService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
-      LOG.warn("Server thread didn't stop after {} millis, interrupting it", timeoutMillis);
-      serverExecutorService.shutdownNow();
+      LOG.warn("Server thread didn't stop after {} millis", timeoutMillis);
     }
   }
 
