@@ -64,9 +64,9 @@ public class Tn5250ClientIT {
   }
 
   private void connectToVirtualService() throws InterruptedException, TimeoutException {
-    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, SSLType.NONE,
-        "pwd123",".", TerminalType.IBM_3477_FC,
-        CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+    SSLData ssldata = new SSLData(SSLType.NONE, "pwd123",".");
+    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, ssldata,
+        TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
   private void loadFlow(String flowFile) throws FileNotFoundException {
@@ -84,8 +84,8 @@ public class Tn5250ClientIT {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, 2222, SSLType.NONE,
-        "pwd123",".",
+    SSLData ssldata = new SSLData(SSLType.NONE, "pwd123",".");
+    client.connect(VIRTUAL_SERVER_HOST, 2222, ssldata,
         TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS,
         STABLE_TIMEOUT_MILLIS);
   }
