@@ -29,15 +29,14 @@ import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.gui.GuiUtils;
 import org.apache.jorphan.gui.ObjectTableModel;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.reflect.Functor;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CoordInputPanel extends JPanel implements ActionListener {
 
-  private static final Logger LOG = LoggingManager.getLoggerForClass();
-
   private static final long serialVersionUID = -6184904133375045201L;
+  private static final Logger LOG = LoggerFactory.getLogger(CoordInputPanel.class);
   private static final String ADD = "add";
   private static final String ADD_FROM_CLIPBOARD = "addFromClipboard";
   private static final String DELETE = "delete";
@@ -373,7 +372,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     try {
       return Integer.valueOf(val);
     } catch (NumberFormatException e) {
-      LOG.warn("Invalid value (" + val + ") for coordinate index.");
+      LOG.warn("Invalid value ({}) for coordinate index.", val);
       return 1;
     }
   }

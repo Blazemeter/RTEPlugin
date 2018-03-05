@@ -20,10 +20,14 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import org.apache.jmeter.util.JMeterUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RTEConfigPanel extends JPanel {
 
   private static final long serialVersionUID = -3671411083800369578L;
+  private static final Logger LOG = LoggerFactory.getLogger(RTEConfigPanel.class);
+
   private JPanel connectionPanel = new JPanel();
   private JPanel sslPanel = new JPanel();
   private ButtonGroup sslTypeGroup = new ButtonGroup();
@@ -210,36 +214,41 @@ public class RTEConfigPanel extends JPanel {
     sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
   }
 
-  public void setServer(String serverAddressParam) {
-    server.setText(serverAddressParam);
-  }
-
   public String getServer() {
     return server.getText();
   }
 
-  public void setPort(String serverPortParam) {
-    port.setText(serverPortParam);
+  public void setServer(String serverAddressParam) {
+    server.setText(serverAddressParam);
   }
 
   public String getPort() {
     return port.getText();
   }
 
-  public void setPass(String passParam) {
-    pass.setText(passParam);
+  public void setPort(String portParam) {
+    port.setText(portParam);
   }
 
   public String getPass() {
     return pass.getText();
   }
 
-  public void setUser(String userParam) {
-    user.setText(userParam);
+  public void setPass(String passParam) {
+    pass.setText(passParam);
   }
 
   public String getUser() {
     return user.getText();
+  }
+
+  public void setUser(String userParam) {
+    user.setText(userParam);
+  }
+
+  public SSLType getSSLType() {
+    String sslType = sslTypeGroup.getSelection().getActionCommand();
+    return SSLType.valueOf(sslType);
   }
 
   public void setSSLType(SSLType ssl) {
@@ -250,32 +259,27 @@ public class RTEConfigPanel extends JPanel {
     }
   }
 
-  public SSLType getSSLType() {
-    String sslType = sslTypeGroup.getSelection().getActionCommand();
-    return SSLType.valueOf(sslType);
+  public Protocol getProtocol() {
+    return (Protocol) protocolComboBox.getSelectedItem();
   }
 
   public void setProtocol(Protocol protocol) {
     protocolComboBox.setSelectedItem(protocol);
   }
 
-  public Protocol getProtocol() {
-    return (Protocol) protocolComboBox.getSelectedItem();
+  public TerminalType getTerminalType() {
+    return (TerminalType) terminalTypeComboBox.getSelectedItem();
   }
 
   public void setTerminalType(TerminalType terminal) {
     terminalTypeComboBox.setSelectedItem(terminal);
   }
 
-  public TerminalType getTerminalType() {
-    return (TerminalType) terminalTypeComboBox.getSelectedItem();
+  public String getConnectionTimeout() {
+    return connectionTimeout.getText();
   }
 
   public void setConnectionTimeout(String timeout) {
     connectionTimeout.setText(timeout);
-  }
-
-  public String getConnectionTimeout() {
-    return connectionTimeout.getText();
   }
 }

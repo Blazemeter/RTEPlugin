@@ -23,8 +23,8 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RTESampler extends AbstractSampler implements ThreadListener {
 
@@ -43,12 +43,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
   public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 30000;
-  private static final int UNSPECIFIED_PORT = 0;
-  private static final String UNSPECIFIED_PORT_AS_STRING = "0";
-  private static final int DEFAULT_RTE_PORT = 23;
+  public static final int DEFAULT_PORT = 23;
 
+  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
-  private static final Logger LOG = LoggingManager.getLoggerForClass();
   private static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
@@ -64,93 +62,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     this.protocolFactory = protocolFactory;
   }
 
-  private void errorResult(String message, Throwable e) {
-    StringWriter sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
-    sampleResult.setDataType(SampleResult.TEXT);
-    sampleResult.setResponseCode(e.getClass().getName());
-    sampleResult.setResponseMessage(e.getMessage());
-    sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    sampleResult.setSuccessful(false);
-    sampleResult.sampleEnd();
-    LOG.error(message, e);
-  }
-
-  private List<CoordInput> getCoordInputs() {
-    List<CoordInput> inputs = new ArrayList<>();
-    for (JMeterProperty p : getInputs()) {
-      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
-      inputs.add(c.toCoordInput());
-    }
-    return inputs;
-  }
-
-  private RteProtocolClient getClient()
-      throws RteIOException, InterruptedException, TimeoutException {
-    String clientId = buildConnectionId();
-    Map<String, RteProtocolClient> clients = connections.get();
-
-    if (clients.containsKey(clientId)) {
-      return clients.get(clientId);
-    }
-
-    RteProtocolClient client = protocolFactory.apply(getProtocol());
-    SSLData ssldata = new SSLData(DEFAULT_SSLTYPE, null, null);
-    client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
-        getStableTimeout()); //TODO: Change hardcoded values from
-    // functions in order to take the values from GUI
-    clients.put(clientId, client);
-    return client;
-  }
-
-  private String buildConnectionId() {
-    return getServer() + ":" + getPort();
-  }
-
-  private void closeConnections() {
-    connections.get().values().forEach(RteProtocolClient::disconnect);
-    connections.get().clear();
-  }
-
   @Override
-  public SampleResult sample(Entry entry) {
-
-    sampleResult = new SampleResult();
-    sampleResult.setSampleLabel(getName());
-    sampleResult.sampleStart();
-    RteProtocolClient client;
-
-    try {
-      client = getClient();
-      sampleResult.connectEnd();
-    } catch (RteIOException | TimeoutException e) {
-      errorResult("Error while establishing the connection", e);
-      return sampleResult;
-    } catch (InterruptedException e) {
-      errorResult("Error while establishing the connection", e);
-      closeConnections();
-      Thread.currentThread().interrupt();
-      return sampleResult;
-    }
-
-    List<CoordInput> inputs = getCoordInputs();
-
-    try {
-      String screen = client.send(inputs, getAction());
-      sampleResult.setSuccessful(true);
-      sampleResult.setResponseData(screen, "utf-8");
-      sampleResult.sampleEnd();
-      return sampleResult;
-    } catch (IllegalArgumentException e) {
-      errorResult("Error while sending message", e);
-      return sampleResult;
-    } catch (InterruptedException e) {
-      errorResult("Error while sending a message", e);
-      closeConnections();
-      Thread.currentThread().interrupt();
-      return sampleResult;
-    }
-
+  public String getName() {
+    return getPropertyAsString(TestElement.NAME);
   }
 
   @Override
@@ -160,9 +74,36 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
   }
 
-  @Override
-  public String getName() {
-    return getPropertyAsString(TestElement.NAME);
+  private Protocol getProtocol() {
+    return Protocol.valueOf(getPropertyAsString(CONFIG_PROTOCOL));
+  }
+
+  private String getServer() {
+    return getPropertyAsString(CONFIG_SERVER);
+  }
+
+  private int getPort() {
+    return getPropertyAsInt(CONFIG_PORT, DEFAULT_PORT);
+  }
+
+  private TerminalType getTerminalType() {
+    return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
+  }
+
+  private long getConnectionTimeout() {
+    return getPropertyAsLong(CONFIG_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+  }
+
+  private long getStableTimeout() {
+    return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
+  }
+
+  public boolean getDisconnect() {
+    return getPropertyAsBoolean("Disconnect");
+  }
+
+  public void setDisconnect(boolean disconnect) {
+    setProperty("Disconnect", disconnect);
   }
 
   private String getUser() {
@@ -285,14 +226,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     setProperty("WaitTimeoutText", waitTimeoutText);
   }
 
-  public boolean getDisconnect() {
-    return getPropertyAsBoolean("Disconnect");
-  }
-
-  public void setDisconnect(boolean disconnect) {
-    setProperty("Disconnect", disconnect);
-  }
-
   public Action getAction() {
     if (getPropertyAsString("Action").isEmpty()) {
       return DEFAULT_ACTION;
@@ -304,45 +237,87 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     setProperty("Action", action.name());
   }
 
-  private TerminalType getTerminalType() {
-    return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
-  }
+  @Override
+  public SampleResult sample(Entry entry) {
 
-  private Protocol getProtocol() {
-    return Protocol.valueOf(getPropertyAsString(CONFIG_PROTOCOL));
-  }
+    sampleResult = new SampleResult();
+    sampleResult.setSampleLabel(getName());
+    sampleResult.sampleStart();
 
-  private long getConnectionTimeout() {
-    return getPropertyAsLong(CONFIG_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT_MILLIS);
-  }
-
-  private long getStableTimeout() {
-    return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
-  }
-
-  private int getPort() {
-    final int port = getPortIfSpecified();
-    if (port == UNSPECIFIED_PORT) {
-      return DEFAULT_RTE_PORT;
-    }
-    return port;
-  }
-
-  private int getPortIfSpecified() {
-    String portS = getPropertyAsString(CONFIG_PORT, UNSPECIFIED_PORT_AS_STRING);
     try {
-      return Integer.parseInt(portS.trim());
-    } catch (NumberFormatException e) {
-      return UNSPECIFIED_PORT;
+      List<CoordInput> inputs = getCoordInputs();
+      RteProtocolClient client = getClient();
+      try {
+        client.send(inputs, getAction());
+        sampleResult.setSuccessful(true);
+        sampleResult.setResponseData(client.getScreen(), "utf-8");
+        sampleResult.sampleEnd();
+        return sampleResult;
+      } finally {
+        if (getDisconnect()) {
+          disconnect(client);
+        }
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return errorResult("The sampling has been interrupted", e);
+    } catch (Exception e) {
+      return errorResult("Error while sampling the remote terminal", e);
     }
   }
 
-  private String getServer() {
-    return getPropertyAsString(CONFIG_SERVER);
+  private List<CoordInput> getCoordInputs() {
+    List<CoordInput> inputs = new ArrayList<>();
+    for (JMeterProperty p : getInputs()) {
+      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
+      inputs.add(c.toCoordInput());
+    }
+    return inputs;
   }
 
   public Inputs getInputs() {
     return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
+  }
+
+  private RteProtocolClient getClient()
+      throws RteIOException, InterruptedException, TimeoutException {
+    String clientId = buildConnectionId();
+    Map<String, RteProtocolClient> clients = connections.get();
+
+    if (clients.containsKey(clientId)) {
+      return clients.get(clientId);
+    }
+
+    RteProtocolClient client = protocolFactory.apply(getProtocol());
+    SSLData ssldata = new SSLData(DEFAULT_SSLTYPE, null, null);
+    client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
+        getStableTimeout()); //TODO: Change hardcoded values from
+    // functions in order to take the values from GUI
+    clients.put(clientId, client);
+    sampleResult.connectEnd();
+    return client;
+  }
+
+  private String buildConnectionId() {
+    return getServer() + ":" + getPort();
+  }
+
+  private void disconnect(RteProtocolClient client) throws RteIOException {
+    client.disconnect();
+    connections.get().remove(buildConnectionId());
+  }
+
+  private SampleResult errorResult(String message, Throwable e) {
+    StringWriter sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
+    sampleResult.setDataType(SampleResult.TEXT);
+    sampleResult.setResponseCode(e.getClass().getName());
+    sampleResult.setResponseMessage(e.getMessage());
+    sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
+    sampleResult.setSuccessful(false);
+    sampleResult.sampleEnd();
+    LOG.error(message, e);
+    return sampleResult;
   }
 
   @Override
@@ -352,6 +327,17 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   @Override
   public void threadFinished() {
     closeConnections();
+  }
+
+  private void closeConnections() {
+    connections.get().values().forEach(c -> {
+      try {
+        c.disconnect();
+      } catch (Exception e) {
+        LOG.error("Problem while closing RTE connection", e);
+      }
+    });
+    connections.get().clear();
   }
 
 }

@@ -12,7 +12,10 @@ public interface RteProtocolClient {
                TerminalType terminalType, long timeoutMillis, long stableTimeout)
       throws RteIOException, TimeoutException, InterruptedException;
 
-  String send(List<CoordInput> input, Action action) throws InterruptedException;
+  void send(List<CoordInput> input, Action action) throws InterruptedException, RteIOException;
 
-  void disconnect();
+  String getScreen();
+
+  void disconnect() throws RteIOException;
+
 }
