@@ -1,17 +1,67 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
+import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.awt.event.KeyEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.crt5250.XI5250Field;
 
 public class Tn5250Client implements RteProtocolClient {
+
+  private static class KeyEventMap {
+
+    private final int modifier;
+    private final int specialKey;
+
+    KeyEventMap(int modifier, int specialKey) {
+      this.modifier = modifier;
+      this.specialKey = specialKey;
+    }
+  }
+
+  private static final Map<Action, KeyEventMap> KEY_EVENTS = new HashMap<Action, KeyEventMap>() {
+    {
+      put(Action.F1, new KeyEventMap(0, KeyEvent.VK_F1));
+      put(Action.F2, new KeyEventMap(0, KeyEvent.VK_F2));
+      put(Action.F3, new KeyEventMap(0, KeyEvent.VK_F3));
+      put(Action.F4, new KeyEventMap(0, KeyEvent.VK_F4));
+      put(Action.F5, new KeyEventMap(0, KeyEvent.VK_F5));
+      put(Action.F6, new KeyEventMap(0, KeyEvent.VK_F6));
+      put(Action.F7, new KeyEventMap(0, KeyEvent.VK_F7));
+      put(Action.F8, new KeyEventMap(0, KeyEvent.VK_F8));
+      put(Action.F9, new KeyEventMap(0, KeyEvent.VK_F9));
+      put(Action.F10, new KeyEventMap(0, KeyEvent.VK_F10));
+      put(Action.F11, new KeyEventMap(0, KeyEvent.VK_F11));
+      put(Action.F12, new KeyEventMap(0, KeyEvent.VK_F12));
+      put(Action.F13, new KeyEventMap(0, KeyEvent.VK_F13));
+      put(Action.F14, new KeyEventMap(0, KeyEvent.VK_F14));
+      put(Action.F15, new KeyEventMap(0, KeyEvent.VK_F15));
+      put(Action.F16, new KeyEventMap(0, KeyEvent.VK_F16));
+      put(Action.F17, new KeyEventMap(0, KeyEvent.VK_F17));
+      put(Action.F18, new KeyEventMap(0, KeyEvent.VK_F18));
+      put(Action.F19, new KeyEventMap(0, KeyEvent.VK_F19));
+      put(Action.F20, new KeyEventMap(0, KeyEvent.VK_F20));
+      put(Action.F21, new KeyEventMap(0, KeyEvent.VK_F21));
+      put(Action.F22, new KeyEventMap(0, KeyEvent.VK_F22));
+      put(Action.F23, new KeyEventMap(0, KeyEvent.VK_F23));
+      put(Action.F24, new KeyEventMap(0, KeyEvent.VK_F24));
+      put(Action.ENTER, new KeyEventMap(0, KeyEvent.VK_ENTER));
+      put(Action.ATTN, new KeyEventMap(0, KeyEvent.VK_ESCAPE));
+      put(Action.CLEAR, new KeyEventMap(0, KeyEvent.VK_PAUSE));
+      put(Action.SYSRQ, new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_ESCAPE));
+      put(Action.RESET, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_CONTROL));
+      put(Action.ROLL_UP, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_UP));
+      put(Action.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
+    }
+  };
 
   private final ConfigurablePortEmulator em = new ConfigurablePortEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
@@ -23,8 +73,8 @@ public class Tn5250Client implements RteProtocolClient {
 
   @Override
   public void connect(String server, int port, SSLData sslData,
-                      TerminalType terminalType, long timeoutMillis,
-                      long stableTimeoutMillis)
+      TerminalType terminalType, long timeoutMillis,
+      long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
@@ -45,7 +95,7 @@ public class Tn5250Client implements RteProtocolClient {
   }
 
   @Override
-  public String send(List<CoordInput> input) throws InterruptedException {
+  public String send(List<CoordInput> input, Action action) throws InterruptedException {
     input.forEach(s -> {
       /*
       The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
@@ -60,7 +110,8 @@ public class Tn5250Client implements RteProtocolClient {
       }
       field.setString(s.getInput());
     });
-    sendSpecialKey(KeyEvent.VK_ENTER);
+
+    sendActionKey(action);
     //TODO: Replace with waiters
     Thread.sleep(3000); //Doing this "wait" to avoid getting empty screen.
     em.throwAnyPendingError();
@@ -78,10 +129,11 @@ public class Tn5250Client implements RteProtocolClient {
     return screen.toString();
   }
 
-  private void sendSpecialKey(int specialKey) {
-    em.processRawKeyEvent(
-        new KeyEvent(em, KeyEvent.KEY_PRESSED, 0, 0, specialKey,
-            KeyEvent.CHAR_UNDEFINED));
+  private void sendActionKey(Action action) {
+    KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
+        getKeyEvent(action).modifier, getKeyEvent(action).specialKey,
+        KeyEvent.CHAR_UNDEFINED);
+    em.processRawKeyEvent(keyEvent);
   }
 
   @Override
@@ -89,6 +141,10 @@ public class Tn5250Client implements RteProtocolClient {
     stableTimeoutExecutor.shutdown();
     em.setActive(false);
     em.throwAnyPendingError();
+  }
+
+  private KeyEventMap getKeyEvent(Action action) {
+    return KEY_EVENTS.get(action);
   }
 
 }

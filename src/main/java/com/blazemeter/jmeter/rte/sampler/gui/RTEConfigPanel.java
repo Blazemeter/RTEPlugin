@@ -20,14 +20,10 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
 
 public class RTEConfigPanel extends JPanel {
 
   private static final long serialVersionUID = -3671411083800369578L;
-  private static final Logger LOG = LoggingManager.getLoggerForClass();
-
   private JPanel connectionPanel = new JPanel();
   private JPanel sslPanel = new JPanel();
   private ButtonGroup sslTypeGroup = new ButtonGroup();
@@ -214,48 +210,36 @@ public class RTEConfigPanel extends JPanel {
     sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
   }
 
-  public String getServer() {
-    return server.getText();
-  }
-
   public void setServer(String serverAddressParam) {
     server.setText(serverAddressParam);
   }
 
-  public int getPort() {
-    String str = port.getText();
-    try {
-      return Integer.valueOf(str);
-    } catch (NumberFormatException e) {
-      LOG.warn("Invalid value for port (" + str + "), falling back to default value "
-          + RTESampler.DEFAULT_PORT);
-      return RTESampler.DEFAULT_PORT;
-    }
+  public String getServer() {
+    return server.getText();
   }
 
-  public void setPort(int portParam) {
-    port.setText(String.valueOf(portParam));
+  public void setPort(String serverPortParam) {
+    port.setText(serverPortParam);
   }
 
-  public String getPass() {
-    return pass.getText();
+  public String getPort() {
+    return port.getText();
   }
 
   public void setPass(String passParam) {
     pass.setText(passParam);
   }
 
-  public String getUser() {
-    return user.getText();
+  public String getPass() {
+    return pass.getText();
   }
 
   public void setUser(String userParam) {
     user.setText(userParam);
   }
 
-  public SSLType getSSLType() {
-    String sslType = sslTypeGroup.getSelection().getActionCommand();
-    return SSLType.valueOf(sslType);
+  public String getUser() {
+    return user.getText();
   }
 
   public void setSSLType(SSLType ssl) {
@@ -266,34 +250,32 @@ public class RTEConfigPanel extends JPanel {
     }
   }
 
-  public Protocol getProtocol() {
-    return (Protocol) protocolComboBox.getSelectedItem();
+  public SSLType getSSLType() {
+    String sslType = sslTypeGroup.getSelection().getActionCommand();
+    return SSLType.valueOf(sslType);
   }
 
   public void setProtocol(Protocol protocol) {
     protocolComboBox.setSelectedItem(protocol);
   }
 
-  public TerminalType getTerminalType() {
-    return (TerminalType) terminalTypeComboBox.getSelectedItem();
+  public Protocol getProtocol() {
+    return (Protocol) protocolComboBox.getSelectedItem();
   }
 
   public void setTerminalType(TerminalType terminal) {
     terminalTypeComboBox.setSelectedItem(terminal);
   }
 
-  public long getConnectionTimeout() {
-    String str = connectionTimeout.getText();
-    try {
-      return Long.valueOf(str);
-    } catch (NumberFormatException e) {
-      LOG.warn("Invalid value for connection timeout (" + str + "), falling back to default value "
-          + RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
-      return RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS;
-    }
+  public TerminalType getTerminalType() {
+    return (TerminalType) terminalTypeComboBox.getSelectedItem();
   }
 
-  public void setConnectionTimeout(long timeout) {
-    connectionTimeout.setText("" + timeout);
+  public void setConnectionTimeout(String timeout) {
+    connectionTimeout.setText(timeout);
+  }
+
+  public String getConnectionTimeout() {
+    return connectionTimeout.getText();
   }
 }

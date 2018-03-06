@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
-public enum Trigger {
+public enum Action {
   F1,
   F2,
   F3,
@@ -28,13 +28,8 @@ public enum Trigger {
   ENTER,
   ATTN,
   CLEAR,
-  DUP,
-  EOF,
-  INPUT,
-  FM,
-  INSERT,
-  PA1,
-  PA2,
   SYSRQ,
-  REST
+  RESET,
+  ROLL_UP,
+  ROLL_DN
 }
