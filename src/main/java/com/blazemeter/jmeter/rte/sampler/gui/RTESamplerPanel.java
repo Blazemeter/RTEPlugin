@@ -395,7 +395,7 @@ public class RTESamplerPanel extends JPanel {
     return (String) typingStyleComboBox.getSelectedItem();
   }
 
-  public void setTrigger(Action action) {
+  public void setAction(Action action) {
     if (actions.containsKey(action)) {
       actions.get(action).setSelected(true);
     } else {
@@ -403,8 +403,8 @@ public class RTESamplerPanel extends JPanel {
     }
   }
 
-  public Action getTrigger() {
-    String trigger = actionsGroup.getSelection().getActionCommand();
-    return Action.valueOf(trigger);
+  public Action getAction() {
+    String action = actionsGroup.getSelection().getActionCommand();
+    return Action.valueOf(action);
   }
 }

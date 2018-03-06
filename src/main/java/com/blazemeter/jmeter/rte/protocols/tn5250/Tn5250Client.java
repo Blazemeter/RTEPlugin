@@ -73,8 +73,8 @@ public class Tn5250Client implements RteProtocolClient {
 
   @Override
   public void connect(String server, int port, SSLData sslData,
-                      TerminalType terminalType, long timeoutMillis,
-                      long stableTimeoutMillis)
+      TerminalType terminalType, long timeoutMillis,
+      long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
@@ -110,10 +110,8 @@ public class Tn5250Client implements RteProtocolClient {
       }
       field.setString(s.getInput());
     });
-    KeyEvent keyEvent =  new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
-        getKeyEvent(action).modifier, getKeyEvent(action).specialKey,
-        KeyEvent.CHAR_UNDEFINED);
-    sendSpecialKey(keyEvent);
+
+    sendActionKey(action);
     //TODO: Replace with waiters
     Thread.sleep(3000); //Doing this "wait" to avoid getting empty screen.
     em.throwAnyPendingError();
@@ -131,8 +129,11 @@ public class Tn5250Client implements RteProtocolClient {
     return screen.toString();
   }
 
-  private void sendSpecialKey(KeyEvent specialKey) {
-    em.processRawKeyEvent(specialKey);
+  private void sendActionKey(Action action) {
+    KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
+        getKeyEvent(action).modifier, getKeyEvent(action).specialKey,
+        KeyEvent.CHAR_UNDEFINED);
+    em.processRawKeyEvent(keyEvent);
   }
 
   @Override

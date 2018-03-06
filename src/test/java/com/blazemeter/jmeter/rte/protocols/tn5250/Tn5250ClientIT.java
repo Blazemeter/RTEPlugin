@@ -6,8 +6,8 @@ import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.SSLType;
+import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.virtualservice.Flow;
 import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import com.google.common.base.Charsets;
@@ -69,7 +69,7 @@ public class Tn5250ClientIT {
   }
 
   private void connectToVirtualService() throws InterruptedException, TimeoutException {
-    SSLData ssldata = new SSLData(SSLType.NONE, null,null);
+    SSLData ssldata = new SSLData(SSLType.NONE, null, null);
     client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, ssldata,
         TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
@@ -89,7 +89,7 @@ public class Tn5250ClientIT {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    SSLData ssldata = new SSLData(SSLType.NONE, null,null);
+    SSLData ssldata = new SSLData(SSLType.NONE, null, null);
     client.connect(VIRTUAL_SERVER_HOST, 2222, ssldata,
         TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS,
         STABLE_TIMEOUT_MILLIS);

@@ -39,9 +39,9 @@ public class RTEConfigPanel extends JPanel {
   private JLabel protocolLabel = new JLabel();
   private JComboBox<Protocol> protocolComboBox = new JComboBox<>(Protocol.values());
 
-  private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<TerminalType>(
+  private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<>(
       TerminalType.findByProtocol(Protocol.TN5250));
-  private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<TerminalType>(
+  private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<>(
       TerminalType.findByProtocol(Protocol.TN3270));
 
   private JLabel terminalTypeLabel = new JLabel();
