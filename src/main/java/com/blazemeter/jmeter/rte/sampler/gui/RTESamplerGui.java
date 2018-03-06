@@ -12,7 +12,6 @@ public class RTESamplerGui extends AbstractSamplerGui {
   private RTESamplerPanel rteSamplerPanel;
 
   public RTESamplerGui() {
-    super();
     init();
     initFields();
 

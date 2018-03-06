@@ -28,7 +28,7 @@ public class RTESamplerPanel extends JPanel {
 
   private JPanel requestPanel = new JPanel();
   private JLabel typingStyleLabel = new JLabel();
-  private JComboBox<String> typingStyleComboBox = new JComboBox<String>(TYPING_STYLE);
+  private JComboBox<String> typingStyleComboBox = new JComboBox<>(TYPING_STYLE);
   private JPanel actionsPanel = new JPanel();
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new HashMap<>();
@@ -68,47 +68,31 @@ public class RTESamplerPanel extends JPanel {
     disconnect.setText("Disconnect?");
 
     waitSync.addItemListener(e -> {
-      if (e.getStateChange() == ItemEvent.SELECTED) {
-        waitTimeoutSync.setEnabled(true);
-      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-        waitTimeoutSync.setEnabled(false);
-      }
+      waitTimeoutSync.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
 
     waitCursor.addItemListener(e -> {
-      if (e.getStateChange() == ItemEvent.SELECTED) {
-        waitTimeoutCursor.setEnabled(true);
-      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-        waitTimeoutCursor.setEnabled(false);
-      }
+      waitTimeoutCursor.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
 
     waitSilent.addItemListener(e -> {
-      if (e.getStateChange() == ItemEvent.SELECTED) {
-        waitTimeoutSilent.setEnabled(true);
-      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-        waitTimeoutSilent.setEnabled(false);
-      }
+      boolean selected = e.getStateChange() == ItemEvent.SELECTED;
+      waitTimeoutSilent.setEnabled(selected);
+      waitForSilent.setEnabled(selected);
       validate();
       repaint();
     });
 
     waitText.addItemListener(e -> {
-      if (e.getStateChange() == ItemEvent.SELECTED) {
-        waitTimeoutText.setEnabled(true);
-        textWait.setEnabled(true);
-        coordXWait.setEnabled(true);
-        coordYWait.setEnabled(true);
-      } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-        waitTimeoutText.setEnabled(false);
-        textWait.setEnabled(false);
-        coordXWait.setEnabled(false);
-        coordYWait.setEnabled(false);
-      }
+      boolean selected = e.getStateChange() == ItemEvent.SELECTED;
+      waitTimeoutText.setEnabled(selected);
+      textWait.setEnabled(selected);
+      coordXWait.setEnabled(selected);
+      coordYWait.setEnabled(selected);
       validate();
       repaint();
     });
@@ -257,23 +241,25 @@ public class RTESamplerPanel extends JPanel {
   public void initFields() {
     payloadPanel.clear();
     disconnect.setSelected(false);
-    waitCursor.setSelected(false);
-    waitSilent.setSelected(false);
     waitSync.setSelected(false);
-    waitText.setSelected(false);
     waitTimeoutSync.setText("");
-    waitTimeoutCursor.setText("");
-    waitTimeoutSilent.setText("");
-    waitTimeoutText.setText("");
-    textWait.setText("");
-    coordXWait.setText("");
-    coordYWait.setText("");
     waitTimeoutSync.setEnabled(false);
+    waitCursor.setSelected(false);
+    waitTimeoutCursor.setText("");
     waitTimeoutCursor.setEnabled(false);
+    waitSilent.setSelected(false);
+    waitTimeoutSilent.setText("");
     waitTimeoutSilent.setEnabled(false);
+    waitForSilent.setText("");
+    waitForSilent.setEnabled(false);
+    waitText.setSelected(false);
+    waitTimeoutText.setText("");
     waitTimeoutText.setEnabled(false);
+    textWait.setText("");
     textWait.setEnabled(false);
+    coordXWait.setText("");
     coordXWait.setEnabled(false);
+    coordYWait.setText("");
     coordYWait.setEnabled(false);
     typingStyleComboBox.setSelectedItem(RTESampler.TYPING_STYLE_FAST);
     actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);

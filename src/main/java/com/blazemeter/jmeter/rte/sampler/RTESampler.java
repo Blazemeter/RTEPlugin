@@ -134,11 +134,23 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   public boolean getWaitSync() {
-    return getPropertyAsBoolean("WaitSync");
+    return getPropertyAsBoolean("WaitSync", true);
   }
 
   public void setWaitSync(boolean waitSync) {
     setProperty("WaitSync", waitSync);
+  }
+
+  public String getWaitTimeoutSync() {
+    return getPropertyAsString("WaitTimeoutSync", "" + DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
+  }
+
+  private long getWaitTimeoutSyncValue() {
+    return getPropertyAsLong("WaitTimeoutSync", DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
+  }
+
+  public void setWaitTimeoutSync(String waitTimeoutSync) {
+    setProperty("WaitTimeoutSync", waitTimeoutSync);
   }
 
   public boolean getWaitCursor() {
@@ -149,12 +161,36 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     setProperty("WaitCursor", waitCursor);
   }
 
+  public String getWaitTimeoutCursor() {
+    return getPropertyAsString("WaitTimeoutCursor");
+  }
+
+  public void setWaitTimeoutCursor(String waitTimeoutCursor) {
+    setProperty("WaitTimeoutCursor", waitTimeoutCursor);
+  }
+
   public boolean getWaitSilent() {
     return getPropertyAsBoolean("WaitSilent");
   }
 
   public void setWaitSilent(boolean waitSilent) {
     setProperty("WaitSilent", waitSilent);
+  }
+
+  public String getWaitForSilent() {
+    return getPropertyAsString("WaitForSilent");
+  }
+
+  public void setWaitForSilent(String waitForSilent) {
+    setProperty("WaitForSilent", waitForSilent);
+  }
+
+  public String getWaitTimeoutSilent() {
+    return getPropertyAsString("WaitTimeoutSilent");
+  }
+
+  public void setWaitTimeoutSilent(String waitTimeoutSilent) {
+    setProperty("WaitTimeoutSilent", waitTimeoutSilent);
   }
 
   public boolean getWaitText() {
@@ -187,42 +223,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public void setCoordYToWait(String coordYToWait) {
     setProperty("CoordYToWait", coordYToWait);
-  }
-
-  public String getWaitTimeoutSync() {
-    return getPropertyAsString("WaitTimeoutSync");
-  }
-
-  private long getWaitTimeoutSyncValue() {
-    return getPropertyAsLong("WaitTimeoutSync", DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
-  }
-
-  public void setWaitTimeoutSync(String waitTimeoutSync) {
-    setProperty("WaitTimeoutSync", waitTimeoutSync);
-  }
-
-  public String getWaitTimeoutCursor() {
-    return getPropertyAsString("WaitTimeoutCursor");
-  }
-
-  public void setWaitTimeoutCursor(String waitTimeoutCursor) {
-    setProperty("WaitTimeoutCursor", waitTimeoutCursor);
-  }
-
-  public String getWaitTimeoutSilent() {
-    return getPropertyAsString("WaitTimeoutSilent");
-  }
-
-  public void setWaitTimeoutSilent(String waitTimeoutSilent) {
-    setProperty("WaitTimeoutSilent", waitTimeoutSilent);
-  }
-
-  public String getWaitForSilent() {
-    return getPropertyAsString("WaitForSilent");
-  }
-
-  public void setWaitForSilent(String waitForSilent) {
-    setProperty("WaitForSilent", waitForSilent);
   }
 
   public String getWaitTimeoutText() {
