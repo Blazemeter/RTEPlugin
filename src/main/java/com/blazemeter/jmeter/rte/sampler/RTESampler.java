@@ -264,9 +264,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    SSLData ssldata = new SSLData(DEFAULT_SSLTYPE, "pwd123", ".");
+    SSLData ssldata = new SSLData(DEFAULT_SSLTYPE, null, null);
     client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
-        getStableTimeout()); //To-do: Change hardcoded values from
+        getStableTimeout()); //Todo: Change hardcoded values from
     // functions in order to take the values from GUI
     clients.put(clientId, client);
     return client;

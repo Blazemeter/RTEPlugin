@@ -18,9 +18,7 @@ import net.infordata.em.tnprot.XITelnetEmulator;
 public class ConfigurablePortEmulator extends XI5250Emulator {
 
   private int port;
-  private SSLType sslType;
-  private String password;
-  private String keystorePath;
+  private SSLData sslData;
 
   /**
    * Since we need to make aware the sampler of any communication problem raised in xtn5250 library
@@ -49,18 +47,12 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
         return;
       }
       if (activate) {
-        if (sslType == SSLType.NONE) {
-          XITelnet ivTelnet = new XITelnet(getHost(), port);
-          setIvTelnet(ivTelnet);
-          ivTelnet.setEmulator(new TelnetEmulator());
-          ivTelnet.connect();
-        } else {
-          SSLTelnet ivTelnet = new SSLTelnet(getHost(),
-                            port, sslType, password, keystorePath);
-          setIvTelnet(ivTelnet);
-          ivTelnet.setEmulator(new TelnetEmulator());
-          ivTelnet.connect();
-        }
+        XITelnet ivTelnet = (sslData.getSslType() == SSLType.NONE)
+            ? new XITelnet(getHost(), port)
+            : new SSLTelnet(getHost(), port, sslData);
+        setIvTelnet(ivTelnet);
+        ivTelnet.setEmulator(new TelnetEmulator());
+        ivTelnet.connect();
       } else {
         XITelnet ivTelnet = getIvTelnet();
         ivTelnet.disconnect();
@@ -129,16 +121,8 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
     }
   }
 
-  public void setSslType(SSLType sslType) {
-    this.sslType = sslType;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public void setKeystorePath(String keystorePath) {
-    this.keystorePath = keystorePath;
+  public void setSslData(SSLData sslData) {
+    this.sslData = sslData;
   }
 
   private class TelnetEmulator implements XITelnetEmulator {

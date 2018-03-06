@@ -21,13 +21,6 @@ public class Tn5250Client implements RteProtocolClient {
     return em.isActive();
   }
 
-  public void connect(String server, int port, SSLData sslData, long timeoutMillis,
-                      long stableTimeoutMillis)
-      throws RteIOException, InterruptedException, TimeoutException {
-    connect(server, port, sslData, null,
-        timeoutMillis, stableTimeoutMillis);
-  }
-
   @Override
   public void connect(String server, int port, SSLData sslData,
                       TerminalType terminalType, long timeoutMillis,
@@ -37,9 +30,7 @@ public class Tn5250Client implements RteProtocolClient {
     em.setHost(server);
     em.setPort(port);
     em.setTerminalType(terminalType.getType());
-    em.setSslType(sslData.getSslType());
-    em.setPassword(sslData.getPassword());
-    em.setKeystorePath(sslData.getKeyStorePath());
+    em.setSslData(sslData);
     UnlockListener unlock = new UnlockListener(timeoutMillis, stableTimeoutMillis,
         stableTimeoutExecutor);
     em.addEmulatorListener(unlock);

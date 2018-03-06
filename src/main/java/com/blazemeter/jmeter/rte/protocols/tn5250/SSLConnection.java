@@ -3,7 +3,9 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.Socket;
+import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -13,11 +15,7 @@ import javax.net.ssl.TrustManagerFactory;
 public class SSLConnection {
 
   private static SSLType sslType;
-  private  KeyStore keystore;
-  private  KeyStore trustedStore;
   private  char[] ksPwd;
-  private KeyManagerFactory keymf;
-  private TrustManagerFactory trustmf;
   private SSLContext sslctx;
   private String keyStorePath;
 
@@ -27,33 +25,54 @@ public class SSLConnection {
     this.keyStorePath = keyStorePath;
   }
 
-  public void start() {
-    try {
-      //KeyStore
-      File ksFile = new File(keyStorePath);
-      this.keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-      if (ksFile.exists()) {
-        keystore.load(new FileInputStream(ksFile), ksPwd);
-      } else {
-        keystore.load(null, ksPwd);
-      }
-      //Key Manager Factory
-      keymf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-      keymf.init(keystore, ksPwd);
-      //trustStore
-      File tsFile = new File(keyStorePath); //Theoretically it's ok to use the same file
-      // for keystore and truststore
-      this.trustedStore = KeyStore.getInstance(KeyStore.getDefaultType());
-      this.trustedStore.load(new FileInputStream(tsFile), ksPwd);
-      //Trust Manager Factory
-      trustmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      trustmf.init(trustedStore);
-      //SSL Context
-      sslctx = SSLContext.getInstance(sslType.toString());
-      sslctx.init(keymf.getKeyManagers(), trustmf.getTrustManagers(), null);
-    } catch (Exception e) {
-      e.printStackTrace();
+  public void start() throws GeneralSecurityException, IOException {
+    KeyStore keystore = buildkeyStore();
+    KeyManagerFactory keymf = buildkeyManagerFactory(keystore);
+    KeyStore trustedStore = buildtrustedStore();
+    TrustManagerFactory trustmf = buildtrustManagerFactory(trustedStore);
+    buildSSLContext(sslType, keymf, trustmf);
+  }
+
+  private void buildSSLContext(SSLType sslType,
+                               KeyManagerFactory keymf, TrustManagerFactory trustmf)
+      throws GeneralSecurityException {
+    sslctx = SSLContext.getInstance(sslType.toString());
+    sslctx.init(keymf.getKeyManagers(), trustmf.getTrustManagers(), null);
+  }
+
+  private TrustManagerFactory buildtrustManagerFactory(KeyStore trustedStore)
+      throws GeneralSecurityException {
+    TrustManagerFactory trustmf =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+    trustmf.init(trustedStore);
+    return trustmf;
+  }
+
+  private KeyStore buildtrustedStore() throws GeneralSecurityException, IOException {
+    File tsFile = new File(keyStorePath); //Theoretically it's ok to use the same file
+    // for keystore and truststore
+    KeyStore trustedStore = KeyStore.getInstance(KeyStore.getDefaultType());
+    trustedStore.load(new FileInputStream(tsFile), ksPwd);
+    return trustedStore;
+  }
+
+  private KeyManagerFactory buildkeyManagerFactory(KeyStore keystore)
+      throws GeneralSecurityException {
+    KeyManagerFactory keymf =
+        KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+    keymf.init(keystore, ksPwd);
+    return keymf;
+  }
+
+  private KeyStore buildkeyStore() throws GeneralSecurityException, IOException {
+    File ksFile = new File(keyStorePath);
+    KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+    if (ksFile.exists()) {
+      keystore.load(new FileInputStream(ksFile), ksPwd);
+    } else {
+      keystore.load(null, ksPwd);
     }
+    return keystore;
   }
 
   public Socket createSocket(String host, int port) {

@@ -64,7 +64,7 @@ public class Tn5250ClientIT {
   }
 
   private void connectToVirtualService() throws InterruptedException, TimeoutException {
-    SSLData ssldata = new SSLData(SSLType.NONE, "pwd123",".");
+    SSLData ssldata = new SSLData(SSLType.NONE, null,null);
     client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, ssldata,
         TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
@@ -84,7 +84,7 @@ public class Tn5250ClientIT {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    SSLData ssldata = new SSLData(SSLType.NONE, "pwd123",".");
+    SSLData ssldata = new SSLData(SSLType.NONE, null,null);
     client.connect(VIRTUAL_SERVER_HOST, 2222, ssldata,
         TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS,
         STABLE_TIMEOUT_MILLIS);

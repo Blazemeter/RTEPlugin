@@ -1,37 +1,33 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
-import com.blazemeter.jmeter.rte.core.SSLType;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.Socket;
+import java.security.GeneralSecurityException;
 import net.infordata.em.tnprot.XITelnet;
 
 public class SSLTelnet extends XITelnet {
 
-  private SSLType sslType;
-  private String password;
-  private String keyStorePath;
+  private static final int READ_BUFFER_SIZE_BYTES = 1024;
+  private SSLData sslData;
 
-  public SSLTelnet(String aHost, int aPort, SSLType sslType,
-                   String password, String keyStorePath) {
-        super(aHost, aPort);
-    this.sslType = sslType;
-    this.password = password;
-    this.keyStorePath = keyStorePath;
+  public SSLTelnet(String aHost, int aPort, SSLData sslData) {
+    super(aHost, aPort);
+    this.sslData = sslData;
   }
 
   public synchronized void connect() {
     if (getIvUsed()) {
-      throw new IllegalArgumentException("XITelnet cannot be recycled");
+      throw new IllegalStateException("XITelnet cannot be recycled");
     } else {
       this.disconnect();
       this.connecting();
-
+      SSLConnection sslConnection = new SSLConnection(sslData.getSslType(),
+          sslData.getPassword(), sslData.getKeyStorePath());
       try {
-        SSLConnection sslConnection = new SSLConnection(sslType, password, keyStorePath);
         sslConnection.start();
         Socket ivSocket = sslConnection.createSocket(this.getHost(), this.getPort());
         //In XITelnet is used ivFirstHost but we are not supposed to use hosts with
@@ -45,16 +41,15 @@ public class SSLTelnet extends XITelnet {
         ivReadTh.start();
         setivUsed(true);
         this.connected();
-      } catch (IOException vvar) {
-        this.catchedIOException(vvar);
+      } catch (GeneralSecurityException | IOException e) {
+        e.printStackTrace();
       }
-
     }
   }
 
-  //It was required to implement reflection on the following attributes as
-  // there are private in XITelnet class.
-  private Field getAccessibleIvField(String fieldName) {
+  //It was required to use reflection on the following attributes as
+  // they are private in XITelnet class.
+  private Field getAccessibleField(String fieldName) {
     try {
       Field target = XITelnet.class.getDeclaredField(fieldName);
       target.setAccessible(true);
@@ -64,79 +59,62 @@ public class SSLTelnet extends XITelnet {
     }
   }
 
-  private void setIvSocket(Socket ivSocket) {
-    Field target = getAccessibleIvField("ivSocket");
+  private <T> T getField(String fieldName, Class<T> clazz) {
     try {
-      target.set(this, ivSocket);
+      return clazz.cast(getAccessibleField(fieldName).get(this));
     } catch (IllegalAccessException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private void setField(String fieldName, Object value) {
+    Field target = getAccessibleField(fieldName);
+    try {
+      target.set(this, value);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void setIvSocket(Socket ivSocket) {
+    setField("ivSocket", ivSocket);
   }
 
   private Socket getIvSocket() {
-    try {
-      return (Socket) getAccessibleIvField("ivSocket").get(this);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    return getField("ivSocket", Socket.class);
   }
 
   private void setIvIn(InputStream ivIn) {
-    Field target = getAccessibleIvField("ivIn");
-    try {
-      target.set(this, ivIn);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    setField("ivIn", ivIn);
   }
 
   private InputStream getIvIn() {
-    try {
-      return (InputStream) getAccessibleIvField("ivIn").get(this);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    return getField("ivIn", InputStream.class);
   }
 
   private void setIvOut(OutputStream ivOut) {
-    Field target = getAccessibleIvField("ivOut");
-    try {
-      target.set(this, ivOut);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    setField("ivOut", ivOut);
   }
 
   private void setivUsed(boolean ivUsed) {
-    Field target = getAccessibleIvField("ivUsed");
-    try {
-      target.set(this, ivUsed);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    setField("ivUsed", ivUsed);
   }
 
   private boolean getIvUsed() {
-    try {
-      return (boolean) getAccessibleIvField("ivUsed").get(this);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    return getField("ivUsed", boolean.class);
   }
 
   private int getivIACParserStatus() {
-    try {
-      return (int) getAccessibleIvField("ivIACParserStatus").get(this);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
+    return getField("ivIACParserStatus", int.class);
   }
 
+  //This class implements the Receptor Thread of the SSL Telnet connection.
+  //It's a copy of XITelnet().RxThread() class.
   class RxThread extends Thread {
     private boolean ivTerminate = false;
 
     RxThread() {
-      super("XITelnet rx thread");
+      super("SSLTelnet rx thread");
     }
 
     public void terminate() {
@@ -147,8 +125,8 @@ public class SSLTelnet extends XITelnet {
     }
 
     public void run() {
-      byte[] buf = new byte[1024];
-      byte[] rBuf = new byte[1024];
+      byte[] buf = new byte[READ_BUFFER_SIZE_BYTES];
+      byte[] rBuf = new byte[READ_BUFFER_SIZE_BYTES];
       boolean var3 = false;
 
       try {
