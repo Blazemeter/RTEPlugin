@@ -16,17 +16,6 @@ import net.infordata.em.crt5250.XI5250Field;
 
 public class Tn5250Client implements RteProtocolClient {
 
-  private static class KeyEventMap {
-
-    private final int modifier;
-    private final int specialKey;
-
-    KeyEventMap(int modifier, int specialKey) {
-      this.modifier = modifier;
-      this.specialKey = specialKey;
-    }
-  }
-
   private static final Map<Action, KeyEventMap> KEY_EVENTS = new HashMap<Action, KeyEventMap>() {
     {
       put(Action.F1, new KeyEventMap(0, KeyEvent.VK_F1));
@@ -62,7 +51,6 @@ public class Tn5250Client implements RteProtocolClient {
       put(Action.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
     }
   };
-
   private final ConfigurablePortEmulator em = new ConfigurablePortEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
 
@@ -95,7 +83,8 @@ public class Tn5250Client implements RteProtocolClient {
   }
 
   @Override
-  public String send(List<CoordInput> input, Action action) throws InterruptedException {
+  public void send(List<CoordInput> input, Action action)
+      throws InterruptedException, RteIOException {
     input.forEach(s -> {
       /*
       The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
@@ -115,10 +104,9 @@ public class Tn5250Client implements RteProtocolClient {
     //TODO: Replace with waiters
     Thread.sleep(3000); //Doing this "wait" to avoid getting empty screen.
     em.throwAnyPendingError();
-    return getScreen();
   }
 
-  private String getScreen() {
+  public String getScreen() {
     int height = em.getCrtSize().height;
     int width = em.getCrtSize().width;
     StringBuilder screen = new StringBuilder();
@@ -137,14 +125,25 @@ public class Tn5250Client implements RteProtocolClient {
   }
 
   @Override
-  public void disconnect() {
-    stableTimeoutExecutor.shutdown();
+  public void disconnect() throws RteIOException {
+    stableTimeoutExecutor.shutdownNow();
     em.setActive(false);
     em.throwAnyPendingError();
   }
 
   private KeyEventMap getKeyEvent(Action action) {
     return KEY_EVENTS.get(action);
+  }
+
+  private static class KeyEventMap {
+
+    private final int modifier;
+    private final int specialKey;
+
+    KeyEventMap(int modifier, int specialKey) {
+      this.modifier = modifier;
+      this.specialKey = specialKey;
+    }
   }
 
 }

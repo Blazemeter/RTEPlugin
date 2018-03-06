@@ -1,8 +1,8 @@
 package com.blazemeter.jmeter.rte.core;
 
-public class RteIOException extends RuntimeException {
+public class RteIOException extends Exception {
 
   public RteIOException(Throwable t) {
-    super("Comunication error with RTEclient", t);
+    super("Communication error with RTE client", t);
   }
 }

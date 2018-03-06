@@ -49,29 +49,15 @@ public class Tn5250ClientIT {
   }
 
   @Test
-  public void shouldGetInvalidCredentialsScreenWhenSendInvalidCreds() throws Exception {
+  public void shouldGetWelcomeScreenWhenConnect() throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    String screen = sendInvalidCreds();
-    assertThat(screen)
-        .isEqualTo(getFileContent("login-invalid-creds.txt"));
+    assertThat(client.getScreen())
+        .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
   private void loadLoginInvalidCredsFlow() throws FileNotFoundException {
     loadFlow("login-invalid-creds.yml");
-  }
-
-  private String sendInvalidCreds() throws InterruptedException {
-    List<CoordInput> input = Arrays.asList(
-        new CoordInput(new Position(7, 53), "TEST"),
-        new CoordInput(new Position(9, 53), "PASS"));
-    return client.send(input, Action.ENTER);
-  }
-
-  private void connectToVirtualService() throws InterruptedException, TimeoutException {
-    SSLData ssldata = new SSLData(SSLType.NONE, null, null);
-    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, ssldata,
-        TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
   private void loadFlow(String flowFile) throws FileNotFoundException {
@@ -81,6 +67,12 @@ public class Tn5250ClientIT {
 
   private URL findResource(String file) {
     return getClass().getResource(file);
+  }
+
+  private void connectToVirtualService() throws Exception {
+    SSLData ssldata = new SSLData(SSLType.NONE, null, null);
+    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, ssldata, TerminalType.IBM_3477_FC,
+        CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
   private String getFileContent(String file) throws IOException {
@@ -101,6 +93,22 @@ public class Tn5250ClientIT {
     connectToVirtualService();
   }
 
+  @Test
+  public void shouldGetInvalidCredentialsScreenWhenSendInvalidCreds() throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    sendInvalidCreds();
+    assertThat(client.getScreen())
+        .isEqualTo(getFileContent("login-invalid-creds.txt"));
+  }
+
+  private void sendInvalidCreds() throws Exception {
+    List<CoordInput> input = Arrays.asList(
+        new CoordInput(new Position(7, 53), "TEST"),
+        new CoordInput(new Position(9, 53), "PASS"));
+    client.send(input, Action.ENTER);
+  }
+
   @Test(expected = IllegalArgumentException.class)
   public void shouldThrowIllegalArgumentExceptionWhenSendIncorrectFieldPosition() throws Exception {
     loadLoginInvalidCredsFlow();
@@ -116,6 +124,33 @@ public class Tn5250ClientIT {
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
     sendInvalidCreds();
+  }
+
+  @Test
+  public void shouldGetWelcomeScreenWhenConnectAfterDisconnectInvalidCreds() throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    sendInvalidCreds();
+    client.disconnect();
+    connectToVirtualService();
+    assertThat(client.getScreen())
+        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void shouldThrowIllegalArgumentExceptionWhenSendAfterDisconnected() throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    client.disconnect();
+    sendInvalidCreds();
+  }
+
+  @Test
+  public void shouldNotThrowExceptionWhenDisconnectAndServerDown() throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    server.stop(SERVER_STOP_TIMEOUT);
+    client.disconnect();
   }
 
 }

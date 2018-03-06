@@ -9,6 +9,8 @@ import java.lang.reflect.Field;
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tnprot.XITelnet;
 import net.infordata.em.tnprot.XITelnetEmulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class was created because it's necessary to have an Emulator instance in which it could be
@@ -16,6 +18,8 @@ import net.infordata.em.tnprot.XITelnetEmulator;
  * setActive method from XI5250Emulator class the connection will be done always through port 23.
  */
 public class ConfigurablePortEmulator extends XI5250Emulator {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ConfigurablePortEmulator.class);
 
   private int port;
   private SSLData sslData;
@@ -105,6 +109,8 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
   private synchronized void setPendingError(Throwable ex) {
     if (pendingError == null) {
       pendingError = ex;
+    } else {
+      LOG.error("Exception ignored in step result due to previously thrown exception", ex);
     }
   }
 
@@ -113,7 +119,7 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
     setPendingError(ex);
   }
 
-  public synchronized void throwAnyPendingError() {
+  public synchronized void throwAnyPendingError() throws RteIOException {
     if (pendingError != null) {
       Throwable ret = pendingError;
       pendingError = null;
