@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +39,8 @@ public class UnlockListenerIT {
   public void setup() {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     eventGeneratorExecutor = Executors.newSingleThreadExecutor();
-    listener = new UnlockListener(TIMEOUT_MILLIS, STABLE_MILLIS, stableTimeoutExecutor);
+    listener = new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
+        stableTimeoutExecutor);
   }
 
   @After
