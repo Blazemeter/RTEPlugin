@@ -30,7 +30,7 @@ public class UnlockListenerIT {
   private ExecutorService eventGeneratorExecutor;
 
   @Mock
-  private XI5250Emulator emulator;
+  private ExtendedEmulator emulator;
 
   private UnlockListener listener;
 
@@ -66,6 +66,16 @@ public class UnlockListenerIT {
         //this is expected since teardown interrupts threads.
       }
     });
+  }
+
+  @Test
+  public void shouldUnblockAfterReceivingStateChangeAndExceptionInEmulator() throws Exception {
+    when(emulator.hasPendingError()).thenReturn(true);
+    long unlockDelayMillis = 500;
+    Stopwatch waitTime = Stopwatch.createStarted();
+    startSingleStateChangeEventGenerator(unlockDelayMillis);
+    listener.await();
+    assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
 
   @Test(expected = TimeoutException.class)

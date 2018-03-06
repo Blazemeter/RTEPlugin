@@ -6,7 +6,9 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
+import com.blazemeter.jmeter.rte.core.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.SSLData;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -42,8 +44,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
-  public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 30000;
-  public static final int DEFAULT_PORT = 23;
+  private static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
+  private static final long DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS = 60000;
+  private static final int DEFAULT_PORT = 23;
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
@@ -190,6 +193,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     return getPropertyAsString("WaitTimeoutSync");
   }
 
+  private long getWaitTimeoutSyncValue() {
+    return getPropertyAsLong("WaitTimeoutSync", DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
+  }
+
   public void setWaitTimeoutSync(String waitTimeoutSync) {
     setProperty("WaitTimeoutSync", waitTimeoutSync);
   }
@@ -245,10 +252,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     sampleResult.sampleStart();
 
     try {
-      List<CoordInput> inputs = getCoordInputs();
       RteProtocolClient client = getClient();
       try {
-        client.send(inputs, getAction());
+        client.send(getCoordInputs(), getAction(), getWaitersList());
         sampleResult.setSuccessful(true);
         sampleResult.setResponseData(client.getScreen(), "utf-8");
         sampleResult.sampleEnd();
@@ -264,19 +270,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     } catch (Exception e) {
       return errorResult("Error while sampling the remote terminal", e);
     }
-  }
-
-  private List<CoordInput> getCoordInputs() {
-    List<CoordInput> inputs = new ArrayList<>();
-    for (JMeterProperty p : getInputs()) {
-      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
-      inputs.add(c.toCoordInput());
-    }
-    return inputs;
-  }
-
-  public Inputs getInputs() {
-    return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
   }
 
   private RteProtocolClient getClient()
@@ -300,6 +293,27 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   private String buildConnectionId() {
     return getServer() + ":" + getPort();
+  }
+
+  private List<CoordInput> getCoordInputs() {
+    List<CoordInput> inputs = new ArrayList<>();
+    for (JMeterProperty p : getInputs()) {
+      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
+      inputs.add(c.toCoordInput());
+    }
+    return inputs;
+  }
+
+  public Inputs getInputs() {
+    return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
+  }
+
+  private List<WaitCondition> getWaitersList() {
+    List<WaitCondition> waiters = new ArrayList<>();
+    if (getWaitSync()) {
+      waiters.add(new SyncWaitCondition(getWaitTimeoutSyncValue(), getStableTimeout()));
+    }
+    return waiters;
   }
 
   private void disconnect(RteProtocolClient client) throws RteIOException {

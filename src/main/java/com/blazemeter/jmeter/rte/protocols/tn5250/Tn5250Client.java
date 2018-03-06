@@ -4,7 +4,9 @@ import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.WaitCondition;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import net.infordata.em.crt5250.XI5250Field;
 
 public class Tn5250Client implements RteProtocolClient {
@@ -51,7 +54,8 @@ public class Tn5250Client implements RteProtocolClient {
       put(Action.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
     }
   };
-  private final ConfigurablePortEmulator em = new ConfigurablePortEmulator();
+
+  private final ExtendedEmulator em = new ExtendedEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
 
   @Override
@@ -74,36 +78,61 @@ public class Tn5250Client implements RteProtocolClient {
     em.addEmulatorListener(unlock);
     try {
       em.setActive(true);
-      em.throwAnyPendingError();
       unlock.await();
     } finally {
-      em.throwAnyPendingError();
       em.removeEmulatorListener(unlock);
+      em.throwAnyPendingError();
     }
   }
 
   @Override
-  public void send(List<CoordInput> input, Action action)
-      throws InterruptedException, RteIOException {
-    input.forEach(s -> {
-      /*
-      The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
-      core input values which are one-indexed.
-       */
-      XI5250Field field = em.getFieldFromPos(s.getPosition().getColumn() - 1,
-          s.getPosition().getRow() - 1);
-      if (field == null) {
-        throw new IllegalArgumentException(
-            "No field at row " + s.getPosition().getRow() + " and column " + s.getPosition()
-                .getColumn());
-      }
-      field.setString(s.getInput());
-    });
-
+  public void send(List<CoordInput> input, Action action, List<WaitCondition> waitConditions)
+      throws InterruptedException, RteIOException, TimeoutException {
+    List<UnlockListener> listeners = buildWaitersList(waitConditions);
+    listeners.forEach(em::addEmulatorListener);
+    input.forEach(this::setField);
     sendActionKey(action);
-    //TODO: Replace with waiters
-    Thread.sleep(3000); //Doing this "wait" to avoid getting empty screen.
+    for (UnlockListener listener : listeners) {
+      listener.await();
+    }
+    listeners.forEach(em::removeEmulatorListener);
     em.throwAnyPendingError();
+  }
+
+  private List<UnlockListener> buildWaitersList(List<WaitCondition> waiters) {
+    return waiters.stream()
+        .map(w -> {
+          if (w instanceof SyncWaitCondition) {
+            return new UnlockListener(w.getTimeoutMillis(), w.getStableTimeoutMillis(),
+                stableTimeoutExecutor);
+          } else {
+            throw new UnsupportedOperationException(
+                "We still don't support " + w.getClass().getName() + " waiters");
+          }
+        })
+        .collect(Collectors.toList());
+  }
+
+  private void setField(CoordInput s) {
+    /*
+    The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
+    core input values which are one-indexed.
+   */
+    XI5250Field field = em.getFieldFromPos(s.getPosition().getColumn() - 1,
+        s.getPosition().getRow() - 1);
+    if (field == null) {
+      throw new IllegalArgumentException(
+          "No field at row " + s.getPosition().getRow() + " and column " + s.getPosition()
+              .getColumn());
+    }
+    field.setString(s.getInput());
+  }
+
+  private void sendActionKey(Action action) {
+    KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
+        getKeyEvent(action).modifier, getKeyEvent(action).specialKey,
+        KeyEvent.CHAR_UNDEFINED);
+    em.processRawKeyEvent(keyEvent);
   }
 
   public String getScreen() {
@@ -117,17 +146,14 @@ public class Tn5250Client implements RteProtocolClient {
     return screen.toString();
   }
 
-  private void sendActionKey(Action action) {
-    KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
-        getKeyEvent(action).modifier, getKeyEvent(action).specialKey,
-        KeyEvent.CHAR_UNDEFINED);
-    em.processRawKeyEvent(keyEvent);
-  }
-
   @Override
   public void disconnect() throws RteIOException {
+    if (stableTimeoutExecutor == null) {
+      return;
+    }
     stableTimeoutExecutor.shutdownNow();
     em.setActive(false);
+    stableTimeoutExecutor = null;
     em.throwAnyPendingError();
   }
 

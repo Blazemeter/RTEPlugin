@@ -42,6 +42,10 @@ public class UnlockListener implements XI5250EmulatorListener {
 
   @Override
   public synchronized void stateChanged(XI5250EmulatorEvent event) {
+    if (((ExtendedEmulator) event.get5250Emulator()).hasPendingError()) {
+      lock.countDown();
+      return;
+    }
     switch (event.get5250Emulator().getState()) {
       case XI5250Emulator.ST_NORMAL_UNLOCKED:
         stableTimeoutTask = stableTimeoutExecutor

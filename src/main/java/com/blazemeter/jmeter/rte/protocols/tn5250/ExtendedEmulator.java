@@ -5,21 +5,20 @@ import com.blazemeter.jmeter.rte.core.SSLType;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-
 import net.infordata.em.tn5250.XI5250Emulator;
+import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import net.infordata.em.tnprot.XITelnet;
 import net.infordata.em.tnprot.XITelnetEmulator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class was created because it's necessary to have an Emulator instance in which it could be
- * possible to create an XITelnet instance with "port" attribute inside setActive method. Using
- * setActive method from XI5250Emulator class the connection will be done always through port 23.
+ * Allows configuring a port to be used in {@link XI5250Emulator} connections, capture
+ * exceptions to later on throw them to client code, and handle SSL connections.
  */
-public class ConfigurablePortEmulator extends XI5250Emulator {
+public class ExtendedEmulator extends XI5250Emulator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ConfigurablePortEmulator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExtendedEmulator.class);
 
   private int port;
   private SSLData sslData;
@@ -43,7 +42,7 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
   }
 
   @Override
-    public void setActive(boolean activate) {
+  public void setActive(boolean activate) {
     boolean wasActive;
     synchronized (this) {
       wasActive = isActive();
@@ -79,9 +78,6 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
     }
   }
 
-  /*It was necessary to use reflection because XI520Emulator class has ivTelnet as a private
-  attribute without set and
-  get methods*/
   private void setIvTelnet(XITelnet ivTelnet) {
     Field target = getAccessibleIvTelnetField();
     try {
@@ -109,6 +105,7 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
   private synchronized void setPendingError(Throwable ex) {
     if (pendingError == null) {
       pendingError = ex;
+      processEmulatorEvent(new XI5250EmulatorEvent(XI5250EmulatorEvent.STATE_CHANGED, this));
     } else {
       LOG.error("Exception ignored in step result due to previously thrown exception", ex);
     }
@@ -131,42 +128,46 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
     this.sslData = sslData;
   }
 
+  public synchronized boolean hasPendingError() {
+    return pendingError != null;
+  }
+
   private class TelnetEmulator implements XITelnetEmulator {
 
     public final void connecting() {
-      ConfigurablePortEmulator.this.connecting();
+      ExtendedEmulator.this.connecting();
     }
 
     public final void connected() {
-      ConfigurablePortEmulator.this.connected();
+      ExtendedEmulator.this.connected();
     }
 
     public final void disconnected() {
-      ConfigurablePortEmulator.this.disconnected();
+      ExtendedEmulator.this.disconnected();
     }
 
     public final void catchedIOException(IOException ex) {
-      ConfigurablePortEmulator.this.catchedIOException(ex);
+      ExtendedEmulator.this.catchedIOException(ex);
     }
 
     public final void receivedData(byte[] buf, int len) {
-      ConfigurablePortEmulator.this.receivedData(buf, len);
+      ExtendedEmulator.this.receivedData(buf, len);
     }
 
     public final void receivedEOR() {
-      ConfigurablePortEmulator.this.receivedEOR();
+      ExtendedEmulator.this.receivedEOR();
     }
 
     public final void unhandledRequest(byte aIACOpt, String aIACStr) {
-      ConfigurablePortEmulator.this.unhandledRequest(aIACOpt, aIACStr);
+      ExtendedEmulator.this.unhandledRequest(aIACOpt, aIACStr);
     }
 
     public final void localFlagsChanged(byte aIACOpt) {
-      ConfigurablePortEmulator.this.localFlagsChanged(aIACOpt);
+      ExtendedEmulator.this.localFlagsChanged(aIACOpt);
     }
 
     public final void remoteFlagsChanged(byte aIACOpt) {
-      ConfigurablePortEmulator.this.remoteFlagsChanged(aIACOpt);
+      ExtendedEmulator.this.remoteFlagsChanged(aIACOpt);
     }
   }
 
