@@ -1,8 +1,11 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.SSLType;
+
 import java.io.IOException;
 import java.lang.reflect.Field;
+
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tnprot.XITelnet;
 import net.infordata.em.tnprot.XITelnetEmulator;
@@ -15,6 +18,8 @@ import net.infordata.em.tnprot.XITelnetEmulator;
 public class ConfigurablePortEmulator extends XI5250Emulator {
 
   private int port;
+  private SSLData sslData;
+
   /**
    * Since we need to make aware the sampler of any communication problem raised in xtn5250 library
    * we need to capture any exception on it and re throw it when an operation is used. If we had
@@ -34,16 +39,17 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
   }
 
   @Override
-  public void setActive(boolean activate) {
+    public void setActive(boolean activate) {
     boolean wasActive;
     synchronized (this) {
       wasActive = isActive();
       if (activate == wasActive) {
         return;
       }
-
       if (activate) {
-        XITelnet ivTelnet = new XITelnet(getHost(), port);
+        XITelnet ivTelnet = (sslData.getSslType() == SSLType.NONE)
+            ? new XITelnet(getHost(), port)
+            : new SSLTelnet(getHost(), port, sslData);
         setIvTelnet(ivTelnet);
         ivTelnet.setEmulator(new TelnetEmulator());
         ivTelnet.connect();
@@ -53,12 +59,14 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
         ivTelnet.setEmulator(null);
         setIvTelnet(null);
       }
-
     }
-
     firePropertyChange(ACTIVE, wasActive, isActive());
   }
 
+  /*
+  It was necessary to use reflection because XI520Emulator class
+  has ivTelnet as a private attribute without set and get methods
+  */
   private XITelnet getIvTelnet() {
     try {
       return (XITelnet) getAccessibleIvTelnetField().get(this);
@@ -111,6 +119,10 @@ public class ConfigurablePortEmulator extends XI5250Emulator {
       pendingError = null;
       throw new RteIOException(ret);
     }
+  }
+
+  public void setSslData(SSLData sslData) {
+    this.sslData = sslData;
   }
 
   private class TelnetEmulator implements XITelnetEmulator {

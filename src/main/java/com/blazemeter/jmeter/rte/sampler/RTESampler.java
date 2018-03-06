@@ -7,6 +7,7 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.Trigger;
+import com.blazemeter.jmeter.rte.protocols.tn5250.SSLData;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -263,8 +264,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    client.connect(getServer(), getPort(), getTerminalType(), getConnectionTimeout(),
-        getStableTimeout());
+    SSLData ssldata = new SSLData(DEFAULT_SSLTYPE, null, null);
+    client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
+        getStableTimeout()); //Todo: Change hardcoded values from
+    // functions in order to take the values from GUI
     clients.put(clientId, client);
     return client;
   }
