@@ -267,6 +267,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         }
         sampleResult.setSuccessful(true);
         sampleResult.setResponseData(client.getScreen(), "utf-8");
+        sampleResult.setDataType(SampleResult.TEXT);
         sampleResult.sampleEnd();
         return sampleResult;
       } finally {
