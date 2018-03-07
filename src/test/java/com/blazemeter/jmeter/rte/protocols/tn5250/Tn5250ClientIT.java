@@ -6,8 +6,10 @@ import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.WaitCondition;
 import com.blazemeter.jmeter.rte.virtualservice.Flow;
 import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import com.google.common.base.Charsets;
@@ -29,7 +31,7 @@ public class Tn5250ClientIT {
 
   private static final String VIRTUAL_SERVER_HOST = "localhost";
   private static final int VIRTUAL_SERVER_PORT = 2323;
-  private static final int CONNECTION_TIMEOUT_MILLIS = 5000;
+  private static final int TIMEOUT_MILLIS = 5000;
   private static final int STABLE_TIMEOUT_MILLIS = 1000;
   private static final long SERVER_STOP_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
@@ -44,8 +46,11 @@ public class Tn5250ClientIT {
 
   @After
   public void teardown() throws Exception {
-    client.disconnect();
-    server.stop(SERVER_STOP_TIMEOUT);
+    try {
+      client.disconnect();
+    } finally {
+      server.stop(SERVER_STOP_TIMEOUT);
+    }
   }
 
   @Test
@@ -72,7 +77,7 @@ public class Tn5250ClientIT {
   private void connectToVirtualService() throws Exception {
     SSLData ssldata = new SSLData(SSLType.NONE, null, null);
     client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, ssldata, TerminalType.IBM_3477_FC,
-        CONNECTION_TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
   private String getFileContent(String file) throws IOException {
@@ -83,13 +88,12 @@ public class Tn5250ClientIT {
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
     SSLData ssldata = new SSLData(SSLType.NONE, null, null);
     client.connect(VIRTUAL_SERVER_HOST, 2222, ssldata,
-        TerminalType.IBM_3477_FC, CONNECTION_TIMEOUT_MILLIS,
-        STABLE_TIMEOUT_MILLIS);
+        TerminalType.IBM_3477_FC, TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenConnectAndServerIsTooSlow() throws Exception {
-    loadFlow("slow-response.yml");
+    loadFlow("slow-welcome-screen.yml");
     connectToVirtualService();
   }
 
@@ -103,10 +107,17 @@ public class Tn5250ClientIT {
   }
 
   private void sendInvalidCreds() throws Exception {
-    List<CoordInput> input = Arrays.asList(
-        new CoordInput(new Position(7, 53), "TEST"),
-        new CoordInput(new Position(9, 53), "PASS"));
-    client.send(input, Action.ENTER);
+    client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
+  }
+
+  private List<CoordInput> buildInvalidCredsFields() {
+    return Arrays.asList(
+          new CoordInput(new Position(7, 53), "TEST"),
+          new CoordInput(new Position(9, 53), "PASS"));
+  }
+
+  private List<WaitCondition> buildSyncWaiter() {
+    return Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -115,7 +126,7 @@ public class Tn5250ClientIT {
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
         new CoordInput(new Position(7, 1), "TEST"));
-    client.send(input, Action.ENTER);
+    client.send(input, Action.ENTER, buildSyncWaiter());
   }
 
   @Test(expected = RteIOException.class)
@@ -124,6 +135,23 @@ public class Tn5250ClientIT {
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
     sendInvalidCreds();
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldThrowUnsupportedOperationExceptionWhenNotWaitForSync() throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    List<WaitCondition> waiters = Collections
+        .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
+        });
+    client.send(buildInvalidCredsFields(), Action.ENTER, waiters);
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void shouldThrowTimeoutExceptionWhenSendWithSyncWaitAndSlowResponse() throws Exception {
+    loadFlow("slow-response.yml");
+    connectToVirtualService();
+    client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
   }
 
   @Test

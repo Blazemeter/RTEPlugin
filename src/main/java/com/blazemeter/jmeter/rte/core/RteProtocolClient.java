@@ -9,10 +9,11 @@ public interface RteProtocolClient {
   boolean isConnected();
 
   void connect(String server, int port, SSLData sslData,
-               TerminalType terminalType, long timeoutMillis, long stableTimeout)
+      TerminalType terminalType, long timeoutMillis, long stableTimeout)
       throws RteIOException, TimeoutException, InterruptedException;
 
-  void send(List<CoordInput> input, Action action) throws InterruptedException, RteIOException;
+  void send(List<CoordInput> input, Action action, List<WaitCondition> waitConditions)
+      throws InterruptedException, TimeoutException, RteIOException;
 
   String getScreen();
 
