@@ -39,6 +39,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
       RTESampler sampler = (RTESampler) element;
       rteSamplerPanel.setTypingStyle(sampler.getTypingStyle());
       rteSamplerPanel.setDisconnect(sampler.getDisconnect());
+      rteSamplerPanel.setSendInputs(sampler.getSendInputs());
       rteSamplerPanel.setWaitCursor(sampler.getWaitCursor());
       rteSamplerPanel.setWaitSilent(sampler.getWaitSilent());
       rteSamplerPanel.setWaitSync(sampler.getWaitSync());
@@ -72,6 +73,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
     if (te instanceof RTESampler) {
       RTESampler sampler = (RTESampler) te;
       sampler.setTypingStyle(rteSamplerPanel.getTypingStyle());
+      sampler.setSendInputs(rteSamplerPanel.getSendInputs());
       sampler.setDisconnect(rteSamplerPanel.getDisconnect());
       sampler.setWaitCursor(rteSamplerPanel.getWaitCursor());
       sampler.setWaitSilent(rteSamplerPanel.getWaitSilent());

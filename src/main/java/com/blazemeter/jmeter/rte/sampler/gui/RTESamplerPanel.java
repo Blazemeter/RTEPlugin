@@ -34,6 +34,7 @@ public class RTESamplerPanel extends JPanel {
   private Map<Action, JRadioButton> actions = new HashMap<>();
   private CoordInputPanel payloadPanel;
   private JCheckBox disconnect = new JCheckBox("Disconnect?");
+  private JCheckBox sendInputs = new JCheckBox("Send Inputs");
   private JPanel waitPanel = new JPanel();
   private JCheckBox waitSync = new JCheckBox("Sync?");
   private JCheckBox waitCursor = new JCheckBox("Cursor?");
@@ -65,7 +66,6 @@ public class RTESamplerPanel extends JPanel {
     requestPanel.setBorder(BorderFactory.createTitledBorder("RTE Message"));
 
     typingStyleLabel.setText("Typing Style: ");
-    disconnect.setText("Disconnect?");
 
     waitSync.addItemListener(e -> {
       waitTimeoutSync.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
@@ -121,7 +121,9 @@ public class RTESamplerPanel extends JPanel {
                     GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
                     Short.MAX_VALUE)
-                .addComponent(disconnect))));
+                .addGroup(requestPanelLayout.createSequentialGroup().addComponent(disconnect)
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                .addComponent(sendInputs)))));
 
     requestPanelLayout.setVerticalGroup(requestPanelLayout
         .createParallelGroup(Alignment.LEADING)
@@ -135,7 +137,8 @@ public class RTESamplerPanel extends JPanel {
             .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
             .addPreferredGap(ComponentPlacement.UNRELATED)
             .addGroup(requestPanelLayout.createParallelGroup(Alignment.BASELINE)
-                .addComponent(disconnect))
+                .addComponent(disconnect)
+                .addComponent(sendInputs))
             .addGap(8, 8, 8).addContainerGap()));
 
     waitPanel.setBorder(BorderFactory.createTitledBorder("Wait for:"));
@@ -241,6 +244,9 @@ public class RTESamplerPanel extends JPanel {
   public void initFields() {
     payloadPanel.clear();
     disconnect.setSelected(false);
+    sendInputs.setSelected(true);
+    waitCursor.setSelected(false);
+    waitSilent.setSelected(false);
     waitSync.setSelected(false);
     waitTimeoutSync.setText("");
     waitTimeoutSync.setEnabled(false);
@@ -291,6 +297,14 @@ public class RTESamplerPanel extends JPanel {
 
   public void setTextWait(String textWait) {
     this.textWait.setText(textWait);
+  }
+
+  public boolean getSendInputs() {
+    return this.sendInputs.isSelected();
+  }
+
+  public void setSendInputs(boolean sendInputs) {
+    this.sendInputs.setSelected(sendInputs);
   }
 
   public boolean getDisconnect() {

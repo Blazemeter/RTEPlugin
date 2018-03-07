@@ -233,6 +233,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     setProperty("WaitTimeoutText", waitTimeoutText);
   }
 
+  public boolean getSendInputs() {
+    return getPropertyAsBoolean("SendInputs");
+  }
+
+  public void setSendInputs(boolean sendInputs) {
+    setProperty("SendInputs", sendInputs);
+  }
+
   public Action getAction() {
     if (getPropertyAsString("Action").isEmpty()) {
       return DEFAULT_ACTION;
@@ -254,7 +262,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     try {
       RteProtocolClient client = getClient();
       try {
-        client.send(getCoordInputs(), getAction(), getWaitersList());
+        if (getSendInputs()) {
+          client.send(getCoordInputs(), getAction(), getWaitersList());
+        }
         sampleResult.setSuccessful(true);
         sampleResult.setResponseData(client.getScreen(), "utf-8");
         sampleResult.sampleEnd();
