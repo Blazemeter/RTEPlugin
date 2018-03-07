@@ -12,8 +12,8 @@ public class RTESamplerGui extends AbstractSamplerGui {
   private RTESamplerPanel rteSamplerPanel;
 
   public RTESamplerGui() {
-    init();
-    initFields();
+    rteSamplerPanel = new RTESamplerPanel();
+    rteSamplerPanel.initFields();
 
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
@@ -37,26 +37,29 @@ public class RTESamplerGui extends AbstractSamplerGui {
     super.configure(element);
     if (element instanceof RTESampler) {
       RTESampler sampler = (RTESampler) element;
-      rteSamplerPanel.setTypingStyle(sampler.getTypingStyle());
-      rteSamplerPanel.setDisconnect(sampler.getDisconnect());
-      rteSamplerPanel.setSendInputs(sampler.getSendInputs());
-      rteSamplerPanel.setWaitCursor(sampler.getWaitCursor());
-      rteSamplerPanel.setWaitSilent(sampler.getWaitSilent());
-      rteSamplerPanel.setWaitSync(sampler.getWaitSync());
-      rteSamplerPanel.setWaitText(sampler.getWaitText());
-      rteSamplerPanel.setWaitTimeoutSync(sampler.getWaitTimeoutSync());
-      rteSamplerPanel.setWaitTimeoutCursor(sampler.getWaitTimeoutCursor());
-      rteSamplerPanel.setWaitTimeoutSilent(sampler.getWaitTimeoutSilent());
-      rteSamplerPanel.setWaitForSilent(sampler.getWaitForSilent());
-      rteSamplerPanel.setWaitTimeoutText(sampler.getWaitTimeoutText());
-      rteSamplerPanel.setCoordXWait(sampler.getCoordXToWait());
-      rteSamplerPanel.setCoordYWait(sampler.getCoordYToWait());
-      rteSamplerPanel.setTextWait(sampler.getTextToWait());
-      rteSamplerPanel.setAction(sampler.getAction());
       Inputs payload = sampler.getInputs();
       if (payload != null) {
         rteSamplerPanel.getPayload().configure(payload);
       }
+      rteSamplerPanel.setAction(sampler.getAction());
+      rteSamplerPanel.setDisconnect(sampler.getDisconnect());
+      rteSamplerPanel.setSendInputs(sampler.getSendInputs());
+      rteSamplerPanel.setWaitSync(sampler.getWaitSync());
+      rteSamplerPanel.setWaitSyncTimeout(sampler.getWaitSyncTimeout());
+      rteSamplerPanel.setWaitCursor(sampler.getWaitCursor());
+      rteSamplerPanel.setWaitCursorRow(sampler.getWaitCursorRow());
+      rteSamplerPanel.setWaitCursorColumn(sampler.getWaitCursorColumn());
+      rteSamplerPanel.setWaitCursorTimeout(sampler.getWaitCursorTimeout());
+      rteSamplerPanel.setWaitSilent(sampler.getWaitSilent());
+      rteSamplerPanel.setWaitSilentTime(sampler.getWaitSilentTime());
+      rteSamplerPanel.setWaitSilentTimeout(sampler.getWaitSilentTimeout());
+      rteSamplerPanel.setWaitText(sampler.getWaitText());
+      rteSamplerPanel.setWaitTextRegex(sampler.getWaitTextRegex());
+      rteSamplerPanel.setWaitTextAreaTop(sampler.getWaitTextAreaTop());
+      rteSamplerPanel.setWaitTextAreaLeft(sampler.getWaitTextAreaLeft());
+      rteSamplerPanel.setWaitTextAreaBottom(sampler.getWaitTextAreaBottom());
+      rteSamplerPanel.setWaitTextAreaRight(sampler.getWaitTextAreaRight());
+      rteSamplerPanel.setWaitTextTimeout(sampler.getWaitTextTimeout());
     }
   }
 
@@ -72,41 +75,36 @@ public class RTESamplerGui extends AbstractSamplerGui {
     configureTestElement(te);
     if (te instanceof RTESampler) {
       RTESampler sampler = (RTESampler) te;
-      sampler.setTypingStyle(rteSamplerPanel.getTypingStyle());
-      sampler.setSendInputs(rteSamplerPanel.getSendInputs());
-      sampler.setDisconnect(rteSamplerPanel.getDisconnect());
-      sampler.setWaitCursor(rteSamplerPanel.getWaitCursor());
-      sampler.setWaitSilent(rteSamplerPanel.getWaitSilent());
-      sampler.setWaitSync(rteSamplerPanel.getWaitSync());
-      sampler.setWaitText(rteSamplerPanel.getWaitText());
-      sampler.setWaitTimeoutSync(rteSamplerPanel.getWaitTimeoutSync());
-      sampler.setWaitTimeoutCursor(rteSamplerPanel.getWaitTimeoutCursor());
-      sampler.setWaitTimeoutSilent(rteSamplerPanel.getWaitTimeoutSilent());
-      sampler.setWaitForSilent(rteSamplerPanel.getWaitForSilent());
-      sampler.setWaitTimeoutText(rteSamplerPanel.getWaitTimeoutText());
-      sampler.setCoordXToWait(rteSamplerPanel.getCoordXWait());
-      sampler.setCoordYToWait(rteSamplerPanel.getCoordYWait());
-      sampler.setTextToWait(rteSamplerPanel.getTextWait());
-      sampler.setAction(rteSamplerPanel.getAction());
-
       CoordInputPanel payload = rteSamplerPanel.getPayload();
       if (payload != null) {
         sampler.setPayload((Inputs) payload.createTestElement());
       }
+      sampler.setAction(rteSamplerPanel.getAction());
+      sampler.setDisconnect(rteSamplerPanel.getDisconnect());
+      sampler.setSendInputs(rteSamplerPanel.getSendInputs());
+      sampler.setWaitSync(rteSamplerPanel.getWaitSync());
+      sampler.setWaitSyncTimeout(rteSamplerPanel.getWaitSyncTimeout());
+      sampler.setWaitCursor(rteSamplerPanel.getWaitCursor());
+      sampler.setWaitCursorRow(rteSamplerPanel.getWaitCursorRow());
+      sampler.setWaitCursorColumn(rteSamplerPanel.getWaitCursorColumn());
+      sampler.setWaitCursorTimeout(rteSamplerPanel.getWaitCursorTimeout());
+      sampler.setWaitSilent(rteSamplerPanel.getWaitSilent());
+      sampler.setWaitSilentTime(rteSamplerPanel.getWaitSilentTime());
+      sampler.setWaitSilentTimeout(rteSamplerPanel.getWaitSilentTimeout());
+      sampler.setWaitText(rteSamplerPanel.getWaitText());
+      sampler.setWaitTextRegex(rteSamplerPanel.getWaitTextRegex());
+      sampler.setWaitTextTimeout(rteSamplerPanel.getWaitTextTimeout());
+      sampler.setWaitTextAreaTop(rteSamplerPanel.getWaitTextAreaTop());
+      sampler.setWaitTextAreaLeft(rteSamplerPanel.getWaitTextAreaLeft());
+      sampler.setWaitTextAreaBottom(rteSamplerPanel.getWaitTextAreaBottom());
+      sampler.setWaitTextAreaRight(rteSamplerPanel.getWaitTextAreaRight());
     }
   }
 
   @Override
   public void clearGui() {
     super.clearGui();
-    initFields();
-  }
-
-  private void init() {
-    rteSamplerPanel = new RTESamplerPanel();
-  }
-
-  private void initFields() {
     rteSamplerPanel.initFields();
   }
+
 }

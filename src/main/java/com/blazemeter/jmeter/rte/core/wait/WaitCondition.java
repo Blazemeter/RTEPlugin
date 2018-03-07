@@ -1,5 +1,8 @@
-package com.blazemeter.jmeter.rte.core;
+package com.blazemeter.jmeter.rte.core.wait;
 
+/**
+ * Condition to wait for emulator to match.
+ */
 public abstract class WaitCondition {
 
   private long timeoutMillis;

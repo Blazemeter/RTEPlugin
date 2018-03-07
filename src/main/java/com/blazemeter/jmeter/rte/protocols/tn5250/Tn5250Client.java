@@ -4,9 +4,9 @@ import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
-import com.blazemeter.jmeter.rte.core.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.WaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +73,8 @@ public class Tn5250Client implements RteProtocolClient {
     em.setPort(port);
     em.setTerminalType(terminalType.getType());
     em.setSslData(sslData);
-    UnlockListener unlock = new UnlockListener(timeoutMillis, stableTimeoutMillis,
+    UnlockListener unlock = new UnlockListener(
+        new SyncWaitCondition(timeoutMillis, stableTimeoutMillis),
         stableTimeoutExecutor);
     em.addEmulatorListener(unlock);
     try {
@@ -88,23 +89,22 @@ public class Tn5250Client implements RteProtocolClient {
   @Override
   public void send(List<CoordInput> input, Action action, List<WaitCondition> waitConditions)
       throws InterruptedException, RteIOException, TimeoutException {
-    List<UnlockListener> listeners = buildWaitersList(waitConditions);
+    List<ConditionWaiter> listeners = buildWaitersList(waitConditions);
     listeners.forEach(em::addEmulatorListener);
     input.forEach(this::setField);
     sendActionKey(action);
-    for (UnlockListener listener : listeners) {
+    for (ConditionWaiter listener : listeners) {
       listener.await();
     }
     listeners.forEach(em::removeEmulatorListener);
     em.throwAnyPendingError();
   }
 
-  private List<UnlockListener> buildWaitersList(List<WaitCondition> waiters) {
+  private List<ConditionWaiter> buildWaitersList(List<WaitCondition> waiters) {
     return waiters.stream()
         .map(w -> {
           if (w instanceof SyncWaitCondition) {
-            return new UnlockListener(w.getTimeoutMillis(), w.getStableTimeoutMillis(),
-                stableTimeoutExecutor);
+            return new UnlockListener((SyncWaitCondition) w, stableTimeoutExecutor);
           } else {
             throw new UnsupportedOperationException(
                 "We still don't support " + w.getClass().getName() + " waiters");

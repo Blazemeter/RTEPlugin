@@ -2,13 +2,14 @@ package com.blazemeter.jmeter.rte.sampler;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
-import com.blazemeter.jmeter.rte.core.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.WaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.SSLData;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -38,19 +39,41 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.sslType";
   public static final String CONFIG_CONNECTION_TIMEOUT = "RTEConnectionConfig.connectTimeout";
   public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.terminalType";
-  public static final String TYPING_STYLE_FAST = "Fast";
-  public static final String TYPING_STYLE_HUMAN = "Human";
   public static final Action DEFAULT_ACTION = Action.ENTER;
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
   private static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
-  private static final long DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS = 60000;
   private static final int DEFAULT_PORT = 23;
 
-  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
   private static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
+  private static final String DISCONNECT_PROPERTY = "RTESampler.disconnect";
+  private static final String SEND_INPUTS_PROPERTY = "RTESampler.SendInputs";
+  private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
+  private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
+  private static final long DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS = 60000;
+  private static final String WAIT_CURSOR_PROPERTY = "RTESampler.waitCursor";
+  private static final String WAIT_CURSOR_ROW_PROPERTY = "RTESampler.waitCursorRow";
+  private static final String WAIT_CURSOR_COLUMN_PROPERTY = "RTESampler.waitCursorColumn";
+  private static final String WAIT_CURSOR_TIMEOUT_PROPERTY = "RTESampler.waitCursorTimeout";
+  private static final long DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS = 30000;
+  private static final String WAIT_SILENT_PROPERTY = "RTESampler.waitSilent";
+  private static final String WAIT_SILENT_TIME_PROPERTY = "RTESampler.waitSilentTime";
+  private static final long DEFAULT_WAIT_SILENT_TIME_MILLIS = 1000;
+  private static final String WAIT_SILENT_TIMEOUT_PROPERTY = "RTESampler.waitSilentTimeout";
+  private static final long DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS = 60000;
+  private static final String WAIT_TEXT_PROPERTY = "RTESampler.waitText";
+  private static final String WAIT_TEXT_REGEX_PROPERTY = "RTESampler.waitTextRegex";
+  private static final String WAIT_TEXT_AREA_TOP_PROPERTY = "RTESampler.waitTextAreaTop";
+  private static final String WAIT_TEXT_AREA_LEFT_PROPERTY = "RTESampler.waitTextAreaLeft";
+  private static final String WAIT_TEXT_AREA_BOTTOM_PROPERTY = "RTESampler.waitTextAreaBottom";
+  private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
+  private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTimeout";
+  private static final long DEFAULT_WAIT_TEXT_TIMEOUT = 30000;
+  private static final String ACTION_PROPERTY = "RTESampler.action";
+
+  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
   private final Function<Protocol, RteProtocolClient> protocolFactory;
@@ -101,12 +124,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
   }
 
-  public boolean getDisconnect() {
-    return getPropertyAsBoolean("Disconnect");
-  }
-
-  public void setDisconnect(boolean disconnect) {
-    setProperty("Disconnect", disconnect);
+  public void setPayload(Inputs payload) {
+    setProperty(new TestElementProperty(Inputs.INPUTS, payload));
   }
 
   private String getUser() {
@@ -121,135 +140,187 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
   }
 
-  public String getTypingStyle() {
-    return getPropertyAsString("TypingStyle");
-  }
-
-  public void setTypingStyle(String typingStyle) {
-    setProperty("TypingStyle", typingStyle);
-  }
-
-  public void setPayload(Inputs payload) {
-    setProperty(new TestElementProperty(Inputs.INPUTS, payload));
-  }
-
-  public boolean getWaitSync() {
-    return getPropertyAsBoolean("WaitSync", true);
-  }
-
-  public void setWaitSync(boolean waitSync) {
-    setProperty("WaitSync", waitSync);
-  }
-
-  public String getWaitTimeoutSync() {
-    return getPropertyAsString("WaitTimeoutSync", "" + DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
-  }
-
-  private long getWaitTimeoutSyncValue() {
-    return getPropertyAsLong("WaitTimeoutSync", DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
-  }
-
-  public void setWaitTimeoutSync(String waitTimeoutSync) {
-    setProperty("WaitTimeoutSync", waitTimeoutSync);
-  }
-
-  public boolean getWaitCursor() {
-    return getPropertyAsBoolean("WaitCursor");
-  }
-
-  public void setWaitCursor(boolean waitCursor) {
-    setProperty("WaitCursor", waitCursor);
-  }
-
-  public String getWaitTimeoutCursor() {
-    return getPropertyAsString("WaitTimeoutCursor");
-  }
-
-  public void setWaitTimeoutCursor(String waitTimeoutCursor) {
-    setProperty("WaitTimeoutCursor", waitTimeoutCursor);
-  }
-
-  public boolean getWaitSilent() {
-    return getPropertyAsBoolean("WaitSilent");
-  }
-
-  public void setWaitSilent(boolean waitSilent) {
-    setProperty("WaitSilent", waitSilent);
-  }
-
-  public String getWaitForSilent() {
-    return getPropertyAsString("WaitForSilent");
-  }
-
-  public void setWaitForSilent(String waitForSilent) {
-    setProperty("WaitForSilent", waitForSilent);
-  }
-
-  public String getWaitTimeoutSilent() {
-    return getPropertyAsString("WaitTimeoutSilent");
-  }
-
-  public void setWaitTimeoutSilent(String waitTimeoutSilent) {
-    setProperty("WaitTimeoutSilent", waitTimeoutSilent);
-  }
-
-  public boolean getWaitText() {
-    return getPropertyAsBoolean("WaitText");
-  }
-
-  public void setWaitText(boolean waitText) {
-    setProperty("WaitText", waitText);
-  }
-
-  public String getTextToWait() {
-    return getPropertyAsString("TextToWait");
-  }
-
-  public void setTextToWait(String textToWait) {
-    setProperty("TextToWait", textToWait);
-  }
-
-  public String getCoordXToWait() {
-    return getPropertyAsString("CoordXToWait");
-  }
-
-  public void setCoordXToWait(String coordXToWait) {
-    setProperty("CoordXToWait", coordXToWait);
-  }
-
-  public String getCoordYToWait() {
-    return getPropertyAsString("CoordYToWait");
-  }
-
-  public void setCoordYToWait(String coordYToWait) {
-    setProperty("CoordYToWait", coordYToWait);
-  }
-
-  public String getWaitTimeoutText() {
-    return getPropertyAsString("WaitTimeoutText");
-  }
-
-  public void setWaitTimeoutText(String waitTimeoutText) {
-    setProperty("WaitTimeoutText", waitTimeoutText);
-  }
-
-  public boolean getSendInputs() {
-    return getPropertyAsBoolean("SendInputs");
-  }
-
-  public void setSendInputs(boolean sendInputs) {
-    setProperty("SendInputs", sendInputs);
-  }
-
   public Action getAction() {
-    if (getPropertyAsString("Action").isEmpty()) {
+    if (getPropertyAsString(ACTION_PROPERTY).isEmpty()) {
       return DEFAULT_ACTION;
     }
-    return Action.valueOf(getPropertyAsString("Action"));
+    return Action.valueOf(getPropertyAsString(ACTION_PROPERTY));
   }
 
   public void setAction(Action action) {
-    setProperty("Action", action.name());
+    setProperty(ACTION_PROPERTY, action.name());
+  }
+
+  public boolean getDisconnect() {
+    return getPropertyAsBoolean(DISCONNECT_PROPERTY);
+  }
+
+  public void setDisconnect(boolean disconnect) {
+    setProperty(DISCONNECT_PROPERTY, disconnect);
+  }
+
+  public boolean getSendInputs() {
+    return getPropertyAsBoolean(SEND_INPUTS_PROPERTY, true);
+  }
+
+  public void setSendInputs(boolean sendInputs) {
+    setProperty(SEND_INPUTS_PROPERTY, sendInputs);
+  }
+
+  public boolean getWaitSync() {
+    return getPropertyAsBoolean(WAIT_SYNC_PROPERTY, true);
+  }
+
+  public void setWaitSync(boolean waitSync) {
+    setProperty(WAIT_SYNC_PROPERTY, waitSync);
+  }
+
+  public String getWaitSyncTimeout() {
+    return getPropertyAsString(WAIT_SYNC_TIMEOUT_PROPERTY, "" + DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
+  }
+
+  public void setWaitSyncTimeout(String waitTimeoutSync) {
+    setProperty(WAIT_SYNC_TIMEOUT_PROPERTY, waitTimeoutSync);
+  }
+
+  private long getWaitSyncTimeoutValue() {
+    return getPropertyAsLong(WAIT_SYNC_TIMEOUT_PROPERTY, DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
+  }
+
+  public boolean getWaitCursor() {
+    return getPropertyAsBoolean(WAIT_CURSOR_PROPERTY);
+  }
+
+  public void setWaitCursor(boolean waitCursor) {
+    setProperty(WAIT_CURSOR_PROPERTY, waitCursor);
+  }
+
+  public String getWaitCursorRow() {
+    return getPropertyAsString(WAIT_CURSOR_ROW_PROPERTY, String.valueOf(1));
+  }
+
+  public void setWaitCursorRow(String row) {
+    setProperty(WAIT_CURSOR_ROW_PROPERTY, row);
+  }
+
+  public String getWaitCursorColumn() {
+    return getPropertyAsString(WAIT_CURSOR_COLUMN_PROPERTY, String.valueOf(1));
+  }
+
+  public void setWaitCursorColumn(String row) {
+    setProperty(WAIT_CURSOR_COLUMN_PROPERTY, row);
+  }
+
+  public String getWaitCursorTimeout() {
+    return getPropertyAsString(WAIT_CURSOR_TIMEOUT_PROPERTY,
+        String.valueOf(DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS));
+  }
+
+  public void setWaitCursorTimeout(String waitTimeoutCursor) {
+    setProperty(WAIT_CURSOR_TIMEOUT_PROPERTY, waitTimeoutCursor);
+  }
+
+  public boolean getWaitSilent() {
+    return getPropertyAsBoolean(WAIT_SILENT_PROPERTY);
+  }
+
+  public void setWaitSilent(boolean waitSilent) {
+    setProperty(WAIT_SILENT_PROPERTY, waitSilent);
+  }
+
+  public String getWaitSilentTime() {
+    return getPropertyAsString(WAIT_SILENT_TIME_PROPERTY,
+        String.valueOf(DEFAULT_WAIT_SILENT_TIME_MILLIS));
+  }
+
+  public void setWaitSilentTime(String waitSilentTime) {
+    setProperty(WAIT_SILENT_TIME_PROPERTY, waitSilentTime);
+  }
+
+  public String getWaitSilentTimeout() {
+    return getPropertyAsString(WAIT_SILENT_TIMEOUT_PROPERTY,
+        String.valueOf(DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS));
+  }
+
+  public void setWaitSilentTimeout(String waitSilentTimeout) {
+    setProperty(WAIT_SILENT_TIMEOUT_PROPERTY, waitSilentTimeout);
+  }
+
+  public boolean getWaitText() {
+    return getPropertyAsBoolean(WAIT_TEXT_PROPERTY);
+  }
+
+  public void setWaitText(boolean waitText) {
+    setProperty(WAIT_TEXT_PROPERTY, waitText);
+  }
+
+  public String getWaitTextRegex() {
+    return getPropertyAsString(WAIT_TEXT_REGEX_PROPERTY);
+  }
+
+  public void setWaitTextRegex(String regex) {
+    setProperty(WAIT_TEXT_REGEX_PROPERTY, regex);
+  }
+
+  public String getWaitTextAreaTop() {
+    return getPropertyAsString(WAIT_TEXT_AREA_TOP_PROPERTY, String.valueOf(1));
+  }
+
+  public void setWaitTextAreaTop(String row) {
+    setProperty(WAIT_TEXT_AREA_TOP_PROPERTY, row);
+  }
+
+  private int getWaitTextAreaTopValue() {
+    return getPropertyAsInt(WAIT_TEXT_AREA_TOP_PROPERTY, 1);
+  }
+
+  public String getWaitTextAreaLeft() {
+    return getPropertyAsString(WAIT_TEXT_AREA_LEFT_PROPERTY, String.valueOf(1));
+  }
+
+  public void setWaitTextAreaLeft(String column) {
+    setProperty(WAIT_TEXT_AREA_LEFT_PROPERTY, column);
+  }
+
+  private int getWaitTextAreaLeftValue() {
+    return getPropertyAsInt(WAIT_TEXT_AREA_LEFT_PROPERTY, 1);
+  }
+
+  public String getWaitTextAreaBottom() {
+    return getPropertyAsString(WAIT_TEXT_AREA_BOTTOM_PROPERTY);
+  }
+
+  public void setWaitTextAreaBottom(String row) {
+    setProperty(WAIT_TEXT_AREA_BOTTOM_PROPERTY, row);
+  }
+
+  private int getWaitTextAreaBottomValue() {
+    return getPropertyAsInt(WAIT_TEXT_AREA_BOTTOM_PROPERTY, Position.UNSPECIFIED_INDEX);
+  }
+
+  public String getWaitTextAreaRight() {
+    return getPropertyAsString(WAIT_TEXT_AREA_RIGHT_PROPERTY);
+  }
+
+  public void setWaitTextAreaRight(String column) {
+    setProperty(WAIT_TEXT_AREA_RIGHT_PROPERTY, column);
+  }
+
+  private int getWaitTextAreaRightValue() {
+    return getPropertyAsInt(WAIT_TEXT_AREA_RIGHT_PROPERTY, Position.UNSPECIFIED_INDEX);
+  }
+
+  public String getWaitTextTimeout() {
+    return getPropertyAsString(WAIT_TEXT_TIMEOUT_PROPERTY,
+        String.valueOf(DEFAULT_WAIT_TEXT_TIMEOUT));
+  }
+
+  public void setWaitTextTimeout(String timeout) {
+    setProperty(WAIT_TEXT_TIMEOUT_PROPERTY, timeout);
+  }
+
+  private long getWaitTextTimeoutValue() {
+    return getPropertyAsLong(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT);
   }
 
   @Override
@@ -322,7 +393,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private List<WaitCondition> getWaitersList() {
     List<WaitCondition> waiters = new ArrayList<>();
     if (getWaitSync()) {
-      waiters.add(new SyncWaitCondition(getWaitTimeoutSyncValue(), getStableTimeout()));
+      waiters.add(new SyncWaitCondition(getWaitSyncTimeoutValue(), getStableTimeout()));
     }
     return waiters;
   }
