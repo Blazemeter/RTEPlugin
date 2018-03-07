@@ -17,31 +17,27 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.concurrent.TimeoutException;
-import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jmeter.util.JMeterUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
+@RunWith(MockitoJUnitRunner.class)
 public class RTESamplerTest {
 
-  private RteProtocolClient rteProtocolClientMock = Mockito.mock(RteProtocolClient.class);
-  ;
+  @Mock
+  private RteProtocolClient rteProtocolClientMock;
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
 
-  @BeforeClass
-  public static void setupClass() throws Exception {
-  }
-
   @Before
   public void setup() throws Exception {
-    Mockito.reset(rteProtocolClientMock);
-    //todo ver como limpiar el contexto
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
   }
 
@@ -52,26 +48,20 @@ public class RTESamplerTest {
 
   @Test
   public void shouldGetErrorSamplerResultWhenGetClientThrowTimeoutException() throws Exception {
-    createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
-        "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
-    rteSampler.addTestElement(configTestElement);
     TimeoutException e = new TimeoutException();
-    doThrow(e).when(rteProtocolClientMock)
-        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
-    SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedErrorResult(e);
-
-    assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseCode",
-            "responseMessage", "responseData", "successful");
+    throwConnectException(e);
   }
 
   @Test
   public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
+    InterruptedException e = new InterruptedException();
+    throwConnectException(e);
+  }
+
+  private void throwConnectException(Exception e) throws Exception{
     createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
         "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
     rteSampler.addTestElement(configTestElement);
-    InterruptedException e = new InterruptedException();
     doThrow(e).when(rteProtocolClientMock)
         .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
     SampleResult result = rteSampler.sample(null);
@@ -84,28 +74,22 @@ public class RTESamplerTest {
 
   @Test
   public void shouldGetErrorSamplerResultWhenSendThrowIllegalArgumentException() throws Exception {
-    createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
-        "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
-    rteSampler.addTestElement(configTestElement);
-    rteSampler.setPayload(createInputs(1));
     IllegalArgumentException e = new IllegalArgumentException();
-    doThrow(e).when(rteProtocolClientMock)
-        .send(any(), any(), any());
-    SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedErrorResult(e);
-
-    assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseCode",
-            "responseMessage", "responseData", "successful");
+    throwSendException(e);
   }
 
   @Test
   public void shouldGetErrorSamplerResultWhenSendThrowInterruptedException() throws Exception {
+    InterruptedException e = new InterruptedException();
+    throwSendException(e);
+
+  }
+
+  private void throwSendException(Exception e) throws Exception{
     createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
         "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs(1));
-    InterruptedException e = new InterruptedException();
     doThrow(e).when(rteProtocolClientMock)
         .send(any(), any(), any());
     SampleResult result = rteSampler.sample(null);
@@ -125,7 +109,7 @@ public class RTESamplerTest {
     String response = "Response";
     when(rteProtocolClientMock.getScreen()).thenReturn(response);
     SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedSuccessefulResult(response);
+    SampleResult expected = createExpectedSuccessfulResult(response);
     assertThat(result)
         .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseData", "successful");
   }
@@ -166,7 +150,7 @@ public class RTESamplerTest {
     return expected;
   }
 
-  private SampleResult createExpectedSuccessefulResult(String responseData) {
+  private SampleResult createExpectedSuccessfulResult(String responseData) {
     SampleResult expected = new SampleResult();
     expected.setSampleLabel(rteSampler.getName());
     expected.setDataType(SampleResult.TEXT);
