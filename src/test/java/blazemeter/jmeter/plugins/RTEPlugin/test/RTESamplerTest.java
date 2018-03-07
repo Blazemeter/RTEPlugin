@@ -49,45 +49,41 @@ public class RTESamplerTest {
   @Test
   public void shouldGetErrorSamplerResultWhenGetClientThrowTimeoutException() throws Exception {
     TimeoutException e = new TimeoutException();
-    throwConnectException(e);
+    assertSampleResultWhenThrowConnectException(e);
   }
 
   @Test
   public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
     InterruptedException e = new InterruptedException();
-    throwConnectException(e);
+    assertSampleResultWhenThrowConnectException(e);
   }
 
-  private void throwConnectException(Exception e) throws Exception{
-    createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
-        "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
+  private void assertSampleResultWhenThrowConnectException(Exception e) throws Exception{
+    createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     doThrow(e).when(rteProtocolClientMock)
         .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedErrorResult(e);
 
-    assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseCode",
-            "responseMessage", "responseData", "successful");
+    assertSampleResult(result, expected);
   }
 
   @Test
   public void shouldGetErrorSamplerResultWhenSendThrowIllegalArgumentException() throws Exception {
     IllegalArgumentException e = new IllegalArgumentException();
-    throwSendException(e);
+    assertSampleResultWhenThrowSendException(e);
   }
 
   @Test
   public void shouldGetErrorSamplerResultWhenSendThrowInterruptedException() throws Exception {
     InterruptedException e = new InterruptedException();
-    throwSendException(e);
+    assertSampleResultWhenThrowSendException(e);
 
   }
 
-  private void throwSendException(Exception e) throws Exception{
-    createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
-        "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
+  private void assertSampleResultWhenThrowSendException(Exception e) throws Exception{
+    createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs(1));
     doThrow(e).when(rteProtocolClientMock)
@@ -95,23 +91,19 @@ public class RTESamplerTest {
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedErrorResult(e);
 
-    assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseCode",
-            "responseMessage", "responseData", "successful");
+    assertSampleResult(result, expected);
   }
 
   @Test
   public void shouldGetSuccessfulSamplerResultWhenSend() throws Exception {
-    createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
-        "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
+    createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs(1));
     String response = "Response";
     when(rteProtocolClientMock.getScreen()).thenReturn(response);
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedSuccessfulResult(response);
-    assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseData", "successful");
+    assertSampleResult(result, expected);
   }
 
   private Inputs createInputs(int amount) {
@@ -121,6 +113,11 @@ public class RTESamplerTest {
       ret.addCoordInput(c);
     }
     return ret;
+  }
+
+  private void createDefaultRTEConfig() {
+    createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
+        "user", "pass", RTESampler.DEFAULT_SSLTYPE, "0");
   }
 
   private void createRTEConfig(String server, int port, TerminalType terminalType,
@@ -157,5 +154,11 @@ public class RTESamplerTest {
     expected.setResponseData(responseData, "utf-8");
     expected.setSuccessful(true);
     return expected;
+  }
+
+  private void assertSampleResult(SampleResult result, SampleResult expected) {
+    assertThat(result)
+        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseCode",
+            "responseMessage", "responseData", "successful");
   }
 }
