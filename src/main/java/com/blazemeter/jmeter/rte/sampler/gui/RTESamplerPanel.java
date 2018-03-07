@@ -315,48 +315,48 @@ public class RTESamplerPanel extends JPanel {
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    JLabel waitTextAreaTopLabel = new JLabel("Top row: ");
-    JLabel waitTextAreaLeftLabel = new JLabel("Left column: ");
-    JLabel waitTextAreaBottomLabel = new JLabel("Bottom row: ");
-    JLabel waitTextAreaRightLabel = new JLabel("Right column: ");
+    JLabel topLabel = new JLabel("Top row: ");
+    JLabel leftLabel = new JLabel("Left column: ");
+    JLabel bottomLabel = new JLabel("Bottom row: ");
+    JLabel rightLabel = new JLabel("Right column: ");
     layout.setHorizontalGroup(
         layout.createSequentialGroup()
-            .addComponent(waitTextAreaLeftLabel)
+            .addComponent(leftLabel)
             .addPreferredGap(ComponentPlacement.RELATED)
             .addComponent(waitTextAreaLeft, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
                 GroupLayout.PREFERRED_SIZE)
             .addPreferredGap(ComponentPlacement.UNRELATED)
             .addGroup(layout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(layout.createSequentialGroup()
-                    .addComponent(waitTextAreaTopLabel)
+                    .addComponent(topLabel)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(waitTextAreaTop, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
                         GroupLayout.PREFERRED_SIZE))
                 .addGroup(layout.createSequentialGroup()
-                    .addComponent(waitTextAreaBottomLabel)
+                    .addComponent(bottomLabel)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(waitTextAreaBottom, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
                         GroupLayout.PREFERRED_SIZE)
                 )
               )
             .addPreferredGap(ComponentPlacement.UNRELATED)
-            .addComponent(waitTextAreaRightLabel)
+            .addComponent(rightLabel)
             .addPreferredGap(ComponentPlacement.RELATED)
             .addComponent(waitTextAreaRight, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
                 GroupLayout.PREFERRED_SIZE));
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addGroup(layout.createParallelGroup(Alignment.BASELINE, false)
-            .addComponent(waitTextAreaTopLabel)
+            .addComponent(topLabel)
             .addComponent(waitTextAreaTop))
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addGroup(layout.createParallelGroup(Alignment.BASELINE, false)
-            .addComponent(waitTextAreaLeftLabel)
+            .addComponent(leftLabel)
             .addComponent(waitTextAreaLeft)
-            .addComponent(waitTextAreaRightLabel)
+            .addComponent(rightLabel)
             .addComponent(waitTextAreaRight))
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addGroup(layout.createParallelGroup(Alignment.BASELINE, false)
-            .addComponent(waitTextAreaBottomLabel)
+            .addComponent(bottomLabel)
             .addComponent(waitTextAreaBottom)));
 
     return panel;

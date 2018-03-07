@@ -86,8 +86,8 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
     if (!lock.await(condition.getTimeoutMillis(), TimeUnit.MILLISECONDS)) {
       cancelWait();
       throw new TimeoutException(
-          "Timeout waiting for " + condition + " after " + condition.getTimeoutMillis()
-              + " millis");
+          "Timeout waiting for " + condition.getDescription() + " after " + condition
+              .getTimeoutMillis() + " millis");
     }
   }
 

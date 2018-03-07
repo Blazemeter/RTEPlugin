@@ -6,7 +6,9 @@ import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.List;
@@ -105,6 +107,8 @@ public class Tn5250Client implements RteProtocolClient {
         .map(w -> {
           if (w instanceof SyncWaitCondition) {
             return new UnlockListener((SyncWaitCondition) w, stableTimeoutExecutor);
+          } else if (w instanceof TextWaitCondition) {
+            return new ScreenTextListener((TextWaitCondition) w, stableTimeoutExecutor);
           } else {
             throw new UnsupportedOperationException(
                 "We still don't support " + w.getClass().getName() + " waiters");
@@ -155,6 +159,11 @@ public class Tn5250Client implements RteProtocolClient {
     em.setActive(false);
     stableTimeoutExecutor = null;
     em.throwAnyPendingError();
+  }
+
+  @Override
+  public Dimension getScreenSize() {
+    return em.getCrtSize();
   }
 
   private KeyEventMap getKeyEvent(Action action) {

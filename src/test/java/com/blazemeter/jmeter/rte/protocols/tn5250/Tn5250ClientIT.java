@@ -143,6 +143,10 @@ public class Tn5250ClientIT {
     connectToVirtualService();
     List<WaitCondition> waiters = Collections
         .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
+          @Override
+          public String getDescription() {
+            return "test";
+          }
         });
     client.send(buildInvalidCredsFields(), Action.ENTER, waiters);
   }
