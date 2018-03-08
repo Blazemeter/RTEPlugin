@@ -48,10 +48,6 @@ public class RTEConfigGui extends AbstractConfigGui {
           Protocol.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL)));
       rteConfigPanelConfigPanel.setTerminalType(TerminalType
           .valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE)));
-      rteConfigPanelConfigPanel
-          .setUser(configTestElement.getPropertyAsString(RTESampler.CONFIG_USER));
-      rteConfigPanelConfigPanel
-          .setPass(configTestElement.getPropertyAsString(RTESampler.CONFIG_PASS));
       rteConfigPanelConfigPanel.setSSLType(
           SSLType.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE)));
       rteConfigPanelConfigPanel
@@ -79,8 +75,6 @@ public class RTEConfigGui extends AbstractConfigGui {
       configTestElement
           .setProperty(RTESampler.CONFIG_SERVER, rteConfigPanelConfigPanel.getServer());
       configTestElement.setProperty(RTESampler.CONFIG_PORT, rteConfigPanelConfigPanel.getPort());
-      configTestElement.setProperty(RTESampler.CONFIG_USER, rteConfigPanelConfigPanel.getUser());
-      configTestElement.setProperty(RTESampler.CONFIG_PASS, rteConfigPanelConfigPanel.getPass());
       configTestElement
           .setProperty(RTESampler.CONFIG_PROTOCOL, rteConfigPanelConfigPanel.getProtocol().name());
       configTestElement
