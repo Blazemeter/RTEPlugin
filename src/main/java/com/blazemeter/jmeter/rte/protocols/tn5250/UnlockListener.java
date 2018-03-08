@@ -18,7 +18,7 @@ public class UnlockListener extends ConditionWaiter<SyncWaitCondition> {
   @Override
   public synchronized void stateChanged(XI5250EmulatorEvent event) {
     if (hasPendingError(event)) {
-      endWait();
+      cancelWait();
       return;
     }
     switch (event.get5250Emulator().getState()) {
