@@ -19,6 +19,7 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
   private final CountDownLatch lock = new CountDownLatch(1);
   private final ScheduledExecutorService stableTimeoutExecutor;
   private ScheduledFuture stableTimeoutTask;
+  private boolean ended;
 
   public ConditionWaiter(T condition, ScheduledExecutorService stableTimeoutExecutor) {
     this.condition = condition;
@@ -38,9 +39,9 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
   }
 
   @Override
-  public synchronized void stateChanged(XI5250EmulatorEvent event) {
+  public void stateChanged(XI5250EmulatorEvent event) {
     if (hasPendingError(event)) {
-      endWait();
+      cancelWait();
     }
   }
 
@@ -60,28 +61,30 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
   public void dataSended(XI5250EmulatorEvent event) {
   }
 
-  protected void endWait() {
+  protected synchronized void cancelWait() {
+    ended = true;
     lock.countDown();
+    endStablePeriod();
   }
 
-  protected void startStablePeriod() {
+  protected synchronized void startStablePeriod() {
+    if (ended) {
+      return;
+    }
+    endStablePeriod();
     stableTimeoutTask = stableTimeoutExecutor
         .schedule(lock::countDown, condition.getStableTimeoutMillis(), TimeUnit.MILLISECONDS);
   }
 
-  protected void endStablePeriod() {
+  protected synchronized void endStablePeriod() {
     if (stableTimeoutTask != null) {
       stableTimeoutTask.cancel(false);
     }
   }
 
-  protected void restartStablePeriod() {
-    endStablePeriod();
-    startStablePeriod();
-  }
-
   public void await() throws InterruptedException, TimeoutException {
     if (!lock.await(condition.getTimeoutMillis(), TimeUnit.MILLISECONDS)) {
+      cancelWait();
       throw new TimeoutException(
           "Timeout waiting for " + condition + " after " + condition.getTimeoutMillis()
               + " millis");

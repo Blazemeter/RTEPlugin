@@ -11,8 +11,6 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.GroupLayout.Group;
-import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -50,67 +48,67 @@ public class RTESamplerPanel extends JPanel {
 
   public RTESamplerPanel() {
     GroupLayout layout = new GroupLayout(this);
+    layout.setAutoCreateGaps(true);
+    layout.setAutoCreateGaps(true);
     this.setLayout(layout);
 
-    Group horizontalGroup = layout.createParallelGroup(Alignment.LEADING);
-    layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(layout.createSequentialGroup()
-            .addContainerGap()
-            .addGroup(horizontalGroup)
-            .addContainerGap()));
-    SequentialGroup verticalGroup = layout.createSequentialGroup()
-        .addContainerGap();
-    layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(verticalGroup));
+    JPanel requestPanel = buildRequestPanel();
+    JPanel waitPanel = buildWaitPanel();
 
-    addRequestPanel(horizontalGroup, verticalGroup);
-    addWaitPanel(horizontalGroup, verticalGroup);
+    layout.setHorizontalGroup(layout.createParallelGroup()
+        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE));
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.DEFAULT_SIZE)
+        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.DEFAULT_SIZE)
+    );
   }
 
-  private void addRequestPanel(Group horizontalGroup, SequentialGroup verticalGroup) {
+  private JPanel buildRequestPanel() {
     JPanel panel = new JPanel();
     panel.setBorder(BorderFactory.createTitledBorder("RTE Message"));
-
-    horizontalGroup.addComponent(panel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-        Short.MAX_VALUE);
-    verticalGroup.addComponent(panel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-        GroupLayout.DEFAULT_SIZE)
-        .addContainerGap();
-
     GroupLayout layout = new GroupLayout(panel);
-    Group requestHorizontalGroup = layout
-        .createParallelGroup(Alignment.LEADING);
-    layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(layout.createSequentialGroup()
-            .addGroup(requestHorizontalGroup)));
-    SequentialGroup requestVerticalGroup = layout.createSequentialGroup()
-        .addGap(8);
-    layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(requestVerticalGroup));
+    layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    addPayLoadPanel(requestHorizontalGroup, requestVerticalGroup);
-    verticalGroup.addPreferredGap(ComponentPlacement.UNRELATED);
-    addActionsPanel(requestHorizontalGroup, requestVerticalGroup);
-    verticalGroup.addPreferredGap(ComponentPlacement.UNRELATED);
-    addDisconnectAndSendInputs(requestHorizontalGroup, requestVerticalGroup, layout);
+    JPanel payloadPanel = buildPayLoadPanel();
+    JPanel actionsPanel = buildActionsPanel();
 
-    requestVerticalGroup.addGap(8)
-        .addContainerGap();
+    layout.setHorizontalGroup(layout.createParallelGroup()
+        .addComponent(payloadPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
+        .addGroup(layout.createSequentialGroup()
+            .addComponent(disconnect)
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addComponent(sendInputs)));
+
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+            .addComponent(disconnect)
+            .addComponent(sendInputs)));
+
+    return panel;
   }
 
-  private void addPayLoadPanel(Group horizontalGroup, SequentialGroup verticalGroup) {
+  private JPanel buildPayLoadPanel() {
     payloadPanel = new CoordInputPanel("Payload");
-    horizontalGroup.addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-        Short.MAX_VALUE);
-    verticalGroup.addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE);
+    return payloadPanel;
   }
 
-  private void addActionsPanel(Group horizontalGroup, SequentialGroup verticalGroup) {
+  private JPanel buildActionsPanel() {
     JPanel panel = new JPanel();
     panel.setBorder(BorderFactory.createTitledBorder("Actions"));
-    panel.setLayout(new GridLayout((int) Math.ceil(Action.values().length / 12), 12));
+    panel.setLayout(new GridLayout(0, 12));
 
     Arrays.stream(Action.values()).forEach(t -> {
       JRadioButton r = new JRadioButton(t.toString());
@@ -120,80 +118,67 @@ public class RTESamplerPanel extends JPanel {
       actionsGroup.add(r);
     });
 
-    horizontalGroup.addComponent(panel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-        Short.MAX_VALUE);
-    verticalGroup.addComponent(panel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE);
+    return panel;
   }
 
-  private void addDisconnectAndSendInputs(Group horizontalGroup, SequentialGroup verticalGroup,
-      GroupLayout layout) {
-    horizontalGroup.addGroup(layout.createSequentialGroup()
-        .addComponent(disconnect)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(sendInputs));
-    verticalGroup.addGroup(layout.createParallelGroup(Alignment.BASELINE)
-        .addComponent(disconnect)
-        .addComponent(sendInputs));
-  }
-
-  private void addWaitPanel(Group horizontalGroup, SequentialGroup verticalGroup) {
+  private JPanel buildWaitPanel() {
     JPanel panel = new JPanel();
     panel.setBorder(BorderFactory.createTitledBorder("Wait for:"));
-
-    horizontalGroup.addComponent(panel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-        Short.MAX_VALUE);
-    verticalGroup.addComponent(panel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-        GroupLayout.DEFAULT_SIZE)
-        .addContainerGap();
-
     GroupLayout layout = new GroupLayout(panel);
+    layout.setAutoCreateContainerGaps(true);
+    layout.setAutoCreateGaps(true);
     panel.setLayout(layout);
-    Group waitHorizontalGroup = layout.createParallelGroup(Alignment.LEADING);
-    layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(layout.createSequentialGroup()
-            .addGroup(waitHorizontalGroup)));
-    SequentialGroup waitVerticalGroup = layout.createSequentialGroup()
-        .addGap(8);
-    layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(waitVerticalGroup));
 
-    addWaitSync(waitHorizontalGroup, waitVerticalGroup, layout);
-    waitVerticalGroup.addPreferredGap(ComponentPlacement.UNRELATED);
-    addWaitCursor(waitHorizontalGroup, waitVerticalGroup, layout);
-    waitVerticalGroup.addPreferredGap(ComponentPlacement.UNRELATED);
-    addWaitSilent(waitHorizontalGroup, waitVerticalGroup, layout);
-    waitVerticalGroup.addPreferredGap(ComponentPlacement.UNRELATED);
-    addWaitText(waitHorizontalGroup, waitVerticalGroup, layout);
+    JPanel waitSyncPanel = buildWaitSyncPanel();
+    JPanel waitCursorPanel = buildWaitCursorPanel();
+    JPanel waitSilentPanel = buildWaitSilentPanel();
+    JPanel waitTextPanel = buildWaitTextPanel();
 
-    waitVerticalGroup.addGap(8)
-        .addContainerGap();
+    layout.setHorizontalGroup(layout.createParallelGroup()
+        .addComponent(waitSyncPanel)
+        .addComponent(waitCursorPanel)
+        .addComponent(waitSilentPanel)
+        .addComponent(waitTextPanel));
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addComponent(waitSyncPanel)
+        .addComponent(waitCursorPanel)
+        .addComponent(waitSilentPanel)
+        .addComponent(waitTextPanel));
+
+    return panel;
   }
 
-  private void addWaitSync(Group horizontalGroup, SequentialGroup verticalGroup,
-      GroupLayout panelLayout) {
+  private JPanel buildWaitSyncPanel() {
+    JPanel panel = new JPanel();
+    GroupLayout layout = new GroupLayout(panel);
+    panel.setLayout(layout);
 
     waitSync.addItemListener(e -> {
       waitSyncTimeout.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
-
     JLabel timeoutLabel = new JLabel("Timeout (millis): ");
-    horizontalGroup.addGroup(panelLayout.createSequentialGroup()
+
+    layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSync)
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(timeoutLabel)
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(waitSyncTimeout, GroupLayout.PREFERRED_SIZE, TIME_WIDTH,
             GroupLayout.PREFERRED_SIZE));
-    verticalGroup.addGroup(panelLayout.createParallelGroup(Alignment.BASELINE)
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
         .addComponent(waitSync)
         .addComponent(timeoutLabel)
         .addComponent(waitSyncTimeout));
+
+    return panel;
   }
 
-  private void addWaitCursor(Group horizontalGroup, SequentialGroup verticalGroup,
-      GroupLayout panelLayout) {
+  private JPanel buildWaitCursorPanel() {
+    JPanel panel = new JPanel();
+    GroupLayout layout = new GroupLayout(panel);
+    panel.setLayout(layout);
 
     waitCursor.addItemListener(e -> {
       boolean enabled = e.getStateChange() == ItemEvent.SELECTED;
@@ -207,7 +192,8 @@ public class RTESamplerPanel extends JPanel {
     JLabel rowLabel = new JLabel("Row: ");
     JLabel columnLabel = new JLabel("Column: ");
     JLabel timeoutLabel = new JLabel("Timeout (millis): ");
-    horizontalGroup.addGroup(panelLayout.createSequentialGroup()
+
+    layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitCursor)
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(rowLabel)
@@ -224,7 +210,7 @@ public class RTESamplerPanel extends JPanel {
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(waitCursorTimeout, GroupLayout.PREFERRED_SIZE, TIME_WIDTH,
             GroupLayout.PREFERRED_SIZE));
-    verticalGroup.addGroup(panelLayout.createParallelGroup(Alignment.BASELINE)
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
         .addComponent(waitCursor)
         .addComponent(rowLabel)
         .addComponent(waitCursorRow)
@@ -232,10 +218,14 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(waitCursorColumn)
         .addComponent(timeoutLabel)
         .addComponent(waitCursorTimeout));
+
+    return panel;
   }
 
-  private void addWaitSilent(Group horizontalGroup, SequentialGroup verticalGroup,
-      GroupLayout panelLayout) {
+  private JPanel buildWaitSilentPanel() {
+    JPanel panel = new JPanel();
+    GroupLayout layout = new GroupLayout(panel);
+    panel.setLayout(layout);
 
     waitSilent.addItemListener(e -> {
       boolean selected = e.getStateChange() == ItemEvent.SELECTED;
@@ -247,7 +237,7 @@ public class RTESamplerPanel extends JPanel {
 
     JLabel timeLabel = new JLabel("Wait for silent (millis): ");
     JLabel timeoutLabel = new JLabel("Timeout (millis): ");
-    horizontalGroup.addGroup(panelLayout.createSequentialGroup()
+    layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSilent)
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(timeLabel)
@@ -259,16 +249,19 @@ public class RTESamplerPanel extends JPanel {
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(waitSilentTimeout, GroupLayout.PREFERRED_SIZE, TIME_WIDTH,
             GroupLayout.PREFERRED_SIZE));
-    verticalGroup.addGroup(panelLayout.createParallelGroup(Alignment.BASELINE)
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
         .addComponent(waitSilent)
         .addComponent(timeoutLabel)
         .addComponent(waitSilentTimeout)
         .addComponent(timeLabel)
         .addComponent(waitSilentTime));
+    return panel;
   }
 
-  private void addWaitText(Group horizontalGroup, SequentialGroup verticalGroup,
-      GroupLayout panelLayout) {
+  private JPanel buildWaitTextPanel() {
+    JPanel panel = new JPanel();
+    GroupLayout layout = new GroupLayout(panel);
+    panel.setLayout(layout);
 
     waitText.addItemListener(e -> {
       boolean selected = e.getStateChange() == ItemEvent.SELECTED;
@@ -283,66 +276,90 @@ public class RTESamplerPanel extends JPanel {
     });
 
     JLabel regexLabel = new JLabel("Regex: ");
-    SequentialGroup waitHorizontalGroup = panelLayout.createSequentialGroup();
-    Group waitVerticalGroup = panelLayout.createParallelGroup(Alignment.BASELINE);
-    horizontalGroup.addGroup(waitHorizontalGroup
+    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
+    JPanel searchAreaPanel = buildSearchAreaPanel();
+
+    layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitText)
         .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(regexLabel)
+        .addGroup(layout.createParallelGroup()
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(regexLabel)
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addComponent(waitTextRegex, GroupLayout.PREFERRED_SIZE, 200,
+                    GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(ComponentPlacement.UNRELATED)
+                .addComponent(timeoutLabel)
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addComponent(waitTextTimeout, GroupLayout.PREFERRED_SIZE, TIME_WIDTH,
+                    GroupLayout.PREFERRED_SIZE))
+            .addComponent(searchAreaPanel))
+    );
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+            .addComponent(waitText)
+            .addComponent(regexLabel)
+            .addComponent(waitTextRegex)
+            .addComponent(timeoutLabel)
+            .addComponent(waitTextTimeout))
         .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(waitTextRegex, GroupLayout.PREFERRED_SIZE, 200,
-            GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(ComponentPlacement.UNRELATED));
-    verticalGroup.addGroup(waitVerticalGroup
-        .addComponent(waitText)
-        .addComponent(regexLabel)
-        .addComponent(waitTextRegex));
+        .addComponent(searchAreaPanel));
 
-    addSearchAreaPanel(waitHorizontalGroup, waitVerticalGroup);
-
-    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
-    waitHorizontalGroup.addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(timeoutLabel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(waitTextTimeout, GroupLayout.PREFERRED_SIZE, TIME_WIDTH,
-            GroupLayout.PREFERRED_SIZE);
-    waitVerticalGroup.addComponent(timeoutLabel)
-        .addComponent(timeoutLabel)
-        .addComponent(waitTextTimeout);
+    return panel;
   }
 
-  private void addSearchAreaPanel(SequentialGroup horizontalGroup, Group verticalGroup) {
+  private JPanel buildSearchAreaPanel() {
+    JPanel panel = new JPanel();
+    panel.setBorder(BorderFactory.createTitledBorder("Search area: "));
+    GroupLayout layout = new GroupLayout(panel);
+    layout.setAutoCreateContainerGaps(true);
+    panel.setLayout(layout);
+
     JLabel waitTextAreaTopLabel = new JLabel("Top row: ");
     JLabel waitTextAreaLeftLabel = new JLabel("Left column: ");
     JLabel waitTextAreaBottomLabel = new JLabel("Bottom row: ");
     JLabel waitTextAreaRightLabel = new JLabel("Right column: ");
-    horizontalGroup.addComponent(waitTextAreaTopLabel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(waitTextAreaTop, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
-            GroupLayout.PREFERRED_SIZE)
+    layout.setHorizontalGroup(
+        layout.createSequentialGroup()
+            .addComponent(waitTextAreaLeftLabel)
+            .addPreferredGap(ComponentPlacement.RELATED)
+            .addComponent(waitTextAreaLeft, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
+                GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addGroup(layout.createParallelGroup(Alignment.TRAILING)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(waitTextAreaTopLabel)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(waitTextAreaTop, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
+                        GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(waitTextAreaBottomLabel)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(waitTextAreaBottom, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
+                        GroupLayout.PREFERRED_SIZE)
+                )
+              )
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addComponent(waitTextAreaRightLabel)
+            .addPreferredGap(ComponentPlacement.RELATED)
+            .addComponent(waitTextAreaRight, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
+                GroupLayout.PREFERRED_SIZE));
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE, false)
+            .addComponent(waitTextAreaTopLabel)
+            .addComponent(waitTextAreaTop))
         .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(waitTextAreaLeftLabel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(waitTextAreaLeft, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
-            GroupLayout.PREFERRED_SIZE)
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE, false)
+            .addComponent(waitTextAreaLeftLabel)
+            .addComponent(waitTextAreaLeft)
+            .addComponent(waitTextAreaRightLabel)
+            .addComponent(waitTextAreaRight))
         .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(waitTextAreaBottomLabel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(waitTextAreaBottom, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
-            GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(waitTextAreaRightLabel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(waitTextAreaRight, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
-            GroupLayout.PREFERRED_SIZE);
-    verticalGroup.addComponent(waitTextAreaTopLabel)
-        .addComponent(waitTextAreaTop)
-        .addComponent(waitTextAreaLeftLabel)
-        .addComponent(waitTextAreaLeft)
-        .addComponent(waitTextAreaBottomLabel)
-        .addComponent(waitTextAreaBottom)
-        .addComponent(waitTextAreaRightLabel)
-        .addComponent(waitTextAreaRight);
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE, false)
+            .addComponent(waitTextAreaBottomLabel)
+            .addComponent(waitTextAreaBottom)));
+
+    return panel;
   }
 
   public void initFields() {
