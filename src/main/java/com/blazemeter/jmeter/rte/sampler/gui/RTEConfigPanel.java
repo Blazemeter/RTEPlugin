@@ -36,10 +36,6 @@ public class RTEConfigPanel extends JPanel {
   private JTextField server = new JTextField();
   private JLabel portLabel = new JLabel();
   private JTextField port = new JTextField();
-  private JLabel userLabel = new JLabel();
-  private JTextField user = new JTextField();
-  private JLabel passLabel = new JLabel();
-  private JTextField pass = new JTextField();
   private JLabel protocolLabel = new JLabel();
   private JComboBox<Protocol> protocolComboBox = new JComboBox<>(Protocol.values());
 
@@ -76,8 +72,6 @@ public class RTEConfigPanel extends JPanel {
 
     serverLabel.setText("Server: ");
     portLabel.setText("Port: ");
-    userLabel.setText("User: ");
-    passLabel.setText("Password: ");
     protocolLabel.setText("Protocol: ");
     terminalTypeLabel.setText("Terminal Type:");
 
@@ -108,16 +102,6 @@ public class RTEConfigPanel extends JPanel {
                     .addComponent(port, GroupLayout.PREFERRED_SIZE, 150,
                         GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.UNRELATED))
-                .addGroup(connectionPanelLayout.createSequentialGroup().addComponent(userLabel)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(user, GroupLayout.PREFERRED_SIZE, 200,
-                        GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.UNRELATED)
-                    .addComponent(passLabel)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(pass, GroupLayout.PREFERRED_SIZE, 200,
-                        GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.UNRELATED))
                 .addGroup(connectionPanelLayout.createSequentialGroup().addComponent(protocolLabel)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(protocolComboBox, 0, 1, Short.MAX_VALUE)
@@ -138,13 +122,6 @@ public class RTEConfigPanel extends JPanel {
                 .addComponent(server, GroupLayout.PREFERRED_SIZE,
                     GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                 .addComponent(portLabel).addComponent(port, GroupLayout.PREFERRED_SIZE,
-                    GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-            .addPreferredGap(ComponentPlacement.RELATED)
-            .addGroup(connectionPanelLayout.createParallelGroup(Alignment.BASELINE)
-                .addComponent(userLabel)
-                .addComponent(user, GroupLayout.PREFERRED_SIZE,
-                    GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                .addComponent(passLabel).addComponent(pass, GroupLayout.PREFERRED_SIZE,
                     GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
             .addPreferredGap(ComponentPlacement.RELATED)
             .addGroup(connectionPanelLayout.createParallelGroup(Alignment.BASELINE)
@@ -207,8 +184,6 @@ public class RTEConfigPanel extends JPanel {
     connectionTimeout.setText("");
     server.setText("");
     port.setText("");
-    pass.setText("");
-    user.setText("");
     protocolComboBox.setSelectedItem(RTESampler.DEFAULT_PROTOCOL);
     terminalTypeComboBox.setSelectedItem(RTESampler.DEFAULT_TERMINAL_TYPE);
     sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
@@ -228,22 +203,6 @@ public class RTEConfigPanel extends JPanel {
 
   public void setPort(String portParam) {
     port.setText(portParam);
-  }
-
-  public String getPass() {
-    return pass.getText();
-  }
-
-  public void setPass(String passParam) {
-    pass.setText(passParam);
-  }
-
-  public String getUser() {
-    return user.getText();
-  }
-
-  public void setUser(String userParam) {
-    user.setText(userParam);
   }
 
   public SSLType getSSLType() {
