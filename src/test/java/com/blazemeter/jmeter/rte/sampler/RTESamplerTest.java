@@ -66,8 +66,6 @@ public class RTESamplerTest {
     configTestElement
         .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, terminalType.name());
     configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
-    configTestElement.setProperty(RTESampler.CONFIG_USER, user);
-    configTestElement.setProperty(RTESampler.CONFIG_PASS, pass);
     configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, sslType.name());
     configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }

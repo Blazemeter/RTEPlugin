@@ -38,8 +38,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.port";
   public static final String CONFIG_SERVER = "RTEConnectionConfig.server";
-  public static final String CONFIG_USER = "RTEConnectionConfig.user";
-  public static final String CONFIG_PASS = "RTEConnectionConfig.pass";
   public static final String CONFIG_PROTOCOL = "RTEConnectionConfig.protocol";
   public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.sslType";
   public static final String CONFIG_CONNECTION_TIMEOUT = "RTEConnectionConfig.connectTimeout";
@@ -61,7 +59,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   private static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
   private static final int DEFAULT_PORT = 23;
-  private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
+
+  //If users wants to change Stable Timeout value it should be specified in
+  // jmeter.properties by adding a line like ths one:
+  // "RTEConnectionConfig.stableTimeoutMillis=value"
+  private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
   private static final String DISCONNECT_PROPERTY = "RTESampler.disconnect";
   private static final String SEND_INPUTS_PROPERTY = "RTESampler.SendInputs";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
@@ -131,7 +133,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   private long getStableTimeout() {
-    return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
+    return JMeterUtils.getPropDefault(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
   }
 
   @VisibleForTesting
@@ -141,14 +143,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public void setPayload(Inputs payload) {
     setProperty(new TestElementProperty(Inputs.INPUTS, payload));
-  }
-
-  private String getUser() {
-    return getPropertyAsString(CONFIG_USER);
-  }
-
-  private String getPass() {
-    return getPropertyAsString(CONFIG_PASS);
   }
 
   private SSLType getSSLType() {
@@ -387,10 +381,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    SSLData ssldata = new SSLData(DEFAULT_SSLTYPE, null, null);
+    SSLData ssldata = new SSLData(getSSLType(),
+        System.getProperty("javax.net.ssl.keyStorePassword"),
+        System.getProperty("javax.net.ssl.keyStore"));
     client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
-        getStableTimeout()); //TODO: Change hardcoded values from
-    // functions in order to take the values from GUI
+        getStableTimeout());
     clients.put(clientId, client);
     sampleResult.connectEnd();
     return client;
