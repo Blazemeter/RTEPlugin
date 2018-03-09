@@ -1,5 +1,7 @@
 package com.blazemeter.jmeter.rte.sampler;
 
+import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
+
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
@@ -33,8 +35,6 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
 
 public class RTESampler extends AbstractSampler implements ThreadListener {
 
@@ -140,8 +140,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   @VisibleForTesting
-  protected void setStableTimeout(long timeoutMillis) {
-    setProperty(CONFIG_STABLE_TIMEOUT, timeoutMillis);
+  protected void setStableTimeout(Long timeoutMillis) {
+    if (timeoutMillis == null) {
+      JMeterUtils.getJMeterProperties().remove(CONFIG_STABLE_TIMEOUT);
+    } else {
+      JMeterUtils.setProperty(CONFIG_STABLE_TIMEOUT, String.valueOf(timeoutMillis));
+    }
   }
 
   public void setPayload(Inputs payload) {

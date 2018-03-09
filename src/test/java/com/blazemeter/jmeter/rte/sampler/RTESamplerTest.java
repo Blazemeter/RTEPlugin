@@ -19,15 +19,22 @@ import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
+
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.concurrent.TimeoutException;
+
+import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -36,13 +43,18 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RTESamplerTest {
 
-  private static final int CUSTOM_TIMEOUT_MILLIS = 3000;
-  private static final int CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
+  private static final long CUSTOM_TIMEOUT_MILLIS = 3000;
+  private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
+
+  @BeforeClass
+  public static void setupClass() {
+    TestJMeterUtils.createJmeterEnv();
+  }
 
   @Before
   public void setup() {
@@ -51,6 +63,11 @@ public class RTESamplerTest {
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs());
+    //try {
+    //  createJmeterEnv();
+    //} catch (IOException e) {
+    //  e.printStackTrace();
+    //}
   }
 
   private void createDefaultRTEConfig() {
@@ -79,6 +96,7 @@ public class RTESamplerTest {
   @After
   public void teardown() {
     rteSampler.threadFinished();
+    rteSampler.setStableTimeout(null);
   }
 
   @Test
@@ -256,6 +274,18 @@ public class RTESamplerTest {
                 Area.fromTopLeftBottomRight(areaTop, areaLeft, areaBottom, areaRight),
                 CUSTOM_TIMEOUT_MILLIS,
                 CUSTOM_STABLE_TIMEOUT_MILLIS))));
+  }
+
+  private static void createJmeterEnv() throws IOException {
+    File propsFile;
+    try {
+      propsFile = File.createTempFile("jmeter", ".properties");
+      propsFile.deleteOnExit();
+      JMeterUtils.loadJMeterProperties(propsFile.getAbsolutePath());
+    } catch (IOException ex) {
+      ex.printStackTrace(System.err);
+    }
+    JMeterUtils.setLocale(new Locale("ignoreResources"));
   }
 
 }
