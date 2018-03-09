@@ -63,12 +63,12 @@ public class TextWaitConditionTest {
   }
 
   @Test
-  public void shouldNotMatchScreenWhenAreaOutsizeOfScreen() throws Exception {
+  public void shouldMatchScreenWhenAreaOutsizeOfScreenDueToDefaultValuesReset() throws Exception {
     assertThat(buildCondition(MATCHING_SIMPLE_REGEX,
         Area.fromTopLeftBottomRight(SCREEN_SIZE.height + 1, SCREEN_SIZE.width + 1,
             SCREEN_SIZE.height + 1, SCREEN_SIZE.width + 1))
         .matchesScreen(SCREEN, SCREEN_SIZE))
-        .isFalse();
+        .isTrue();
   }
 
   @Test

@@ -1,14 +1,19 @@
 package com.blazemeter.jmeter.rte.core.wait;
 
+import com.blazemeter.jmeter.rte.core.Position;
 import java.awt.Dimension;
 import java.util.Objects;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.PatternMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link WaitCondition} to wait for certain text to be in terminal screen.
  */
 public class TextWaitCondition extends WaitCondition {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TextWaitCondition.class);
 
   private final Pattern regex;
   private final PatternMatcher matcher;
@@ -35,18 +40,31 @@ public class TextWaitCondition extends WaitCondition {
 
   private String extractScreenArea(Area searchArea, String screen, Dimension screenSize) {
     StringBuilder builder = new StringBuilder();
-    int top = Math.max(1, searchArea.getTop());
-    int left = Math.max(1, searchArea.getLeft());
-    int bottom = Math.min(searchArea.getBottom() <= 0 ? screenSize.height : searchArea.getBottom(),
-        screenSize.height);
-    int right = Math.min(searchArea.getRight() <= 0 ? screenSize.width : searchArea.getRight(),
-        screenSize.width);
+    int top = getBoundedValueOrDefault(searchArea.getTop(), 1, screenSize.height, 1, "top row");
+    int left = getBoundedValueOrDefault(searchArea.getLeft(), 1, screenSize.width, 1,
+        "left column");
+    int bottom = getBoundedValueOrDefault(
+        searchArea.getBottom() == Position.UNSPECIFIED_INDEX ? screenSize.height
+            : searchArea.getBottom(), top, screenSize.height, screenSize.height, "bottom row");
+    int right = getBoundedValueOrDefault(
+        searchArea.getRight() == Position.UNSPECIFIED_INDEX ? screenSize.width
+            : searchArea.getRight(), left, screenSize.width, screenSize.width, "right column");
     for (int i = top; i <= bottom; i++) {
       int rowStart = (i - 1) * screenSize.width;
       builder.append(screen.substring(rowStart + left - 1, rowStart + right));
       builder.append("\n");
     }
     return builder.toString();
+  }
+
+  private int getBoundedValueOrDefault(int value, int lowerBound, int upperBound, int defaultValue,
+      String description) {
+    if (value < lowerBound || value > upperBound) {
+      LOG.warn("Search area {} {} is outside of allowed bounds ({},{}). Defaulting to {}.",
+          description, value, lowerBound, upperBound, defaultValue);
+      return defaultValue;
+    }
+    return value;
   }
 
   @Override

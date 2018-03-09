@@ -46,6 +46,7 @@ public class RTESamplerTest {
   @Before
   public void setup() {
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
+    when(rteProtocolClientMock.getScreen()).thenReturn("Test screen");
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs());
