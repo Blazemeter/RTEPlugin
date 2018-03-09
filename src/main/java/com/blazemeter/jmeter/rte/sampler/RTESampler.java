@@ -9,6 +9,7 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
@@ -52,6 +53,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   @VisibleForTesting
   protected static final long DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS = 60000;
   @VisibleForTesting
+  protected static final long DEFAULT_WAIT_SILENT_TIME_MILLIS = 1000;
+  @VisibleForTesting
+  protected static final long DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS = 60000;
+  @VisibleForTesting
   protected static final long DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS = 30000;
 
   private static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
@@ -68,9 +73,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final long DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS = 30000;
   private static final String WAIT_SILENT_PROPERTY = "RTESampler.waitSilent";
   private static final String WAIT_SILENT_TIME_PROPERTY = "RTESampler.waitSilentTime";
-  private static final long DEFAULT_WAIT_SILENT_TIME_MILLIS = 1000;
   private static final String WAIT_SILENT_TIMEOUT_PROPERTY = "RTESampler.waitSilentTimeout";
-  private static final long DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS = 60000;
   private static final String WAIT_TEXT_PROPERTY = "RTESampler.waitText";
   private static final String WAIT_TEXT_REGEX_PROPERTY = "RTESampler.waitTextRegex";
   private static final String WAIT_TEXT_AREA_TOP_PROPERTY = "RTESampler.waitTextAreaTop";
@@ -245,6 +248,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         String.valueOf(DEFAULT_WAIT_SILENT_TIME_MILLIS));
   }
 
+  private long getWaitSilentTimeValue() {
+    return getPropertyAsLong(WAIT_SILENT_TIME_PROPERTY, DEFAULT_WAIT_SILENT_TIME_MILLIS);
+  }
+
   public void setWaitSilentTime(String waitSilentTime) {
     setProperty(WAIT_SILENT_TIME_PROPERTY, waitSilentTime);
   }
@@ -252,6 +259,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public String getWaitSilentTimeout() {
     return getPropertyAsString(WAIT_SILENT_TIMEOUT_PROPERTY,
         String.valueOf(DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS));
+  }
+
+  private long getWaitSilentTimeoutValue() {
+    return getPropertyAsLong(WAIT_SILENT_TIMEOUT_PROPERTY, DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS);
   }
 
   public void setWaitSilentTimeout(String waitSilentTimeout) {
@@ -406,6 +417,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     List<WaitCondition> waiters = new ArrayList<>();
     if (getWaitSync()) {
       waiters.add(new SyncWaitCondition(getWaitSyncTimeoutValue(), getStableTimeout()));
+    }
+    if (getWaitSilent()) {
+      waiters.add(new SilentWaitCondition(getWaitSilentTimeoutValue(), getWaitSilentTimeValue()));
     }
     if (getWaitText()) {
       waiters.add(buildTextWaitCondition());

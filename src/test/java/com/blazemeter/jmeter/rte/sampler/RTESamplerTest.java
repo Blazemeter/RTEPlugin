@@ -16,6 +16,7 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import java.io.PrintWriter;
@@ -188,6 +189,30 @@ public class RTESamplerTest {
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
         .send(any(), eq(Action.ENTER), eq(Collections.emptyList()));
+  }
+
+  @Test
+  public void shouldSendSilentWaitConditionToEmulatorWhenSilentWaitEnabled() throws Exception {
+    rteSampler.setWaitSync(false);
+    rteSampler.setWaitSilent(true);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .send(any(), eq(Action.ENTER), eq(Collections.singletonList(
+            new SilentWaitCondition(RTESampler.DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS,
+                RTESampler.DEFAULT_WAIT_SILENT_TIME_MILLIS))));
+  }
+
+  @Test
+  public void shouldSendSilentConditionWithCustomValuesToEmulatorWhenSilentWaitEnabled()
+      throws Exception {
+    rteSampler.setWaitSync(false);
+    rteSampler.setWaitSilent(true);
+    rteSampler.setWaitSilentTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
+    rteSampler.setWaitSilentTime(String.valueOf(CUSTOM_STABLE_TIMEOUT_MILLIS));
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .send(any(), eq(Action.ENTER), eq(Collections.singletonList(
+            new SilentWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS))));
   }
 
   @Test
