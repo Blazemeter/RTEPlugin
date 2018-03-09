@@ -34,6 +34,8 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
+
 public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.port";
@@ -84,6 +86,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
   private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTimeout";
   private static final String ACTION_PROPERTY = "RTESampler.action";
+  private static final String JAVAX_NET_SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
@@ -382,8 +385,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
     SSLData ssldata = new SSLData(getSSLType(),
-        System.getProperty("javax.net.ssl.keyStorePassword"),
-        System.getProperty("javax.net.ssl.keyStore"));
+        System.getProperty(JAVAX_NET_SSL_KEY_STORE_PASSWORD),
+        System.getProperty(JAVAX_NET_SSL_KEY_STORE));
     client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
         getStableTimeout());
     clients.put(clientId, client);
