@@ -31,5 +31,6 @@ public enum Action {
   SYSRQ,
   RESET,
   ROLL_UP,
-  ROLL_DN
+  ROLL_DN,
+  CONNECT
 }

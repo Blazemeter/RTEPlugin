@@ -17,8 +17,12 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RTESamplerPanel extends JPanel {
+
+  private static final Logger LOG = LoggerFactory.getLogger(RTESamplerPanel.class);
 
   private static final long serialVersionUID = 4739160923223292835L;
   private static final int INDEX_WIDTH = 30;
@@ -28,7 +32,6 @@ public class RTESamplerPanel extends JPanel {
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new HashMap<>();
   private JCheckBox disconnect = new JCheckBox("Disconnect?");
-  private JCheckBox sendInputs = new JCheckBox("Send Inputs");
   private JCheckBox waitSync = new JCheckBox("Sync?");
   private JTextField waitSyncTimeout = new JTextField();
   private JCheckBox waitCursor = new JCheckBox("Cursor?");
@@ -83,19 +86,14 @@ public class RTESamplerPanel extends JPanel {
             Short.MAX_VALUE)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE)
-        .addGroup(layout.createSequentialGroup()
-            .addComponent(disconnect)
-            .addPreferredGap(ComponentPlacement.UNRELATED)
-            .addComponent(sendInputs)));
+        .addComponent(disconnect));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
-            .addComponent(disconnect)
-            .addComponent(sendInputs)));
+        .addComponent(disconnect));
 
     return panel;
   }
@@ -116,6 +114,12 @@ public class RTESamplerPanel extends JPanel {
       panel.add(r);
       actions.put(t, r);
       actionsGroup.add(r);
+    });
+
+    actions.get(Action.CONNECT).addItemListener(e -> {
+      payloadPanel.setEnabled(e.getStateChange() != ItemEvent.SELECTED);
+      validate();
+      repaint();
     });
 
     return panel;
@@ -338,7 +342,7 @@ public class RTESamplerPanel extends JPanel {
                     .addComponent(waitTextAreaBottom, GroupLayout.PREFERRED_SIZE, INDEX_WIDTH,
                         GroupLayout.PREFERRED_SIZE)
                 )
-              )
+            )
             .addPreferredGap(ComponentPlacement.UNRELATED)
             .addComponent(rightLabel)
             .addPreferredGap(ComponentPlacement.RELATED)
@@ -365,7 +369,6 @@ public class RTESamplerPanel extends JPanel {
   public void initFields() {
     payloadPanel.clear();
     disconnect.setSelected(false);
-    sendInputs.setSelected(true);
     actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);
     waitSync.setSelected(false);
     waitSyncTimeout.setText("");
@@ -420,14 +423,6 @@ public class RTESamplerPanel extends JPanel {
 
   public void setDisconnect(boolean disconnect) {
     this.disconnect.setSelected(disconnect);
-  }
-
-  public boolean getSendInputs() {
-    return this.sendInputs.isSelected();
-  }
-
-  public void setSendInputs(boolean sendInputs) {
-    this.sendInputs.setSelected(sendInputs);
   }
 
   public boolean getWaitSync() {

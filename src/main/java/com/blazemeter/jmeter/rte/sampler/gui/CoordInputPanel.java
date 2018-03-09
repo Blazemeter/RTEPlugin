@@ -45,9 +45,10 @@ public class CoordInputPanel extends JPanel implements ActionListener {
   private static final String CLIPBOARD_LINE_DELIMITERS = "\n";
   private static final String CLIPBOARD_ARG_DELIMITERS = "\t";
 
-  private JLabel tableLabel;
   private transient ObjectTableModel tableModel;
   private transient JTable table;
+  private JButton add;
+  private JButton addFromClipboard;
   private JButton delete;
   private JButton up;
   private JButton down;
@@ -57,22 +58,20 @@ public class CoordInputPanel extends JPanel implements ActionListener {
   }
 
   public CoordInputPanel(String label) {
-    this.tableLabel = new JLabel(label);
-    init();
-  }
+    setLayout(new BorderLayout());
 
-  private void init() {
-    JPanel p = this;
-
-    p.setLayout(new BorderLayout());
-
-    p.add(makeLabelPanel(), BorderLayout.NORTH);
-    p.add(makeMainPanel(), BorderLayout.CENTER);
-
-    p.add(Box.createVerticalStrut(70), BorderLayout.WEST);
-    p.add(makeButtonPanel(), BorderLayout.SOUTH);
+    add(makeLabelPanel(label), BorderLayout.NORTH);
+    add(makeMainPanel(), BorderLayout.CENTER);
+    add(Box.createVerticalStrut(70), BorderLayout.WEST);
+    add(makeButtonPanel(), BorderLayout.SOUTH);
 
     table.revalidate();
+  }
+
+  private Component makeLabelPanel(String label) {
+    JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    labelPanel.add(new JLabel(label));
+    return labelPanel;
   }
 
   private Component makeMainPanel() {
@@ -96,19 +95,13 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     }
   }
 
-  private Component makeLabelPanel() {
-    JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    labelPanel.add(tableLabel);
-    return labelPanel;
-  }
-
   private JPanel makeButtonPanel() {
 
-    JButton add = new JButton(JMeterUtils.getResString("add"));
+    add = new JButton(JMeterUtils.getResString("add"));
     add.setActionCommand(ADD);
     add.setEnabled(true);
 
-    JButton addFromClipboard = new JButton(JMeterUtils.getResString("add_from_clipboard"));
+    addFromClipboard = new JButton(JMeterUtils.getResString("add_from_clipboard"));
     addFromClipboard.setActionCommand("addFromClipboard");
     addFromClipboard.setEnabled(true);
 
@@ -121,7 +114,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     down = new JButton(JMeterUtils.getResString("down"));
     down.setActionCommand(DOWN);
 
-    checkButtonsStatus();
+    updateEnabledButtons();
 
     JPanel buttonPanel = new JPanel();
     buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
@@ -139,19 +132,11 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     return buttonPanel;
   }
 
-  private void checkButtonsStatus() {
-    if (tableModel.getRowCount() == 0) {
-      delete.setEnabled(false);
-    } else {
-      delete.setEnabled(true);
-    }
-    if (tableModel.getRowCount() > 1) {
-      up.setEnabled(true);
-      down.setEnabled(true);
-    } else {
-      up.setEnabled(false);
-      down.setEnabled(false);
-    }
+  private void updateEnabledButtons() {
+    int rowCount = tableModel.getRowCount();
+    delete.setEnabled(isEnabled() && rowCount != 0);
+    up.setEnabled(isEnabled() && rowCount > 1);
+    down.setEnabled(isEnabled() && rowCount > 1);
   }
 
   public TestElement createTestElement() {
@@ -184,21 +169,21 @@ public class CoordInputPanel extends JPanel implements ActionListener {
         tableModel.addRow(input);
       }
     }
-    checkButtonsStatus();
+    updateEnabledButtons();
   }
 
   @Override
   public void actionPerformed(ActionEvent e) {
     String action = e.getActionCommand();
     switch (action) {
-      case DELETE:
-        deleteArgument();
-        break;
       case ADD:
         addArgument();
         break;
       case ADD_FROM_CLIPBOARD:
         addFromClipboard();
+        break;
+      case DELETE:
+        deleteArgument();
         break;
       case UP:
         moveUp();
@@ -211,24 +196,120 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     }
   }
 
-  private void moveDown() {
+  private void addArgument() {
+    // If a table cell is being edited, we should accept the current value
+    // and stop the editing before adding a new row.
+    GuiUtils.stopTableEditing(table);
+
+    tableModel.addRow(new CoordInputRowGUI());
+
+    updateEnabledButtons();
+
+    // Highlight (select) and scroll to the appropriate row.
+    int rowToSelect = tableModel.getRowCount() - 1;
+    table.setRowSelectionInterval(rowToSelect, rowToSelect);
+    table.scrollRectToVisible(table.getCellRect(rowToSelect, 0, true));
+  }
+
+  private void addFromClipboard() {
+    GuiUtils.stopTableEditing(table);
+    int rowCount = table.getRowCount();
+    try {
+      String clipboardContent = GuiUtils.getPastedText();
+      if (clipboardContent == null) {
+        return;
+      }
+      String[] clipboardLines = clipboardContent.split(CLIPBOARD_LINE_DELIMITERS);
+      for (String clipboardLine : clipboardLines) {
+        String[] clipboardCols = clipboardLine.split(CLIPBOARD_ARG_DELIMITERS);
+        if (clipboardCols.length > 0) {
+          CoordInputRowGUI input = createArgumentFromClipboard(clipboardCols);
+          tableModel.addRow(input);
+        }
+      }
+      if (table.getRowCount() > rowCount) {
+        updateEnabledButtons();
+
+        // Highlight (select) and scroll to the appropriate rows.
+        int rowToSelect = tableModel.getRowCount() - 1;
+        table.setRowSelectionInterval(rowCount, rowToSelect);
+        table.scrollRectToVisible(table.getCellRect(rowCount, 0, true));
+      }
+    } catch (IOException ioe) {
+      JOptionPane.showMessageDialog(this,
+          "Could not add read arguments from clipboard:\n" + ioe.getLocalizedMessage(), "Error",
+          JOptionPane.ERROR_MESSAGE);
+    } catch (UnsupportedFlavorException ufe) {
+      JOptionPane
+          .showMessageDialog(this,
+              "Could not add retrieve " + DataFlavor.stringFlavor.getHumanPresentableName()
+                  + " from clipboard" + ufe.getLocalizedMessage(),
+              "Error", JOptionPane.ERROR_MESSAGE);
+    }
+  }
+
+  private CoordInputRowGUI createArgumentFromClipboard(String[] clipboardCols) {
+    CoordInputRowGUI argument = new CoordInputRowGUI();
+    argument.setInput(clipboardCols[0]);
+    if (clipboardCols.length > 1) {
+      argument.setColumn(parseCoordIndex(clipboardCols[1]));
+      if (clipboardCols.length > 2) {
+        argument.setRow(parseCoordIndex(clipboardCols[2]));
+      }
+    }
+    return argument;
+  }
+
+  private int parseCoordIndex(String val) {
+    try {
+      return Integer.valueOf(val);
+    } catch (NumberFormatException e) {
+      LOG.warn("Invalid value ({}) for coordinate index.", val);
+      return 1;
+    }
+  }
+
+  private void deleteArgument() {
+    GuiUtils.cancelEditing(table);
+
+    int[] rowsSelected = table.getSelectedRows();
+    int anchorSelection = table.getSelectionModel().getAnchorSelectionIndex();
+    table.clearSelection();
+    if (rowsSelected.length > 0) {
+      for (int i = rowsSelected.length - 1; i >= 0; i--) {
+        tableModel.removeRow(rowsSelected[i]);
+      }
+
+      // Table still contains one or more rows, so highlight (select)
+      // the appropriate one.
+      if (tableModel.getRowCount() > 0) {
+        if (anchorSelection >= tableModel.getRowCount()) {
+          anchorSelection = tableModel.getRowCount() - 1;
+        }
+        table.setRowSelectionInterval(anchorSelection, anchorSelection);
+      }
+
+      updateEnabledButtons();
+    }
+  }
+
+  private void moveUp() {
     // get the selected rows before stopping editing
     // or the selected rows will be unselected
     int[] rowsSelected = table.getSelectedRows();
     GuiUtils.stopTableEditing(table);
 
-    if (rowsSelected.length > 0
-        && rowsSelected[rowsSelected.length - 1] < table.getRowCount() - 1) {
+    if (rowsSelected.length > 0 && rowsSelected[0] > 0) {
       table.clearSelection();
-      for (int i = rowsSelected.length - 1; i >= 0; i--) {
-        int rowSelected = rowsSelected[i];
-        tableModel.moveRow(rowSelected, rowSelected + 1, rowSelected + 1);
-      }
       for (int rowSelected : rowsSelected) {
-        table.addRowSelectionInterval(rowSelected + 1, rowSelected + 1);
+        tableModel.moveRow(rowSelected, rowSelected + 1, rowSelected - 1);
       }
 
-      scrollToRowIfNotVisible(rowsSelected[0] + 1);
+      for (int rowSelected : rowsSelected) {
+        table.addRowSelectionInterval(rowSelected - 1, rowSelected - 1);
+      }
+
+      scrollToRowIfNotVisible(rowsSelected[0] - 1);
     }
   }
 
@@ -256,133 +337,39 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     return table.rowAtPoint(vr.getLocation()) - first;
   }
 
-  private void moveUp() {
+  private void moveDown() {
     // get the selected rows before stopping editing
     // or the selected rows will be unselected
     int[] rowsSelected = table.getSelectedRows();
     GuiUtils.stopTableEditing(table);
 
-    if (rowsSelected.length > 0 && rowsSelected[0] > 0) {
+    if (rowsSelected.length > 0
+        && rowsSelected[rowsSelected.length - 1] < table.getRowCount() - 1) {
       table.clearSelection();
-      for (int rowSelected : rowsSelected) {
-        tableModel.moveRow(rowSelected, rowSelected + 1, rowSelected - 1);
-      }
-
-      for (int rowSelected : rowsSelected) {
-        table.addRowSelectionInterval(rowSelected - 1, rowSelected - 1);
-      }
-
-      scrollToRowIfNotVisible(rowsSelected[0] - 1);
-    }
-  }
-
-  private void deleteArgument() {
-    GuiUtils.cancelEditing(table);
-
-    int[] rowsSelected = table.getSelectedRows();
-    int anchorSelection = table.getSelectionModel().getAnchorSelectionIndex();
-    table.clearSelection();
-    if (rowsSelected.length > 0) {
       for (int i = rowsSelected.length - 1; i >= 0; i--) {
-        tableModel.removeRow(rowsSelected[i]);
+        int rowSelected = rowsSelected[i];
+        tableModel.moveRow(rowSelected, rowSelected + 1, rowSelected + 1);
+      }
+      for (int rowSelected : rowsSelected) {
+        table.addRowSelectionInterval(rowSelected + 1, rowSelected + 1);
       }
 
-      // Table still contains one or more rows, so highlight (select)
-      // the appropriate one.
-      if (tableModel.getRowCount() > 0) {
-        if (anchorSelection >= tableModel.getRowCount()) {
-          anchorSelection = tableModel.getRowCount() - 1;
-        }
-        table.setRowSelectionInterval(anchorSelection, anchorSelection);
-      }
-
-      checkButtonsStatus();
+      scrollToRowIfNotVisible(rowsSelected[0] + 1);
     }
-  }
-
-  private void addArgument() {
-    // If a table cell is being edited, we should accept the current value
-    // and stop the editing before adding a new row.
-    GuiUtils.stopTableEditing(table);
-
-    tableModel.addRow(makeNewArgument());
-
-    checkButtonsStatus();
-
-    // Highlight (select) and scroll to the appropriate row.
-    int rowToSelect = tableModel.getRowCount() - 1;
-    table.setRowSelectionInterval(rowToSelect, rowToSelect);
-    table.scrollRectToVisible(table.getCellRect(rowToSelect, 0, true));
-  }
-
-  private void addFromClipboard(String lineDelimiter, String argDelimiter) {
-    GuiUtils.stopTableEditing(table);
-    int rowCount = table.getRowCount();
-    try {
-      String clipboardContent = GuiUtils.getPastedText();
-      if (clipboardContent == null) {
-        return;
-      }
-      String[] clipboardLines = clipboardContent.split(lineDelimiter);
-      for (String clipboardLine : clipboardLines) {
-        String[] clipboardCols = clipboardLine.split(argDelimiter);
-        if (clipboardCols.length > 0) {
-          CoordInputRowGUI input = createArgumentFromClipboard(clipboardCols);
-          tableModel.addRow(input);
-        }
-      }
-      if (table.getRowCount() > rowCount) {
-        checkButtonsStatus();
-
-        // Highlight (select) and scroll to the appropriate rows.
-        int rowToSelect = tableModel.getRowCount() - 1;
-        table.setRowSelectionInterval(rowCount, rowToSelect);
-        table.scrollRectToVisible(table.getCellRect(rowCount, 0, true));
-      }
-    } catch (IOException ioe) {
-      JOptionPane.showMessageDialog(this,
-          "Could not add read arguments from clipboard:\n" + ioe.getLocalizedMessage(), "Error",
-          JOptionPane.ERROR_MESSAGE);
-    } catch (UnsupportedFlavorException ufe) {
-      JOptionPane
-          .showMessageDialog(this,
-              "Could not add retrieve " + DataFlavor.stringFlavor.getHumanPresentableName()
-                  + " from clipboard" + ufe.getLocalizedMessage(),
-              "Error", JOptionPane.ERROR_MESSAGE);
-    }
-  }
-
-  private void addFromClipboard() {
-    addFromClipboard(CLIPBOARD_LINE_DELIMITERS, CLIPBOARD_ARG_DELIMITERS);
-  }
-
-  private CoordInputRowGUI createArgumentFromClipboard(String[] clipboardCols) {
-    CoordInputRowGUI argument = makeNewArgument();
-    argument.setInput(clipboardCols[0]);
-    if (clipboardCols.length > 1) {
-      argument.setColumn(parseCoordIndex(clipboardCols[1]));
-      if (clipboardCols.length > 2) {
-        argument.setRow(parseCoordIndex(clipboardCols[2]));
-      }
-    }
-    return argument;
-  }
-
-  private int parseCoordIndex(String val) {
-    try {
-      return Integer.valueOf(val);
-    } catch (NumberFormatException e) {
-      LOG.warn("Invalid value ({}) for coordinate index.", val);
-      return 1;
-    }
-  }
-
-  private CoordInputRowGUI makeNewArgument() {
-    return new CoordInputRowGUI();
   }
 
   public void clear() {
     GuiUtils.stopTableEditing(table);
     tableModel.clearData();
   }
+
+  @Override
+  public void setEnabled(boolean enabled) {
+    super.setEnabled(enabled);
+    table.setEnabled(enabled);
+    add.setEnabled(enabled);
+    addFromClipboard.setEnabled(enabled);
+    updateEnabledButtons();
+  }
+
 }

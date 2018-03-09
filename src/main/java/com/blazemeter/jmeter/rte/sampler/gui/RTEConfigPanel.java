@@ -20,13 +20,10 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import org.apache.jmeter.util.JMeterUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RTEConfigPanel extends JPanel {
 
   private static final long serialVersionUID = -3671411083800369578L;
-  private static final Logger LOG = LoggerFactory.getLogger(RTEConfigPanel.class);
 
   private JPanel connectionPanel = new JPanel();
   private JPanel sslPanel = new JPanel();
