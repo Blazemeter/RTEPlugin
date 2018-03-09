@@ -1,9 +1,11 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250;
+package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

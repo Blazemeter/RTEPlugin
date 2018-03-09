@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.core;
 
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.SSLData;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import java.awt.Dimension;
 import java.util.List;
 import java.util.concurrent.TimeoutException;

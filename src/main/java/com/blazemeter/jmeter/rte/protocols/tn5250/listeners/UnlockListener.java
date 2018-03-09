@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250;
+package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import java.util.concurrent.ScheduledExecutorService;
