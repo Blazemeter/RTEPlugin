@@ -1,7 +1,5 @@
 package com.blazemeter.jmeter.rte.sampler;
 
-import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
-
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
@@ -35,6 +33,8 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
 
 public class RTESampler extends AbstractSampler implements ThreadListener {
 
@@ -145,6 +145,24 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       JMeterUtils.getJMeterProperties().remove(CONFIG_STABLE_TIMEOUT);
     } else {
       JMeterUtils.setProperty(CONFIG_STABLE_TIMEOUT, String.valueOf(timeoutMillis));
+    }
+  }
+
+  @VisibleForTesting
+  protected void setKeyStore(String keystore) {
+    if (keystore == null) {
+      System.getProperties().remove(JAVAX_NET_SSL_KEY_STORE);
+    } else {
+      System.setProperty(JAVAX_NET_SSL_KEY_STORE, keystore);
+    }
+  }
+
+  @VisibleForTesting
+  protected void setKeyStorePassword(String keystorePwd) {
+    if (keystorePwd == null) {
+      System.getProperties().remove(JAVAX_NET_SSL_KEY_STORE_PASSWORD);
+    } else {
+      System.setProperty(JAVAX_NET_SSL_KEY_STORE_PASSWORD, keystorePwd);
     }
   }
 

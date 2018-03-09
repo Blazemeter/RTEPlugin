@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.concurrent.TimeoutException;
 
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
@@ -45,6 +46,9 @@ public class RTESamplerTest {
 
   private static final long CUSTOM_TIMEOUT_MILLIS = 3000;
   private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
+  private static final String CUSTOM_SSL_KEY_STORE = "/apache-jmeter4.0/ssl/cert.keystore";
+  private static final String CUSTOM_SSL_KEY_STORE_PASSWORD = "pwd123";
+  private static final SSLType CUSTOM_SSL_TYPE = SSLType.SSLv2;
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
@@ -63,11 +67,6 @@ public class RTESamplerTest {
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs());
-    //try {
-    //  createJmeterEnv();
-    //} catch (IOException e) {
-    //  e.printStackTrace();
-    //}
   }
 
   private void createDefaultRTEConfig() {
@@ -276,16 +275,16 @@ public class RTESamplerTest {
                 CUSTOM_STABLE_TIMEOUT_MILLIS))));
   }
 
-  private static void createJmeterEnv() throws IOException {
-    File propsFile;
-    try {
-      propsFile = File.createTempFile("jmeter", ".properties");
-      propsFile.deleteOnExit();
-      JMeterUtils.loadJMeterProperties(propsFile.getAbsolutePath());
-    } catch (IOException ex) {
-      ex.printStackTrace(System.err);
-    }
-    JMeterUtils.setLocale(new Locale("ignoreResources"));
+  @Test
+  public void shouldConnectUsingSSLDataCustomValuesToEmulatorWhenKeyStorePropertiesEnabled()
+      throws Exception {
+    rteSampler.setKeyStore(CUSTOM_SSL_KEY_STORE);
+    rteSampler.setKeyStorePassword(CUSTOM_SSL_KEY_STORE_PASSWORD);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .connect(any(), anyInt(),
+            new SSLData(any(),CUSTOM_SSL_KEY_STORE_PASSWORD,CUSTOM_SSL_KEY_STORE),
+            any(), anyLong(), anyLong());
   }
 
 }
