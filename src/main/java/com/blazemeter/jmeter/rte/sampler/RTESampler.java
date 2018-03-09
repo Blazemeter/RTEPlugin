@@ -8,9 +8,12 @@ import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.SSLData;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -26,6 +29,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
+import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,16 +47,20 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
+  @VisibleForTesting
+  protected static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
+  @VisibleForTesting
+  protected static final long DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS = 60000;
+  @VisibleForTesting
+  protected static final long DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS = 30000;
+
   private static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
   private static final int DEFAULT_PORT = 23;
-
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
-  private static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
   private static final String DISCONNECT_PROPERTY = "RTESampler.disconnect";
   private static final String SEND_INPUTS_PROPERTY = "RTESampler.SendInputs";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
   private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
-  private static final long DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS = 60000;
   private static final String WAIT_CURSOR_PROPERTY = "RTESampler.waitCursor";
   private static final String WAIT_CURSOR_ROW_PROPERTY = "RTESampler.waitCursorRow";
   private static final String WAIT_CURSOR_COLUMN_PROPERTY = "RTESampler.waitCursorColumn";
@@ -70,7 +78,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final String WAIT_TEXT_AREA_BOTTOM_PROPERTY = "RTESampler.waitTextAreaBottom";
   private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
   private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTimeout";
-  private static final long DEFAULT_WAIT_TEXT_TIMEOUT = 30000;
   private static final String ACTION_PROPERTY = "RTESampler.action";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
@@ -122,6 +129,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   private long getStableTimeout() {
     return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
+  }
+
+  @VisibleForTesting
+  protected void setStableTimeout(long timeoutMillis) {
+    setProperty(CONFIG_STABLE_TIMEOUT, timeoutMillis);
   }
 
   public void setPayload(Inputs payload) {
@@ -312,7 +324,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public String getWaitTextTimeout() {
     return getPropertyAsString(WAIT_TEXT_TIMEOUT_PROPERTY,
-        String.valueOf(DEFAULT_WAIT_TEXT_TIMEOUT));
+        String.valueOf(DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS));
   }
 
   public void setWaitTextTimeout(String timeout) {
@@ -320,7 +332,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   private long getWaitTextTimeoutValue() {
-    return getPropertyAsLong(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT);
+    return getPropertyAsLong(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
   }
 
   @Override
@@ -395,7 +407,20 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     if (getWaitSync()) {
       waiters.add(new SyncWaitCondition(getWaitSyncTimeoutValue(), getStableTimeout()));
     }
+    if (getWaitText()) {
+      waiters.add(buildTextWaitCondition());
+    }
     return waiters;
+  }
+
+  private TextWaitCondition buildTextWaitCondition() {
+    return new TextWaitCondition(
+        JMeterUtils.getPattern(getWaitTextRegex()),
+        JMeterUtils.getMatcher(),
+        Area.fromTopLeftBottomRight(getWaitTextAreaTopValue(), getWaitTextAreaLeftValue(),
+            getWaitTextAreaBottomValue(), getWaitTextAreaRightValue()),
+        getWaitTextTimeoutValue(),
+        getStableTimeout());
   }
 
   private void disconnect(RteProtocolClient client) throws RteIOException {

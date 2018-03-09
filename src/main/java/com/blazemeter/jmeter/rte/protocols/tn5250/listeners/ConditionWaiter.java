@@ -1,6 +1,7 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250;
+package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -86,8 +87,8 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
     if (!lock.await(condition.getTimeoutMillis(), TimeUnit.MILLISECONDS)) {
       cancelWait();
       throw new TimeoutException(
-          "Timeout waiting for " + condition + " after " + condition.getTimeoutMillis()
-              + " millis");
+          "Timeout waiting for " + condition.getDescription() + " after " + condition
+              .getTimeoutMillis() + " millis");
     }
   }
 

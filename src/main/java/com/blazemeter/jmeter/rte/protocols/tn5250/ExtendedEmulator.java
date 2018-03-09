@@ -3,6 +3,8 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.SSLType;
 
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLTelnet;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import net.infordata.em.tn5250.XI5250Emulator;

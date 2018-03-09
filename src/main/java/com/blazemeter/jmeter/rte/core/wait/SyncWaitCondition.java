@@ -10,8 +10,16 @@ public class SyncWaitCondition extends WaitCondition {
   }
 
   @Override
-  public String toString() {
+  public String getDescription() {
     return "emulator to be unlocked";
+  }
+
+  @Override
+  public String toString() {
+    return "SyncWaitCondition{" +
+        "timeoutMillis=" + timeoutMillis +
+        ", stableTimeoutMillis=" + stableTimeoutMillis +
+        '}';
   }
 
 }

@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250;
+package com.blazemeter.jmeter.rte.protocols.tn5250.ssl;
 
 import java.io.IOException;
 import java.io.InputStream;

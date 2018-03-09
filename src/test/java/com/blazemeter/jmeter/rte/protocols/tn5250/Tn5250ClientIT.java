@@ -7,9 +7,12 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.SSLType;
-import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import com.blazemeter.jmeter.rte.virtualservice.Flow;
 import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import com.google.common.base.Charsets;
@@ -23,6 +26,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.apache.oro.text.regex.Perl5Compiler;
+import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,8 +117,8 @@ public class Tn5250ClientIT {
 
   private List<CoordInput> buildInvalidCredsFields() {
     return Arrays.asList(
-          new CoordInput(new Position(7, 53), "TEST"),
-          new CoordInput(new Position(9, 53), "PASS"));
+        new CoordInput(new Position(7, 53), "TEST"),
+        new CoordInput(new Position(9, 53), "PASS"));
   }
 
   private List<WaitCondition> buildSyncWaiter() {
@@ -143,6 +148,10 @@ public class Tn5250ClientIT {
     connectToVirtualService();
     List<WaitCondition> waiters = Collections
         .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
+          @Override
+          public String getDescription() {
+            return "test";
+          }
         });
     client.send(buildInvalidCredsFields(), Action.ENTER, waiters);
   }
@@ -152,6 +161,21 @@ public class Tn5250ClientIT {
     loadFlow("slow-response.yml");
     connectToVirtualService();
     client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void shouldThrowTimeoutExceptionWhenSendWithTextWaitWithNoMatchingRegex()
+      throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    client.send(buildInvalidCredsFields(), Action.ENTER,
+        Collections.singletonList(
+            new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
+                new Perl5Matcher(),
+                Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
+                    Position.UNSPECIFIED_INDEX),
+                TIMEOUT_MILLIS,
+                STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
