@@ -9,6 +9,7 @@ import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
@@ -161,6 +162,14 @@ public class Tn5250ClientIT {
     loadFlow("slow-response.yml");
     connectToVirtualService();
     client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void shouldThrowTimeoutExceptionWhenSendWithSilentWaitAndChattyServer() throws Exception {
+    loadFlow("chatty-server.yml");
+    connectToVirtualService();
+    client.send(buildInvalidCredsFields(), Action.ENTER,
+        Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
