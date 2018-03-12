@@ -177,15 +177,6 @@ public class RTEConfigPanel extends JPanel {
             .addContainerGap()));
   }
 
-  public void initFields() {
-    connectionTimeout.setText("");
-    server.setText("");
-    port.setText("");
-    protocolComboBox.setSelectedItem(RTESampler.DEFAULT_PROTOCOL);
-    terminalTypeComboBox.setSelectedItem(RTESampler.DEFAULT_TERMINAL_TYPE);
-    sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
-  }
-
   public String getServer() {
     return server.getText();
   }

@@ -44,6 +44,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.sslType";
   public static final String CONFIG_CONNECTION_TIMEOUT = "RTEConnectionConfig.connectTimeout";
   public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.terminalType";
+  public static final int DEFAULT_PORT = 23;
+  public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
   public static final Action DEFAULT_ACTION = Action.ENTER;
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
@@ -59,8 +61,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   @VisibleForTesting
   protected static final long DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS = 30000;
 
-  private static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
-  private static final int DEFAULT_PORT = 23;
 
   //If users wants to change Stable Timeout value it should be specified in
   // jmeter.properties by adding a line like ths one:

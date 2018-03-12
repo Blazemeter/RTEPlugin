@@ -16,7 +16,6 @@ public class RTEConfigGui extends AbstractConfigGui {
 
   public RTEConfigGui() {
     rteConfigPanelConfigPanel = new RTEConfigPanel();
-    rteConfigPanelConfigPanel.initFields();
 
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
@@ -43,17 +42,21 @@ public class RTEConfigGui extends AbstractConfigGui {
       rteConfigPanelConfigPanel
           .setServer(configTestElement.getPropertyAsString(RTESampler.CONFIG_SERVER));
       rteConfigPanelConfigPanel.setPort(
-          configTestElement.getPropertyAsString(RTESampler.CONFIG_PORT));
+          configTestElement.getPropertyAsString(RTESampler.CONFIG_PORT,
+              String.valueOf(RTESampler.DEFAULT_PORT)));
       rteConfigPanelConfigPanel.setProtocol(
-          Protocol.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL)));
+          Protocol.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL,
+              RTESampler.DEFAULT_PROTOCOL.name())));
       rteConfigPanelConfigPanel.setTerminalType(TerminalType
-          .valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE)));
+          .valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE,
+              RTESampler.DEFAULT_TERMINAL_TYPE.name())));
       rteConfigPanelConfigPanel.setSSLType(
-          SSLType.valueOf(configTestElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE)));
+          SSLType.valueOf(configTestElement
+              .getPropertyAsString(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name())));
       rteConfigPanelConfigPanel
           .setConnectionTimeout(
-              configTestElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT));
-
+              configTestElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT,
+                  String.valueOf(RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS)));
     }
   }
 
@@ -87,9 +90,4 @@ public class RTEConfigGui extends AbstractConfigGui {
     }
   }
 
-  @Override
-  public void clearGui() {
-    super.clearGui();
-    rteConfigPanelConfigPanel.initFields();
-  }
 }

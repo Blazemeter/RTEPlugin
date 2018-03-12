@@ -13,7 +13,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
 
   public RTESamplerGui() {
     rteSamplerPanel = new RTESamplerPanel();
-    rteSamplerPanel.initFields();
+    rteSamplerPanel.resetFields();
 
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
@@ -104,7 +104,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
   @Override
   public void clearGui() {
     super.clearGui();
-    rteSamplerPanel.initFields();
+    rteSamplerPanel.resetFields();
   }
 
 }
