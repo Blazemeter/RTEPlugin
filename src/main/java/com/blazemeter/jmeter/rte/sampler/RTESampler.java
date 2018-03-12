@@ -34,12 +34,12 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
+
 public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.port";
   public static final String CONFIG_SERVER = "RTEConnectionConfig.server";
-  public static final String CONFIG_USER = "RTEConnectionConfig.user";
-  public static final String CONFIG_PASS = "RTEConnectionConfig.pass";
   public static final String CONFIG_PROTOCOL = "RTEConnectionConfig.protocol";
   public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.sslType";
   public static final String CONFIG_CONNECTION_TIMEOUT = "RTEConnectionConfig.connectTimeout";
@@ -61,7 +61,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   private static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
   private static final int DEFAULT_PORT = 23;
-  private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeout";
+
+  //If users wants to change Stable Timeout value it should be specified in
+  // jmeter.properties by adding a line like ths one:
+  // "RTEConnectionConfig.stableTimeoutMillis=value"
+  private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
   private static final String DISCONNECT_PROPERTY = "RTESampler.disconnect";
   private static final String SEND_INPUTS_PROPERTY = "RTESampler.SendInputs";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
@@ -82,6 +86,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
   private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTimeout";
   private static final String ACTION_PROPERTY = "RTESampler.action";
+  private static final String JAVAX_NET_SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
@@ -131,24 +136,38 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   private long getStableTimeout() {
-    return getPropertyAsLong(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
+    return JMeterUtils.getPropDefault(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
   }
 
   @VisibleForTesting
-  protected void setStableTimeout(long timeoutMillis) {
-    setProperty(CONFIG_STABLE_TIMEOUT, timeoutMillis);
+  protected void setStableTimeout(Long timeoutMillis) {
+    if (timeoutMillis == null) {
+      JMeterUtils.getJMeterProperties().remove(CONFIG_STABLE_TIMEOUT);
+    } else {
+      JMeterUtils.setProperty(CONFIG_STABLE_TIMEOUT, String.valueOf(timeoutMillis));
+    }
+  }
+
+  @VisibleForTesting
+  protected void setKeyStore(String keystore) {
+    if (keystore == null) {
+      System.getProperties().remove(JAVAX_NET_SSL_KEY_STORE);
+    } else {
+      System.setProperty(JAVAX_NET_SSL_KEY_STORE, keystore);
+    }
+  }
+
+  @VisibleForTesting
+  protected void setKeyStorePassword(String keystorePwd) {
+    if (keystorePwd == null) {
+      System.getProperties().remove(JAVAX_NET_SSL_KEY_STORE_PASSWORD);
+    } else {
+      System.setProperty(JAVAX_NET_SSL_KEY_STORE_PASSWORD, keystorePwd);
+    }
   }
 
   public void setPayload(Inputs payload) {
     setProperty(new TestElementProperty(Inputs.INPUTS, payload));
-  }
-
-  private String getUser() {
-    return getPropertyAsString(CONFIG_USER);
-  }
-
-  private String getPass() {
-    return getPropertyAsString(CONFIG_PASS);
   }
 
   private SSLType getSSLType() {
@@ -387,10 +406,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    SSLData ssldata = new SSLData(DEFAULT_SSLTYPE, null, null);
+    SSLData ssldata = new SSLData(getSSLType(),
+        System.getProperty(JAVAX_NET_SSL_KEY_STORE_PASSWORD),
+        System.getProperty(JAVAX_NET_SSL_KEY_STORE));
     client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
-        getStableTimeout()); //TODO: Change hardcoded values from
-    // functions in order to take the values from GUI
+        getStableTimeout());
     clients.put(clientId, client);
     sampleResult.connectEnd();
     return client;

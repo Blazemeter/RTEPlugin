@@ -19,15 +19,23 @@ import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
+
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.concurrent.TimeoutException;
+
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
+import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -36,13 +44,21 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RTESamplerTest {
 
-  private static final int CUSTOM_TIMEOUT_MILLIS = 3000;
-  private static final int CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
+  private static final long CUSTOM_TIMEOUT_MILLIS = 3000;
+  private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
+  private static final String CUSTOM_SSL_KEY_STORE = "/apache-jmeter4.0/ssl/cert.keystore";
+  private static final String CUSTOM_SSL_KEY_STORE_PASSWORD = "pwd123";
+  private static final SSLType CUSTOM_SSL_TYPE = SSLType.SSLv2;
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
+
+  @BeforeClass
+  public static void setupClass() {
+    TestJMeterUtils.createJmeterEnv();
+  }
 
   @Before
   public void setup() {
@@ -66,8 +82,6 @@ public class RTESamplerTest {
     configTestElement
         .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, terminalType.name());
     configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
-    configTestElement.setProperty(RTESampler.CONFIG_USER, user);
-    configTestElement.setProperty(RTESampler.CONFIG_PASS, pass);
     configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, sslType.name());
     configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }
@@ -81,6 +95,7 @@ public class RTESamplerTest {
   @After
   public void teardown() {
     rteSampler.threadFinished();
+    rteSampler.setStableTimeout(null);
   }
 
   @Test
@@ -258,6 +273,18 @@ public class RTESamplerTest {
                 Area.fromTopLeftBottomRight(areaTop, areaLeft, areaBottom, areaRight),
                 CUSTOM_TIMEOUT_MILLIS,
                 CUSTOM_STABLE_TIMEOUT_MILLIS))));
+  }
+
+  @Test
+  public void shouldConnectUsingSSLDataCustomValuesToEmulatorWhenKeyStorePropertiesEnabled()
+      throws Exception {
+    rteSampler.setKeyStore(CUSTOM_SSL_KEY_STORE);
+    rteSampler.setKeyStorePassword(CUSTOM_SSL_KEY_STORE_PASSWORD);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .connect(any(), anyInt(),
+            new SSLData(any(),CUSTOM_SSL_KEY_STORE_PASSWORD,CUSTOM_SSL_KEY_STORE),
+            any(), anyLong(), anyLong());
   }
 
 }
