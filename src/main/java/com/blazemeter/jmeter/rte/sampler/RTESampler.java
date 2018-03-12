@@ -67,7 +67,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   // "RTEConnectionConfig.stableTimeoutMillis=value"
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
   private static final String DISCONNECT_PROPERTY = "RTESampler.disconnect";
-  private static final String SEND_INPUTS_PROPERTY = "RTESampler.SendInputs";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
   private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
   private static final String WAIT_CURSOR_PROPERTY = "RTESampler.waitCursor";
@@ -191,14 +190,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public void setDisconnect(boolean disconnect) {
     setProperty(DISCONNECT_PROPERTY, disconnect);
-  }
-
-  public boolean getSendInputs() {
-    return getPropertyAsBoolean(SEND_INPUTS_PROPERTY, true);
-  }
-
-  public void setSendInputs(boolean sendInputs) {
-    setProperty(SEND_INPUTS_PROPERTY, sendInputs);
   }
 
   public boolean getWaitSync() {
@@ -375,7 +366,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     try {
       RteProtocolClient client = getClient();
       try {
-        if (getSendInputs()) {
+        if (getAction() != Action.CONNECT) {
           client.send(getCoordInputs(), getAction(), getWaitersList());
         }
         sampleResult.setSuccessful(true);

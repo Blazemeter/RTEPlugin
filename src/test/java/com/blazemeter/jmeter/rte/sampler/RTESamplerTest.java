@@ -6,12 +6,14 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -157,7 +159,6 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenSendThrowInterruptedException() throws Exception {
     InterruptedException e = new InterruptedException();
     assertSampleResultWhenThrowSendException(e);
-
   }
 
   @Test
@@ -179,10 +180,51 @@ public class RTESamplerTest {
   }
 
   @Test
+  public void shouldSendDefaultActionToEmulatorWhenSampleWithoutSpecifyingAction() throws Exception {
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .send(any(), eq(Action.ENTER), any());
+  }
+
+  @Test
+  public void shouldSendCustomActionToEmulatorWhenSampleWithCustomAction() throws Exception {
+    rteSampler.setAction(Action.F1);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .send(any(), eq(Action.F1), any());
+  }
+
+  @Test
+  public void shouldNotSendInputToEmulatorWhenSampleWithConnectAction() throws Exception {
+    rteSampler.setAction(Action.CONNECT);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock, never())
+        .send(any(), any(), any());
+  }
+
+  @Test
+  public void shouldDisconnectEmulatorWhenSampleWithDisconnect() throws Exception {
+    rteSampler.setDisconnect(true);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock).disconnect();
+  }
+
+  @Test
+  public void shouldGetErrorSamplerResultWhenDisconnectThrowRteIOException() throws Exception {
+    rteSampler.setDisconnect(true);
+    RteIOException e = new RteIOException(null);
+    doThrow(e)
+        .when(rteProtocolClientMock).disconnect();
+    SampleResult result = rteSampler.sample(null);
+    SampleResult expected = createExpectedErrorResult(e);
+    assertSampleResult(result, expected);
+  }
+
+  @Test
   public void shouldSendSyncWaitConditionToEmulatorWhenSyncWaitEnabled() throws Exception {
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(Action.ENTER), eq(Collections.singletonList(
+        .send(any(), any(), eq(Collections.singletonList(
             new SyncWaitCondition(RTESampler.DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS))));
   }
@@ -194,7 +236,7 @@ public class RTESamplerTest {
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(Action.ENTER), eq(Collections.singletonList(
+        .send(any(), any(), eq(Collections.singletonList(
             new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS))));
   }
 
@@ -212,7 +254,7 @@ public class RTESamplerTest {
     rteSampler.setWaitSilent(true);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(Action.ENTER), eq(Collections.singletonList(
+        .send(any(), any(), eq(Collections.singletonList(
             new SilentWaitCondition(RTESampler.DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_WAIT_SILENT_TIME_MILLIS))));
   }
@@ -226,7 +268,7 @@ public class RTESamplerTest {
     rteSampler.setWaitSilentTime(String.valueOf(CUSTOM_STABLE_TIMEOUT_MILLIS));
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(Action.ENTER), eq(Collections.singletonList(
+        .send(any(), any(), eq(Collections.singletonList(
             new SilentWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS))));
   }
 
@@ -238,7 +280,7 @@ public class RTESamplerTest {
     rteSampler.setWaitTextRegex(regex);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(Action.ENTER), eq(Collections
+        .send(any(), any(), eq(Collections
             .singletonList(new TextWaitCondition(
                 JMeterUtils.getPattern(regex),
                 JMeterUtils.getMatcher(),
@@ -266,7 +308,7 @@ public class RTESamplerTest {
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(Action.ENTER), eq(Collections
+        .send(any(), any(), eq(Collections
             .singletonList(new TextWaitCondition(
                 JMeterUtils.getPattern(regex),
                 JMeterUtils.getMatcher(),
