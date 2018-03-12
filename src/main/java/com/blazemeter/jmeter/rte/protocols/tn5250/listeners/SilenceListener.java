@@ -4,6 +4,10 @@ import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import java.util.concurrent.ScheduledExecutorService;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 
+/**
+ * A {@link ConditionWaiter} which allows waiting until the terminal does not receive events for a
+ * given period of time.
+ */
 public class SilenceListener extends ConditionWaiter<SilentWaitCondition> {
 
   public SilenceListener(SilentWaitCondition condition,

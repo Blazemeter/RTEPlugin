@@ -8,6 +8,7 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
@@ -26,7 +27,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyInt;
@@ -264,6 +274,36 @@ public class RTESamplerTest {
     verify(rteProtocolClientMock)
         .send(any(), any(), eq(Collections.singletonList(
             new SilentWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS))));
+  }
+
+  @Test
+  public void shouldSendCursorWaitConditionToEmulatorWhenCursorWaitEnabled() throws Exception {
+    rteSampler.setWaitSync(false);
+    rteSampler.setWaitCursor(true);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .send(any(), any(), eq(Collections.singletonList(
+            new CursorWaitCondition(new Position(1, 1),
+                RTESampler.DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS,
+                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS))));
+  }
+
+  @Test
+  public void shouldSendCursorConditionWithCustomValuesToEmulatorWhenCursorWaitEnabled()
+      throws Exception {
+    rteSampler.setWaitSync(false);
+    rteSampler.setWaitCursor(true);
+    int customRow = 5;
+    rteSampler.setWaitCursorRow(String.valueOf(customRow));
+    int customColumn = 7;
+    rteSampler.setWaitCursorColumn(String.valueOf(customColumn));
+    rteSampler.setWaitCursorTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
+    rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .send(any(), any(), eq(Collections.singletonList(
+            new CursorWaitCondition(new Position(customRow, customColumn), CUSTOM_TIMEOUT_MILLIS,
+                CUSTOM_STABLE_TIMEOUT_MILLIS))));
   }
 
   @Test
