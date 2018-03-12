@@ -4,7 +4,6 @@ import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -13,9 +12,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Iterator;
 import javax.swing.BorderFactory;
-import javax.swing.Box;
 import javax.swing.JButton;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -54,17 +51,9 @@ public class CoordInputPanel extends JPanel implements ActionListener {
   private JButton down;
 
   public CoordInputPanel() {
-    this("Payload");
-  }
-
-  public CoordInputPanel(String label) {
     setLayout(new BorderLayout());
-
-    add(makeLabelPanel(label), BorderLayout.NORTH);
     add(makeMainPanel(), BorderLayout.CENTER);
-    add(Box.createVerticalStrut(70), BorderLayout.WEST);
     add(makeButtonPanel(), BorderLayout.SOUTH);
-
     table.revalidate();
   }
 
@@ -73,12 +62,6 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     int first = table.rowAtPoint(vr.getLocation());
     vr.translate(0, vr.height);
     return table.rowAtPoint(vr.getLocation()) - first;
-  }
-
-  private Component makeLabelPanel(String label) {
-    JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-    labelPanel.add(new JLabel(label));
-    return labelPanel;
   }
 
   private Component makeMainPanel() {

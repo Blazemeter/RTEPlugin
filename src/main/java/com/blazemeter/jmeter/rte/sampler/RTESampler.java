@@ -66,7 +66,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   // jmeter.properties by adding a line like ths one:
   // "RTEConnectionConfig.stableTimeoutMillis=value"
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
+  private static final String ACTION_PROPERTY = "RTESampler.action";
   private static final String DISCONNECT_PROPERTY = "RTESampler.disconnect";
+  private static final String JUST_CONNECT_PROPERTY = "RTESampler.justConnect";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
   private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
   private static final String WAIT_CURSOR_PROPERTY = "RTESampler.waitCursor";
@@ -83,8 +85,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final String WAIT_TEXT_AREA_LEFT_PROPERTY = "RTESampler.waitTextAreaLeft";
   private static final String WAIT_TEXT_AREA_BOTTOM_PROPERTY = "RTESampler.waitTextAreaBottom";
   private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
-  private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTimeout";
-  private static final String ACTION_PROPERTY = "RTESampler.action";
+  private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTextTimeout";
   private static final String JAVAX_NET_SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
@@ -165,12 +166,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
   }
 
-  public void setPayload(Inputs payload) {
-    setProperty(new TestElementProperty(Inputs.INPUTS, payload));
-  }
-
   private SSLType getSSLType() {
     return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
+  }
+
+  public void setPayload(Inputs payload) {
+    setProperty(new TestElementProperty(Inputs.INPUTS, payload));
   }
 
   public Action getAction() {
@@ -190,6 +191,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public void setDisconnect(boolean disconnect) {
     setProperty(DISCONNECT_PROPERTY, disconnect);
+  }
+
+  public boolean getJustConnect() {
+    return getPropertyAsBoolean(JUST_CONNECT_PROPERTY);
+  }
+
+  public void setJustConnect(boolean disconnect) {
+    setProperty(JUST_CONNECT_PROPERTY, disconnect);
   }
 
   public boolean getWaitSync() {
@@ -366,7 +375,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     try {
       RteProtocolClient client = getClient();
       try {
-        if (getAction() != Action.CONNECT) {
+        if (!getJustConnect()) {
           client.send(getCoordInputs(), getAction(), getWaitersList());
         }
         sampleResult.setSuccessful(true);

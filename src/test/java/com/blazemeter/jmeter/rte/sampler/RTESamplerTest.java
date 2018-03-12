@@ -1,15 +1,5 @@
 package com.blazemeter.jmeter.rte.sampler;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
@@ -21,16 +11,11 @@ import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
-
-import java.io.File;
-import java.io.IOException;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
-import java.util.Locale;
 import java.util.concurrent.TimeoutException;
-
-import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
@@ -43,6 +28,16 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 @RunWith(MockitoJUnitRunner.class)
 public class RTESamplerTest {
 
@@ -50,7 +45,6 @@ public class RTESamplerTest {
   private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
   private static final String CUSTOM_SSL_KEY_STORE = "/apache-jmeter4.0/ssl/cert.keystore";
   private static final String CUSTOM_SSL_KEY_STORE_PASSWORD = "pwd123";
-  private static final SSLType CUSTOM_SSL_TYPE = SSLType.SSLv2;
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
@@ -195,8 +189,8 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldNotSendInputToEmulatorWhenSampleWithConnectAction() throws Exception {
-    rteSampler.setAction(Action.CONNECT);
+  public void shouldNotSendInputToEmulatorWhenSampleWithJustConnect() throws Exception {
+    rteSampler.setJustConnect(true);
     rteSampler.sample(null);
     verify(rteProtocolClientMock, never())
         .send(any(), any(), any());
