@@ -68,6 +68,13 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     table.revalidate();
   }
 
+  private static int getNumberOfVisibleRows(JTable table) {
+    Rectangle vr = table.getVisibleRect();
+    int first = table.rowAtPoint(vr.getLocation());
+    vr.translate(0, vr.height);
+    return table.rowAtPoint(vr.getLocation()) - first;
+  }
+
   private Component makeLabelPanel(String label) {
     JPanel labelPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
     labelPanel.add(new JLabel(label));
@@ -77,7 +84,14 @@ public class CoordInputPanel extends JPanel implements ActionListener {
   private Component makeMainPanel() {
     initializeTableModel();
     table = new JTable(tableModel);
-    table.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer());
+    table.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer() {
+      // using deprecated getResString since there is no simple workaround
+      @SuppressWarnings("deprecation")
+      @Override
+      protected String getText(Object value, int row, int column) {
+        return (value == null) ? "" : JMeterUtils.getResString(value.toString(), value.toString());
+      }
+    });
     table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
     JMeterUtils.applyHiDPI(table);
     JScrollPane pane = new JScrollPane(table);
@@ -328,13 +342,6 @@ public class CoordInputPanel extends JPanel implements ActionListener {
             new Rectangle(cellRect.x, cellRect.y, cellRect.width, cellRect.height + width));
       }
     }
-  }
-
-  private static int getNumberOfVisibleRows(JTable table) {
-    Rectangle vr = table.getVisibleRect();
-    int first = table.rowAtPoint(vr.getLocation());
-    vr.translate(0, vr.height);
-    return table.rowAtPoint(vr.getLocation()) - first;
   }
 
   private void moveDown() {
