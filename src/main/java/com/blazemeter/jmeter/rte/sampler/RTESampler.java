@@ -393,7 +393,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
           client.send(getCoordInputs(), getAction(), getWaitersList());
         }
         sampleResult.setRequestHeaders(
-            buildRequestHeader(client.getState(), getAction().toString(), getCoordInputs()));
+            buildRequestHeader(client.getState(), getAction(), getCoordInputs()));
         sampleResult.setSuccessful(true);
         sampleResult
             .setResponseHeaders(buildResponseHeader(client.getCursorPosition(), client.getState()));
@@ -421,14 +421,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   }
 
-  private String buildRequestHeader(String state, String action,
+  private String buildRequestHeader(String state, Action action,
       List<CoordInput> coordInputs) {
     String ret = "Server: " + getServer() + "\n" +
         "Port: " + getPort() + "\n" +
         "Protocol: " + getProtocol().toString() + "\n" +
         "Terminal type: " + getTerminalType().toString() + "\n" +
         "State: " + state + "\n\n" +
-        "Action: " + action + "\n" +
+        "Action: " + action.toString() + "\n" +
         "Inputs:\n\n";
 
     for (CoordInput c : coordInputs) {
