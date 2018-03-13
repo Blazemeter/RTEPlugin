@@ -262,7 +262,7 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel timeLabel = new JLabel("Wait for silent (millis): ");
+    JLabel timeLabel = new JLabel("Silent interval (millis): ");
     JLabel timeoutLabel = new JLabel("Timeout (millis): ");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSilent)
