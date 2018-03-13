@@ -138,10 +138,32 @@ public class RTESamplerTest {
     return expected;
   }
 
+  private SampleResult createExpectedErrorResultDisconnect(Exception e) {
+    SampleResult expected = new SampleResult();
+    expected.setSampleLabel(rteSampler.getName());
+    StringWriter sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
+    expected.setDataType(SampleResult.TEXT);
+    expected.setResponseCode(e.getClass().getName());
+    expected.setResponseMessage(e.getMessage());
+    expected.setRequestHeaders("Server: server\n"
+        + "Port: 23\n"
+        + "Protocol: TN5250\n"
+        + "Terminal type: IBM-3179-2: 24x80 color display\n"
+        + "State: null\n"
+        + "\n"
+        + "Action: ENTER\n"
+        + "Inputs:\n"
+        + "\n"
+        + "Row 1 Column 1 = input\n");
+    expected.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
+    expected.setSuccessful(false);
+    return expected;
+  }
+
   private void assertSampleResult(SampleResult result, SampleResult expected) {
     assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "responseCode",
-            "responseMessage", "responseData", "successful");
+        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "requestHeaders" ,"responseHeaders", "responseData", "successful", "responseCode", "responseMessage");
   }
 
   @Test
@@ -169,6 +191,8 @@ public class RTESamplerTest {
   public void shouldGetSuccessfulSamplerResultWhenSend() {
     String response = "Response";
     when(rteProtocolClientMock.getScreen()).thenReturn(response);
+    when(rteProtocolClientMock.getState()).thenReturn("ST_NORMAL_UNLOCKED");
+    when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position (1,1));
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedSuccessfulResult(response);
     assertSampleResult(result, expected);
@@ -179,6 +203,18 @@ public class RTESamplerTest {
     expected.setSampleLabel(rteSampler.getName());
     expected.setDataType(SampleResult.TEXT);
     expected.setResponseData(responseData, "utf-8");
+    expected.setResponseHeaders("State: ST_NORMAL_UNLOCKED\n"
+        + "Cursor position: row 1 column 1");
+    expected.setRequestHeaders("Server: server\n"
+        + "Port: 23\n"
+        + "Protocol: TN5250\n"
+        + "Terminal type: IBM-3179-2: 24x80 color display\n"
+        + "State: ST_NORMAL_UNLOCKED\n"
+        + "\n"
+        + "Action: ENTER\n"
+        + "Inputs:\n"
+        + "\n"
+        + "Row 1 Column 1 = input\n");
     expected.setSuccessful(true);
     return expected;
   }
@@ -220,7 +256,7 @@ public class RTESamplerTest {
     doThrow(e)
         .when(rteProtocolClientMock).disconnect();
     SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedErrorResult(e);
+    SampleResult expected = createExpectedErrorResultDisconnect(e);
     assertSampleResult(result, expected);
   }
 

@@ -392,9 +392,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         if (!getJustConnect()) {
           client.send(getCoordInputs(), getAction(), getWaitersList());
         }
+        sampleResult.setRequestHeaders(
+            buildRequestHeader(client.getState(), getAction().toString(), getCoordInputs()));
         sampleResult.setSuccessful(true);
+        sampleResult
+            .setResponseHeaders(buildResponseHeader(client.getCursorPosition(), client.getState()));
         sampleResult.setResponseData(client.getScreen(), "utf-8");
         sampleResult.setDataType(SampleResult.TEXT);
+        sampleResult.latencyEnd();
         sampleResult.sampleEnd();
         return sampleResult;
       } finally {
@@ -408,6 +413,29 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     } catch (Exception e) {
       return errorResult("Error while sampling the remote terminal", e);
     }
+  }
+
+  private String buildResponseHeader(Position cursorPosition, String state) {
+    return "State: " + state + "\n" +
+        "Cursor position: row " + cursorPosition.getRow() + " column " + cursorPosition.getColumn();
+
+  }
+
+  private String buildRequestHeader(String state, String action,
+      List<CoordInput> coordInputs) {
+    String ret = "Server: " + getServer() + "\n" +
+        "Port: " + getPort() + "\n" +
+        "Protocol: " + getProtocol().toString() + "\n" +
+        "Terminal type: " + getTerminalType().toString() + "\n" +
+        "State: " + state + "\n\n" +
+        "Action: " + action + "\n" +
+        "Inputs:\n\n";
+
+    for (CoordInput c : coordInputs) {
+      ret += "Row " + c.getPosition().getRow() + " Column " + c.getPosition().getColumn() + " = "
+          + c.getInput() + "\n";
+    }
+    return ret;
   }
 
   private RteProtocolClient getClient()

@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -156,10 +157,32 @@ public class Tn5250Client implements RteProtocolClient {
     int width = em.getCrtSize().width;
     StringBuilder screen = new StringBuilder();
     for (int i = 0; i < height; i++) {
-      screen.append(em.getString(0, i, width));
+      screen.append(em.getString(0, i, width).replace("\u0000", " ").replace("\u0001", ""));
       screen.append("\n");
     }
     return screen.toString();
+  }
+
+  @Override
+  public String getState() {
+    final String[] description =
+        {"ST_NULL",
+            "ST_TEMPORARY_LOCK",
+            "ST_HARDWARE_ERROR",
+            "ST_NORMAL_LOCKED",
+            "ST_NORMAL_UNLOCKED",
+            "ST_POST_HELP",
+            "ST_POWER_ON",
+            "ST_PRE_HELP",
+            "ST_SS_MESSAGE",
+            "ST_SYSTEM_REQUEST",
+            "ST_POWERED"};
+    return description[em.getState() + 2];
+  }
+
+  @Override
+  public Position getCursorPosition() {
+    return new Position(em.getCursorRow(), em.getCursorCol());
   }
 
   @Override
