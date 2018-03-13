@@ -6,7 +6,7 @@ import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 
 /**
- * An {@link ConditionWaiter} which allows waiting until the terminal is unlocked.
+ * A {@link ConditionWaiter} which allows waiting until the terminal is unlocked.
  */
 public class UnlockListener extends ConditionWaiter<SyncWaitCondition> {
 

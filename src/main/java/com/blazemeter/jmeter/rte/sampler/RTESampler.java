@@ -9,6 +9,7 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
@@ -60,6 +61,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   protected static final long DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS = 60000;
   @VisibleForTesting
   protected static final long DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS = 30000;
+  @VisibleForTesting
+  protected static final long DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS = 30000;
 
 
   //If users wants to change Stable Timeout value it should be specified in
@@ -75,7 +78,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final String WAIT_CURSOR_ROW_PROPERTY = "RTESampler.waitCursorRow";
   private static final String WAIT_CURSOR_COLUMN_PROPERTY = "RTESampler.waitCursorColumn";
   private static final String WAIT_CURSOR_TIMEOUT_PROPERTY = "RTESampler.waitCursorTimeout";
-  private static final long DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS = 30000;
   private static final String WAIT_SILENT_PROPERTY = "RTESampler.waitSilent";
   private static final String WAIT_SILENT_TIME_PROPERTY = "RTESampler.waitSilentTime";
   private static final String WAIT_SILENT_TIMEOUT_PROPERTY = "RTESampler.waitSilentTimeout";
@@ -229,6 +231,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     setProperty(WAIT_CURSOR_PROPERTY, waitCursor);
   }
 
+  private long getWaitCursorTimeoutValue() {
+    return getPropertyAsLong(WAIT_CURSOR_TIMEOUT_PROPERTY, DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS);
+  }
+
   public String getWaitCursorRow() {
     return getPropertyAsString(WAIT_CURSOR_ROW_PROPERTY, String.valueOf(1));
   }
@@ -237,12 +243,20 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     setProperty(WAIT_CURSOR_ROW_PROPERTY, row);
   }
 
+  private int getWaitCursorRowValue() {
+    return getPropertyAsInt(WAIT_CURSOR_ROW_PROPERTY, 1);
+  }
+
   public String getWaitCursorColumn() {
     return getPropertyAsString(WAIT_CURSOR_COLUMN_PROPERTY, String.valueOf(1));
   }
 
   public void setWaitCursorColumn(String row) {
     setProperty(WAIT_CURSOR_COLUMN_PROPERTY, row);
+  }
+
+  private int getWaitCursorColumnValue() {
+    return getPropertyAsInt(WAIT_CURSOR_COLUMN_PROPERTY, 1);
   }
 
   public String getWaitCursorTimeout() {
@@ -267,12 +281,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         String.valueOf(DEFAULT_WAIT_SILENT_TIME_MILLIS));
   }
 
-  private long getWaitSilentTimeValue() {
-    return getPropertyAsLong(WAIT_SILENT_TIME_PROPERTY, DEFAULT_WAIT_SILENT_TIME_MILLIS);
-  }
-
   public void setWaitSilentTime(String waitSilentTime) {
     setProperty(WAIT_SILENT_TIME_PROPERTY, waitSilentTime);
+  }
+
+  private long getWaitSilentTimeValue() {
+    return getPropertyAsLong(WAIT_SILENT_TIME_PROPERTY, DEFAULT_WAIT_SILENT_TIME_MILLIS);
   }
 
   public String getWaitSilentTimeout() {
@@ -280,12 +294,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         String.valueOf(DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS));
   }
 
-  private long getWaitSilentTimeoutValue() {
-    return getPropertyAsLong(WAIT_SILENT_TIMEOUT_PROPERTY, DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS);
-  }
-
   public void setWaitSilentTimeout(String waitSilentTimeout) {
     setProperty(WAIT_SILENT_TIMEOUT_PROPERTY, waitSilentTimeout);
+  }
+
+  private long getWaitSilentTimeoutValue() {
+    return getPropertyAsLong(WAIT_SILENT_TIMEOUT_PROPERTY, DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS);
   }
 
   public boolean getWaitText() {
@@ -438,6 +452,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     if (getWaitSync()) {
       waiters.add(new SyncWaitCondition(getWaitSyncTimeoutValue(), getStableTimeout()));
     }
+    if (getWaitCursor()) {
+      waiters.add(buildCursorWaitCondition());
+    }
     if (getWaitSilent()) {
       waiters.add(new SilentWaitCondition(getWaitSilentTimeoutValue(), getWaitSilentTimeValue()));
     }
@@ -445,6 +462,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       waiters.add(buildTextWaitCondition());
     }
     return waiters;
+  }
+
+  private CursorWaitCondition buildCursorWaitCondition() {
+    return new CursorWaitCondition(
+        new Position(getWaitCursorRowValue(), getWaitCursorColumnValue()),
+        getWaitCursorTimeoutValue(), getStableTimeout());
   }
 
   private TextWaitCondition buildTextWaitCondition() {

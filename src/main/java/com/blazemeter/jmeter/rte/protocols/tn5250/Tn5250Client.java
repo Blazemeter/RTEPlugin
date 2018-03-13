@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
@@ -13,6 +14,7 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConditionWaiter;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
@@ -113,6 +115,8 @@ public class Tn5250Client implements RteProtocolClient {
         .map(w -> {
           if (w instanceof SyncWaitCondition) {
             return new UnlockListener((SyncWaitCondition) w, stableTimeoutExecutor);
+          } else if (w instanceof CursorWaitCondition) {
+            return new VisibleCursorListener((CursorWaitCondition) w, stableTimeoutExecutor);
           } else if (w instanceof SilentWaitCondition) {
             return new SilenceListener((SilentWaitCondition) w, stableTimeoutExecutor);
           } else if (w instanceof TextWaitCondition) {

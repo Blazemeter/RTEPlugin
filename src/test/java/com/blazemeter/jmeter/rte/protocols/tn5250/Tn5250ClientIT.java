@@ -1,7 +1,5 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
@@ -9,6 +7,7 @@ import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
@@ -32,6 +31,8 @@ import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class Tn5250ClientIT {
 
@@ -107,12 +108,12 @@ public class Tn5250ClientIT {
   public void shouldGetInvalidCredentialsScreenWhenSendInvalidCreds() throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    sendInvalidCreds();
+    sendInvalidCredsWithSyncWait();
     assertThat(client.getScreen())
         .isEqualTo(getFileContent("login-invalid-creds.txt"));
   }
 
-  private void sendInvalidCreds() throws Exception {
+  private void sendInvalidCredsWithSyncWait() throws Exception {
     client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
   }
 
@@ -140,11 +141,11 @@ public class Tn5250ClientIT {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
-    sendInvalidCreds();
+    sendInvalidCredsWithSyncWait();
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void shouldThrowUnsupportedOperationExceptionWhenNotWaitForSync() throws Exception {
+  public void shouldThrowUnsupportedOperationExceptionWithUndefinedWaiter() throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
     List<WaitCondition> waiters = Collections
@@ -162,6 +163,19 @@ public class Tn5250ClientIT {
     loadFlow("slow-response.yml");
     connectToVirtualService();
     client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void shouldThrowTimeoutExceptionWhenSendWithCursorWaitAndNotExpectedCursorPosition()
+      throws Exception {
+    loadLoginInvalidCredsFlow();
+    connectToVirtualService();
+    client.send(buildInvalidCredsFields(), Action.ENTER, buildCursorWaiter(new Position(1, 1)));
+  }
+
+  private List<WaitCondition> buildCursorWaiter(Position position) {
+    return Collections
+        .singletonList(new CursorWaitCondition(position, TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS));
   }
 
   @Test(expected = TimeoutException.class)
@@ -191,7 +205,7 @@ public class Tn5250ClientIT {
   public void shouldGetWelcomeScreenWhenConnectAfterDisconnectInvalidCreds() throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    sendInvalidCreds();
+    sendInvalidCredsWithSyncWait();
     client.disconnect();
     connectToVirtualService();
     assertThat(client.getScreen())
@@ -203,7 +217,7 @@ public class Tn5250ClientIT {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
     client.disconnect();
-    sendInvalidCreds();
+    sendInvalidCredsWithSyncWait();
   }
 
   @Test
