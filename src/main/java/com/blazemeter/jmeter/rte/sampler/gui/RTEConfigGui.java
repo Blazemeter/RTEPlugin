@@ -63,10 +63,7 @@ public class RTEConfigGui extends AbstractConfigGui {
   @Override
   public TestElement createTestElement() {
     ConfigTestElement config = new ConfigTestElement();
-    config.setName(this.getName());
-    config.setProperty(TestElement.GUI_CLASS, this.getClass().getName());
-    config.setProperty(TestElement.TEST_CLASS, config.getClass().getName());
-    modifyTestElement(config);
+    configureTestElement(config);
     return config;
   }
 

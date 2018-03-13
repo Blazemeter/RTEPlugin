@@ -68,11 +68,9 @@ public class CoordInputPanel extends JPanel implements ActionListener {
     initializeTableModel();
     table = new JTable(tableModel);
     table.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer() {
-      // using deprecated getResString since there is no simple workaround
-      @SuppressWarnings("deprecation")
       @Override
       protected String getText(Object value, int row, int column) {
-        return (value == null) ? "" : JMeterUtils.getResString(value.toString(), value.toString());
+        return (value == null) ? "" : value.toString();
       }
     });
     table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
