@@ -2,6 +2,8 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.util.Arrays;
@@ -17,30 +19,32 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RTESamplerPanel extends JPanel {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RTESamplerPanel.class);
 
   private static final long serialVersionUID = 4739160923223292835L;
   private static final int INDEX_WIDTH = 30;
   private static final int TIME_WIDTH = 60;
 
+  private final JPanel requestPanel;
   private CoordInputPanel payloadPanel;
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new HashMap<>();
   private JCheckBox disconnect = new JCheckBox("Disconnect?");
+  private JCheckBox justConnect = new JCheckBox("Just connect");
+  private JPanel waitSyncPanel;
   private JCheckBox waitSync = new JCheckBox("Sync?");
   private JTextField waitSyncTimeout = new JTextField();
+  private JPanel waitCursorPanel;
   private JCheckBox waitCursor = new JCheckBox("Cursor?");
   private JTextField waitCursorRow = new JTextField();
   private JTextField waitCursorColumn = new JTextField();
   private JTextField waitCursorTimeout = new JTextField();
+  private JPanel waitSilentPanel;
   private JCheckBox waitSilent = new JCheckBox("Silent?");
   private JTextField waitSilentTime = new JTextField();
   private JTextField waitSilentTimeout = new JTextField();
+  private JPanel waitTextPanel;
   private JCheckBox waitText = new JCheckBox("Text?");
   private JTextField waitTextRegex = new JTextField();
   private JTextField waitTextTimeout = new JTextField();
@@ -55,8 +59,8 @@ public class RTESamplerPanel extends JPanel {
     layout.setAutoCreateGaps(true);
     this.setLayout(layout);
 
-    JPanel requestPanel = buildRequestPanel();
-    JPanel waitPanel = buildWaitPanel();
+    requestPanel = buildRequestPanel();
+    JPanel waitPanel = buildWaitsPanel();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
@@ -78,29 +82,55 @@ public class RTESamplerPanel extends JPanel {
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    JPanel payloadPanel = buildPayLoadPanel();
+    JLabel payloadLabel = new JLabel("Payload: ");
+    payloadPanel = new CoordInputPanel();
     JPanel actionsPanel = buildActionsPanel();
 
+    justConnect.addItemListener(e -> {
+      updateJustConnect(e.getStateChange() == ItemEvent.SELECTED);
+      validate();
+      repaint();
+    });
+
     layout.setHorizontalGroup(layout.createParallelGroup()
+        .addComponent(payloadLabel)
         .addComponent(payloadPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE)
-        .addComponent(disconnect));
+        .addGroup(layout.createSequentialGroup()
+            .addComponent(disconnect)
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addComponent(justConnect)));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addComponent(payloadLabel)
+        .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(disconnect));
+        .addGroup(layout.createParallelGroup()
+            .addComponent(disconnect)
+            .addComponent(justConnect)));
 
     return panel;
   }
 
-  private JPanel buildPayLoadPanel() {
-    payloadPanel = new CoordInputPanel("Payload");
-    return payloadPanel;
+  private void updateJustConnect(boolean checked) {
+    setEnabled(requestPanel, !checked);
+    disconnect.setEnabled(true);
+    justConnect.setEnabled(true);
+  }
+
+  private void setEnabled(Component component, boolean enabled) {
+    component.setEnabled(enabled);
+    if (component instanceof Container) {
+      for (Component child : ((Container) component).getComponents()) {
+        setEnabled(child, enabled);
+      }
+    }
   }
 
   private JPanel buildActionsPanel() {
@@ -116,16 +146,10 @@ public class RTESamplerPanel extends JPanel {
       actionsGroup.add(r);
     });
 
-    actions.get(Action.CONNECT).addItemListener(e -> {
-      payloadPanel.setEnabled(e.getStateChange() != ItemEvent.SELECTED);
-      validate();
-      repaint();
-    });
-
     return panel;
   }
 
-  private JPanel buildWaitPanel() {
+  private JPanel buildWaitsPanel() {
     JPanel panel = new JPanel();
     panel.setBorder(BorderFactory.createTitledBorder("Wait for:"));
     GroupLayout layout = new GroupLayout(panel);
@@ -133,10 +157,10 @@ public class RTESamplerPanel extends JPanel {
     layout.setAutoCreateGaps(true);
     panel.setLayout(layout);
 
-    JPanel waitSyncPanel = buildWaitSyncPanel();
-    JPanel waitCursorPanel = buildWaitCursorPanel();
-    JPanel waitSilentPanel = buildWaitSilentPanel();
-    JPanel waitTextPanel = buildWaitTextPanel();
+    waitSyncPanel = buildWaitSyncPanel();
+    waitCursorPanel = buildWaitCursorPanel();
+    waitSilentPanel = buildWaitSilentPanel();
+    waitTextPanel = buildWaitTextPanel();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(waitSyncPanel)
@@ -158,12 +182,12 @@ public class RTESamplerPanel extends JPanel {
     panel.setLayout(layout);
 
     waitSync.addItemListener(e -> {
-      waitSyncTimeout.setEnabled(e.getStateChange() == ItemEvent.SELECTED);
+      updateWait(waitSync, panel, e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
-    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
 
+    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSync)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -179,16 +203,18 @@ public class RTESamplerPanel extends JPanel {
     return panel;
   }
 
+  private void updateWait(JCheckBox waitCheck, JPanel panel, boolean checked) {
+    setEnabled(panel, checked);
+    waitCheck.setEnabled(true);
+  }
+
   private JPanel buildWaitCursorPanel() {
     JPanel panel = new JPanel();
     GroupLayout layout = new GroupLayout(panel);
     panel.setLayout(layout);
 
     waitCursor.addItemListener(e -> {
-      boolean enabled = e.getStateChange() == ItemEvent.SELECTED;
-      waitCursorRow.setEnabled(enabled);
-      waitCursorColumn.setEnabled(enabled);
-      waitCursorTimeout.setEnabled(enabled);
+      updateWait(waitCursor, panel, e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
@@ -196,7 +222,6 @@ public class RTESamplerPanel extends JPanel {
     JLabel rowLabel = new JLabel("Row: ");
     JLabel columnLabel = new JLabel("Column: ");
     JLabel timeoutLabel = new JLabel("Timeout (millis): ");
-
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitCursor)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -232,9 +257,7 @@ public class RTESamplerPanel extends JPanel {
     panel.setLayout(layout);
 
     waitSilent.addItemListener(e -> {
-      boolean selected = e.getStateChange() == ItemEvent.SELECTED;
-      waitSilentTimeout.setEnabled(selected);
-      waitSilentTime.setEnabled(selected);
+      updateWait(waitSilent, panel, e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
@@ -268,13 +291,7 @@ public class RTESamplerPanel extends JPanel {
     panel.setLayout(layout);
 
     waitText.addItemListener(e -> {
-      boolean selected = e.getStateChange() == ItemEvent.SELECTED;
-      waitTextRegex.setEnabled(selected);
-      waitTextAreaTop.setEnabled(selected);
-      waitTextAreaLeft.setEnabled(selected);
-      waitTextAreaBottom.setEnabled(selected);
-      waitTextAreaRight.setEnabled(selected);
-      waitTextTimeout.setEnabled(selected);
+      updateWait(waitText, panel, e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
@@ -282,7 +299,6 @@ public class RTESamplerPanel extends JPanel {
     JLabel regexLabel = new JLabel("Regex: ");
     JLabel timeoutLabel = new JLabel("Timeout (millis): ");
     JPanel searchAreaPanel = buildSearchAreaPanel();
-
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitText)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -366,38 +382,8 @@ public class RTESamplerPanel extends JPanel {
     return panel;
   }
 
-  public void initFields() {
+  public void resetFields() {
     payloadPanel.clear();
-    disconnect.setSelected(false);
-    actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);
-    waitSync.setSelected(false);
-    waitSyncTimeout.setText("");
-    waitSyncTimeout.setEnabled(false);
-    waitCursor.setSelected(false);
-    waitCursorRow.setText("");
-    waitCursorRow.setEnabled(false);
-    waitCursorColumn.setText("");
-    waitCursorColumn.setEnabled(false);
-    waitCursorTimeout.setText("");
-    waitCursorTimeout.setEnabled(false);
-    waitSilent.setSelected(false);
-    waitSilentTimeout.setText("");
-    waitSilentTimeout.setEnabled(false);
-    waitSilentTime.setText("");
-    waitSilentTime.setEnabled(false);
-    waitText.setSelected(false);
-    waitTextTimeout.setText("");
-    waitTextTimeout.setEnabled(false);
-    waitTextRegex.setText("");
-    waitTextRegex.setEnabled(false);
-    waitTextAreaTop.setText("");
-    waitTextAreaTop.setEnabled(false);
-    waitTextAreaLeft.setText("");
-    waitTextAreaLeft.setEnabled(false);
-    waitTextAreaBottom.setText("");
-    waitTextAreaBottom.setEnabled(false);
-    waitTextAreaRight.setText("");
-    waitTextAreaRight.setEnabled(false);
   }
 
   public CoordInputPanel getPayload() {
@@ -425,12 +411,22 @@ public class RTESamplerPanel extends JPanel {
     this.disconnect.setSelected(disconnect);
   }
 
+  public boolean getJustConnect() {
+    return justConnect.isSelected();
+  }
+
+  public void setJustConnect(boolean justConnect) {
+    this.justConnect.setSelected(justConnect);
+    updateJustConnect(justConnect);
+  }
+
   public boolean getWaitSync() {
     return this.waitSync.isSelected();
   }
 
   public void setWaitSync(boolean waitSync) {
     this.waitSync.setSelected(waitSync);
+    updateWait(this.waitSync, waitSyncPanel, waitSync);
   }
 
   public String getWaitSyncTimeout() {
@@ -447,6 +443,7 @@ public class RTESamplerPanel extends JPanel {
 
   public void setWaitCursor(boolean waitCursor) {
     this.waitCursor.setSelected(waitCursor);
+    updateWait(this.waitCursor, waitCursorPanel, waitCursor);
   }
 
   public String getWaitCursorRow() {
@@ -479,6 +476,7 @@ public class RTESamplerPanel extends JPanel {
 
   public void setWaitSilent(boolean waitSilent) {
     this.waitSilent.setSelected(waitSilent);
+    updateWait(this.waitSilent, waitSilentPanel, waitSilent);
   }
 
   public String getWaitSilentTime() {
@@ -503,6 +501,7 @@ public class RTESamplerPanel extends JPanel {
 
   public void setWaitText(boolean waitText) {
     this.waitText.setSelected(waitText);
+    updateWait(this.waitText, waitTextPanel, waitText);
   }
 
   public String getWaitTextRegex() {

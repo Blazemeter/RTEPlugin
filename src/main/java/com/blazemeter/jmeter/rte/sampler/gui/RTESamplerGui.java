@@ -13,7 +13,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
 
   public RTESamplerGui() {
     rteSamplerPanel = new RTESamplerPanel();
-    rteSamplerPanel.initFields();
+    rteSamplerPanel.resetFields();
 
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
@@ -43,6 +43,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
       }
       rteSamplerPanel.setAction(sampler.getAction());
       rteSamplerPanel.setDisconnect(sampler.getDisconnect());
+      rteSamplerPanel.setJustConnect(sampler.getJustConnect());
       rteSamplerPanel.setWaitSync(sampler.getWaitSync());
       rteSamplerPanel.setWaitSyncTimeout(sampler.getWaitSyncTimeout());
       rteSamplerPanel.setWaitCursor(sampler.getWaitCursor());
@@ -80,6 +81,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
       }
       sampler.setAction(rteSamplerPanel.getAction());
       sampler.setDisconnect(rteSamplerPanel.getDisconnect());
+      sampler.setJustConnect(rteSamplerPanel.getJustConnect());
       sampler.setWaitSync(rteSamplerPanel.getWaitSync());
       sampler.setWaitSyncTimeout(rteSamplerPanel.getWaitSyncTimeout());
       sampler.setWaitCursor(rteSamplerPanel.getWaitCursor());
@@ -102,7 +104,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
   @Override
   public void clearGui() {
     super.clearGui();
-    rteSamplerPanel.initFields();
+    rteSamplerPanel.resetFields();
   }
 
 }
