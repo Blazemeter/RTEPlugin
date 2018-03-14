@@ -63,7 +63,7 @@ The Test Plan will look like this:
 
 The RTE Config element should specify the server url in *Server* field, and the protocol TN5250 in *Protocol* field like it's shown below:
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTECongif.png "RTE Config")
+![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTEConfig.png "RTE Config")
 
 "Just connect" option should be checked in first sampler to not send payload data or actions but get the Welcome screen after the connection. An assertion post processor should also be attached to it to validate the "Welcome" message.
 
