@@ -17,6 +17,7 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
@@ -28,6 +29,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250Emulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Tn5250Client implements RteProtocolClient {
 
@@ -67,6 +70,7 @@ public class Tn5250Client implements RteProtocolClient {
     }
   };
 
+  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private final ExtendedEmulator em = new ExtendedEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
 
@@ -182,6 +186,7 @@ public class Tn5250Client implements RteProtocolClient {
       case XI5250Emulator.ST_NORMAL_UNLOCKED:
         return false;
       default:
+        LOG.debug("Unexpected state: " + state);
         return false;
     }
   }
