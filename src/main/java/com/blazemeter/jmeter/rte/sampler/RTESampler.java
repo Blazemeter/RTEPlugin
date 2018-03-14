@@ -393,10 +393,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
           client.send(getCoordInputs(), getAction(), getWaitersList());
         }
         sampleResult.setRequestHeaders(
-            buildRequestHeader(client.getState(), getAction(), getCoordInputs()));
+            buildRequestHeader(client.isInputInhibited(), getAction(), getCoordInputs()));
         sampleResult.setSuccessful(true);
         sampleResult
-            .setResponseHeaders(buildResponseHeader(client.getCursorPosition(), client.getState()));
+            .setResponseHeaders(
+                buildResponseHeader(client.getCursorPosition(), client.isInputInhibited()));
         sampleResult.setResponseData(client.getScreen(), "utf-8");
         sampleResult.setDataType(SampleResult.TEXT);
         sampleResult.latencyEnd();
@@ -415,27 +416,26 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
   }
 
-  private String buildResponseHeader(Position cursorPosition, String state) {
-    return "State: " + state + "\n" +
+  private String buildResponseHeader(Position cursorPosition, boolean state) {
+    return "Inhibited: " + state + "\n" +
         "Cursor position: row " + cursorPosition.getRow() + " column " + cursorPosition.getColumn();
-
   }
 
-  private String buildRequestHeader(String state, Action action,
+  private String buildRequestHeader(boolean state, Action action,
       List<CoordInput> coordInputs) {
-    String ret = "Server: " + getServer() + "\n" +
+    StringBuilder ret = new StringBuilder("Server: " + getServer() + "\n" +
         "Port: " + getPort() + "\n" +
         "Protocol: " + getProtocol().toString() + "\n" +
         "Terminal type: " + getTerminalType().toString() + "\n" +
-        "State: " + state + "\n\n" +
+        "Inhibited: " + state + "\n\n" +
         "Action: " + action.toString() + "\n" +
-        "Inputs:\n\n";
+        "Inputs:\n\n");
 
     for (CoordInput c : coordInputs) {
-      ret += "Row " + c.getPosition().getRow() + " Column " + c.getPosition().getColumn() + " = "
-          + c.getInput() + "\n";
+      ret.append("Row ").append(c.getPosition().getRow()).append(" Column ")
+          .append(c.getPosition().getColumn()).append(" = ").append(c.getInput()).append("\n");
     }
-    return ret;
+    return ret.toString();
   }
 
   private RteProtocolClient getClient()

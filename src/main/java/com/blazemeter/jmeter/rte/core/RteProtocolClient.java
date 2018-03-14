@@ -19,7 +19,7 @@ public interface RteProtocolClient {
 
   String getScreen();
 
-  String getState();
+  boolean isInputInhibited();
 
   Position getCursorPosition();
 

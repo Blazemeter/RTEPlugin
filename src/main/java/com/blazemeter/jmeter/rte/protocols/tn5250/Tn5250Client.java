@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import net.infordata.em.crt5250.XI5250Field;
+import net.infordata.em.tn5250.XI5250Emulator;
 
 public class Tn5250Client implements RteProtocolClient {
 
@@ -164,20 +165,25 @@ public class Tn5250Client implements RteProtocolClient {
   }
 
   @Override
-  public String getState() {
-    final String[] description =
-        {"ST_NULL",
-            "ST_TEMPORARY_LOCK",
-            "ST_HARDWARE_ERROR",
-            "ST_NORMAL_LOCKED",
-            "ST_NORMAL_UNLOCKED",
-            "ST_POST_HELP",
-            "ST_POWER_ON",
-            "ST_PRE_HELP",
-            "ST_SS_MESSAGE",
-            "ST_SYSTEM_REQUEST",
-            "ST_POWERED"};
-    return description[em.getState() + 2];
+  public boolean isInputInhibited() {
+    int state = em.getState();
+    switch (state) {
+      case XI5250Emulator.ST_NULL:
+      case XI5250Emulator.ST_TEMPORARY_LOCK:
+      case XI5250Emulator.ST_NORMAL_LOCKED:
+      case XI5250Emulator.ST_POWER_ON:
+      case XI5250Emulator.ST_POWERED:
+        return true;
+      case XI5250Emulator.ST_HARDWARE_ERROR:
+      case XI5250Emulator.ST_POST_HELP:
+      case XI5250Emulator.ST_PRE_HELP:
+      case XI5250Emulator.ST_SS_MESSAGE:
+      case XI5250Emulator.ST_SYSTEM_REQUEST:
+      case XI5250Emulator.ST_NORMAL_UNLOCKED:
+        return false;
+      default:
+        return false;
+    }
   }
 
   @Override

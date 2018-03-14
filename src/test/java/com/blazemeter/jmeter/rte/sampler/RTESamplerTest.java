@@ -150,7 +150,7 @@ public class RTESamplerTest {
         + "Port: 23\n"
         + "Protocol: TN5250\n"
         + "Terminal type: IBM-3179-2: 24x80 color display\n"
-        + "State: null\n"
+        + "Inhibited: false\n"
         + "\n"
         + "Action: ENTER\n"
         + "Inputs:\n"
@@ -191,7 +191,7 @@ public class RTESamplerTest {
   public void shouldGetSuccessfulSamplerResultWhenSend() {
     String response = "Response";
     when(rteProtocolClientMock.getScreen()).thenReturn(response);
-    when(rteProtocolClientMock.getState()).thenReturn("ST_NORMAL_UNLOCKED");
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true);
     when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position (1,1));
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedSuccessfulResult(response);
@@ -203,13 +203,13 @@ public class RTESamplerTest {
     expected.setSampleLabel(rteSampler.getName());
     expected.setDataType(SampleResult.TEXT);
     expected.setResponseData(responseData, "utf-8");
-    expected.setResponseHeaders("State: ST_NORMAL_UNLOCKED\n"
+    expected.setResponseHeaders("Inhibited: true\n"
         + "Cursor position: row 1 column 1");
     expected.setRequestHeaders("Server: server\n"
         + "Port: 23\n"
         + "Protocol: TN5250\n"
         + "Terminal type: IBM-3179-2: 24x80 color display\n"
-        + "State: ST_NORMAL_UNLOCKED\n"
+        + "Inhibited: true\n"
         + "\n"
         + "Action: ENTER\n"
         + "Inputs:\n"
