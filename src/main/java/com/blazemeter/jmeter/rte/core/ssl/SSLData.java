@@ -1,6 +1,4 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250.ssl;
-
-import com.blazemeter.jmeter.rte.core.SSLType;
+package com.blazemeter.jmeter.rte.core.ssl;
 
 public class SSLData {
   private SSLType sslType;
@@ -17,23 +15,12 @@ public class SSLData {
     return sslType;
   }
 
-  public void setSslType(SSLType sslType) {
-    this.sslType = sslType;
-  }
-
   public String getPassword() {
     return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
   }
 
   public String getKeyStorePath() {
     return keyStorePath;
   }
 
-  public void setKeyStorePath(String keyStorePath) {
-    this.keyStorePath = keyStorePath;
-  }
 }

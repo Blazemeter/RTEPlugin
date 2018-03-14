@@ -1,20 +1,23 @@
 package com.blazemeter.jmeter.rte.sampler;
 
+import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
+
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
-import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -34,8 +37,6 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
 
 public class RTESampler extends AbstractSampler implements ThreadListener {
 
@@ -388,9 +389,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
     try {
       RteProtocolClient client = getClient();
+      List<? extends ConditionWaiter> waiters = client.buildConditionWaiters(getWaitersList());
       try {
         if (!getJustConnect()) {
-          client.send(getCoordInputs(), getAction(), getWaitersList());
+          client.send(getCoordInputs(), getAction());
+        }
+        for (ConditionWaiter waiter : waiters) {
+          waiter.await();
         }
         sampleResult.setRequestHeaders(
             buildRequestHeader(client.isInputInhibited(), getAction(), getCoordInputs()));
@@ -404,6 +409,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         sampleResult.sampleEnd();
         return sampleResult;
       } finally {
+        waiters.forEach(ConditionWaiter::stop);
         if (getDisconnect()) {
           disconnect(client);
         }

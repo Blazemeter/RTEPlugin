@@ -14,13 +14,14 @@ import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
 
-public class ScreenTextListenerIT extends ConditionWaiterIT {
+public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
 
   @Override
-  protected ConditionWaiter<?> buildConditionWaiter() throws Exception {
+  protected Tn5250ConditionWaiter<?> buildConditionWaiter() throws Exception {
     ScreenTextListener listener = new ScreenTextListener(
         new TextWaitCondition(new Perl5Compiler().compile("hello"), new Perl5Matcher(),
             Area.fromTopLeftBottomRight(1, 1, 1, 5), TIMEOUT_MILLIS, STABLE_MILLIS),
+        client,
         stableTimeoutExecutor);
     setupScreenWithText("hello");
     return listener;

@@ -6,19 +6,19 @@ import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConditionWaiter;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
-import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.List;
@@ -70,14 +70,20 @@ public class Tn5250Client implements RteProtocolClient {
     }
   };
 
+  private static class KeyEventMap {
+
+    private final int modifier;
+    private final int specialKey;
+
+    KeyEventMap(int modifier, int specialKey) {
+      this.modifier = modifier;
+      this.specialKey = specialKey;
+    }
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private final ExtendedEmulator em = new ExtendedEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
-
-  @Override
-  public boolean isConnected() {
-    return em.isActive();
-  }
 
   @Override
   public void connect(String server, int port, SSLData sslData,
@@ -90,7 +96,7 @@ public class Tn5250Client implements RteProtocolClient {
     em.setTerminalType(terminalType.getType());
     em.setSslData(sslData);
     UnlockListener unlock = new UnlockListener(
-        new SyncWaitCondition(timeoutMillis, stableTimeoutMillis),
+        new SyncWaitCondition(timeoutMillis, stableTimeoutMillis), this,
         stableTimeoutExecutor);
     em.addEmulatorListener(unlock);
     try {
@@ -103,36 +109,35 @@ public class Tn5250Client implements RteProtocolClient {
   }
 
   @Override
-  public void send(List<CoordInput> input, Action action, List<WaitCondition> waitConditions)
-      throws InterruptedException, RteIOException, TimeoutException {
-    List<ConditionWaiter> listeners = buildWaitersList(waitConditions);
-    listeners.forEach(em::addEmulatorListener);
+  public void send(List<CoordInput> input, Action action) throws RteIOException {
     input.forEach(this::setField);
     sendActionKey(action);
-    for (ConditionWaiter listener : listeners) {
-      listener.await();
-    }
-    listeners.forEach(em::removeEmulatorListener);
     em.throwAnyPendingError();
   }
 
-  private List<ConditionWaiter> buildWaitersList(List<WaitCondition> waiters) {
-    return waiters.stream()
-        .map(w -> {
-          if (w instanceof SyncWaitCondition) {
-            return new UnlockListener((SyncWaitCondition) w, stableTimeoutExecutor);
-          } else if (w instanceof CursorWaitCondition) {
-            return new VisibleCursorListener((CursorWaitCondition) w, stableTimeoutExecutor);
-          } else if (w instanceof SilentWaitCondition) {
-            return new SilenceListener((SilentWaitCondition) w, stableTimeoutExecutor);
-          } else if (w instanceof TextWaitCondition) {
-            return new ScreenTextListener((TextWaitCondition) w, stableTimeoutExecutor);
-          } else {
-            throw new UnsupportedOperationException(
-                "We still don't support " + w.getClass().getName() + " waiters");
-          }
-        })
+  @Override
+  public List<? extends ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions) {
+    List<Tn5250ConditionWaiter> listeners = waitConditions.stream()
+        .map(this::buildWaiter)
         .collect(Collectors.toList());
+    listeners.forEach(em::addEmulatorListener);
+    return listeners;
+  }
+
+  private Tn5250ConditionWaiter buildWaiter(WaitCondition waitCondition) {
+    if (waitCondition instanceof SyncWaitCondition) {
+      return new UnlockListener((SyncWaitCondition) waitCondition, this, stableTimeoutExecutor);
+    } else if (waitCondition instanceof CursorWaitCondition) {
+      return new VisibleCursorListener((CursorWaitCondition) waitCondition, this,
+          stableTimeoutExecutor);
+    } else if (waitCondition instanceof SilentWaitCondition) {
+      return new SilenceListener((SilentWaitCondition) waitCondition, this, stableTimeoutExecutor);
+    } else if (waitCondition instanceof TextWaitCondition) {
+      return new ScreenTextListener((TextWaitCondition) waitCondition, this, stableTimeoutExecutor);
+    } else {
+      throw new UnsupportedOperationException(
+          "We still don't support " + waitCondition.getClass().getName() + " waiters");
+    }
   }
 
   private void setField(CoordInput s) {
@@ -196,6 +201,14 @@ public class Tn5250Client implements RteProtocolClient {
     return new Position(em.getCursorRow(), em.getCursorCol());
   }
 
+  public boolean hasPendingError() {
+    return em.hasPendingError();
+  }
+
+  public void throwAnyPendingError() throws RteIOException {
+    em.throwAnyPendingError();
+  }
+
   @Override
   public void disconnect() throws RteIOException {
     if (stableTimeoutExecutor == null) {
@@ -207,24 +220,12 @@ public class Tn5250Client implements RteProtocolClient {
     em.throwAnyPendingError();
   }
 
-  @Override
-  public Dimension getScreenSize() {
-    return em.getCrtSize();
-  }
-
   private KeyEventMap getKeyEvent(Action action) {
     return KEY_EVENTS.get(action);
   }
 
-  private static class KeyEventMap {
-
-    private final int modifier;
-    private final int specialKey;
-
-    KeyEventMap(int modifier, int specialKey) {
-      this.modifier = modifier;
-      this.specialKey = specialKey;
-    }
+  public void removeListener(Tn5250ConditionWaiter<?> listener) {
+    em.removeEmulatorListener(listener);
   }
 
 }

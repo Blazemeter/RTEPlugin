@@ -47,7 +47,10 @@
 
     <module name="AvoidStarImport"/>
     <module name="IllegalImport"/>
-    <module name="ImportOrder"/>
+    <module name="ImportOrder">
+      <property name="option" value="top"/>
+      <property name="separated" value="true"/>
+    </module>
     <module name="RedundantImport"/>
     <module name="UnusedImports"/>
 

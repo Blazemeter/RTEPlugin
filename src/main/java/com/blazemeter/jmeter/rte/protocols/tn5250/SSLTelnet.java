@@ -1,5 +1,7 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250.ssl;
+package com.blazemeter.jmeter.rte.protocols.tn5250;
 
+import com.blazemeter.jmeter.rte.core.ssl.SSLConnection;
+import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -39,7 +41,7 @@ public class SSLTelnet extends XITelnet {
         setIvOut(ivOut);
         SSLTelnet.RxThread ivReadTh = new SSLTelnet.RxThread();
         ivReadTh.start();
-        setivUsed(true);
+        setIvUsed(true);
         this.connected();
       } catch (GeneralSecurityException | IOException e) {
         e.printStackTrace();
@@ -96,7 +98,7 @@ public class SSLTelnet extends XITelnet {
     setField("ivOut", ivOut);
   }
 
-  private void setivUsed(boolean ivUsed) {
+  private void setIvUsed(boolean ivUsed) {
     setField("ivUsed", ivUsed);
   }
 
@@ -113,10 +115,11 @@ public class SSLTelnet extends XITelnet {
   class RxThread extends Thread {
     private boolean ivTerminate = false;
 
-    RxThread() {
+    private RxThread() {
       super("SSLTelnet rx thread");
     }
 
+    //TODO: this should be used in disconnect logic either directly or indirectly.
     public void terminate() {
       this.ivTerminate = true;
       if (this != Thread.currentThread()) {
@@ -127,7 +130,6 @@ public class SSLTelnet extends XITelnet {
     public void run() {
       byte[] buf = new byte[READ_BUFFER_SIZE_BYTES];
       byte[] rBuf = new byte[READ_BUFFER_SIZE_BYTES];
-      boolean var3 = false;
 
       try {
         while (!this.ivTerminate) {
