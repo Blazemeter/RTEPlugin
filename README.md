@@ -15,11 +15,11 @@ The plugin adds two different elements to JMeter:
 
 A Config Element (RTE Config)
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/blob/master/readme/RTEConfig.png "RTE Config GUI")
+![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/RTEConfig.png "RTE Config GUI")
 
 and a Sampler (RTE Sampler)
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/blob/master/readme/RTESampler.png "RTE Sampler GUI")
+![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/RTESampler.png "RTE Sampler GUI")
 
 The RTE Config element sets the parameters to be used by the sampler in order to establish the connection to the server. These parameters are:
 - *Server* (required). The url or ip of the IBM server.
@@ -59,19 +59,19 @@ To do this, first of all it's required an RTE Config element specifying the serv
 
 The Test Plan will look like this:
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/blob/master/readme/example_testplan.png "Test Plan")
+![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_testplan.png "Test Plan")
 
 The RTE Config element should specify the server url in *Server* field, and the protocol TN5250 in *Protocol* field like it's shown below:
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/blob/master/readme/example_RTECongif.png "RTE Config")
+![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTECongif.png "RTE Config")
 
 "Just connect" option should be checked in first sampler to not send payload data or actions but get the Welcome screen after the connection. An assertion post processor should also be attached to it to validate the "Welcome" message.
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/blob/master/readme/example_RTESampler1.png "RTE Sampler 1")
+![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTESampler1.png "RTE Sampler 1")
 
 Finally, the second sampler should specify in the Payload grid the position on the screen and the value to put on both *user* and *password* fields. Besides, the action button *ENTER* should be selected to simulate the user pressing that key after filling the fields. It should has also an assert who checks for the ¨Login Successful¨ message.
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/blob/master/readme/example_RTESampler2.png "RTE Sampler 2") 
+![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTESampler2.png "RTE Sampler 2") 
 
 ## Contributing
 
