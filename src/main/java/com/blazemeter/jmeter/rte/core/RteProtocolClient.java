@@ -19,6 +19,10 @@ public interface RteProtocolClient {
 
   String getScreen();
 
+  boolean isInputInhibited();
+
+  Position getCursorPosition();
+
   void disconnect() throws RteIOException;
 
   Dimension getScreenSize();

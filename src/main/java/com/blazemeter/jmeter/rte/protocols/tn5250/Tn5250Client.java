@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -16,6 +17,7 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
@@ -26,6 +28,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import net.infordata.em.crt5250.XI5250Field;
+import net.infordata.em.tn5250.XI5250Emulator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Tn5250Client implements RteProtocolClient {
 
@@ -65,6 +70,7 @@ public class Tn5250Client implements RteProtocolClient {
     }
   };
 
+  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private final ExtendedEmulator em = new ExtendedEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
 
@@ -156,10 +162,38 @@ public class Tn5250Client implements RteProtocolClient {
     int width = em.getCrtSize().width;
     StringBuilder screen = new StringBuilder();
     for (int i = 0; i < height; i++) {
-      screen.append(em.getString(0, i, width));
+      screen.append(em.getString(0, i, width).replace("\u0000", " ").replace("\u0001", ""));
       screen.append("\n");
     }
     return screen.toString();
+  }
+
+  @Override
+  public boolean isInputInhibited() {
+    int state = em.getState();
+    switch (state) {
+      case XI5250Emulator.ST_NULL:
+      case XI5250Emulator.ST_TEMPORARY_LOCK:
+      case XI5250Emulator.ST_NORMAL_LOCKED:
+      case XI5250Emulator.ST_POWER_ON:
+      case XI5250Emulator.ST_POWERED:
+        return true;
+      case XI5250Emulator.ST_HARDWARE_ERROR:
+      case XI5250Emulator.ST_POST_HELP:
+      case XI5250Emulator.ST_PRE_HELP:
+      case XI5250Emulator.ST_SS_MESSAGE:
+      case XI5250Emulator.ST_SYSTEM_REQUEST:
+      case XI5250Emulator.ST_NORMAL_UNLOCKED:
+        return false;
+      default:
+        LOG.debug("Unexpected state: " + state);
+        return false;
+    }
+  }
+
+  @Override
+  public Position getCursorPosition() {
+    return new Position(em.getCursorRow(), em.getCursorCol());
   }
 
   @Override
