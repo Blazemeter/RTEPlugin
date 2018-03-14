@@ -25,13 +25,13 @@ To build the plugin and run all tests just run `mvn clean verify`
 
 ## Usage
 
-###Installation
+### Installation
 
 To use the plugin install it (by copying the jar from `target` folder) in `lib/ext/` folder of the JMeter installation. Also copy the `tn5250j.jar` to the same JMeter folder.
 
 Run JMeter and check the new config and sampler elements available.
 
-###Using the plugin
+### Using the plugin
 
 The plugin adds two different elements to JMeter:
 
@@ -53,7 +53,7 @@ The RTE Config element sets the parameters to be used by the sampler in order to
 
 The RTE Sampler element checks if exists a connection to send the packets, if there isn't, it uses the RTE Config data to establish a new one.
 
-This means that it's **always required an RTE Config Element** in order to connect the RTE sampler to a server.
+This means that it's **always required an RTE Config Element** in order to connect the RTE samplers to a server.
 
 If more than one RTE Config element is used at the same level of the Test Plan, JMeter will take the value of the first one. On the other hand if there are more than one RTE Config used but in different levels, JMeter will use the "closest" (talking about Test Plan tree level's) Config element for each sampler.
 
@@ -61,7 +61,7 @@ The RTE Sampler fields are:
 - *RTE Message*
   - *Payload*. Contains a grid in which user can specify Row and Column of a field in the screen, and the value (string) to send in the field starting from that position.
   - *Actions*. These buttons trigger the action to be sent to the server on each sample. They all represent a key from a terminal's keyboard.
-  - *Disconnect*. Disconnects from the server after send the sampler request. By default this option is unchecked. If a sampler has this field checked, next sampler in the workflow (if it exists) will re-connect to the server. 
+  - *Disconnect*. Disconnects from the server after send the sampler request. By default this option is unchecked. If a sampler in the middle of a workflow has this field checked, the following sampler will re-connect to the server. 
   - *Just Connect*. This option disables all the information set in Payload and Actions field's before send packets to the server. It's useful in case the user wants to validate the welcome screen or use a waiter (see below) without interact with the server.    
 - *Wait for*. Waiters are executed after the sampler sends packets to the server. They wait for a specific condition, if this condition is not reached after a specific time (defined in *Timeout* value) the sampler returns timeout error. There are four defined waiters:
   - *Sync*. Waits for the system to return from X SYSTEM or Input Inhibited mode. Default value is checked, as it's recommended to always check that the system is not in Input Inhibited Mode after a sample (and before the next one) in order to get the correct screen in the sample result (and to ensure that the next sampler is executed from the desired screen). On the other hand, the sampler does an implicit "Wait for sync" each time it connects to a server, which means that if *Just Connect* option is checked it's not needed to check the *Wait for sync* function, unless you want to change the default timeout. 
@@ -71,12 +71,13 @@ The RTE Sampler fields are:
 
 All the "waiters" have a stable timeout value (in milliseconds) who checks that the system remains at the desired state (or condition, depending on the waiters used) for an specific time. The default value is 1000 milliseconds, but it could be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file.
 
-###Example
+### Example
+
 Suppose the user wants to automate the following workflow in an AS400 server (TN5250 system):
 1. Connect to the system *myAS400.net* and validate that the screens shows the "Welcome" message.
 2. Fill the *user field* (which is in row 7 and column 53 of the screen) and the *password field* (which is in row 9, column 53 of the screen) and press *Enter* key. Validate that the screen shows the message "Login Successful".
 
-To do this, first of all it's required an RTE Config element specifying the server url and the protocol (TN5250), and two RTE sampler's: one to make the connection and validate the Welcome screen, and the other to do the login.
+To do this, first of all it's required an RTE Config element specifying the server url and the protocol (TN5250). They're needed also two RTE sampler's: one to make the connection and validate the Welcome screen, and the other to do the login.
 
 The Test Plan will look like this:
 
