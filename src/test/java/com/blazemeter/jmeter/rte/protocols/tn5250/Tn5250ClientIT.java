@@ -1,18 +1,21 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.SSLType;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.ssl.SSLData;
 import com.blazemeter.jmeter.rte.virtualservice.Flow;
 import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import com.google.common.base.Charsets;
@@ -31,8 +34,6 @@ import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class Tn5250ClientIT {
 
@@ -114,7 +115,21 @@ public class Tn5250ClientIT {
   }
 
   private void sendInvalidCredsWithSyncWait() throws Exception {
-    client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
+    sendInvalidCredsWithWaiter(buildConditionWaiter(
+        new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+  }
+
+  private ConditionWaiter buildConditionWaiter(WaitCondition condition) {
+    return client.buildConditionWaiters(Collections.singletonList(condition)).get(0);
+  }
+
+  private void sendInvalidCredsWithWaiter(ConditionWaiter waiter) throws Exception {
+    try {
+      client.send(buildInvalidCredsFields(), Action.ENTER);
+      waiter.await();
+    } finally {
+      waiter.stop();
+    }
   }
 
   private List<CoordInput> buildInvalidCredsFields() {
@@ -123,17 +138,13 @@ public class Tn5250ClientIT {
         new CoordInput(new Position(9, 53), "PASS"));
   }
 
-  private List<WaitCondition> buildSyncWaiter() {
-    return Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS));
-  }
-
   @Test(expected = IllegalArgumentException.class)
   public void shouldThrowIllegalArgumentExceptionWhenSendIncorrectFieldPosition() throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
         new CoordInput(new Position(7, 1), "TEST"));
-    client.send(input, Action.ENTER, buildSyncWaiter());
+    client.send(input, Action.ENTER);
   }
 
   @Test(expected = RteIOException.class)
@@ -145,60 +156,57 @@ public class Tn5250ClientIT {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void shouldThrowUnsupportedOperationExceptionWithUndefinedWaiter() throws Exception {
+  public void shouldThrowUnsupportedOperationExceptionWhenBuildWaiterWithUndefinedCondition()
+      throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    List<WaitCondition> waiters = Collections
+    List<WaitCondition> conditions = Collections
         .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
           @Override
           public String getDescription() {
             return "test";
           }
         });
-    client.send(buildInvalidCredsFields(), Action.ENTER, waiters);
+    client.buildConditionWaiters(conditions);
   }
 
   @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenSendWithSyncWaitAndSlowResponse() throws Exception {
+  public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER, buildSyncWaiter());
+    sendInvalidCredsWithWaiter(
+        buildConditionWaiter(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenSendWithCursorWaitAndNotExpectedCursorPosition()
+  public void shouldThrowTimeoutExceptionWhenCursorWaitAndNotExpectedCursorPosition()
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER, buildCursorWaiter(new Position(1, 1)));
-  }
-
-  private List<WaitCondition> buildCursorWaiter(Position position) {
-    return Collections
-        .singletonList(new CursorWaitCondition(position, TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS));
+    sendInvalidCredsWithWaiter(buildConditionWaiter(
+        new CursorWaitCondition(new Position(1, 1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenSendWithSilentWaitAndChattyServer() throws Exception {
+  public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER,
-        Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    sendInvalidCredsWithWaiter(
+        buildConditionWaiter(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenSendWithTextWaitWithNoMatchingRegex()
+  public void shouldThrowTimeoutExceptionWhenTextWaitWithNoMatchingRegex()
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER,
-        Collections.singletonList(
-            new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
-                new Perl5Matcher(),
-                Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
-                    Position.UNSPECIFIED_INDEX),
-                TIMEOUT_MILLIS,
-                STABLE_TIMEOUT_MILLIS)));
+    sendInvalidCredsWithWaiter(buildConditionWaiter(
+        new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
+            new Perl5Matcher(),
+            Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
+                Position.UNSPECIFIED_INDEX),
+            TIMEOUT_MILLIS,
+            STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test

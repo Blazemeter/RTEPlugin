@@ -1,6 +1,5 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250.ssl;
+package com.blazemeter.jmeter.rte.core.ssl;
 
-import com.blazemeter.jmeter.rte.core.SSLType;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,8 +13,8 @@ import javax.net.ssl.TrustManagerFactory;
 
 public class SSLConnection {
 
-  private static SSLType sslType;
-  private  char[] ksPwd;
+  private final SSLType sslType;
+  private final char[] ksPwd;
   private SSLContext sslctx;
   private String keyStorePath;
 

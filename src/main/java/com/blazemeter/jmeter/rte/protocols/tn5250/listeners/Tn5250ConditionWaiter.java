@@ -1,7 +1,9 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
+import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
+import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -14,16 +16,20 @@ import net.infordata.em.tn5250.XI5250EmulatorListener;
  * An {@link XI5250EmulatorListener} which allows waiting for certain condition, and keeps in such
  * state for a given period of time.
  */
-public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250EmulatorListener {
+public abstract class Tn5250ConditionWaiter<T extends WaitCondition> implements ConditionWaiter,
+    XI5250EmulatorListener {
 
   protected final T condition;
+  protected final Tn5250Client client;
   private final CountDownLatch lock = new CountDownLatch(1);
   private final ScheduledExecutorService stableTimeoutExecutor;
   private ScheduledFuture stableTimeoutTask;
   private boolean ended;
 
-  public ConditionWaiter(T condition, ScheduledExecutorService stableTimeoutExecutor) {
+  public Tn5250ConditionWaiter(T condition, Tn5250Client client,
+      ScheduledExecutorService stableTimeoutExecutor) {
     this.condition = condition;
+    this.client = client;
     this.stableTimeoutExecutor = stableTimeoutExecutor;
   }
 
@@ -41,13 +47,9 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
 
   @Override
   public void stateChanged(XI5250EmulatorEvent event) {
-    if (hasPendingError(event)) {
+    if (client.hasPendingError()) {
       cancelWait();
     }
-  }
-
-  protected boolean hasPendingError(XI5250EmulatorEvent event) {
-    return ((ExtendedEmulator) event.get5250Emulator()).hasPendingError();
   }
 
   @Override
@@ -83,13 +85,20 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
     }
   }
 
-  public void await() throws InterruptedException, TimeoutException {
+  @Override
+  public void await() throws InterruptedException, TimeoutException, RteIOException {
     if (!lock.await(condition.getTimeoutMillis(), TimeUnit.MILLISECONDS)) {
       cancelWait();
       throw new TimeoutException(
           "Timeout waiting for " + condition.getDescription() + " after " + condition
               .getTimeoutMillis() + " millis");
     }
+    client.throwAnyPendingError();
+  }
+
+  @Override
+  public void stop() {
+    client.removeListener(this);
   }
 
 }

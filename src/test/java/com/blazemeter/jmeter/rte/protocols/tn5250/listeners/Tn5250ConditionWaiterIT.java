@@ -1,6 +1,10 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
+import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,11 +18,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
 @RunWith(MockitoJUnitRunner.class)
-public abstract class ConditionWaiterIT {
+public abstract class Tn5250ConditionWaiterIT {
 
   protected static final long TIMEOUT_MILLIS = 3000;
   protected static final long STABLE_MILLIS = 1000;
@@ -29,7 +30,10 @@ public abstract class ConditionWaiterIT {
   @Mock
   protected ExtendedEmulator emulator;
 
-  protected ConditionWaiter<?> listener;
+  @Mock
+  protected Tn5250Client client;
+
+  protected Tn5250ConditionWaiter<?> listener;
 
   @Before
   public void setup() throws Exception {
@@ -38,7 +42,7 @@ public abstract class ConditionWaiterIT {
     listener = buildConditionWaiter();
   }
 
-  protected abstract ConditionWaiter<?> buildConditionWaiter() throws Exception;
+  protected abstract Tn5250ConditionWaiter<?> buildConditionWaiter() throws Exception;
 
   @After
   public void teardown() {
@@ -59,7 +63,7 @@ public abstract class ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingStateChangeAndExceptionInEmulator() throws Exception {
-    when(emulator.hasPendingError()).thenReturn(true);
+    when(client.hasPendingError()).thenReturn(true);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
     startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator());

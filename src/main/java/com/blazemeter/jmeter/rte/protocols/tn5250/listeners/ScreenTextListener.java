@@ -1,17 +1,18 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 
-public class ScreenTextListener extends ConditionWaiter<TextWaitCondition> {
+public class ScreenTextListener extends Tn5250ConditionWaiter<TextWaitCondition> {
 
   private boolean matched;
 
-  public ScreenTextListener(TextWaitCondition condition,
+  public ScreenTextListener(TextWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor) {
-    super(condition, stableTimeoutExecutor);
+    super(condition, client, stableTimeoutExecutor);
   }
 
   @Override
@@ -37,7 +38,7 @@ public class ScreenTextListener extends ConditionWaiter<TextWaitCondition> {
 
   @Override
   public void stateChanged(XI5250EmulatorEvent event) {
-    if (hasPendingError(event)) {
+    if (client.hasPendingError()) {
       cancelWait();
     } else if (matched) {
       startStablePeriod();

@@ -12,11 +12,12 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class UnlockListenerIT extends ConditionWaiterIT {
+public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
 
   @Override
-  protected ConditionWaiter<?> buildConditionWaiter() {
+  protected Tn5250ConditionWaiter<?> buildConditionWaiter() {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
+        client,
         stableTimeoutExecutor);
   }
 

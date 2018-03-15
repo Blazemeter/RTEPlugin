@@ -1,5 +1,8 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.google.common.base.Stopwatch;
@@ -10,17 +13,15 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
-public class VisibleCursorListenerIT extends ConditionWaiterIT {
+public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
 
   private static final Position DEFAULT_CURSOR_POSITION = new Position(7, 53);
 
   @Override
-  protected ConditionWaiter<?> buildConditionWaiter() {
+  protected Tn5250ConditionWaiter<?> buildConditionWaiter() {
     return new VisibleCursorListener(
         new CursorWaitCondition(DEFAULT_CURSOR_POSITION, TIMEOUT_MILLIS, STABLE_MILLIS),
+        client,
         stableTimeoutExecutor);
   }
 
