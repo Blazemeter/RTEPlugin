@@ -13,13 +13,13 @@ import org.slf4j.LoggerFactory;
 
 public class Tn5250RequestListener implements RequestListener, XI5250EmulatorListener {
 
+  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
+
   protected final Tn5250Client client;
   private Instant startTime = Instant.now();
   private Instant firstResponseTime = Instant.now();
   private Instant lastResponseTime = Instant.now();
   private boolean receivedFirstResponse = false;
-
-  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
 
   public Tn5250RequestListener(Tn5250Client client) {
     this.client = client;
