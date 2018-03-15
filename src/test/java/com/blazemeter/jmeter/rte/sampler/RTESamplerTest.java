@@ -47,8 +47,19 @@ public class RTESamplerTest {
 
   private static final long CUSTOM_TIMEOUT_MILLIS = 3000;
   private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
+  private static final String TEST_SCREEN = "Test screen";
   private static final String CUSTOM_SSL_KEY_STORE = "/apache-jmeter4.0/ssl/cert.keystore";
   private static final String CUSTOM_SSL_KEY_STORE_PASSWORD = "pwd123";
+  private static final String BASE_REQUEST_HEADERS_FORMAT = "Server: server\n"
+      + "Port: 23\n"
+      + "Protocol: TN5250\n"
+      + "Terminal-type: IBM-3179-2: 24x80 color display\n"
+      + "Security: %s\n";
+  private static final String REQUEST_HEADERS_FORMAT = BASE_REQUEST_HEADERS_FORMAT
+      + "Input-inhibited: true\n";
+  private static final String REQUEST_BODY = "Action: ENTER\n"
+      + "Inputs (Row,Column,Value):\n"
+      + "1,1,input\n";
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
@@ -66,7 +77,9 @@ public class RTESamplerTest {
   @Before
   public void setup() {
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
-    when(rteProtocolClientMock.getScreen()).thenReturn("Test screen");
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true, false);
+    when(rteProtocolClientMock.getScreen()).thenReturn(TEST_SCREEN);
+    when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position(1, 1));
     when(rteProtocolClientMock.buildConditionWaiters(any()))
         .thenReturn((List) Arrays.asList(waiter1, waiter2));
     createDefaultRTEConfig();
@@ -105,63 +118,41 @@ public class RTESamplerTest {
   @Test
   public void shouldGetErrorSamplerResultWhenGetClientThrowTimeoutException() throws Exception {
     TimeoutException e = new TimeoutException();
-    assertSampleResultWhenThrowConnectException(e);
+    doThrow(e).when(rteProtocolClientMock)
+        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+    assertSampleResult(rteSampler.sample(null), createExpectedErrorResult(e,
+        BASE_REQUEST_HEADERS_FORMAT));
   }
 
   @Test
   public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
     InterruptedException e = new InterruptedException();
-    assertSampleResultWhenThrowConnectException(e);
-  }
-
-  private void assertSampleResultWhenThrowConnectException(Exception e) throws Exception {
     doThrow(e).when(rteProtocolClientMock)
         .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
-    SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedErrorResult(e);
-
-    assertSampleResult(result, expected);
+    assertSampleResult(rteSampler.sample(null), createExpectedErrorResult(e,
+        BASE_REQUEST_HEADERS_FORMAT));
   }
 
-  private SampleResult createExpectedErrorResult(Exception e) {
+  private SampleResult createExpectedErrorResult(Exception e, String requestHeadersFormat) {
     SampleResult expected = new SampleResult();
     expected.setSampleLabel(rteSampler.getName());
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));
-    expected.setDataType(SampleResult.TEXT);
+    expected.setRequestHeaders(String.format(requestHeadersFormat, SSLType.NONE));
+    expected.setSamplerData(REQUEST_BODY);
+    expected.setSuccessful(false);
     expected.setResponseCode(e.getClass().getName());
     expected.setResponseMessage(e.getMessage());
-    expected.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    expected.setSuccessful(false);
-    return expected;
-  }
-
-  private SampleResult createExpectedErrorResultDisconnect(Exception e) {
-    SampleResult expected = new SampleResult();
-    expected.setSampleLabel(rteSampler.getName());
-    StringWriter sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
     expected.setDataType(SampleResult.TEXT);
-    expected.setResponseCode(e.getClass().getName());
-    expected.setResponseMessage(e.getMessage());
-    expected.setRequestHeaders("Server: server\n"
-        + "Port: 23\n"
-        + "Protocol: TN5250\n"
-        + "Terminal type: IBM-3179-2: 24x80 color display\n"
-        + "Inhibited: false\n"
-        + "\n"
-        + "Action: ENTER\n"
-        + "Inputs:\n"
-        + "\n"
-        + "Row 1 Column 1 = input\n");
     expected.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    expected.setSuccessful(false);
     return expected;
   }
 
   private void assertSampleResult(SampleResult result, SampleResult expected) {
     assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "dataType", "requestHeaders" ,"responseHeaders", "responseData", "successful", "responseCode", "responseMessage");
+        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "requestHeaders", "samplerData",
+            "successful", "responseCode", "responseMessage", "responseHeaders", "dataType",
+            "responseData");
   }
 
   @Test
@@ -169,7 +160,8 @@ public class RTESamplerTest {
     IllegalArgumentException e = new IllegalArgumentException();
     doThrow(e).when(rteProtocolClientMock)
         .send(any(), any());
-    assertSampleResult(rteSampler.sample(null), createExpectedErrorResult(e));
+    assertSampleResult(rteSampler.sample(null),
+        createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT));
   }
 
   @Test
@@ -177,38 +169,28 @@ public class RTESamplerTest {
     TimeoutException e = new TimeoutException();
     doThrow(e).
         when(waiter1).await();
-    assertSampleResult(rteSampler.sample(null), createExpectedErrorResult(e));
+    assertSampleResult(rteSampler.sample(null),
+        createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT));
   }
 
   @Test
   public void shouldGetSuccessfulSamplerResultWhenSend() {
-    String response = "Response";
-    when(rteProtocolClientMock.getScreen()).thenReturn(response);
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true);
-    when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position (1,1));
     SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedSuccessfulResult(response);
+    SampleResult expected = createExpectedSuccessfulResult(
+        String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE), REQUEST_BODY);
     assertSampleResult(result, expected);
   }
 
-  private SampleResult createExpectedSuccessfulResult(String responseData) {
+  private SampleResult createExpectedSuccessfulResult(String requestHeaders, String samplerData) {
     SampleResult expected = new SampleResult();
     expected.setSampleLabel(rteSampler.getName());
-    expected.setDataType(SampleResult.TEXT);
-    expected.setResponseData(responseData, "utf-8");
-    expected.setResponseHeaders("Inhibited: true\n"
-        + "Cursor position: row 1 column 1");
-    expected.setRequestHeaders("Server: server\n"
-        + "Port: 23\n"
-        + "Protocol: TN5250\n"
-        + "Terminal type: IBM-3179-2: 24x80 color display\n"
-        + "Inhibited: true\n"
-        + "\n"
-        + "Action: ENTER\n"
-        + "Inputs:\n"
-        + "\n"
-        + "Row 1 Column 1 = input\n");
+    expected.setRequestHeaders(requestHeaders);
+    expected.setSamplerData(samplerData);
     expected.setSuccessful(true);
+    expected.setResponseHeaders("Input-inhibited: false\n"
+        + "Cursor-position: 1,1");
+    expected.setDataType(SampleResult.TEXT);
+    expected.setResponseData(TEST_SCREEN, "utf-8");
     return expected;
   }
 
@@ -237,6 +219,16 @@ public class RTESamplerTest {
   }
 
   @Test
+  public void shouldGetJustConnectResultWhenSampleWithJustConnect() {
+    rteSampler.setJustConnect(true);
+    assertSampleResult(rteSampler.sample(null),
+        createExpectedSuccessfulResult(
+            String.format(BASE_REQUEST_HEADERS_FORMAT, SSLType.NONE)
+                + "Just-connect: true\n"
+                + "Input-inhibited: true\n", ""));
+  }
+
+  @Test
   public void shouldDisconnectEmulatorWhenSampleWithDisconnect() throws Exception {
     rteSampler.setDisconnect(true);
     rteSampler.sample(null);
@@ -252,6 +244,21 @@ public class RTESamplerTest {
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedErrorResultDisconnect(e);
     assertSampleResult(result, expected);
+  }
+
+  private SampleResult createExpectedErrorResultDisconnect(Exception e) {
+    SampleResult expected = new SampleResult();
+    expected.setSampleLabel(rteSampler.getName());
+    expected.setRequestHeaders(String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE));
+    expected.setSamplerData(REQUEST_BODY);
+    expected.setSuccessful(false);
+    expected.setResponseCode(e.getClass().getName());
+    expected.setResponseMessage(e.getMessage());
+    expected.setDataType(SampleResult.TEXT);
+    StringWriter sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
+    expected.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
+    return expected;
   }
 
   @Test
@@ -288,6 +295,33 @@ public class RTESamplerTest {
     verify(waiter2).await();
     verify(waiter1).stop();
     verify(waiter2).stop();
+  }
+
+  @Test
+  public void shouldBuildWaitersWithDefaultOrderWhenSampleAndWaitersHaveSameTimeout() {
+    rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
+    rteSampler.setWaitCursor(true);
+    rteSampler.setWaitCursorTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .buildConditionWaiters(Arrays.asList(
+            new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
+            new CursorWaitCondition(new Position(1, 1), CUSTOM_TIMEOUT_MILLIS,
+                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+  }
+
+  @Test
+  public void shouldBuildWaitersSortedByTimeoutToOptimizeWaitingTimeOnTimeouts() {
+    rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
+    rteSampler.setWaitCursor(true);
+    rteSampler.setWaitCursorTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS - 1));
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock)
+        .buildConditionWaiters(Arrays.asList(
+            new CursorWaitCondition(new Position(1, 1), CUSTOM_TIMEOUT_MILLIS - 1,
+                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
+            new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS,
+                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -399,13 +433,23 @@ public class RTESamplerTest {
   @Test
   public void shouldConnectUsingSSLDataCustomValuesToEmulatorWhenKeyStorePropertiesEnabled()
       throws Exception {
+    rteSampler.setSslType(SSLType.TLS);
     rteSampler.setKeyStore(CUSTOM_SSL_KEY_STORE);
     rteSampler.setKeyStorePassword(CUSTOM_SSL_KEY_STORE_PASSWORD);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
         .connect(any(), anyInt(),
-            new SSLData(any(), CUSTOM_SSL_KEY_STORE_PASSWORD, CUSTOM_SSL_KEY_STORE),
+            eq(new SSLData(SSLType.TLS, CUSTOM_SSL_KEY_STORE_PASSWORD, CUSTOM_SSL_KEY_STORE)),
             any(), anyLong(), anyLong());
+  }
+
+  @Test
+  public void shouldGetCustomSslHeaderWhenUsingCustomSsl() {
+    rteSampler.setSslType(SSLType.TLS);
+    rteSampler.setKeyStore(CUSTOM_SSL_KEY_STORE);
+    rteSampler.setKeyStorePassword(CUSTOM_SSL_KEY_STORE_PASSWORD);
+    assertSampleResult(rteSampler.sample(null), createExpectedSuccessfulResult(
+        String.format(REQUEST_HEADERS_FORMAT, SSLType.TLS), REQUEST_BODY));
   }
 
 }

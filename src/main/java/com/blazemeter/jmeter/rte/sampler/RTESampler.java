@@ -22,6 +22,7 @@ import com.helger.commons.annotation.VisibleForTesting;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,8 +95,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
+
   private final Function<Protocol, RteProtocolClient> protocolFactory;
-  private SampleResult sampleResult;
 
   public RTESampler() {
     this(Protocol::createProtocolClient);
@@ -171,6 +172,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   private SSLType getSSLType() {
     return SSLType.valueOf(getPropertyAsString(CONFIG_SSL_TYPE));
+  }
+
+  @VisibleForTesting
+  protected void setSslType(SSLType sslType) {
+    setProperty(CONFIG_SSL_TYPE, sslType.name());
   }
 
   public void setPayload(Inputs payload) {
@@ -382,13 +388,16 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   @Override
   public SampleResult sample(Entry entry) {
-
-    sampleResult = new SampleResult();
+    SampleResult sampleResult = new SampleResult();
     sampleResult.setSampleLabel(getName());
     sampleResult.sampleStart();
+    sampleResult.setRequestHeaders(buildRequestHeaders());
+    sampleResult.setSamplerData(buildRequestBody());
 
     try {
       RteProtocolClient client = getClient();
+      sampleResult.connectEnd();
+      addClientRequestHeaders(client, sampleResult);
       List<? extends ConditionWaiter> waiters = client.buildConditionWaiters(getWaitersList());
       try {
         if (!getJustConnect()) {
@@ -397,17 +406,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         for (ConditionWaiter waiter : waiters) {
           waiter.await();
         }
-        sampleResult.setRequestHeaders(
-            buildRequestHeader(client.isInputInhibited(), getAction(), getCoordInputs()));
         sampleResult.setSuccessful(true);
-        sampleResult
-            .setResponseHeaders(
-                buildResponseHeader(client.getCursorPosition(), client.isInputInhibited()));
-        sampleResult.setResponseData(client.getScreen(), "utf-8");
+        sampleResult.setResponseHeaders(buildResponseHeaders(client));
         sampleResult.setDataType(SampleResult.TEXT);
+        sampleResult.setResponseData(client.getScreen(), "utf-8");
         sampleResult.latencyEnd();
-        sampleResult.sampleEnd();
-        return sampleResult;
       } finally {
         waiters.forEach(ConditionWaiter::stop);
         if (getDisconnect()) {
@@ -416,32 +419,17 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return errorResult("The sampling has been interrupted", e);
+      return errorResult("The sampling has been interrupted", e, sampleResult);
     } catch (Exception e) {
-      return errorResult("Error while sampling the remote terminal", e);
+      return errorResult("Error while sampling the remote terminal", e, sampleResult);
     }
+    sampleResult.sampleEnd();
+    return sampleResult;
   }
 
-  private String buildResponseHeader(Position cursorPosition, boolean state) {
-    return "Inhibited: " + state + "\n" +
-        "Cursor position: row " + cursorPosition.getRow() + " column " + cursorPosition.getColumn();
-  }
-
-  private String buildRequestHeader(boolean state, Action action,
-      List<CoordInput> coordInputs) {
-    StringBuilder ret = new StringBuilder("Server: " + getServer() + "\n" +
-        "Port: " + getPort() + "\n" +
-        "Protocol: " + getProtocol().toString() + "\n" +
-        "Terminal type: " + getTerminalType().toString() + "\n" +
-        "Inhibited: " + state + "\n\n" +
-        "Action: " + action.toString() + "\n" +
-        "Inputs:\n\n");
-
-    for (CoordInput c : coordInputs) {
-      ret.append("Row ").append(c.getPosition().getRow()).append(" Column ")
-          .append(c.getPosition().getColumn()).append(" = ").append(c.getInput()).append("\n");
-    }
-    return ret.toString();
+  private void addClientRequestHeaders(RteProtocolClient client, SampleResult result) {
+    result.setRequestHeaders(
+        result.getRequestHeaders() + "Input-inhibited: " + client.isInputInhibited() + "\n");
   }
 
   private RteProtocolClient getClient()
@@ -460,12 +448,44 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
         getStableTimeout());
     clients.put(clientId, client);
-    sampleResult.connectEnd();
     return client;
   }
 
   private String buildConnectionId() {
     return getServer() + ":" + getPort();
+  }
+
+  private String buildRequestHeaders() {
+    StringBuilder ret = new StringBuilder("Server: " + getServer() + "\n" +
+        "Port: " + getPort() + "\n" +
+        "Protocol: " + getProtocol().toString() + "\n" +
+        "Terminal-type: " + getTerminalType().toString() + "\n" +
+        "Security: " + getSSLType() + "\n"
+    );
+    if (getJustConnect()) {
+      ret.append("Just-connect: true\n");
+    }
+    return ret.toString();
+  }
+
+  private String buildRequestBody() {
+    StringBuilder ret = new StringBuilder();
+    if (!getJustConnect()) {
+      ret.append("Action: ")
+          .append(getAction())
+          .append("\n")
+          .append("Inputs (Row,Column,Value):\n");
+
+      for (CoordInput c : getCoordInputs()) {
+        ret.append(c.getPosition().getRow())
+            .append(",")
+            .append(c.getPosition().getColumn())
+            .append(",")
+            .append(c.getInput())
+            .append("\n");
+      }
+    }
+    return ret.toString();
   }
 
   private List<CoordInput> getCoordInputs() {
@@ -495,6 +515,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     if (getWaitText()) {
       waiters.add(buildTextWaitCondition());
     }
+    waiters.sort(Comparator.comparing(WaitCondition::getTimeoutMillis));
     return waiters;
   }
 
@@ -514,19 +535,26 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         getStableTimeout());
   }
 
+  private String buildResponseHeaders(RteProtocolClient client) {
+    Position cursorPosition = client.getCursorPosition();
+    return "Input-inhibited: " + client.isInputInhibited() + "\n" +
+        "Cursor-position: " + cursorPosition.getRow() + "," + cursorPosition.getColumn();
+  }
+
   private void disconnect(RteProtocolClient client) throws RteIOException {
     client.disconnect();
     connections.get().remove(buildConnectionId());
   }
 
-  private SampleResult errorResult(String message, Throwable e) {
-    StringWriter sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
-    sampleResult.setDataType(SampleResult.TEXT);
+  private SampleResult errorResult(String message, Throwable e, SampleResult sampleResult) {
+    sampleResult.setSuccessful(false);
+    sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
     sampleResult.setResponseMessage(e.getMessage());
+    sampleResult.setDataType(SampleResult.TEXT);
+    StringWriter sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
     sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    sampleResult.setSuccessful(false);
     sampleResult.sampleEnd();
     LOG.error(message, e);
     return sampleResult;
