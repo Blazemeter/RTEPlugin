@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -65,6 +66,8 @@ public class RTESamplerTest {
   private RteProtocolClient rteProtocolClientMock;
   @Mock
   private ConditionWaiter waiter1, waiter2;
+  @Mock
+  private RequestListener requestListenerMock;
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
 
@@ -79,6 +82,9 @@ public class RTESamplerTest {
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
     when(rteProtocolClientMock.isInputInhibited()).thenReturn(true, false);
     when(rteProtocolClientMock.getScreen()).thenReturn(TEST_SCREEN);
+    when(rteProtocolClientMock.buildRequestListener()).thenReturn(requestListenerMock);
+    when(requestListenerMock.getEndTime()).thenReturn((long) 100);
+    when(requestListenerMock.getLatency()).thenReturn((long) 100);
     when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position(1, 1));
     when(rteProtocolClientMock.buildConditionWaiters(any()))
         .thenReturn((List) Arrays.asList(waiter1, waiter2));
