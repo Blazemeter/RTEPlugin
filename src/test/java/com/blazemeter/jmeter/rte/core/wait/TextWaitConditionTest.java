@@ -14,10 +14,10 @@ public class TextWaitConditionTest {
   private static final Area DEFAULT_SEARCH_AREA = Area
       .fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
           Position.UNSPECIFIED_INDEX);
-  private static final String SCREEN = "+------------------+"
-      + "| Welcome to the   |"
-      + "|  awesome server! |"
-      + "+------------------+";
+  private static final String SCREEN = "+------------------+\n"
+      + "| Welcome to the   |\n"
+      + "|  awesome server! |\n"
+      + "+------------------+\n";
   private static final Dimension SCREEN_SIZE = new Dimension(20, 4);
   private static final String MATCHING_SIMPLE_REGEX = "awesome";
 

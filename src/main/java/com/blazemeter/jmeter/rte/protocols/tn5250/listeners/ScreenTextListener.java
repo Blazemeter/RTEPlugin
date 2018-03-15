@@ -48,7 +48,7 @@ public class ScreenTextListener extends Tn5250ConditionWaiter<TextWaitCondition>
   @Override
   public void newPanelReceived(XI5250EmulatorEvent event) {
     XI5250Emulator emulator = event.get5250Emulator();
-    if (condition.matchesScreen(emulator.getString(), emulator.getCrtSize())) {
+    if (condition.matchesScreen(client.getScreen(), emulator.getCrtSize())) {
       matched = true;
     }
     if (matched) {

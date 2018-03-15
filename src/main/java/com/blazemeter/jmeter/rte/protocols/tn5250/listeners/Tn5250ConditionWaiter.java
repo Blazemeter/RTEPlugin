@@ -98,6 +98,7 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> implements 
 
   @Override
   public void stop() {
+    cancelWait();
     client.removeListener(this);
   }
 
