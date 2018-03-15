@@ -69,18 +69,6 @@ public class Tn5250Client implements RteProtocolClient {
       put(Action.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
     }
   };
-
-  private static class KeyEventMap {
-
-    private final int modifier;
-    private final int specialKey;
-
-    KeyEventMap(int modifier, int specialKey) {
-      this.modifier = modifier;
-      this.specialKey = specialKey;
-    }
-  }
-
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private final ExtendedEmulator em = new ExtendedEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
@@ -167,7 +155,7 @@ public class Tn5250Client implements RteProtocolClient {
     int width = em.getCrtSize().width;
     StringBuilder screen = new StringBuilder();
     for (int i = 0; i < height; i++) {
-      screen.append(em.getString(0, i, width).replace("\u0000", " ").replace("\u0001", ""));
+      screen.append(em.getString(0, i, width).replaceAll("[\\x00-\\x19]", " "));
       screen.append("\n");
     }
     return screen.toString();
@@ -226,6 +214,17 @@ public class Tn5250Client implements RteProtocolClient {
 
   public void removeListener(Tn5250ConditionWaiter<?> listener) {
     em.removeEmulatorListener(listener);
+  }
+
+  private static class KeyEventMap {
+
+    private final int modifier;
+    private final int specialKey;
+
+    KeyEventMap(int modifier, int specialKey) {
+      this.modifier = modifier;
+      this.specialKey = specialKey;
+    }
   }
 
 }

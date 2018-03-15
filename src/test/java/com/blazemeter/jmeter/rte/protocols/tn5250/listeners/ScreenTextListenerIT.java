@@ -28,7 +28,7 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
   }
 
   private void setupScreenWithText(String screen) {
-    when(emulator.getString()).thenReturn(screen);
+    when(client.getScreen()).thenReturn(screen);
     when(emulator.getCrtSize()).thenReturn(new Dimension(screen.length(), 1));
   }
 

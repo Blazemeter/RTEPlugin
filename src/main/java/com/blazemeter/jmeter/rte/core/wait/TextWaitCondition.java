@@ -50,7 +50,8 @@ public class TextWaitCondition extends WaitCondition {
         searchArea.getRight() == Position.UNSPECIFIED_INDEX ? screenSize.width
             : searchArea.getRight(), left, screenSize.width, screenSize.width, "right column");
     for (int i = top; i <= bottom; i++) {
-      int rowStart = (i - 1) * screenSize.width;
+      // we increase one due to new line at end of row
+      int rowStart = (i - 1) * (screenSize.width + 1);
       builder.append(screen.substring(rowStart + left - 1, rowStart + right));
       builder.append("\n");
     }
