@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -399,6 +400,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       sampleResult.connectEnd();
       addClientRequestHeaders(client, sampleResult);
       List<? extends ConditionWaiter> waiters = client.buildConditionWaiters(getWaitersList());
+      RequestListener requestListener = client.buildRequestListener();
       try {
         if (!getJustConnect()) {
           client.send(getCoordInputs(), getAction());
@@ -411,8 +413,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         sampleResult.setDataType(SampleResult.TEXT);
         sampleResult.setResponseData(client.getScreen(), "utf-8");
         sampleResult.latencyEnd();
+        sampleResult.setLatency(requestListener.getLatency());
+        sampleResult.setEndTime(requestListener.getEndTime());
       } finally {
         waiters.forEach(ConditionWaiter::stop);
+        requestListener.stop();
         if (getDisconnect()) {
           disconnect(client);
         }
@@ -423,7 +428,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     } catch (Exception e) {
       return errorResult("Error while sampling the remote terminal", e, sampleResult);
     }
-    sampleResult.sampleEnd();
     return sampleResult;
   }
 

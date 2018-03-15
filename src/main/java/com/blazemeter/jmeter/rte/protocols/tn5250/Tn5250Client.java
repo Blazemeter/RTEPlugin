@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -16,6 +17,7 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250Emulator;
+import net.infordata.em.tn5250.XI5250EmulatorListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,6 +136,12 @@ public class Tn5250Client implements RteProtocolClient {
     }
   }
 
+  public RequestListener buildRequestListener() {
+    Tn5250RequestListener listener = new Tn5250RequestListener(this);
+    em.addEmulatorListener(listener);
+    return listener;
+  }
+
   private void setField(CoordInput s) {
     /*
     The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
@@ -221,7 +230,7 @@ public class Tn5250Client implements RteProtocolClient {
     return KEY_EVENTS.get(action);
   }
 
-  public void removeListener(Tn5250ConditionWaiter<?> listener) {
+  public void removeListener(XI5250EmulatorListener listener) {
     em.removeEmulatorListener(listener);
   }
 
