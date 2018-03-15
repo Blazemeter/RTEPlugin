@@ -2,7 +2,6 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
-import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import net.infordata.em.tn5250.XI5250Emulator;
@@ -13,14 +12,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Allows configuring a port to be used in {@link XI5250Emulator} connections, capture
- * exceptions to later on throw them to client code, and handle SSL connections.
+ * Allows configuring port and connection timeout to be used in {@link XI5250Emulator} connections,
+ * capture exceptions to later on throw them to client code, handle SSL connections and avoids
+ * leaving threads running when disconnected.
  */
 public class ExtendedEmulator extends XI5250Emulator {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedEmulator.class);
 
   private int port;
+  private int connectionTimeoutMillis;
   private SSLData sslData;
 
   /**
@@ -32,27 +33,31 @@ public class ExtendedEmulator extends XI5250Emulator {
    */
   private Throwable pendingError;
 
-  public synchronized void setPort(int port) {
-    if (port == this.port) {
-      return;
-    }
-
-    setActive(false);
+  public void setPort(int port) {
     this.port = port;
+  }
+
+  public void setConnectionTimeoutMillis(int connectionTimeoutMillis) {
+    this.connectionTimeoutMillis = connectionTimeoutMillis;
+  }
+
+  public void setSslData(SSLData sslData) {
+    this.sslData = sslData;
   }
 
   @Override
   public void setActive(boolean activate) {
     boolean wasActive;
     synchronized (this) {
+      if (!activate) {
+        stopKeybThread();
+      }
       wasActive = isActive();
       if (activate == wasActive) {
         return;
       }
       if (activate) {
-        XITelnet ivTelnet = (sslData.getSslType() == SSLType.NONE)
-            ? new XITelnet(getHost(), port)
-            : new SSLTelnet(getHost(), port, sslData);
+        XITelnet ivTelnet = new ExtendedTelnet(getHost(), port, connectionTimeoutMillis, sslData);
         setIvTelnet(ivTelnet);
         ivTelnet.setEmulator(new TelnetEmulator());
         ivTelnet.connect();
@@ -122,10 +127,6 @@ public class ExtendedEmulator extends XI5250Emulator {
       pendingError = null;
       throw new RteIOException(ret);
     }
-  }
-
-  public void setSslData(SSLData sslData) {
-    this.sslData = sslData;
   }
 
   public synchronized boolean hasPendingError() {
