@@ -32,6 +32,7 @@ public enum TerminalType {
     return description;
   }
 
+  @Override
   public String toString() {
     return type + ": " + description;
   }

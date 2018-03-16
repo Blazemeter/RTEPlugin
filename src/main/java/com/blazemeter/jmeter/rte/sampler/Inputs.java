@@ -11,25 +11,25 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 
 public class Inputs extends ConfigTestElement implements Serializable, Iterable<JMeterProperty> {
 
-  public static final String INPUTS = "Inputs.inputs";
+  public static final String INPUTS_PROPERTY = "Inputs.inputs";
   private static final long serialVersionUID = 5810149938611069868L;
 
   public Inputs() {
-    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInputRowGUI>()));
+    setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<CoordInputRowGUI>()));
   }
 
   public CollectionProperty getInputs() {
-    return (CollectionProperty) getProperty(INPUTS);
+    return (CollectionProperty) getProperty(INPUTS_PROPERTY);
   }
 
   @Override
   public void clear() {
     super.clear();
-    setProperty(new CollectionProperty(INPUTS, new ArrayList<CoordInputRowGUI>()));
+    setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<CoordInputRowGUI>()));
   }
 
   public void setCoordInput(List<Inputs> coordInput) {
-    setProperty(new CollectionProperty(INPUTS, coordInput));
+    setProperty(new CollectionProperty(INPUTS_PROPERTY, coordInput));
   }
 
   public void addCoordInput(CoordInputRowGUI input) {

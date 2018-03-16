@@ -90,13 +90,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final String WAIT_TEXT_AREA_BOTTOM_PROPERTY = "RTESampler.waitTextAreaBottom";
   private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
   private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTextTimeout";
-  private static final String JAVAX_NET_SSL_KEY_STORE_PASSWORD = "javax.net.ssl.keyStorePassword";
+  private static final String KEY_STORE_PASSWORD_PROPERTY = "javax.net.ssl.keyStorePassword";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
 
-  private final Function<Protocol, RteProtocolClient> protocolFactory;
+  private final transient Function<Protocol, RteProtocolClient> protocolFactory;
 
   public RTESampler() {
     this(Protocol::createProtocolClient);
@@ -164,9 +164,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   @VisibleForTesting
   protected void setKeyStorePassword(String keystorePwd) {
     if (keystorePwd == null) {
-      System.getProperties().remove(JAVAX_NET_SSL_KEY_STORE_PASSWORD);
+      System.getProperties().remove(KEY_STORE_PASSWORD_PROPERTY);
     } else {
-      System.setProperty(JAVAX_NET_SSL_KEY_STORE_PASSWORD, keystorePwd);
+      System.setProperty(KEY_STORE_PASSWORD_PROPERTY, keystorePwd);
     }
   }
 
@@ -180,7 +180,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   public void setPayload(Inputs payload) {
-    setProperty(new TestElementProperty(Inputs.INPUTS, payload));
+    setProperty(new TestElementProperty(Inputs.INPUTS_PROPERTY, payload));
   }
 
   public Action getAction() {
@@ -443,7 +443,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
     SSLData ssldata = new SSLData(getSSLType(),
-        System.getProperty(JAVAX_NET_SSL_KEY_STORE_PASSWORD),
+        System.getProperty(KEY_STORE_PASSWORD_PROPERTY),
         System.getProperty(JAVAX_NET_SSL_KEY_STORE));
     client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
         getStableTimeout());
@@ -498,7 +498,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   public Inputs getInputs() {
-    return (Inputs) getProperty(Inputs.INPUTS).getObjectValue();
+    return (Inputs) getProperty(Inputs.INPUTS_PROPERTY).getObjectValue();
   }
 
   private List<WaitCondition> getWaitersList() {

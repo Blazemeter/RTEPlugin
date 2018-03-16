@@ -36,8 +36,7 @@ public class CursorWaitCondition extends WaitCondition {
       return false;
     }
     CursorWaitCondition that = (CursorWaitCondition) o;
-    return super.equals(o) &&
-        Objects.equals(position, that.position);
+    return Objects.equals(position, that.position);
   }
 
   @Override

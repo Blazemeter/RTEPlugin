@@ -33,6 +33,7 @@ public class ExtendedTelnet extends XITelnet {
     this.sslData = sslData;
   }
 
+  @Override
   public synchronized void connect() {
     if (getIvUsed()) {
       throw new IllegalStateException("XITelnet cannot be recycled");
@@ -84,7 +85,7 @@ public class ExtendedTelnet extends XITelnet {
       target.setAccessible(true);
       return target;
     } catch (NoSuchFieldException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); //NOSONAR
     }
   }
 
@@ -92,7 +93,7 @@ public class ExtendedTelnet extends XITelnet {
     try {
       return clazz.cast(getAccessibleField(fieldName).get(this));
     } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); //NOSONAR
     }
   }
 
@@ -101,7 +102,7 @@ public class ExtendedTelnet extends XITelnet {
     try {
       target.set(this, value);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); //NOSONAR
     }
   }
 
@@ -137,6 +138,7 @@ public class ExtendedTelnet extends XITelnet {
     return getField("ivIACParserStatus", Integer.class);
   }
 
+  @Override
   public synchronized void disconnect() { //!!V 03/03/98
     if (readThread != null) {
       readThread.terminate();
@@ -151,12 +153,13 @@ public class ExtendedTelnet extends XITelnet {
       method.setAccessible(true);
       method.invoke(this);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); //NOSONAR
     }
   }
 
   //This class implements the Receptor Thread of the SSL Telnet connection.
   //It's a copy of XITelnet().RxThread() class.
+  @SuppressWarnings("all")
   class RxThread extends Thread {
 
     private boolean ivTerminate = false;
@@ -172,6 +175,7 @@ public class ExtendedTelnet extends XITelnet {
       }
     }
 
+    @Override
     public void run() {
       byte[] buf = new byte[READ_BUFFER_SIZE_BYTES];
       byte[] rBuf = new byte[READ_BUFFER_SIZE_BYTES];

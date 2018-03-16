@@ -20,7 +20,7 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.event.KeyEvent;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -34,7 +34,8 @@ import org.slf4j.LoggerFactory;
 
 public class Tn5250Client implements RteProtocolClient {
 
-  private static final Map<Action, KeyEventMap> KEY_EVENTS = new HashMap<Action, KeyEventMap>() {
+  private static final Map<Action, KeyEventMap> KEY_EVENTS = new EnumMap<Action, KeyEventMap>(
+      Action.class) {
     {
       put(Action.F1, new KeyEventMap(0, KeyEvent.VK_F1));
       put(Action.F2, new KeyEventMap(0, KeyEvent.VK_F2));
@@ -106,13 +107,14 @@ public class Tn5250Client implements RteProtocolClient {
     em.throwAnyPendingError();
   }
 
+  @SuppressWarnings({"unchecked"})
   @Override
-  public List<? extends ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions) {
+  public List<ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions) {
     List<Tn5250ConditionWaiter> listeners = waitConditions.stream()
         .map(this::buildWaiter)
         .collect(Collectors.toList());
     listeners.forEach(em::addEmulatorListener);
-    return listeners;
+    return (List) listeners;
   }
 
   private Tn5250ConditionWaiter buildWaiter(WaitCondition waitCondition) {
@@ -182,7 +184,7 @@ public class Tn5250Client implements RteProtocolClient {
       case XI5250Emulator.ST_NORMAL_UNLOCKED:
         return false;
       default:
-        LOG.debug("Unexpected state: " + state);
+        LOG.debug("Unexpected state: {}", state);
         return false;
     }
   }

@@ -34,21 +34,21 @@ public class CoordInputPanel extends JPanel implements ActionListener {
 
   private static final long serialVersionUID = -6184904133375045201L;
   private static final Logger LOG = LoggerFactory.getLogger(CoordInputPanel.class);
-  private static final String ADD = "add";
-  private static final String ADD_FROM_CLIPBOARD = "addFromClipboard";
-  private static final String DELETE = "delete";
-  private static final String UP = "up";
-  private static final String DOWN = "down";
+  private static final String ADD_ACTION = "add";
+  private static final String ADD_FROM_CLIPBOARD_ACTION = "addFromClipboard";
+  private static final String DELETE_ACTION = "delete";
+  private static final String UP_ACTION = "up";
+  private static final String DOWN_ACTION = "down";
   private static final String CLIPBOARD_LINE_DELIMITERS = "\n";
   private static final String CLIPBOARD_ARG_DELIMITERS = "\t";
 
   private transient ObjectTableModel tableModel;
   private transient JTable table;
-  private JButton add;
-  private JButton addFromClipboard;
-  private JButton delete;
-  private JButton up;
-  private JButton down;
+  private JButton addButton;
+  private JButton addFromClipboardButton;
+  private JButton deleteButton;
+  private JButton upButton;
+  private JButton downButton;
 
   public CoordInputPanel() {
     setLayout(new BorderLayout());
@@ -92,46 +92,46 @@ public class CoordInputPanel extends JPanel implements ActionListener {
 
   private JPanel makeButtonPanel() {
 
-    add = new JButton(JMeterUtils.getResString("add"));
-    add.setActionCommand(ADD);
-    add.setEnabled(true);
+    addButton = new JButton(JMeterUtils.getResString("add"));
+    addButton.setActionCommand(ADD_ACTION);
+    addButton.setEnabled(true);
 
-    addFromClipboard = new JButton(JMeterUtils.getResString("add_from_clipboard"));
-    addFromClipboard.setActionCommand("addFromClipboard");
-    addFromClipboard.setEnabled(true);
+    addFromClipboardButton = new JButton(JMeterUtils.getResString("add_from_clipboard"));
+    addFromClipboardButton.setActionCommand("addFromClipboardButton");
+    addFromClipboardButton.setEnabled(true);
 
-    delete = new JButton(JMeterUtils.getResString("delete"));
-    delete.setActionCommand(DELETE);
+    deleteButton = new JButton(JMeterUtils.getResString("delete"));
+    deleteButton.setActionCommand(DELETE_ACTION);
 
-    up = new JButton(JMeterUtils.getResString("up"));
-    up.setActionCommand(UP);
+    upButton = new JButton(JMeterUtils.getResString("up"));
+    upButton.setActionCommand(UP_ACTION);
 
-    down = new JButton(JMeterUtils.getResString("down"));
-    down.setActionCommand(DOWN);
+    downButton = new JButton(JMeterUtils.getResString("down"));
+    downButton.setActionCommand(DOWN_ACTION);
 
     updateEnabledButtons();
 
     JPanel buttonPanel = new JPanel();
     buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
-    add.addActionListener(this);
-    addFromClipboard.addActionListener(this);
-    delete.addActionListener(this);
-    up.addActionListener(this);
-    down.addActionListener(this);
-    buttonPanel.add(add);
-    buttonPanel.add(addFromClipboard);
-    buttonPanel.add(delete);
-    buttonPanel.add(up);
-    buttonPanel.add(down);
+    addButton.addActionListener(this);
+    addFromClipboardButton.addActionListener(this);
+    deleteButton.addActionListener(this);
+    upButton.addActionListener(this);
+    downButton.addActionListener(this);
+    buttonPanel.add(addButton);
+    buttonPanel.add(addFromClipboardButton);
+    buttonPanel.add(deleteButton);
+    buttonPanel.add(upButton);
+    buttonPanel.add(downButton);
     return buttonPanel;
   }
 
   private void updateEnabledButtons() {
     int rowCount = tableModel.getRowCount();
-    delete.setEnabled(isEnabled() && rowCount != 0);
-    up.setEnabled(isEnabled() && rowCount > 1);
-    down.setEnabled(isEnabled() && rowCount > 1);
+    deleteButton.setEnabled(isEnabled() && rowCount != 0);
+    upButton.setEnabled(isEnabled() && rowCount > 1);
+    downButton.setEnabled(isEnabled() && rowCount > 1);
   }
 
   public TestElement createTestElement() {
@@ -171,19 +171,19 @@ public class CoordInputPanel extends JPanel implements ActionListener {
   public void actionPerformed(ActionEvent e) {
     String action = e.getActionCommand();
     switch (action) {
-      case ADD:
+      case ADD_ACTION:
         addArgument();
         break;
-      case ADD_FROM_CLIPBOARD:
+      case ADD_FROM_CLIPBOARD_ACTION:
         addFromClipboard();
         break;
-      case DELETE:
+      case DELETE_ACTION:
         deleteArgument();
         break;
-      case UP:
+      case UP_ACTION:
         moveUp();
         break;
-      case DOWN:
+      case DOWN_ACTION:
         moveDown();
         break;
       default:
@@ -355,8 +355,8 @@ public class CoordInputPanel extends JPanel implements ActionListener {
   public void setEnabled(boolean enabled) {
     super.setEnabled(enabled);
     table.setEnabled(enabled);
-    add.setEnabled(enabled);
-    addFromClipboard.setEnabled(enabled);
+    addButton.setEnabled(enabled);
+    addFromClipboardButton.setEnabled(enabled);
     updateEnabledButtons();
   }
 

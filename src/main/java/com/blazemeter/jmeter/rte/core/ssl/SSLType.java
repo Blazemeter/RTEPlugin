@@ -2,8 +2,8 @@ package com.blazemeter.jmeter.rte.core.ssl;
 
 public enum SSLType {
   NONE("NONE"),
-  SSLv2("SSLv2"),
-  SSLv3("SSLv3"),
+  SSLV2("SSLv2"),
+  SSLV3("SSLv3"),
   TLS("TLS");
 
   private final String name;
@@ -12,7 +12,9 @@ public enum SSLType {
     this.name = name;
   }
 
+  @Override
   public String toString() {
     return name;
   }
+  
 }
