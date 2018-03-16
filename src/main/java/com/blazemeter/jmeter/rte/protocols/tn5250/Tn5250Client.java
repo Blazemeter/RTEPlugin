@@ -81,6 +81,7 @@ public class Tn5250Client implements RteProtocolClient {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
     em.setPort(port);
+    em.setConnectionTimeoutMillis((int) timeoutMillis);
     em.setTerminalType(terminalType.getType());
     em.setSslData(sslData);
     UnlockListener unlock = new UnlockListener(
@@ -90,9 +91,11 @@ public class Tn5250Client implements RteProtocolClient {
     try {
       em.setActive(true);
       unlock.await();
+    } catch (TimeoutException | InterruptedException | RteIOException e) {
+      doDisconnect();
+      throw e;
     } finally {
       em.removeEmulatorListener(unlock);
-      em.throwAnyPendingError();
     }
   }
 
@@ -202,10 +205,14 @@ public class Tn5250Client implements RteProtocolClient {
     if (stableTimeoutExecutor == null) {
       return;
     }
-    stableTimeoutExecutor.shutdownNow();
-    em.setActive(false);
-    stableTimeoutExecutor = null;
+    doDisconnect();
     em.throwAnyPendingError();
+  }
+
+  private void doDisconnect() {
+    stableTimeoutExecutor.shutdownNow();
+    stableTimeoutExecutor = null;
+    em.setActive(false);
   }
 
   private KeyEventMap getKeyEvent(Action action) {

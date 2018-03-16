@@ -542,8 +542,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   private void disconnect(RteProtocolClient client) throws RteIOException {
-    client.disconnect();
     connections.get().remove(buildConnectionId());
+    client.disconnect();
   }
 
   private SampleResult errorResult(String message, Throwable e, SampleResult sampleResult) {

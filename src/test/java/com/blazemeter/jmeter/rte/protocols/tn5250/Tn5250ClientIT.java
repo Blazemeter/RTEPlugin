@@ -34,8 +34,12 @@ import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Tn5250ClientIT {
+
+  private static final Logger LOG = LoggerFactory.getLogger(Tn5250ClientIT.class);
 
   private static final String VIRTUAL_SERVER_HOST = "localhost";
   private static final int VIRTUAL_SERVER_PORT = 2323;
@@ -56,6 +60,8 @@ public class Tn5250ClientIT {
   public void teardown() throws Exception {
     try {
       client.disconnect();
+    } catch (Exception e) {
+      LOG.warn("Problem disconnecting client", e);
     } finally {
       server.stop(SERVER_STOP_TIMEOUT);
     }
