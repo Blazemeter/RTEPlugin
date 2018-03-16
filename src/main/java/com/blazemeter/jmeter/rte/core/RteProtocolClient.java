@@ -12,7 +12,7 @@ public interface RteProtocolClient {
       TerminalType terminalType, long timeoutMillis, long stableTimeout)
       throws RteIOException, TimeoutException, InterruptedException;
 
-  List<? extends ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions);
+  List<ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions);
 
   void send(List<CoordInput> input, Action action) throws RteIOException;
 

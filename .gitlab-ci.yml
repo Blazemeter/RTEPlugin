@@ -8,14 +8,26 @@ variables:
 cache:
   paths:
     - .m2/repository/
+before_script:
+  - set -e
+  - mvn $MAVEN_OPTS com.googlecode.maven-download-plugin:download-maven-plugin:1.4.0:wget -Ddownload.url=https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/$XTN5250_JAR
+  - mvn $MAVEN_OPTS install:install-file -Dfile=target/$XTN5250_JAR -DgroupId=net.sourceforge.xtn5250 -DartifactId=xtn5250 -Dversion=$XTN5250_VERSION -Dpackaging=jar
 build:
   tags:
     - docker
-  before_script:
-    - set -e
-    - mvn $MAVEN_OPTS com.googlecode.maven-download-plugin:download-maven-plugin:1.4.0:wget -Ddownload.url=https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/$XTN5250_JAR
-    - mvn $MAVEN_OPTS install:install-file -Dfile=target/$XTN5250_JAR -DgroupId=net.sourceforge.xtn5250 -DartifactId=xtn5250 -Dversion=$XTN5250_VERSION -Dpackaging=jar
+  except:
+    - master
   script: mvn --batch-mode clean verify
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 month
+build_and_analyze:
+  tags:
+    - docker
+  only:
+    - master
+  script: mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
   artifacts:
     paths:
       - target/*.jar

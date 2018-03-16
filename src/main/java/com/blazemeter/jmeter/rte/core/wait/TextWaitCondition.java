@@ -80,8 +80,7 @@ public class TextWaitCondition extends WaitCondition {
       return false;
     }
     TextWaitCondition that = (TextWaitCondition) o;
-    return super.equals(o) &&
-        Objects.equals(regex, that.regex) &&
+    return Objects.equals(regex, that.regex) &&
         Objects.equals(matcher, that.matcher) &&
         Objects.equals(searchArea, that.searchArea);
   }

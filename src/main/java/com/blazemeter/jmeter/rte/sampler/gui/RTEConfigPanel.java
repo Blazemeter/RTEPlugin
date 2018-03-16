@@ -6,7 +6,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.GridLayout;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -28,12 +28,9 @@ public class RTEConfigPanel extends JPanel {
   private JPanel connectionPanel = new JPanel();
   private JPanel sslPanel = new JPanel();
   private ButtonGroup sslTypeGroup = new ButtonGroup();
-  private Map<SSLType, JRadioButton> sslType = new HashMap<>();
-  private JLabel serverLabel = new JLabel();
-  private JTextField server = new JTextField();
-  private JLabel portLabel = new JLabel();
-  private JTextField port = new JTextField();
-  private JLabel protocolLabel = new JLabel();
+  private Map<SSLType, JRadioButton> sslTypeRadios = new EnumMap<>(SSLType.class);
+  private JTextField serverField = new JTextField();
+  private JTextField portField = new JTextField();
   private JComboBox<Protocol> protocolComboBox = new JComboBox<>(Protocol.values());
 
   private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<>(
@@ -41,11 +38,7 @@ public class RTEConfigPanel extends JPanel {
   private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<>(
       TerminalType.findByProtocol(Protocol.TN3270));
 
-  private JLabel terminalTypeLabel = new JLabel();
   private JComboBox<TerminalType> terminalTypeComboBox = new JComboBox<>(modelTN5250);
-
-  private JPanel timeoutPanel = new JPanel();
-  private JLabel connectTimeoutLabel = new JLabel();
   private JTextField connectionTimeout = new JTextField();
 
   public RTEConfigPanel() {
@@ -67,11 +60,6 @@ public class RTEConfigPanel extends JPanel {
       repaint();
     });
 
-    serverLabel.setText("Server: ");
-    portLabel.setText("Port: ");
-    protocolLabel.setText("Protocol: ");
-    terminalTypeLabel.setText("Terminal Type:");
-
     sslPanel.setBorder(BorderFactory.createTitledBorder("SSL Type"));
     sslPanel.setLayout(new GridLayout(1, 4));
 
@@ -79,9 +67,14 @@ public class RTEConfigPanel extends JPanel {
       JRadioButton r = new JRadioButton(s.toString());
       r.setActionCommand(s.toString());
       sslPanel.add(r);
-      sslType.put(s, r);
+      sslTypeRadios.put(s, r);
       sslTypeGroup.add(r);
     });
+
+    JLabel serverLabel = new JLabel("Server: ");
+    JLabel portLabel = new JLabel("Port: ");
+    JLabel protocolLabel = new JLabel("Protocol: ");
+    JLabel terminalTypeLabel = new JLabel("Terminal Type:");
 
     GroupLayout connectionPanelLayout = new GroupLayout(connectionPanel);
     connectionPanel.setLayout(connectionPanelLayout);
@@ -91,12 +84,12 @@ public class RTEConfigPanel extends JPanel {
             .addGroup(connectionPanelLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(connectionPanelLayout.createSequentialGroup().addComponent(serverLabel)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(server, GroupLayout.PREFERRED_SIZE, 500,
+                    .addComponent(serverField, GroupLayout.PREFERRED_SIZE, 500,
                         GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.UNRELATED)
                     .addComponent(portLabel)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(port, GroupLayout.PREFERRED_SIZE, 150,
+                    .addComponent(portField, GroupLayout.PREFERRED_SIZE, 150,
                         GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.UNRELATED))
                 .addGroup(connectionPanelLayout.createSequentialGroup().addComponent(protocolLabel)
@@ -116,9 +109,9 @@ public class RTEConfigPanel extends JPanel {
         .addGroup(connectionPanelLayout.createSequentialGroup().addContainerGap()
             .addGroup(connectionPanelLayout.createParallelGroup(Alignment.BASELINE)
                 .addComponent(serverLabel)
-                .addComponent(server, GroupLayout.PREFERRED_SIZE,
+                .addComponent(serverField, GroupLayout.PREFERRED_SIZE,
                     GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                .addComponent(portLabel).addComponent(port, GroupLayout.PREFERRED_SIZE,
+                .addComponent(portLabel).addComponent(portField, GroupLayout.PREFERRED_SIZE,
                     GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
             .addPreferredGap(ComponentPlacement.RELATED)
             .addGroup(connectionPanelLayout.createParallelGroup(Alignment.BASELINE)
@@ -133,10 +126,11 @@ public class RTEConfigPanel extends JPanel {
             .addPreferredGap(ComponentPlacement.RELATED).addComponent(sslPanel)
             .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 
+    JPanel timeoutPanel = new JPanel();
     timeoutPanel
         .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString("timeout_title")));
 
-    connectTimeoutLabel.setText(JMeterUtils.getResString("web_server_timeout_connect"));
+    JLabel connectTimeoutLabel = new JLabel(JMeterUtils.getResString("web_server_timeout_connect"));
 
     GroupLayout timeoutPanelLayout = new GroupLayout(timeoutPanel);
     timeoutPanel.setLayout(timeoutPanelLayout);
@@ -178,19 +172,19 @@ public class RTEConfigPanel extends JPanel {
   }
 
   public String getServer() {
-    return server.getText();
+    return serverField.getText();
   }
 
   public void setServer(String serverAddressParam) {
-    server.setText(serverAddressParam);
+    serverField.setText(serverAddressParam);
   }
 
   public String getPort() {
-    return port.getText();
+    return portField.getText();
   }
 
   public void setPort(String portParam) {
-    port.setText(portParam);
+    portField.setText(portParam);
   }
 
   public SSLType getSSLType() {
@@ -199,10 +193,10 @@ public class RTEConfigPanel extends JPanel {
   }
 
   public void setSSLType(SSLType ssl) {
-    if (sslType.containsKey(ssl)) {
-      sslType.get(ssl).setSelected(true);
+    if (sslTypeRadios.containsKey(ssl)) {
+      sslTypeRadios.get(ssl).setSelected(true);
     } else {
-      sslType.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
+      sslTypeRadios.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
     }
   }
 

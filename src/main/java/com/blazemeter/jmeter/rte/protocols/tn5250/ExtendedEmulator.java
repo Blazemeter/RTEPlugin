@@ -79,7 +79,7 @@ public class ExtendedEmulator extends XI5250Emulator {
     try {
       return (XITelnet) getAccessibleIvTelnetField().get(this);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); //NOSONAR
     }
   }
 
@@ -88,7 +88,7 @@ public class ExtendedEmulator extends XI5250Emulator {
     try {
       target.set(this, ivTelnet);
     } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); //NOSONAR
     }
   }
 
@@ -98,7 +98,7 @@ public class ExtendedEmulator extends XI5250Emulator {
       target.setAccessible(true);
       return target;
     } catch (NoSuchFieldException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(e); //NOSONAR
     }
   }
 

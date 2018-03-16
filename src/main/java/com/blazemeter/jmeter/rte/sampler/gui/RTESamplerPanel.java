@@ -7,7 +7,7 @@ import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -25,11 +25,12 @@ public class RTESamplerPanel extends JPanel {
   private static final long serialVersionUID = 4739160923223292835L;
   private static final int INDEX_WIDTH = 30;
   private static final int TIME_WIDTH = 60;
+  private static final String TIMEOUT_LABEL = "Timeout (millis): ";
 
   private final JPanel requestPanel;
   private CoordInputPanel payloadPanel;
   private ButtonGroup actionsGroup = new ButtonGroup();
-  private Map<Action, JRadioButton> actions = new HashMap<>();
+  private Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
   private JCheckBox disconnect = new JCheckBox("Disconnect?");
   private JCheckBox justConnect = new JCheckBox("Just connect");
   private JPanel waitSyncPanel;
@@ -187,7 +188,7 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
+    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSync)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -221,7 +222,7 @@ public class RTESamplerPanel extends JPanel {
 
     JLabel rowLabel = new JLabel("Row: ");
     JLabel columnLabel = new JLabel("Column: ");
-    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
+    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitCursor)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -263,7 +264,7 @@ public class RTESamplerPanel extends JPanel {
     });
 
     JLabel timeLabel = new JLabel("Silent interval (millis): ");
-    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
+    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSilent)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -297,7 +298,7 @@ public class RTESamplerPanel extends JPanel {
     });
 
     JLabel regexLabel = new JLabel("Regex: ");
-    JLabel timeoutLabel = new JLabel("Timeout (millis): ");
+    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
     JPanel searchAreaPanel = buildSearchAreaPanel();
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitText)
