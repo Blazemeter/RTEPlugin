@@ -1,8 +1,8 @@
 package com.blazemeter.jmeter.rte.core;
 
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
-import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import java.awt.Dimension;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -12,7 +12,8 @@ public interface RteProtocolClient {
       TerminalType terminalType, long timeoutMillis, long stableTimeout)
       throws RteIOException, TimeoutException, InterruptedException;
 
-  List<ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions);
+  void await(List<WaitCondition> waitConditions)
+      throws InterruptedException, TimeoutException, RteIOException;
 
   RequestListener buildRequestListener();
 
@@ -20,8 +21,15 @@ public interface RteProtocolClient {
 
   String getScreen();
 
+  Dimension getScreenSize();
+
   boolean isInputInhibited();
 
+  /**
+   * Gets the position of the cursor in the screen.
+   *
+   * @return the position of the cursor in the screen or null if is not visible
+   */
   Position getCursorPosition();
 
   void disconnect() throws RteIOException;

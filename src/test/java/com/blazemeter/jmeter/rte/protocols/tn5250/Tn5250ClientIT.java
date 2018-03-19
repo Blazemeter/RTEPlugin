@@ -10,7 +10,6 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
-import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -121,21 +120,9 @@ public class Tn5250ClientIT {
   }
 
   private void sendInvalidCredsWithSyncWait() throws Exception {
-    sendInvalidCredsWithWaiter(buildConditionWaiter(
-        new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
-  }
-
-  private ConditionWaiter buildConditionWaiter(WaitCondition condition) {
-    return client.buildConditionWaiters(Collections.singletonList(condition)).get(0);
-  }
-
-  private void sendInvalidCredsWithWaiter(ConditionWaiter waiter) throws Exception {
-    try {
-      client.send(buildInvalidCredsFields(), Action.ENTER);
-      waiter.await();
-    } finally {
-      waiter.stop();
-    }
+    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   private List<CoordInput> buildInvalidCredsFields() {
@@ -162,7 +149,7 @@ public class Tn5250ClientIT {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void shouldThrowUnsupportedOperationExceptionWhenBuildWaiterWithUndefinedCondition()
+  public void shouldThrowUnsupportedOperationExceptionWhenAwaitWithUndefinedCondition()
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
@@ -173,15 +160,16 @@ public class Tn5250ClientIT {
             return "test";
           }
         });
-    client.buildConditionWaiters(conditions);
+    client.await(conditions);
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    sendInvalidCredsWithWaiter(
-        buildConditionWaiter(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
@@ -189,7 +177,8 @@ public class Tn5250ClientIT {
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    sendInvalidCredsWithWaiter(buildConditionWaiter(
+    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1, 1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
@@ -197,8 +186,9 @@ public class Tn5250ClientIT {
   public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    sendInvalidCredsWithWaiter(
-        buildConditionWaiter(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.await(
+        Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
@@ -206,8 +196,9 @@ public class Tn5250ClientIT {
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    sendInvalidCredsWithWaiter(buildConditionWaiter(
-        new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
+    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.await(Collections
+        .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
             new Perl5Matcher(),
             Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
                 Position.UNSPECIFIED_INDEX),

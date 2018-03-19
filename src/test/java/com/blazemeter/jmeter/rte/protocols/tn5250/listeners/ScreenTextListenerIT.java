@@ -10,26 +10,31 @@ import java.awt.Dimension;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
+import org.apache.oro.text.regex.MalformedPatternException;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
 
-public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
+public class ScreenTextListenerIT extends ConditionWaiterIT {
 
   @Override
-  protected Tn5250ConditionWaiter<?> buildConditionWaiter() throws Exception {
-    ScreenTextListener listener = new ScreenTextListener(
-        new TextWaitCondition(new Perl5Compiler().compile("hello"), new Perl5Matcher(),
+  protected ConditionWaiter<?> buildConditionWaiter() throws Exception {
+    String screenText = "hello";
+    setupScreenWithText(screenText);
+    return buildTextListener(screenText);
+  }
+
+  private ScreenTextListener buildTextListener(String regex) throws MalformedPatternException {
+    return new ScreenTextListener(
+        new TextWaitCondition(new Perl5Compiler().compile(regex), new Perl5Matcher(),
             Area.fromTopLeftBottomRight(1, 1, 1, 5), TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor);
-    setupScreenWithText("hello");
-    return listener;
   }
 
   private void setupScreenWithText(String screen) {
     when(client.getScreen()).thenReturn(screen);
-    when(emulator.getCrtSize()).thenReturn(new Dimension(screen.length(), 1));
+    when(client.getScreenSize()).thenReturn(new Dimension(screen.length(), 1));
   }
 
   @Test
@@ -39,6 +44,11 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
     startNewPanelEventGenerator(unlockDelayMillis);
     listener.await();
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
+  }
+
+  @Test
+  public void shouldUnblockWhenScreenAlreadyContainsTextWithExpectedRegexInArea() throws Exception {
+    listener.await();
   }
 
   private void startNewPanelEventGenerator(long screenDelayMillis) {
@@ -53,7 +63,7 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenNoScreenReceivedMatchingRegexInArea()
       throws Exception {
-    setupScreenWithText("  hello");
+    ScreenTextListener listener = buildTextListener("Hi");
     listener.await();
   }
 

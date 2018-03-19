@@ -1,9 +1,11 @@
 package com.blazemeter.jmeter.rte.core;
 
-public interface RequestListener extends RTEListener {
+public interface RequestListener {
 
   long getLatency();
 
   long getEndTime();
+
+  void stop();
 
 }

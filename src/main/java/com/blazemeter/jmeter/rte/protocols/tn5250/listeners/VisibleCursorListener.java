@@ -4,16 +4,23 @@ import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * A {@link Tn5250ConditionWaiter} which allows waiting until the cursor shows up on the desired
+ * A {@link ConditionWaiter} which allows waiting until the cursor shows up on the desired
  * position.
  */
-public class VisibleCursorListener extends Tn5250ConditionWaiter<CursorWaitCondition> {
+public class VisibleCursorListener extends ConditionWaiter<CursorWaitCondition> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(VisibleCursorListener.class);
 
   public VisibleCursorListener(CursorWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor) {
     super(condition, client, stableTimeoutExecutor);
+    if (condition.getPosition().equals(client.getCursorPosition())) {
+      startStablePeriod();
+    }
   }
 
   @Override
@@ -22,11 +29,11 @@ public class VisibleCursorListener extends Tn5250ConditionWaiter<CursorWaitCondi
       cancelWait();
       return;
     }
-    if (event.get5250Emulator().isCursorVisible()
-        && event.get5250Emulator().getCursorRow() == condition.getPosition().getRow()
-        && event.get5250Emulator().getCursorCol() == condition.getPosition().getColumn()) {
+    if (condition.getPosition().equals(client.getCursorPosition())) {
+      LOG.debug("Cursor is in expected position, now waiting for it to remain for stable period");
       startStablePeriod();
     } else {
+      LOG.debug("Cursor is not in expected position, canceling any stable period");
       endStablePeriod();
     }
   }
