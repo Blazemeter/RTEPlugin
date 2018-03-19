@@ -5,7 +5,6 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.time.Duration;
 import java.time.Instant;
-import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
 import org.slf4j.Logger;
@@ -52,15 +51,9 @@ public class Tn5250RequestListener implements RequestListener, XI5250EmulatorLis
       firstResponseTime = Instant.now();
     }
     lastResponseTime = System.currentTimeMillis();
-    XI5250Emulator emulator = e.get5250Emulator();
-    int height = emulator.getCrtSize().height;
-    int width = emulator.getCrtSize().width;
-    StringBuilder screen = new StringBuilder();
-    for (int i = 0; i < height; i++) {
-      screen.append(emulator.getString(0, i, width).replace("\u0000", " ").replace("\u0001", ""));
-      screen.append("\n");
+    if (LOG.isTraceEnabled()) {
+      LOG.trace(client.getScreen());
     }
-    LOG.trace(screen.toString());
   }
 
   @Override

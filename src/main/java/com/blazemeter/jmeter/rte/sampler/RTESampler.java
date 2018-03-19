@@ -414,8 +414,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         sampleResult.setResponseData(client.getScreen(), "utf-8");
         sampleResult.latencyEnd();
         sampleResult.setLatency(requestListener.getLatency());
-        sampleResult.setEndTime(requestListener.getEndTime());
       } finally {
+        sampleResult.setEndTime(requestListener.getEndTime());
         waiters.forEach(ConditionWaiter::stop);
         requestListener.stop();
         if (getDisconnect()) {
