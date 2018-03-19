@@ -18,7 +18,7 @@ public class Tn5250RequestListener implements RequestListener, XI5250EmulatorLis
   protected final Tn5250Client client;
   private Instant startTime = Instant.now();
   private Instant firstResponseTime = Instant.now();
-  private Instant lastResponseTime = Instant.now();
+  private long lastResponseTime = System.currentTimeMillis();
   private boolean receivedFirstResponse = false;
 
   public Tn5250RequestListener(Tn5250Client client) {
@@ -51,7 +51,7 @@ public class Tn5250RequestListener implements RequestListener, XI5250EmulatorLis
       receivedFirstResponse = true;
       firstResponseTime = Instant.now();
     }
-    lastResponseTime = Instant.now();
+    lastResponseTime = System.currentTimeMillis();
     XI5250Emulator emulator = e.get5250Emulator();
     int height = emulator.getCrtSize().height;
     int width = emulator.getCrtSize().width;
@@ -60,7 +60,7 @@ public class Tn5250RequestListener implements RequestListener, XI5250EmulatorLis
       screen.append(emulator.getString(0, i, width).replace("\u0000", " ").replace("\u0001", ""));
       screen.append("\n");
     }
-    LOG.trace(screen.toString());
+    LOG.info(screen.toString());
   }
 
   @Override
@@ -79,7 +79,7 @@ public class Tn5250RequestListener implements RequestListener, XI5250EmulatorLis
 
   @Override
   public long getEndTime() {
-    return lastResponseTime.getEpochSecond();
+    return lastResponseTime;
   }
 
   @Override
