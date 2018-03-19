@@ -60,7 +60,7 @@ public class Tn5250RequestListener implements RequestListener, XI5250EmulatorLis
       screen.append(emulator.getString(0, i, width).replace("\u0000", " ").replace("\u0001", ""));
       screen.append("\n");
     }
-    LOG.info(screen.toString());
+    LOG.trace(screen.toString());
   }
 
   @Override
