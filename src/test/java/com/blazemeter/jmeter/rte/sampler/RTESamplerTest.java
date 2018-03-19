@@ -20,7 +20,6 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
-import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -29,7 +28,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeoutException;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -65,8 +63,6 @@ public class RTESamplerTest {
   @Mock
   private RteProtocolClient rteProtocolClientMock;
   @Mock
-  private ConditionWaiter waiter1, waiter2;
-  @Mock
   private RequestListener requestListenerMock;
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
@@ -86,8 +82,6 @@ public class RTESamplerTest {
     when(requestListenerMock.getEndTime()).thenReturn((long) 100);
     when(requestListenerMock.getLatency()).thenReturn((long) 100);
     when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position(1, 1));
-    when(rteProtocolClientMock.buildConditionWaiters(any()))
-        .thenReturn((List) Arrays.asList(waiter1, waiter2));
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs());
@@ -171,10 +165,10 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldGetErrorSamplerResultWhenWaitThrowsException() throws Exception {
+  public void shouldGetErrorSamplerResultWhenAwaitThrowsException() throws Exception {
     TimeoutException e = new TimeoutException();
     doThrow(e).
-        when(waiter1).await();
+        when(rteProtocolClientMock).await(any());
     assertSampleResult(rteSampler.sample(null),
         createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT));
   }
@@ -268,62 +262,55 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldBuildSyncWaiterWhenSyncWaitEnabled() {
+  public void shouldAwaitSyncWaiterWhenSyncWaitEnabled() throws Exception {
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections.singletonList(
+        .await(Collections.singletonList(
             new SyncWaitCondition(RTESampler.DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
-  public void shouldBuildSyncWaiterWithCustomWhenSyncWaitEnabled() {
+  public void shouldBuildSyncWaiterWithCustomWhenSyncWaitEnabled() throws Exception {
     rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections.singletonList(
+        .await(Collections.singletonList(
             new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
-  public void shouldBuildNoWaitersWhenNoneAreEnabled() {
+  public void shouldNotAwaitWhenNoWaitersAreEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.sample(null);
-    verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections.emptyList());
+    verify(rteProtocolClientMock, never())
+        .await(any());
   }
 
   @Test
-  public void shouldWaitAndStopOnBuiltWaitersWhenSample() throws Exception {
-    rteSampler.sample(null);
-    verify(waiter1).await();
-    verify(waiter2).await();
-    verify(waiter1).stop();
-    verify(waiter2).stop();
-  }
-
-  @Test
-  public void shouldBuildWaitersWithDefaultOrderWhenSampleAndWaitersHaveSameTimeout() {
+  public void shouldAwaitWithDefaultOrderConditionsWhenSampleAndWaitersHaveSameTimeout()
+      throws Exception {
     rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.setWaitCursor(true);
     rteSampler.setWaitCursorTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Arrays.asList(
+        .await(Arrays.asList(
             new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
             new CursorWaitCondition(new Position(1, 1), CUSTOM_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
-  public void shouldBuildWaitersSortedByTimeoutToOptimizeWaitingTimeOnTimeouts() {
+  public void shouldAwaitWithConditionsSortedByTimeoutToOptimizeWaitingTimeOnTimeouts()
+      throws Exception {
     rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.setWaitCursor(true);
     rteSampler.setWaitCursorTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS - 1));
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Arrays.asList(
+        .await(Arrays.asList(
             new CursorWaitCondition(new Position(1, 1), CUSTOM_TIMEOUT_MILLIS - 1,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
             new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS,
@@ -331,51 +318,41 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldStopOnBuiltWaitersWhenSampleAndSomeWaiterWaitFails() throws Exception {
-    doThrow(new TimeoutException())
-        .when(waiter1).await();
-    rteSampler.sample(null);
-    verify(waiter1).stop();
-    verify(waiter2).stop();
-  }
-
-  @Test
-  public void shouldBuildSilentWaiterWhenSilentWaitEnabled() {
+  public void shouldAwaitSilentWhenSilentWaitEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.setWaitSilent(true);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections.singletonList(
+        .await(Collections.singletonList(
             new SilentWaitCondition(RTESampler.DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_WAIT_SILENT_TIME_MILLIS)));
   }
 
   @Test
-  public void shouldBuildSilentWaiterWithCustomValuesWhenSilentWaitEnabled() {
+  public void shouldAwaitSilentWithCustomValuesWhenSilentWaitEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.setWaitSilent(true);
     rteSampler.setWaitSilentTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.setWaitSilentTime(String.valueOf(CUSTOM_STABLE_TIMEOUT_MILLIS));
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections.singletonList(
+        .await(Collections.singletonList(
             new SilentWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
-  public void shouldBuildCursorWaiterWhenCursorWaitEnabled() {
+  public void shouldAwaitCursorWhenCursorWaitEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.setWaitCursor(true);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections.singletonList(
-            new CursorWaitCondition(new Position(1, 1),
-                RTESampler.DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS,
-                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+        .await(Collections.singletonList(new CursorWaitCondition(new Position(1, 1),
+            RTESampler.DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS,
+            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
-  public void shouldBuildCursorWaiterWithCustomValuesWhenCursorWaitEnabled() {
+  public void shouldAwaitCursorWithCustomValuesWhenCursorWaitEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.setWaitCursor(true);
     int customRow = 5;
@@ -386,31 +363,30 @@ public class RTESamplerTest {
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections.singletonList(
+        .await(Collections.singletonList(
             new CursorWaitCondition(new Position(customRow, customColumn), CUSTOM_TIMEOUT_MILLIS,
                 CUSTOM_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
-  public void shouldBuildTextWaiterWhenWaitTextEnabled() {
+  public void shouldAwaitTextWhenWaitTextEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.setWaitText(true);
     String regex = "test";
     rteSampler.setWaitTextRegex(regex);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections
-            .singletonList(new TextWaitCondition(
-                JMeterUtils.getPattern(regex),
-                JMeterUtils.getMatcher(),
-                Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
-                    Position.UNSPECIFIED_INDEX),
-                RTESampler.DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS,
-                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+        .await(Collections.singletonList(new TextWaitCondition(
+            JMeterUtils.getPattern(regex),
+            JMeterUtils.getMatcher(),
+            Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
+                Position.UNSPECIFIED_INDEX),
+            RTESampler.DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS,
+            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
-  public void shouldBuildTextWaiterWithCustomValuesWhenWaitTextEnabled() {
+  public void shouldAwaitTextWithCustomValuesWhenWaitTextEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.setWaitText(true);
     String regex = "test";
@@ -427,7 +403,7 @@ public class RTESamplerTest {
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .buildConditionWaiters(Collections
+        .await(Collections
             .singletonList(new TextWaitCondition(
                 JMeterUtils.getPattern(regex),
                 JMeterUtils.getMatcher(),

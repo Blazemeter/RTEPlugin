@@ -8,19 +8,19 @@ import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
-import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConditionWaiter;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.EnumMap;
 import java.util.List;
@@ -111,16 +111,25 @@ public class Tn5250Client implements RteProtocolClient {
   }
 
   @SuppressWarnings({"unchecked"})
-  @Override
-  public List<ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions) {
-    List<Tn5250ConditionWaiter> listeners = waitConditions.stream()
+  public void await(List<WaitCondition> waitConditions)
+      throws InterruptedException, TimeoutException, RteIOException {
+    List<ConditionWaiter> listeners = waitConditions.stream()
         .map(this::buildWaiter)
         .collect(Collectors.toList());
     listeners.forEach(em::addEmulatorListener);
-    return (List) listeners;
+    try {
+      for (ConditionWaiter listener : listeners) {
+        listener.await();
+      }
+    } finally {
+      listeners.forEach(l -> {
+        l.stop();
+        em.removeEmulatorListener(l);
+      });
+    }
   }
 
-  private Tn5250ConditionWaiter buildWaiter(WaitCondition waitCondition) {
+  private ConditionWaiter buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
       return new UnlockListener((SyncWaitCondition) waitCondition, this, stableTimeoutExecutor);
     } else if (waitCondition instanceof CursorWaitCondition) {
@@ -164,6 +173,7 @@ public class Tn5250Client implements RteProtocolClient {
     em.processRawKeyEvent(keyEvent);
   }
 
+  @Override
   public String getScreen() {
     int height = em.getCrtSize().height;
     int width = em.getCrtSize().width;
@@ -173,6 +183,11 @@ public class Tn5250Client implements RteProtocolClient {
       screen.append("\n");
     }
     return screen.toString();
+  }
+
+  @Override
+  public Dimension getScreenSize() {
+    return em.getCrtSize();
   }
 
   @Override
@@ -200,7 +215,7 @@ public class Tn5250Client implements RteProtocolClient {
 
   @Override
   public Position getCursorPosition() {
-    return new Position(em.getCursorRow(), em.getCursorCol());
+    return em.isCursorVisible() ? new Position(em.getCursorRow() + 1, em.getCursorCol() + 1) : null;
   }
 
   public boolean hasPendingError() {

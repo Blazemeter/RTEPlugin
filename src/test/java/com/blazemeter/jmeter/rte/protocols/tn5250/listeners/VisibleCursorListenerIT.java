@@ -13,12 +13,12 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
+public class VisibleCursorListenerIT extends ConditionWaiterIT {
 
   private static final Position DEFAULT_CURSOR_POSITION = new Position(7, 53);
 
   @Override
-  protected Tn5250ConditionWaiter<?> buildConditionWaiter() {
+  protected ConditionWaiter<?> buildConditionWaiter() {
     return new VisibleCursorListener(
         new CursorWaitCondition(DEFAULT_CURSOR_POSITION, TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
@@ -28,9 +28,7 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
   @Before
   public void setup() throws Exception {
     super.setup();
-    when(emulator.isCursorVisible()).thenReturn(true);
-    when(emulator.getCursorRow()).thenReturn(DEFAULT_CURSOR_POSITION.getRow());
-    when(emulator.getCursorCol()).thenReturn(DEFAULT_CURSOR_POSITION.getColumn());
+    when(client.getCursorPosition()).thenReturn(DEFAULT_CURSOR_POSITION);
   }
 
   @Test
@@ -44,14 +42,16 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedUnexpectedCursorPosition() throws Exception {
-    when(emulator.getCursorRow()).thenReturn(DEFAULT_CURSOR_POSITION.getRow() + 1);
+    when(client.getCursorPosition()).thenReturn(
+        new Position(DEFAULT_CURSOR_POSITION.getRow() + 1,
+            DEFAULT_CURSOR_POSITION.getColumn() + 1));
     startSingleEventGenerator(0, buildStateChangeGenerator());
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenNoVisibleCursorPosition() throws Exception {
-    when(emulator.isCursorVisible()).thenReturn(false);
+    when(client.getCursorPosition()).thenReturn(null);
     startSingleEventGenerator(0, buildStateChangeGenerator());
     listener.await();
   }
@@ -64,14 +64,15 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
   }
 
   private void setupCursorRepositioningEmulator() {
-    when(emulator.getCursorRow()).thenAnswer(new Answer<Integer>() {
+    when(client.getCursorPosition()).thenAnswer(new Answer<Position>() {
       private boolean returnDefaultRow = true;
 
       @Override
-      public Integer answer(InvocationOnMock invocation) {
+      public Position answer(InvocationOnMock invocation) {
         returnDefaultRow = !returnDefaultRow;
         return returnDefaultRow
-            ? DEFAULT_CURSOR_POSITION.getRow() : DEFAULT_CURSOR_POSITION.getRow() + 1;
+            ? DEFAULT_CURSOR_POSITION : new Position(DEFAULT_CURSOR_POSITION.getRow() + 1,
+            DEFAULT_CURSOR_POSITION.getColumn() + 1);
       }
     });
   }

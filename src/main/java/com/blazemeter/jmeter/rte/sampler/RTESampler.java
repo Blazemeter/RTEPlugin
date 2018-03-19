@@ -13,7 +13,6 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
-import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -399,14 +398,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       RteProtocolClient client = getClient();
       sampleResult.connectEnd();
       addClientRequestHeaders(client, sampleResult);
-      List<? extends ConditionWaiter> waiters = client.buildConditionWaiters(getWaitersList());
       RequestListener requestListener = client.buildRequestListener();
       try {
         if (!getJustConnect()) {
           client.send(getCoordInputs(), getAction());
         }
-        for (ConditionWaiter waiter : waiters) {
-          waiter.await();
+        List<WaitCondition> waiters = getWaitersList();
+        if (!waiters.isEmpty()) {
+          client.await(waiters);
         }
         sampleResult.setSuccessful(true);
         sampleResult.setResponseHeaders(buildResponseHeaders(client));
@@ -415,7 +414,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
         sampleResult.setLatency(requestListener.getLatency());
       } finally {
         sampleResult.setEndTime(requestListener.getEndTime());
-        waiters.forEach(ConditionWaiter::stop);
         requestListener.stop();
         if (getDisconnect()) {
           disconnect(client);
@@ -541,7 +539,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private String buildResponseHeaders(RteProtocolClient client) {
     Position cursorPosition = client.getCursorPosition();
     return "Input-inhibited: " + client.isInputInhibited() + "\n" +
-        "Cursor-position: " + cursorPosition.getRow() + "," + cursorPosition.getColumn();
+        "Cursor-position: " + (cursorPosition == null ? ""
+        : cursorPosition.getRow() + "," + cursorPosition.getColumn());
   }
 
   private void disconnect(RteProtocolClient client) throws RteIOException {

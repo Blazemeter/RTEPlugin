@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.CountDownLatch;
@@ -16,8 +15,7 @@ import net.infordata.em.tn5250.XI5250EmulatorListener;
  * An {@link XI5250EmulatorListener} which allows waiting for certain condition, and keeps in such
  * state for a given period of time.
  */
-public abstract class Tn5250ConditionWaiter<T extends WaitCondition> implements ConditionWaiter,
-    XI5250EmulatorListener {
+public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250EmulatorListener {
 
   protected final T condition;
   protected final Tn5250Client client;
@@ -26,7 +24,7 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> implements 
   private ScheduledFuture stableTimeoutTask;
   private boolean ended;
 
-  public Tn5250ConditionWaiter(T condition, Tn5250Client client,
+  public ConditionWaiter(T condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor) {
     this.condition = condition;
     this.client = client;
@@ -85,7 +83,6 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> implements 
     }
   }
 
-  @Override
   public void await() throws InterruptedException, TimeoutException, RteIOException {
     if (!lock.await(condition.getTimeoutMillis(), TimeUnit.MILLISECONDS)) {
       cancelWait();
@@ -96,10 +93,8 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> implements 
     client.throwAnyPendingError();
   }
 
-  @Override
   public void stop() {
     cancelWait();
-    client.removeListener(this);
   }
 
 }

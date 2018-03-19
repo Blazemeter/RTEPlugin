@@ -12,10 +12,10 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
+public class UnlockListenerIT extends ConditionWaiterIT {
 
   @Override
-  protected Tn5250ConditionWaiter<?> buildConditionWaiter() {
+  protected ConditionWaiter<?> buildConditionWaiter() {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor);
@@ -23,7 +23,6 @@ public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingUnlockStateChange() throws Exception {
-    when(emulator.getState()).thenReturn(XI5250Emulator.ST_NORMAL_UNLOCKED);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
     startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator());
@@ -31,8 +30,15 @@ public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
 
+  @Test
+  public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
+    listener.await();
+  }
+
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenNotReceiveUnlockStateChange() throws Exception {
+    when(client.isInputInhibited()).thenReturn(true);
+    ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
 
