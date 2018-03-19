@@ -14,6 +14,8 @@ public interface RteProtocolClient {
 
   List<ConditionWaiter> buildConditionWaiters(List<WaitCondition> waitConditions);
 
+  RequestListener buildRequestListener();
+
   void send(List<CoordInput> input, Action action) throws RteIOException;
 
   String getScreen();
