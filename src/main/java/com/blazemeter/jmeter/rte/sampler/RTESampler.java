@@ -557,7 +557,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));
     sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    sampleResult.sampleEnd();
     LOG.error(message, e);
     return sampleResult;
   }

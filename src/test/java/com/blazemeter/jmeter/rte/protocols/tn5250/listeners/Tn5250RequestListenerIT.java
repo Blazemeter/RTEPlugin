@@ -38,6 +38,8 @@ public class Tn5250RequestListenerIT {
   @Test
   public void shouldReturnGreaterEndTimeThanTheStartTime() throws Exception {
     long startTime = System.currentTimeMillis();
+    /*This loop was included to simulate multiple screens sent by the server.
+    The end time must be the time where the last screen came.*/
     for (int i = 0; i < 3; i++) {
       Thread.sleep(100);
       listener.newPanelReceived(
