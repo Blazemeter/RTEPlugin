@@ -25,7 +25,7 @@ public abstract class ConditionWaiterIT {
   protected static final long STABLE_MILLIS = 1000;
 
   protected ScheduledExecutorService stableTimeoutExecutor;
-  private ExecutorService eventGeneratorExecutor;
+  private ScheduledExecutorService eventGeneratorExecutor;
 
   @Mock
   protected ExtendedEmulator emulator;
@@ -38,7 +38,7 @@ public abstract class ConditionWaiterIT {
   @Before
   public void setup() throws Exception {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
-    eventGeneratorExecutor = Executors.newSingleThreadExecutor();
+    eventGeneratorExecutor = Executors.newSingleThreadScheduledExecutor();
     listener = buildConditionWaiter();
   }
 
@@ -52,14 +52,7 @@ public abstract class ConditionWaiterIT {
   }
 
   protected void startSingleEventGenerator(long delayMillis, Runnable eventGenerator) {
-    eventGeneratorExecutor.submit(() -> {
-      try {
-        Thread.sleep(delayMillis);
-        eventGenerator.run();
-      } catch (InterruptedException e) {
-        //this is expected since teardown interrupts threads.
-      }
-    });
+    eventGeneratorExecutor.schedule(eventGenerator,delayMillis, TimeUnit.MILLISECONDS);
   }
 
   @Test
@@ -78,16 +71,7 @@ public abstract class ConditionWaiterIT {
   }
 
   protected void startPeriodicEventGenerator(Runnable eventGenerator) {
-    eventGeneratorExecutor.submit(() -> {
-      try {
-        while (true) {
-          Thread.sleep(500);
-          eventGenerator.run();
-        }
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    });
+    eventGeneratorExecutor.scheduleAtFixedRate(eventGenerator,500,500,TimeUnit.MILLISECONDS);
   }
 
 }
