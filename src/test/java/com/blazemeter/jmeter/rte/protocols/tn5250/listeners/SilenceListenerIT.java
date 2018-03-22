@@ -6,15 +6,22 @@ import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.Before;
 import org.junit.Test;
 
 public class SilenceListenerIT extends ConditionWaiterIT {
 
   private Stopwatch waitTime;
 
+  @Before
+  @Override
+  public void setup() throws Exception {
+    waitTime = Stopwatch.createStarted();
+    super.setup();
+  }
+
   @Override
   protected ConditionWaiter<?> buildConditionWaiter() {
-    waitTime = Stopwatch.createStarted();
     return new SilenceListener(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor);
