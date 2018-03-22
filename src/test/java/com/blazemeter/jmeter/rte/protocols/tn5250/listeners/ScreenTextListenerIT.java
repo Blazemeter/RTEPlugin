@@ -13,15 +13,23 @@ import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import org.apache.oro.text.regex.MalformedPatternException;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ScreenTextListenerIT extends ConditionWaiterIT {
 
+  private static final String EXPECTED_SCREEN = "hello";
+
+  @Before
+  @Override
+  public void setup() throws Exception {
+    setupScreenWithText("Welcome");
+    super.setup();
+  }
+
   @Override
   protected ConditionWaiter<?> buildConditionWaiter() throws Exception {
-    String screenText = "hello";
-    setupScreenWithText(screenText);
-    return buildTextListener(screenText);
+    return buildTextListener(EXPECTED_SCREEN);
   }
 
   private ScreenTextListener buildTextListener(String regex) throws MalformedPatternException {
@@ -39,6 +47,7 @@ public class ScreenTextListenerIT extends ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingScreenWithExpectedRegexInArea() throws Exception {
+    setupScreenWithText(EXPECTED_SCREEN);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
     startNewPanelEventGenerator(unlockDelayMillis);
@@ -48,6 +57,8 @@ public class ScreenTextListenerIT extends ConditionWaiterIT {
 
   @Test
   public void shouldUnblockWhenScreenAlreadyContainsTextWithExpectedRegexInArea() throws Exception {
+    setupScreenWithText(EXPECTED_SCREEN);
+    ScreenTextListener listener = buildTextListener(EXPECTED_SCREEN);
     listener.await();
   }
 
@@ -63,13 +74,21 @@ public class ScreenTextListenerIT extends ConditionWaiterIT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenNoScreenReceivedMatchingRegexInArea()
       throws Exception {
-    ScreenTextListener listener = buildTextListener("Hi");
+    listener.await();
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void shouldThrowTimeoutExceptionWhenReceivedScreenNotMatchingRegexInArea()
+      throws Exception {
+    setupScreenWithText("Welcome");
+    buildNewPanelGenerator().run();
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedExpectedScreenButKeepGettingStateChanges()
       throws Exception {
+    setupScreenWithText(EXPECTED_SCREEN);
     buildNewPanelGenerator().run();
     startPeriodicEventGenerator(buildStateChangeGenerator());
     listener.await();
@@ -78,6 +97,7 @@ public class ScreenTextListenerIT extends ConditionWaiterIT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedExpectedScreenButKeepGettingScreens()
       throws Exception {
+    setupScreenWithText(EXPECTED_SCREEN);
     startPeriodicEventGenerator(buildNewPanelGenerator());
     listener.await();
   }

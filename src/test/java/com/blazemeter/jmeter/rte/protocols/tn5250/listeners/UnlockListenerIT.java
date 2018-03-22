@@ -7,12 +7,19 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import net.infordata.em.tn5250.XI5250Emulator;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 public class UnlockListenerIT extends ConditionWaiterIT {
+
+  @Override
+  @Before
+  public void setup() throws Exception {
+    when(client.isInputInhibited()).thenReturn(true);
+    super.setup();
+  }
 
   @Override
   protected ConditionWaiter<?> buildConditionWaiter() {
@@ -23,6 +30,7 @@ public class UnlockListenerIT extends ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingUnlockStateChange() throws Exception {
+    when(client.isInputInhibited()).thenReturn(false);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
     startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator());
@@ -32,13 +40,13 @@ public class UnlockListenerIT extends ConditionWaiterIT {
 
   @Test
   public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
+    when(client.isInputInhibited()).thenReturn(false);
+    ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenNotReceiveUnlockStateChange() throws Exception {
-    when(client.isInputInhibited()).thenReturn(true);
-    ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
 
@@ -51,14 +59,14 @@ public class UnlockListenerIT extends ConditionWaiterIT {
   }
 
   private void setupEverLockingAndUnlockingEmulator() {
-    when(emulator.getState()).thenAnswer(new Answer<Integer>() {
+    when(client.isInputInhibited()).thenAnswer(new Answer<Boolean>() {
 
-      private boolean locked = true;
+      private boolean locked = false;
 
       @Override
-      public Integer answer(InvocationOnMock invocation) {
+      public Boolean answer(InvocationOnMock invocation) {
         locked = !locked;
-        return locked ? XI5250Emulator.ST_NORMAL_LOCKED : XI5250Emulator.ST_NORMAL_UNLOCKED;
+        return locked;
       }
 
     });
