@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -69,6 +70,13 @@ public class Flow {
   public static Flow fromYml(File ymlFile) throws FileNotFoundException {
     List<PacketStep> packets = (List<PacketStep>) new Yaml(buildYamlConstructor())
         .load(new FileInputStream(ymlFile));
+    return new Flow(packets);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Flow fromYmlStream(InputStream stream) {
+    List<PacketStep> packets = (List<PacketStep>) new Yaml(buildYamlConstructor())
+        .load(stream);
     return new Flow(packets);
   }
 
