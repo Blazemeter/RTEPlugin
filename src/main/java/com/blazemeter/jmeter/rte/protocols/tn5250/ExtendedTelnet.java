@@ -5,7 +5,6 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -182,15 +181,14 @@ public class ExtendedTelnet extends XITelnet {
 
       try {
         while (!this.ivTerminate) {
-          int len;
-          try {
-            len = getIvIn().read(buf);
-          } catch (InterruptedIOException varvii) {
-            len = 0;
+          InputStream input = getIvIn();
+          // the input may be null if disconnect was invoked after the while condition evaluation
+          if (input == null) {
+            return;
           }
+          int len = input.read(buf);
 
           int i = 0;
-
           int j;
           for (j = 0; i < len; ++i) {
             rBuf[j] = buf[i];
