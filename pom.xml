@@ -14,9 +14,6 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <jmeter.version>3.1</jmeter.version>
-        <guava.version>24.0-jre</guava.version>
-        <snakeyaml.version>1.17</snakeyaml.version>
-        <jackson.version>2.9.4</jackson.version>
     </properties>
 
     <dependencies>
@@ -61,7 +58,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
+            <version>24.0-jre</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -73,13 +70,13 @@
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
-            <version>${snakeyaml.version}</version>
+            <version>1.17</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
+            <version>2.9.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -174,35 +171,11 @@
                         <id>copy-dependencies</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>copy</goal>
+                            <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.google.guava</groupId>
-                                    <artifactId>guava</artifactId>
-                                    <version>${guava.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>org.yaml</groupId>
-                                    <artifactId>snakeyaml</artifactId>
-                                    <version>${snakeyaml.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.fasterxml.jackson.core</groupId>
-                                    <artifactId>jackson-databind</artifactId>
-                                    <version>${jackson.version}</version>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>com.fasterxml.jackson.core</groupId>
-                                    <artifactId>jackson-core</artifactId>
-                                    <version>${jackson.version}</version>
-                                </artifactItem>
-                            </artifactItems>
+                            <includeArtifactIds>guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations</includeArtifactIds>
                             <outputDirectory>${project.build.directory}/taurus</outputDirectory>
-                            <overWriteReleases>false</overWriteReleases>
-                            <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
                         </configuration>
                     </execution>
                 </executions>
