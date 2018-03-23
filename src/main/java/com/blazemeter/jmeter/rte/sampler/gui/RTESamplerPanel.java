@@ -4,6 +4,7 @@ import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
 import java.util.Arrays;
@@ -163,12 +164,20 @@ public class RTESamplerPanel extends JPanel {
     waitSilentPanel = buildWaitSilentPanel();
     waitTextPanel = buildWaitTextPanel();
 
+    JLabel warningLabel = new JLabel("Warning: if Timeout value " +
+        "is shorter than Stable time, or Silent interval, " +
+        "the sampler will return a Timeout exception. " +
+        "For more information see sampler documentation.");
+    warningLabel.setFont(new Font(null, Font.ITALIC, 11));
+
     layout.setHorizontalGroup(layout.createParallelGroup()
+        .addComponent(warningLabel)
         .addComponent(waitSyncPanel)
         .addComponent(waitCursorPanel)
         .addComponent(waitSilentPanel)
         .addComponent(waitTextPanel));
     layout.setVerticalGroup(layout.createSequentialGroup()
+        .addComponent(warningLabel)
         .addComponent(waitSyncPanel)
         .addComponent(waitCursorPanel)
         .addComponent(waitSilentPanel)
