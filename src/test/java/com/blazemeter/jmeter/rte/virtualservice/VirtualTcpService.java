@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class allows to create a virtual service (a mock) a an actual service traffic dump.
+ * This class allows to create a virtual service (a mock) from an actual service traffic dump.
  *
  * This is useful for testing clients and interactions which depend on a not always available
  * environment, either due to cost, resiliency, or other potential concerns.
