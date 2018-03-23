@@ -174,7 +174,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations</includeArtifactIds>
+                            <includeArtifactIds>guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250</includeArtifactIds>
                             <outputDirectory>${project.build.directory}/taurus</outputDirectory>
                         </configuration>
                     </execution>
