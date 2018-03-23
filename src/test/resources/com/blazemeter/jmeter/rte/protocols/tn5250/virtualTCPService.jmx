@@ -33,16 +33,13 @@
 import com.blazemeter.jmeter.rte.virtualservice.Flow
 import com.google.common.io.Resources
 
-//Searchs for the Wireshark dump
 def findResource(String file) {
 	return Resources.getResource(&quot;com/blazemeter/jmeter/rte/protocols/tn5250/&quot;+file)
 }
 
-//Create a virtual service (a mock) listening on port 2324
 def server = new VirtualTcpService(2324)
-props.put(&quot;SERVER&quot;,server) //save the object in a JMeter prop
-server.start() //start the virtual service
-//Load the Wireshark dump in the service
+props.put(&quot;SERVER&quot;,server)
+server.start()
 server.setFlow(Flow.fromYmlStream(findResource(&quot;login-invalid-creds.yml&quot;).openStream()))
 println(&quot;server started...&quot;)</stringProp>
           <stringProp name="scriptLanguage">groovy</stringProp>
@@ -139,8 +136,8 @@ println(&quot;server started...&quot;)</stringProp>
           <stringProp name="cacheKey">true</stringProp>
           <stringProp name="script">import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService
 
-def server = props.get(&quot;SERVER&quot;) //get the virtual service object
-server.stop(10000) //stop the virtual service
+def server = props.get(&quot;SERVER&quot;)
+server.stop(10000)
 println(&quot;server stopped...&quot;)</stringProp>
         </JSR223Sampler>
         <hashTree/>
