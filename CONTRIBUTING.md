@@ -18,6 +18,8 @@ We are using a custom [checkstyle](http://checkstyle.sourceforge.net/index.html)
 
 To build the plugin and run all tests just run `mvn clean verify`
 
+We are using a Docker image with Maven and BZ Taurus to build and test the plugin. The Dockerfile can be found on this repo. 
+
 ### Installation
 
 To use the plugin, install it (by copying the jar from `target` folder) in `lib/ext/` folder of the JMeter installation. Also copy `xtn5250_119m.jar` to the same JMeter folder.
