@@ -41,17 +41,8 @@ jmeter_compatibility:
   tags:
     - docker
   script:
-    - curl -fsSL -o target/$XTN5250_JAR https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/$XTN5250_JAR
-    - mkdir -p jmeter/4.0/lib/ext/ && cp -f target/*.jar jmeter/4.0/lib/ext/
-    - mkdir -p jmeter/3.1/lib/ext/ && cp -f target/*.jar jmeter/3.1/lib/ext/
-    - mkdir -p jmeter/3.2/lib/ext/ && cp -f target/*.jar jmeter/3.2/lib/ext/
-    - mkdir -p jmeter/3.3/lib/ext/ && cp -f target/*.jar jmeter/3.3/lib/ext/
-    - mkdir -p jmeter/4.0/lib/ext/ && cp -f target/taurus/*.jar jmeter/4.0/lib/ext/
-    - mkdir -p jmeter/3.1/lib/ext/ && cp -f target/taurus/*.jar jmeter/3.1/lib/ext/
-    - mkdir -p jmeter/3.2/lib/ext/ && cp -f target/taurus/*.jar jmeter/3.2/lib/ext/
-    - mkdir -p jmeter/3.3/lib/ext/ && cp -f target/taurus/*.jar jmeter/3.3/lib/ext/
-    - bzt src/test/resources/JMeter/testJMeter4.0.yaml
-    - bzt src/test/resources/JMeter/testJMeter3.1.yaml
-    - bzt src/test/resources/JMeter/testJMeter3.2.yaml
-    - bzt src/test/resources/JMeter/testJMeter3.3.yaml
+    - src/test/resources/JMeter/testJMeter.sh 4.0
+    - src/test/resources/JMeter/testJMeter.sh 3.3
+    - src/test/resources/JMeter/testJMeter.sh 3.2
+    - src/test/resources/JMeter/testJMeter.sh 3.1
     - bzt src/test/resources/JMeter/testJMeterBZ.yaml
