@@ -51,6 +51,7 @@ public class ExtendedEmulator extends XI5250Emulator {
     synchronized (this) {
       if (!activate) {
         stopKeybThread();
+        setBlinkingCursor(false);
       }
       wasActive = isActive();
       if (activate == wasActive) {

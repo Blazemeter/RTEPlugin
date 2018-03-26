@@ -47,7 +47,7 @@ The RTE Sampler fields are:
   - *Silent*. Waits for the client application to be silent for a specified amount of time. The client is considered silent when the terminal emulator does not receive any characters. 
   - *Text*. Waits for a text string, who matches the specified regex, to appear in a specific location.
 
-All the "waiters" have a stable timeout value (in milliseconds) who checks that the system remains at the desired state (or condition, depending on the waiters used) for an specific time. The default value is 1000 milliseconds, but it could be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The Wait for Silent feature is not affected by this setting since it has an explicit field for specify this behavior.
+All the "waiters" have a stable timeout value (in milliseconds) who checks that the system remains at the desired state (or condition, depending on the waiters used) for an specific time. The default value is 1000 milliseconds, but it could be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The Wait for Silent feature is not affected by this setting since it has an explicit field for specify this behavior. *Warning: both Stable Timeout and Silent Interval should be shorter than Timeout value, otherwise the sampler will always return a timeout exception*.
 
 ### Example
 

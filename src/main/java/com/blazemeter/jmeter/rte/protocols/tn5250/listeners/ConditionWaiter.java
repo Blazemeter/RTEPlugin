@@ -88,7 +88,9 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements XI5250
       cancelWait();
       throw new TimeoutException(
           "Timeout waiting for " + condition.getDescription() + " after " + condition
-              .getTimeoutMillis() + " millis");
+              .getTimeoutMillis() + " millis. " +
+              "Check if Timeout values of the 'Wait for' components " +
+              "are greater than Stable time or Silent interval.");
     }
     client.throwAnyPendingError();
   }
