@@ -35,6 +35,7 @@ build_and_analyze:
   artifacts:
     paths:
       - target/*.jar
+      - target/taurus/*.jar
     expire_in: 1 month
 jmeter_compatibility:
   stage: test
