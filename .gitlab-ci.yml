@@ -1,4 +1,4 @@
-image: maven:3.5
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus:latest
 
 variables:
   MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
@@ -8,11 +8,13 @@ variables:
 cache:
   paths:
     - .m2/repository/
+    - jmeter/
 before_script:
   - set -e
   - mvn $MAVEN_OPTS com.googlecode.maven-download-plugin:download-maven-plugin:1.4.0:wget -Ddownload.url=https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/$XTN5250_JAR
   - mvn $MAVEN_OPTS install:install-file -Dfile=target/$XTN5250_JAR -DgroupId=net.sourceforge.xtn5250 -DartifactId=xtn5250 -Dversion=$XTN5250_VERSION -Dpackaging=jar
 build:
+  stage: build
   tags:
     - docker
   except:
@@ -21,8 +23,10 @@ build:
   artifacts:
     paths:
       - target/*.jar
+      - target/taurus/*.jar
     expire_in: 1 month
 build_and_analyze:
+  stage: build
   tags:
     - docker
   only:
@@ -32,3 +36,13 @@ build_and_analyze:
     paths:
       - target/*.jar
     expire_in: 1 month
+jmeter_compatibility:
+  stage: test
+  tags:
+    - docker
+  script:
+    - sh src/test/resources/JMeter/testJMeter.sh 4.0
+    - sh src/test/resources/JMeter/testJMeter.sh 3.3
+    - sh src/test/resources/JMeter/testJMeter.sh 3.2
+    - sh src/test/resources/JMeter/testJMeter.sh 3.1
+    - bzt src/test/resources/JMeter/testJMeterBZ.yaml

@@ -1,0 +1,32 @@
+provisioning: cloud
+
+modules:
+  jmeter:
+    version: 3.3
+  console:
+    disable: true
+  cloud:
+    token: cfd0a99c51ce937b04cf2eed:431dc7d3c28a3fe11fa181291ff79fe25d57de73f96ea0214861109336a6baa905d9350e
+
+execution:
+- concurrency: 1
+  scenario: test
+  hold-for: 1m
+  files:
+  - target/jmeter-bzm-rteplugin-0.1.0-SNAPSHOT.jar
+  - target/jmeter-bzm-rteplugin-0.1.0-SNAPSHOT-tests.jar
+  - target/taurus/xtn5250-1.19m.jar
+  - target/taurus/guava-24.0-jre.jar
+  - target/taurus/jackson-annotations-2.9.0.jar
+  - target/taurus/jackson-core-2.9.4.jar
+  - target/taurus/jackson-databind-2.9.4.jar
+  - target/taurus/snakeyaml-1.17.jar
+
+scenarios:
+  test:
+    script: RTESampler.jmx
+    
+reporting:
+- module: passfail
+  criteria:
+  - failures>0% 
