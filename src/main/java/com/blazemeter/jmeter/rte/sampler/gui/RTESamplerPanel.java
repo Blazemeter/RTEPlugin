@@ -84,7 +84,7 @@ public class RTESamplerPanel extends JPanel {
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    JLabel payloadLabel = new JLabel("Payload: ");
+    JLabel payloadLabel = SwingUtils.createLabel("Payload: ", payloadPanel);
     payloadPanel = new CoordInputPanel();
     JPanel actionsPanel = buildActionsPanel();
 
@@ -197,7 +197,7 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
+    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitSyncTimeout);
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSync)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -229,9 +229,9 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel rowLabel = new JLabel("Row: ");
-    JLabel columnLabel = new JLabel("Column: ");
-    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
+    JLabel rowLabel = SwingUtils.createLabel("Row: ", waitCursorRow);
+    JLabel columnLabel = SwingUtils.createLabel("Column: ", waitCursorColumn);
+    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitCursorTimeout);
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitCursor)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -272,8 +272,8 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel timeLabel = new JLabel("Silent interval (millis): ");
-    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
+    JLabel timeLabel = SwingUtils.createLabel("Silent interval (millis): ", waitSilentTime);
+    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitSilentTimeout);
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSilent)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -306,8 +306,8 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel regexLabel = new JLabel("Regex: ");
-    JLabel timeoutLabel = new JLabel(TIMEOUT_LABEL);
+    JLabel regexLabel = SwingUtils.createLabel("Regex: ", waitTextRegex);
+    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitTextTimeout);
     JPanel searchAreaPanel = buildSearchAreaPanel();
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitText)
@@ -345,10 +345,10 @@ public class RTESamplerPanel extends JPanel {
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    JLabel topLabel = new JLabel("Top row: ");
-    JLabel leftLabel = new JLabel("Left column: ");
-    JLabel bottomLabel = new JLabel("Bottom row: ");
-    JLabel rightLabel = new JLabel("Right column: ");
+    JLabel topLabel = SwingUtils.createLabel("Top row: ", waitTextAreaTop);
+    JLabel leftLabel = SwingUtils.createLabel("Left column: ", waitTextAreaLeft);
+    JLabel bottomLabel = SwingUtils.createLabel("Bottom row: ", waitTextAreaBottom);
+    JLabel rightLabel = SwingUtils.createLabel("Right column: ", waitTextAreaRight);
     layout.setHorizontalGroup(
         layout.createSequentialGroup()
             .addComponent(leftLabel)

@@ -4,6 +4,7 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
@@ -22,6 +23,11 @@ public class RTEConfigGui extends AbstractConfigGui {
 
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(rteConfigPanelConfigPanel, BorderLayout.CENTER);
+  }
+
+  @VisibleForTesting
+  protected RTEConfigGui(RTEConfigPanel panel) {
+    rteConfigPanelConfigPanel = panel;
   }
 
   @Override
