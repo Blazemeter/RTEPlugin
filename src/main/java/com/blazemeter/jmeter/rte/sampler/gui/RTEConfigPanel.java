@@ -71,10 +71,10 @@ public class RTEConfigPanel extends JPanel {
       sslTypeGroup.add(r);
     });
 
-    JLabel serverLabel = new JLabel("Server: ");
-    JLabel portLabel = new JLabel("Port: ");
-    JLabel protocolLabel = new JLabel("Protocol: ");
-    JLabel terminalTypeLabel = new JLabel("Terminal Type:");
+    JLabel serverLabel = SwingUtils.createLabel("Server: ", serverField);
+    JLabel portLabel = SwingUtils.createLabel("Port: ", portField);
+    JLabel protocolLabel = SwingUtils.createLabel("Protocol: ", protocolComboBox);
+    JLabel terminalTypeLabel = SwingUtils.createLabel("Terminal Type:", terminalTypeComboBox);
 
     GroupLayout connectionPanelLayout = new GroupLayout(connectionPanel);
     connectionPanel.setLayout(connectionPanelLayout);
@@ -130,7 +130,8 @@ public class RTEConfigPanel extends JPanel {
     timeoutPanel
         .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString("timeout_title")));
 
-    JLabel connectTimeoutLabel = new JLabel(JMeterUtils.getResString("web_server_timeout_connect"));
+    JLabel connectTimeoutLabel = SwingUtils.createLabel(
+        JMeterUtils.getResString("web_server_timeout_connect"), connectionTimeout);
 
     GroupLayout timeoutPanelLayout = new GroupLayout(timeoutPanel);
     timeoutPanel.setLayout(timeoutPanelLayout);
