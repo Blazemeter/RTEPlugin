@@ -32,28 +32,40 @@ public class RTESamplerPanel extends JPanel {
   private CoordInputPanel payloadPanel;
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
-  private JCheckBox disconnect = new JCheckBox("Disconnect?");
-  private JCheckBox justConnect = new JCheckBox("Just connect");
+  private JCheckBox disconnect = SwingUtils
+      .createComponent("disconnect", new JCheckBox("Disconnect?"));
+  private JCheckBox justConnect = SwingUtils
+      .createComponent("justConnect", new JCheckBox("Just connect"));
   private JPanel waitSyncPanel;
-  private JCheckBox waitSync = new JCheckBox("Sync?");
-  private JTextField waitSyncTimeout = new JTextField();
+  private JCheckBox waitSync = SwingUtils.createComponent("waitSync", new JCheckBox("Sync?"));
+  private JTextField waitSyncTimeout = SwingUtils
+      .createComponent("waitSyncTimeout", new JTextField());
   private JPanel waitCursorPanel;
-  private JCheckBox waitCursor = new JCheckBox("Cursor?");
-  private JTextField waitCursorRow = new JTextField();
-  private JTextField waitCursorColumn = new JTextField();
-  private JTextField waitCursorTimeout = new JTextField();
+  private JCheckBox waitCursor = SwingUtils.createComponent("waitCursor", new JCheckBox("Cursor?"));
+  private JTextField waitCursorRow = SwingUtils.createComponent("waitCursorRow", new JTextField());
+  private JTextField waitCursorColumn = SwingUtils
+      .createComponent("waitCursorColumn", new JTextField());
+  private JTextField waitCursorTimeout = SwingUtils
+      .createComponent("waitCursorTimeout", new JTextField());
   private JPanel waitSilentPanel;
-  private JCheckBox waitSilent = new JCheckBox("Silent?");
-  private JTextField waitSilentTime = new JTextField();
-  private JTextField waitSilentTimeout = new JTextField();
+  private JCheckBox waitSilent = SwingUtils.createComponent("waitSilent", new JCheckBox("Silent?"));
+  private JTextField waitSilentTime = SwingUtils
+      .createComponent("waitSilentTime", new JTextField());
+  private JTextField waitSilentTimeout = SwingUtils
+      .createComponent("waitSilentTimeout", new JTextField());
   private JPanel waitTextPanel;
-  private JCheckBox waitText = new JCheckBox("Text?");
-  private JTextField waitTextRegex = new JTextField();
-  private JTextField waitTextTimeout = new JTextField();
-  private JTextField waitTextAreaTop = new JTextField();
-  private JTextField waitTextAreaLeft = new JTextField();
-  private JTextField waitTextAreaBottom = new JTextField();
-  private JTextField waitTextAreaRight = new JTextField();
+  private JCheckBox waitText = SwingUtils.createComponent("waitText", new JCheckBox("Text?"));
+  private JTextField waitTextRegex = SwingUtils.createComponent("waitTextRegex", new JTextField());
+  private JTextField waitTextTimeout = SwingUtils
+      .createComponent("waitTextTimeout", new JTextField());
+  private JTextField waitTextAreaTop = SwingUtils
+      .createComponent("waitTextAreaTop", new JTextField());
+  private JTextField waitTextAreaLeft = SwingUtils
+      .createComponent("waitTextAreaLeft", new JTextField());
+  private JTextField waitTextAreaBottom = SwingUtils
+      .createComponent("waitTextAreaBottom", new JTextField());
+  private JTextField waitTextAreaRight = SwingUtils
+      .createComponent("waitTextAreaRight", new JTextField());
 
   public RTESamplerPanel() {
     GroupLayout layout = new GroupLayout(this);
@@ -78,14 +90,14 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildRequestPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("requestPanel", new JPanel());
     panel.setBorder(BorderFactory.createTitledBorder("RTE Message"));
     GroupLayout layout = new GroupLayout(panel);
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    JLabel payloadLabel = SwingUtils.createLabel("Payload: ", payloadPanel);
-    payloadPanel = new CoordInputPanel();
+    JLabel payloadLabel = SwingUtils.createComponent("payloadLabel", new JLabel("Payload: "));
+    payloadPanel = SwingUtils.createComponent("payloadPanel", new CoordInputPanel());
     JPanel actionsPanel = buildActionsPanel();
 
     justConnect.addItemListener(e -> {
@@ -136,12 +148,12 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildActionsPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("actionPanel", new JPanel());
     panel.setBorder(BorderFactory.createTitledBorder("Actions"));
     panel.setLayout(new GridLayout(0, 12));
 
     Arrays.stream(Action.values()).forEach(t -> {
-      JRadioButton r = new JRadioButton(t.toString());
+      JRadioButton r = SwingUtils.createComponent(t.toString(), new JRadioButton(t.toString()));
       r.setActionCommand(t.toString());
       panel.add(r);
       actions.put(t, r);
@@ -152,7 +164,7 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildWaitsPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("waitsPanel", new JPanel());
     panel.setBorder(BorderFactory.createTitledBorder("Wait for:"));
     GroupLayout layout = new GroupLayout(panel);
     layout.setAutoCreateContainerGaps(true);
@@ -164,10 +176,11 @@ public class RTESamplerPanel extends JPanel {
     waitSilentPanel = buildWaitSilentPanel();
     waitTextPanel = buildWaitTextPanel();
 
-    JLabel warningLabel = new JLabel("Warning: if Timeout value " +
-        "is shorter than Stable time, or Silent interval, " +
-        "the sampler will return a Timeout exception. " +
-        "For more information see sampler documentation.");
+    JLabel warningLabel = SwingUtils
+        .createComponent("warningLabel", new JLabel("Warning: if Timeout value " +
+            "is shorter than Stable time, or Silent interval, " +
+            "the sampler will return a Timeout exception. " +
+            "For more information see sampler documentation."));
     warningLabel.setFont(new Font(null, Font.ITALIC, 11));
 
     layout.setHorizontalGroup(layout.createParallelGroup()
@@ -187,7 +200,7 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildWaitSyncPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("waitSyncPanel", new JPanel());
     GroupLayout layout = new GroupLayout(panel);
     panel.setLayout(layout);
 
@@ -197,7 +210,7 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitSyncTimeout);
+    JLabel timeoutLabel = SwingUtils.createComponent("timeoutLabel", new JLabel(TIMEOUT_LABEL));
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSync)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -219,7 +232,7 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildWaitCursorPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("waitCursorPanel", new JPanel());
     GroupLayout layout = new GroupLayout(panel);
     panel.setLayout(layout);
 
@@ -229,9 +242,9 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel rowLabel = SwingUtils.createLabel("Row: ", waitCursorRow);
-    JLabel columnLabel = SwingUtils.createLabel("Column: ", waitCursorColumn);
-    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitCursorTimeout);
+    JLabel rowLabel = SwingUtils.createComponent("rowLabel", new JLabel("Row: "));
+    JLabel columnLabel = SwingUtils.createComponent("columnLabel", new JLabel("Column: "));
+    JLabel timeoutLabel = SwingUtils.createComponent("timeoutLabel", new JLabel(TIMEOUT_LABEL));
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitCursor)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -262,7 +275,7 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildWaitSilentPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("waitSilentPanel", new JPanel());
     GroupLayout layout = new GroupLayout(panel);
     panel.setLayout(layout);
 
@@ -272,8 +285,9 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel timeLabel = SwingUtils.createLabel("Silent interval (millis): ", waitSilentTime);
-    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitSilentTimeout);
+    JLabel timeLabel = SwingUtils
+        .createComponent("timeLabel", new JLabel("Silent interval (millis): "));
+    JLabel timeoutLabel = SwingUtils.createComponent("timeoutLabel", new JLabel(TIMEOUT_LABEL));
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitSilent)
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -296,7 +310,7 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildWaitTextPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("waitTextPanel", new JPanel());
     GroupLayout layout = new GroupLayout(panel);
     panel.setLayout(layout);
 
@@ -306,8 +320,8 @@ public class RTESamplerPanel extends JPanel {
       repaint();
     });
 
-    JLabel regexLabel = SwingUtils.createLabel("Regex: ", waitTextRegex);
-    JLabel timeoutLabel = SwingUtils.createLabel(TIMEOUT_LABEL, waitTextTimeout);
+    JLabel regexLabel = SwingUtils.createComponent("regexLabel", new JLabel("Regex: "));
+    JLabel timeoutLabel = SwingUtils.createComponent("timeoutLabel", new JLabel(TIMEOUT_LABEL));
     JPanel searchAreaPanel = buildSearchAreaPanel();
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitText)
@@ -339,16 +353,16 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private JPanel buildSearchAreaPanel() {
-    JPanel panel = new JPanel();
+    JPanel panel = SwingUtils.createComponent("searchAreaPanel", new JPanel());
     panel.setBorder(BorderFactory.createTitledBorder("Search area: "));
     GroupLayout layout = new GroupLayout(panel);
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    JLabel topLabel = SwingUtils.createLabel("Top row: ", waitTextAreaTop);
-    JLabel leftLabel = SwingUtils.createLabel("Left column: ", waitTextAreaLeft);
-    JLabel bottomLabel = SwingUtils.createLabel("Bottom row: ", waitTextAreaBottom);
-    JLabel rightLabel = SwingUtils.createLabel("Right column: ", waitTextAreaRight);
+    JLabel topLabel = SwingUtils.createComponent("topLabel", new JLabel("Top row: "));
+    JLabel leftLabel = SwingUtils.createComponent("leftLabel", new JLabel("Left column: "));
+    JLabel bottomLabel = SwingUtils.createComponent("bottomLabel", new JLabel("Bottom row: "));
+    JLabel rightLabel = SwingUtils.createComponent("rightLabel", new JLabel("Right column: "));
     layout.setHorizontalGroup(
         layout.createSequentialGroup()
             .addComponent(leftLabel)
