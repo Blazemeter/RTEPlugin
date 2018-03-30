@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 
 import com.blazemeter.jmeter.rte.sampler.Inputs;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
@@ -20,6 +21,11 @@ public class RTESamplerGui extends AbstractSamplerGui {
 
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(rteSamplerPanel, BorderLayout.CENTER);
+  }
+
+  @VisibleForTesting
+  protected RTESamplerGui(RTESamplerPanel panel) {
+    rteSamplerPanel = panel;
   }
 
   @Override
