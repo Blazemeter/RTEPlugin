@@ -7,9 +7,13 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import java.io.File;
+import java.io.IOException;
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,6 +39,11 @@ public class RTEConfigGuiTest {
   @BeforeClass
   public static void setupClass() {
     TestJMeterUtils.createJmeterEnv();
+  }
+
+  @AfterClass
+  public static void tearDownClass() throws IOException {
+    FileUtils.deleteDirectory(new File(TestJMeterUtils.getTempDir()));
   }
 
   @Test
