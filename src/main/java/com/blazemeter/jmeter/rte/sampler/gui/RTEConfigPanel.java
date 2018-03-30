@@ -25,21 +25,24 @@ public class RTEConfigPanel extends JPanel {
 
   private static final long serialVersionUID = -3671411083800369578L;
 
-  private JPanel connectionPanel = new JPanel();
-  private JPanel sslPanel = new JPanel();
+  private JPanel connectionPanel = SwingUtils.createComponent("connectionPanel", new JPanel());
+  private JPanel sslPanel = SwingUtils.createComponent("sslPanel", new JPanel());
   private ButtonGroup sslTypeGroup = new ButtonGroup();
   private Map<SSLType, JRadioButton> sslTypeRadios = new EnumMap<>(SSLType.class);
-  private JTextField serverField = new JTextField();
-  private JTextField portField = new JTextField();
-  private JComboBox<Protocol> protocolComboBox = new JComboBox<>(Protocol.values());
+  private JTextField serverField = SwingUtils.createComponent("serverField", new JTextField());
+  private JTextField portField = SwingUtils.createComponent("portField", new JTextField());
+  private JComboBox<Protocol> protocolComboBox = SwingUtils
+      .createComponent("protocolComboBox", new JComboBox<>(Protocol.values()));
 
   private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<>(
       TerminalType.findByProtocol(Protocol.TN5250));
   private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<>(
       TerminalType.findByProtocol(Protocol.TN3270));
 
-  private JComboBox<TerminalType> terminalTypeComboBox = new JComboBox<>(modelTN5250);
-  private JTextField connectionTimeout = new JTextField();
+  private JComboBox<TerminalType> terminalTypeComboBox = SwingUtils
+      .createComponent("terminalTypeComboBox", new JComboBox<>(modelTN5250));
+  private JTextField connectionTimeout = SwingUtils
+      .createComponent("connectionTimeout", new JTextField());
 
   public RTEConfigPanel() {
     initComponents();
@@ -64,17 +67,18 @@ public class RTEConfigPanel extends JPanel {
     sslPanel.setLayout(new GridLayout(1, 4));
 
     Arrays.stream(SSLType.values()).forEach(s -> {
-      JRadioButton r = new JRadioButton(s.toString());
+      JRadioButton r = SwingUtils.createComponent(s.toString(), new JRadioButton(s.toString()));
       r.setActionCommand(s.toString());
       sslPanel.add(r);
       sslTypeRadios.put(s, r);
       sslTypeGroup.add(r);
     });
 
-    JLabel serverLabel = SwingUtils.createLabel("Server: ", serverField);
-    JLabel portLabel = SwingUtils.createLabel("Port: ", portField);
-    JLabel protocolLabel = SwingUtils.createLabel("Protocol: ", protocolComboBox);
-    JLabel terminalTypeLabel = SwingUtils.createLabel("Terminal Type:", terminalTypeComboBox);
+    JLabel serverLabel = SwingUtils.createComponent("serverLabel", new JLabel("Server: "));
+    JLabel portLabel = SwingUtils.createComponent("portLabel", new JLabel("Port: "));
+    JLabel protocolLabel = SwingUtils.createComponent("protocolLabel", new JLabel("Protocol: "));
+    JLabel terminalTypeLabel = SwingUtils
+        .createComponent("terminalTypeLabel", new JLabel("Terminal Type:"));
 
     GroupLayout connectionPanelLayout = new GroupLayout(connectionPanel);
     connectionPanel.setLayout(connectionPanelLayout);
@@ -126,12 +130,12 @@ public class RTEConfigPanel extends JPanel {
             .addPreferredGap(ComponentPlacement.RELATED).addComponent(sslPanel)
             .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
 
-    JPanel timeoutPanel = new JPanel();
+    JPanel timeoutPanel = SwingUtils.createComponent("timeoutPanel", new JPanel());
     timeoutPanel
         .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString("timeout_title")));
 
-    JLabel connectTimeoutLabel = SwingUtils.createLabel(
-        JMeterUtils.getResString("web_server_timeout_connect"), connectionTimeout);
+    JLabel connectTimeoutLabel = SwingUtils.createComponent("connectTimeoutLabel",
+        new JLabel(JMeterUtils.getResString("web_server_timeout_connect")));
 
     GroupLayout timeoutPanelLayout = new GroupLayout(timeoutPanel);
     timeoutPanel.setLayout(timeoutPanelLayout);
