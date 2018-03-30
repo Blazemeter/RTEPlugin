@@ -6,14 +6,18 @@ import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
 import com.blazemeter.jmeter.rte.core.Action;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.commons.io.FileUtils;
 import org.assertj.swing.fixture.AbstractJComponentFixture;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JCheckBoxFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,8 +27,13 @@ public class RTESamplerPanelTest {
   private FrameFixture frame;
 
   @BeforeClass
-  public static void setUpOnce() {
+  public static void setupClass() {
     TestJMeterUtils.createJmeterEnv();
+  }
+
+  @AfterClass
+  public static void tearDownClass() throws IOException {
+    FileUtils.deleteDirectory(new File(TestJMeterUtils.getTempDir()));
   }
 
   @Before
@@ -190,15 +199,5 @@ public class RTESamplerPanelTest {
         return result.containsAll(expected) && expected.containsAll(result);
       }
     }, timeout(10000));
-
-/*    List<String> result = new ArrayList<>();
-    List<String> expected = new ArrayList<>();
-    for (AbstractJComponentFixture c : components) {
-      if (c.isEnabled() == enable) {
-        result.add(c.target().getName());
-      }
-      expected.add(c.target().getName());
-    }
-    assertThat(result).containsExactlyElementsOf(expected);*/
   }
 }

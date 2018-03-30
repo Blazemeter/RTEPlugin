@@ -24,16 +24,20 @@ import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -70,6 +74,11 @@ public class RTESamplerTest {
   @BeforeClass
   public static void setupClass() {
     TestJMeterUtils.createJmeterEnv();
+  }
+
+  @AfterClass
+  public static void tearDownClass() throws IOException {
+    FileUtils.deleteDirectory(new File(TestJMeterUtils.getTempDir()));
   }
 
   @SuppressWarnings("unchecked")
