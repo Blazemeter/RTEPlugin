@@ -5,11 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import java.io.File;
-import java.io.IOException;
 import kg.apc.emulators.TestJMeterUtils;
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

@@ -1,23 +1,18 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
 import com.blazemeter.jmeter.rte.core.Action;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import kg.apc.emulators.TestJMeterUtils;
-import org.apache.commons.io.FileUtils;
 import org.assertj.swing.fixture.AbstractJComponentFixture;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JCheckBoxFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
