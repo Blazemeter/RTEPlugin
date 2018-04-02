@@ -37,11 +37,6 @@ public class RTESamplerGuiTest {
     TestJMeterUtils.createJmeterEnv();
   }
 
-  @AfterClass
-  public static void tearDownClass() throws IOException {
-    FileUtils.deleteDirectory(new File(TestJMeterUtils.getTempDir()));
-  }
-
   @Test
   public void shouldSetTheTestElementFromThePanel() {
     when(panel.getAction()).thenReturn(Action.ENTER);

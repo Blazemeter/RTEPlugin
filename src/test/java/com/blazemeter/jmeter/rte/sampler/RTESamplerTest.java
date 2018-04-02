@@ -78,7 +78,7 @@ public class RTESamplerTest {
 
   @AfterClass
   public static void tearDownClass() throws IOException {
-    FileUtils.deleteDirectory(new File(TestJMeterUtils.getTempDir()));
+    Thread.interrupted();
   }
 
   @SuppressWarnings("unchecked")

@@ -31,11 +31,6 @@ public class RTESamplerPanelTest {
     TestJMeterUtils.createJmeterEnv();
   }
 
-  @AfterClass
-  public static void tearDownClass() throws IOException {
-    FileUtils.deleteDirectory(new File(TestJMeterUtils.getTempDir()));
-  }
-
   @Before
   public void setup() {
     RTESamplerPanel panel = new RTESamplerPanel();
