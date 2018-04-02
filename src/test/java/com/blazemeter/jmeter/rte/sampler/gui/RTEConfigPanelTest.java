@@ -33,10 +33,13 @@ public class RTEConfigPanelTest {
 
   @Test
   public void shouldChangeTheValuesOfTheTerminalComboBoxWhenChangeProtocolComboBox() {
-    JComboBox protocolCombo = frame.robot().finder().findByName("protocolComboBox", JComboBox.class);
-    JComboBox terminalCombo = frame.robot().finder().findByName("terminalTypeComboBox", JComboBox.class);
+    JComboBox protocolCombo = frame.robot().finder()
+        .findByName("protocolComboBox", JComboBox.class);
+    JComboBox terminalCombo = frame.robot().finder()
+        .findByName("terminalTypeComboBox", JComboBox.class);
     protocolCombo.setSelectedItem(Protocol.TN3270);
-    assertThat(Arrays.asList(TerminalType.findByProtocol(Protocol.TN3270))).containsExactlyElementsOf(getComboValues(terminalCombo));
+    assertThat(Arrays.asList(TerminalType.findByProtocol(Protocol.TN3270)))
+        .containsExactlyElementsOf(getComboValues(terminalCombo));
   }
 
   @After
