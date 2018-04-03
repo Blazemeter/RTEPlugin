@@ -15,11 +15,11 @@ The plugin adds two different elements to JMeter:
 
 A Config Element (RTE Config)
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/RTEConfig.png "RTE Config GUI")
+![alt text](readme/RTEConfig.png "RTE Config GUI")
 
 and a Sampler (RTE Sampler)
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/RTESampler.png "RTE Sampler GUI")
+![alt text](readme/RTESampler.png "RTE Sampler GUI")
 
 The RTE Config element sets the parameters to be used by the sampler in order to establish the connection to the server. These parameters are:
 - *Server* (required). The url or ip of the IBM server.
@@ -47,7 +47,8 @@ The RTE Sampler fields are:
   - *Silent*. Waits for the client application to be silent for a specified amount of time. The client is considered silent when the terminal emulator does not receive any characters. 
   - *Text*. Waits for a text string, who matches the specified regex, to appear in a specific location.
 
-All the "waiters" have a stable timeout value (in milliseconds) who checks that the system remains at the desired state (or condition, depending on the waiters used) for an specific time. The default value is 1000 milliseconds, but it could be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The Wait for Silent feature is not affected by this setting since it has an explicit field for specify this behavior. *Warning: both Stable Timeout and Silent Interval should be shorter than Timeout value, otherwise the sampler will always return a timeout exception*.
+All the "waiters" have a stable timeout value (in milliseconds) who checks that the system remains at the desired state (or condition, depending on the waiters used) for an specific time. The default value is 1000 milliseconds, but it could be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The Wait for Silent feature is not affected by this setting since it has an explicit field for specify this behavior. 
+> Warning: both Stable Timeout and Silent Interval should be shorter than Timeout value, otherwise the sampler will always return a timeout exception.
 
 ### Example
 
@@ -59,22 +60,22 @@ To do this, first of all it's required an RTE Config element specifying the serv
 
 The Test Plan will look like this:
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_testplan.png "Test Plan")
+![alt text](readme/example_testplan.png "Test Plan")
 
 The RTE Config element should specify the server url in *Server* field, and the protocol TN5250 in *Protocol* field like it's shown below:
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTEConfig.png "RTE Config")
+![alt text](readme/example_RTEConfig.png "RTE Config")
 
 "Just connect" option should be checked in first sampler to not send payload data or actions but get the Welcome screen after the connection. An assertion post processor should also be attached to it to validate the "Welcome" message.
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTESampler1.png "RTE Sampler 1")
+![alt text](readme/example_RTESampler1.png "RTE Sampler 1")
 
 Finally, the second sampler should specify in the Payload grid the position on the screen and the value to put on both *user* and *password* fields. Besides, the action button *ENTER* should be selected to simulate the user pressing that key after filling the fields. It should has also an assert who checks for the ¨Login Successful¨ message.
 
-![alt text](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/raw/master/readme/example_RTESampler2.png "RTE Sampler 2") 
+![alt text](readme/example_RTESampler2.png "RTE Sampler 2") 
 
 ## Contributing
 
 If you find any issue or something that is not supported by this plugin, please report it and we will try to fix it. 
 
-Otherwise you could [contribute](http://gitlab.abstracta.us/BZ/jmeter-rte-plugin/blob/master/CONTRIBUTING.md) to the project. 
+Otherwise you could [contribute](CONTRIBUTING.md) to the project. 
