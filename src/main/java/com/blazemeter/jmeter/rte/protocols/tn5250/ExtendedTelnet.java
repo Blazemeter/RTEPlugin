@@ -3,11 +3,11 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -21,9 +21,22 @@ import net.infordata.em.tnprot.XITelnet;
  */
 public class ExtendedTelnet extends XITelnet {
 
+  private static final Field SOCKET_FIELD = ReflectionUtils
+      .getAccessibleField(XITelnet.class, "ivSocket");
+  private static final Field INPUT_STREAM_FIELD = ReflectionUtils
+      .getAccessibleField(XITelnet.class, "ivIn");
+  private static final Field OUTPUT_STREAM_FIELD = ReflectionUtils
+      .getAccessibleField(XITelnet.class, "ivOut");
+  private static final Field USED_FIELD = ReflectionUtils
+      .getAccessibleField(XITelnet.class, "ivUsed");
+  private static final Field IAC_PARSER_STATUS_FIELD = ReflectionUtils
+      .getAccessibleField(XITelnet.class, "ivIACParserStatus");
+  private static final Method CLOSE_SOCKET_METHOD = ReflectionUtils
+      .getAccessibleMethod(XITelnet.class, "closeSocket");
   private static final int READ_BUFFER_SIZE_BYTES = 1024;
+
   private final int connectTimeoutMillis;
-  private SSLData sslData;
+  private final SSLData sslData;
   private RxThread readThread;
 
   public ExtendedTelnet(String aHost, int aPort, int connectTimeoutMillis, SSLData sslData) {
@@ -76,65 +89,40 @@ public class ExtendedTelnet extends XITelnet {
     }
   }
 
-  //It was required to use reflection on the following attributes as
-  // they are private in XITelnet class.
-  private Field getAccessibleField(String fieldName) {
-    try {
-      Field target = XITelnet.class.getDeclaredField(fieldName);
-      target.setAccessible(true);
-      return target;
-    } catch (NoSuchFieldException e) {
-      throw new RuntimeException(e); //NOSONAR
-    }
-  }
-
-  private <T> T getField(String fieldName, Class<T> clazz) {
-    try {
-      return clazz.cast(getAccessibleField(fieldName).get(this));
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e); //NOSONAR
-    }
-  }
-
-  private void setField(String fieldName, Object value) {
-    Field target = getAccessibleField(fieldName);
-    try {
-      target.set(this, value);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e); //NOSONAR
-    }
-  }
-
+  /*
+  It was required to use reflection on the following attributes as they are private in XITelnet
+  class.
+   */
   private Socket getIvSocket() {
-    return getField("ivSocket", Socket.class);
+    return ReflectionUtils.getFieldValue(SOCKET_FIELD, Socket.class, this);
   }
 
   private void setIvSocket(Socket ivSocket) {
-    setField("ivSocket", ivSocket);
+    ReflectionUtils.setFieldValue(SOCKET_FIELD, ivSocket, this);
   }
 
   private InputStream getIvIn() {
-    return getField("ivIn", InputStream.class);
+    return ReflectionUtils.getFieldValue(INPUT_STREAM_FIELD, InputStream.class, this);
   }
 
   private void setIvIn(InputStream ivIn) {
-    setField("ivIn", ivIn);
+    ReflectionUtils.setFieldValue(INPUT_STREAM_FIELD, ivIn, this);
   }
 
   private void setIvOut(OutputStream ivOut) {
-    setField("ivOut", ivOut);
+    ReflectionUtils.setFieldValue(OUTPUT_STREAM_FIELD, ivOut, this);
   }
 
   private boolean getIvUsed() {
-    return getField("ivUsed", Boolean.class);
+    return ReflectionUtils.getFieldValue(USED_FIELD, Boolean.class, this);
   }
 
   private void setIvUsed(boolean ivUsed) {
-    setField("ivUsed", ivUsed);
+    ReflectionUtils.setFieldValue(USED_FIELD, ivUsed, this);
   }
 
   private int getivIACParserStatus() {
-    return getField("ivIACParserStatus", Integer.class);
+    return ReflectionUtils.getFieldValue(IAC_PARSER_STATUS_FIELD, Integer.class, this);
   }
 
   @Override
@@ -147,13 +135,7 @@ public class ExtendedTelnet extends XITelnet {
   }
 
   private void closeIvSocket() {
-    try {
-      Method method = XITelnet.class.getDeclaredMethod("closeSocket");
-      method.setAccessible(true);
-      method.invoke(this);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e); //NOSONAR
-    }
+    ReflectionUtils.invokeMethod(CLOSE_SOCKET_METHOD, this);
   }
 
   //This class implements the Receptor Thread of the SSL Telnet connection.
