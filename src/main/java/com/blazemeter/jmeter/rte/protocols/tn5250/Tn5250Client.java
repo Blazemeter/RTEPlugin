@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
@@ -159,9 +160,7 @@ public class Tn5250Client implements RteProtocolClient {
     XI5250Field field = em.getFieldFromPos(s.getPosition().getColumn() - 1,
         s.getPosition().getRow() - 1);
     if (field == null) {
-      throw new IllegalArgumentException(
-          "No field at row " + s.getPosition().getRow() + " and column " + s.getPosition()
-              .getColumn());
+      throw new InvalidFieldPositionException(s.getPosition());
     }
     field.setString(s.getInput());
   }
