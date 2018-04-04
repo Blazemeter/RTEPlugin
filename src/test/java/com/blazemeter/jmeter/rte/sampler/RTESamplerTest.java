@@ -24,6 +24,7 @@ import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -34,6 +35,7 @@ import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -70,6 +72,13 @@ public class RTESamplerTest {
   @BeforeClass
   public static void setupClass() {
     TestJMeterUtils.createJmeterEnv();
+  }
+
+  @AfterClass
+  public static void tearDownClass() throws IOException {
+    /*RESampler in some cases throw an InterruptedException and set true the interrupted flag when
+    this is tested is needed reset this flag otherwise the following I/O operations will fail.*/
+    Thread.interrupted();
   }
 
   @SuppressWarnings("unchecked")
