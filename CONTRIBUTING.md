@@ -18,7 +18,14 @@ We are using a custom [checkstyle](http://checkstyle.sourceforge.net/index.html)
 
 To build the plugin and run all tests just run `mvn clean verify`
 
-We are using a Docker image with Maven and BZ Taurus to build and test the plugin. The Dockerfile can be found on this repo. 
+We are using a Docker image with Maven and BZ Taurus to build and test the plugin. The Dockerfile can be found on this repo.
+If it is needed modifying the image it should be tagged as a new version.
+
+The follow Docker commands should be run to build and publish in the repository the new image.
+  ```
+  docker build -t 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus:latest -t 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus:$VERSION $PATH_TO_DOCKERFILE
+  docker push 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus
+  ```
 
 ### Installation
 
