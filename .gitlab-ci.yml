@@ -19,7 +19,7 @@ build:
     - docker
   except:
     - master
-  script: mvn --batch-mode clean verify
+  script: execute-on-vnc mvn --batch-mode clean verify
   artifacts:
     paths:
       - target/*.jar
@@ -31,7 +31,7 @@ build_and_analyze:
     - docker
   only:
     - master
-  script: mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
+  script: execute-on-vnc mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
   artifacts:
     paths:
       - target/*.jar

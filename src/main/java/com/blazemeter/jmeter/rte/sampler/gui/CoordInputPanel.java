@@ -66,7 +66,7 @@ public class CoordInputPanel extends JPanel implements ActionListener {
 
   private Component makeMainPanel() {
     initializeTableModel();
-    table = new JTable(tableModel);
+    table = SwingUtils.createComponent("table", new JTable(tableModel));
     table.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer() {
       @Override
       protected String getText(Object value, int row, int column) {
@@ -92,26 +92,30 @@ public class CoordInputPanel extends JPanel implements ActionListener {
 
   private JPanel makeButtonPanel() {
 
-    addButton = new JButton(JMeterUtils.getResString("add"));
+    addButton = SwingUtils
+        .createComponent("addButton", new JButton(JMeterUtils.getResString("add")));
     addButton.setActionCommand(ADD_ACTION);
     addButton.setEnabled(true);
 
-    addFromClipboardButton = new JButton(JMeterUtils.getResString("add_from_clipboard"));
+    addFromClipboardButton = SwingUtils.createComponent("addFromClipboardButton",
+        new JButton(JMeterUtils.getResString("add_from_clipboard")));
     addFromClipboardButton.setActionCommand("addFromClipboardButton");
     addFromClipboardButton.setEnabled(true);
 
-    deleteButton = new JButton(JMeterUtils.getResString("delete"));
+    deleteButton = SwingUtils
+        .createComponent("deleteButton", new JButton(JMeterUtils.getResString("delete")));
     deleteButton.setActionCommand(DELETE_ACTION);
 
-    upButton = new JButton(JMeterUtils.getResString("up"));
+    upButton = SwingUtils.createComponent("upButton", new JButton(JMeterUtils.getResString("up")));
     upButton.setActionCommand(UP_ACTION);
 
-    downButton = new JButton(JMeterUtils.getResString("down"));
+    downButton = SwingUtils
+        .createComponent("downButton", new JButton(JMeterUtils.getResString("down")));
     downButton.setActionCommand(DOWN_ACTION);
 
     updateEnabledButtons();
 
-    JPanel buttonPanel = new JPanel();
+    JPanel buttonPanel = SwingUtils.createComponent("buttonPanel", new JPanel());
     buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
     addButton.addActionListener(this);
