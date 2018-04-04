@@ -10,8 +10,10 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -37,24 +39,35 @@ public class RTEConfigGuiTest {
     TestJMeterUtils.createJmeterEnv();
   }
 
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
   @Test
-  public void shouldSetTheTestElementFromThePanel() {
-    when(panel.getServer()).thenReturn("Server");
-    when(panel.getPort()).thenReturn("80");
-    when(panel.getProtocol()).thenReturn(Protocol.TN5250);
-    when(panel.getSSLType()).thenReturn(SSLType.NONE);
-    when(panel.getTerminalType()).thenReturn(TerminalType.IBM_3179_2);
-    when(panel.getConnectionTimeout()).thenReturn("10000");
+  public void shouldSetTheTestElementFromThePanelWhenModifyTestElement() {
+    final String server = "Server";
+    final String port = "80";
+    final Protocol protocol = Protocol.TN5250;
+    final TerminalType terminalType = TerminalType.IBM_3179_2;
+    final SSLType sslType = SSLType.NONE;
+    final String timeout = "10000";
+    when(panel.getServer()).thenReturn(server);
+    when(panel.getPort()).thenReturn(port);
+    when(panel.getProtocol()).thenReturn(protocol);
+    when(panel.getSSLType()).thenReturn(sslType);
+    when(panel.getTerminalType()).thenReturn(terminalType);
+    when(panel.getConnectionTimeout()).thenReturn(timeout);
     configGui.modifyTestElement(testElement);
-    assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_SERVER)).isEqualTo("Server");
-    assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_PORT)).isEqualTo("80");
-    assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL))
-        .isEqualTo(Protocol.TN5250.name());
-    assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE))
-        .isEqualTo(SSLType.NONE.name());
-    assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE))
-        .isEqualTo(TerminalType.IBM_3179_2.name());
-    assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT))
-        .isEqualTo("10000");
+    softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_SERVER))
+        .as(RTESampler.CONFIG_SERVER).isEqualTo(server);
+    softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_PORT))
+        .as(RTESampler.CONFIG_PORT).isEqualTo(port);
+    softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL))
+        .as(RTESampler.CONFIG_PROTOCOL).isEqualTo(protocol.name());
+    softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE))
+        .as(RTESampler.CONFIG_SSL_TYPE).isEqualTo(sslType.name());
+    softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE))
+        .as(RTESampler.CONFIG_TERMINAL_TYPE).isEqualTo(terminalType.name());
+    softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT))
+        .as(RTESampler.CONFIG_CONNECTION_TIMEOUT).isEqualTo(timeout);
   }
 }

@@ -36,9 +36,7 @@ public class RTESamplerPanelTest {
   public void shouldDisableRequestFieldsWhenJustConnectIsChecked() {
     JCheckBoxFixture check = frame.checkBox("justConnect");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set false previously to assure that the event is triggered
-    check.check(false);
-    check.check(true);
+    switchEnabledTo(true, check );
     expected.add(frame.table("table"));
     expected.add(frame.button("addButton"));
     expected.add(frame.button("addFromClipboardButton"));
@@ -52,9 +50,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableRequestFieldsWhenJustConnectIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox("justConnect");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set true previously to assure that the event is triggered
-    check.check(true);
-    check.check(false);
+    switchEnabledTo(false, check );
     expected.add(frame.table("table"));
     expected.add(frame.button("addButton"));
     expected.add(frame.button("addFromClipboardButton"));
@@ -68,9 +64,7 @@ public class RTESamplerPanelTest {
   public void shouldDisableSyncWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox("waitSync");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set true previously to assure that the event is triggered
-    check.check(true);
-    check.check(false);
+    switchEnabledTo(false, check );
     expected.add(frame.textBox("waitSyncTimeout"));
     validateEnabled(false, expected);
   }
@@ -79,9 +73,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableSyncWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox("waitSync");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set false previously to assure that the event is triggered
-    check.check(false);
-    check.check(true);
+    switchEnabledTo(true, check );
     expected.add(frame.textBox("waitSyncTimeout"));
     validateEnabled(true, expected);
   }
@@ -90,9 +82,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableCursorWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox("waitCursor");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set false previously to assure that the event is triggered
-    check.check(false);
-    check.check(true);
+    switchEnabledTo(true, check );
     expected.add(frame.textBox("waitCursorRow"));
     expected.add(frame.textBox("waitCursorColumn"));
     expected.add(frame.textBox("waitCursorTimeout"));
@@ -103,9 +93,7 @@ public class RTESamplerPanelTest {
   public void shouldDisableCursorWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox("waitCursor");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set true previously to assure that the event is triggered
-    check.check(true);
-    check.check(false);
+    switchEnabledTo(false, check );
     expected.add(frame.textBox("waitCursorRow"));
     expected.add(frame.textBox("waitCursorColumn"));
     expected.add(frame.textBox("waitCursorTimeout"));
@@ -116,9 +104,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableSilentWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox("waitSilent");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set false previously to assure that the event is triggered
-    check.check(false);
-    check.check(true);
+    switchEnabledTo(true, check );
     expected.add(frame.textBox("waitSilentTime"));
     expected.add(frame.textBox("waitSilentTimeout"));
     validateEnabled(true, expected);
@@ -140,9 +126,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableTextWaitFieldWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox("waitText");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set false previously to assure that the event is triggered
-    check.check(false);
-    check.check(true);
+    switchEnabledTo(true, check );
     expected.add(frame.textBox("waitTextRegex"));
     expected.add(frame.textBox("waitTextTimeout"));
     expected.add(frame.textBox("waitTextAreaLeft"));
@@ -156,9 +140,7 @@ public class RTESamplerPanelTest {
   public void shouldDisableTextWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox("waitText");
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set true previously to assure that the event is triggered
-    check.check(true);
-    check.check(false);
+    switchEnabledTo(false, check );
     expected.add(frame.textBox("waitTextRegex"));
     expected.add(frame.textBox("waitTextTimeout"));
     expected.add(frame.textBox("waitTextAreaLeft"));
@@ -171,6 +153,11 @@ public class RTESamplerPanelTest {
   @After
   public void tearDown() {
     frame.cleanUp();
+  }
+
+  private void switchEnabledTo(boolean state, JCheckBoxFixture check ){
+    check.check(!state);
+    check.check(state);
   }
 
   private void validateEnabled(boolean enable, List<AbstractJComponentFixture> components) {
