@@ -1,6 +1,5 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.Protocol;
@@ -28,6 +27,9 @@ public class RTEConfigGuiTest {
   @Mock
   private RTEConfigPanel panel;
 
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
   @Before
   public void setup() {
     configGui = new RTEConfigGui(panel);
@@ -38,9 +40,6 @@ public class RTEConfigGuiTest {
   public static void setupClass() {
     TestJMeterUtils.createJmeterEnv();
   }
-
-  @Rule
-  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
   @Test
   public void shouldSetTheTestElementFromThePanelWhenModifyTestElement() {

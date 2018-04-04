@@ -1,13 +1,14 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import kg.apc.emulators.TestJMeterUtils;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -22,6 +23,9 @@ public class RTESamplerGuiTest {
   @Mock
   private RTESamplerPanel panel;
 
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
   @Before
   public void setup() {
     samplerGui = new RTESamplerGui(panel);
@@ -35,49 +39,74 @@ public class RTESamplerGuiTest {
 
   @Test
   public void shouldSetTheTestElementFromThePanel() {
-    when(panel.getAction()).thenReturn(Action.ENTER);
-    when(panel.getDisconnect()).thenReturn(true);
-    when(panel.getJustConnect()).thenReturn(true);
-    when(panel.getWaitSync()).thenReturn(true);
-    when(panel.getWaitSyncTimeout()).thenReturn("1");
-    when(panel.getWaitCursor()).thenReturn(true);
-    when(panel.getWaitCursorColumn()).thenReturn("2");
-    when(panel.getWaitCursorRow()).thenReturn("3");
-    when(panel.getWaitCursorTimeout()).thenReturn("4");
-    when(panel.getWaitSilent()).thenReturn(true);
-    when(panel.getWaitSilentTimeout()).thenReturn("5");
-    when(panel.getWaitSilentTime()).thenReturn("6");
-    when(panel.getWaitText()).thenReturn(true);
-    when(panel.getWaitTextAreaBottom()).thenReturn("7");
-    when(panel.getWaitTextAreaLeft()).thenReturn("8");
-    when(panel.getWaitTextAreaRight()).thenReturn("9");
-    when(panel.getWaitTextAreaTop()).thenReturn("10");
-    when(panel.getWaitTextRegex()).thenReturn("regExp");
-    when(panel.getWaitTextTimeout()).thenReturn("11");
+    final Action action = Action.ENTER;
+    final boolean t = true;
+    final String waitSyncTimeout = "1";
+    final String waitCursorColumn = "2";
+    final String waitCursorRow = "3";
+    final String waitCursorTimeout = "4";
+    final String waitSilentTimeout = "5";
+    final String waitSilentTime = "6";
+    final String waitTextAreaBottom = "7";
+    final String waitTextAreaLeft = "8";
+    final String waitTextAreaRight = "9";
+    final String waitTextAreaTop = "10";
+    final String waitTextRegex = "regExp";
+    final String waitTextTimeout = "11";
+    when(panel.getAction()).thenReturn(action);
+    when(panel.getDisconnect()).thenReturn(t);
+    when(panel.getJustConnect()).thenReturn(t);
+    when(panel.getWaitSync()).thenReturn(t);
+    when(panel.getWaitSyncTimeout()).thenReturn(waitSyncTimeout);
+    when(panel.getWaitCursor()).thenReturn(t);
+    when(panel.getWaitCursorColumn()).thenReturn(waitCursorColumn);
+    when(panel.getWaitCursorRow()).thenReturn(waitCursorRow);
+    when(panel.getWaitCursorTimeout()).thenReturn(waitCursorTimeout);
+    when(panel.getWaitSilent()).thenReturn(t);
+    when(panel.getWaitSilentTimeout()).thenReturn(waitSilentTimeout);
+    when(panel.getWaitSilentTime()).thenReturn(waitSilentTime);
+    when(panel.getWaitText()).thenReturn(t);
+    when(panel.getWaitTextAreaBottom()).thenReturn(waitTextAreaBottom);
+    when(panel.getWaitTextAreaLeft()).thenReturn(waitTextAreaLeft);
+    when(panel.getWaitTextAreaRight()).thenReturn(waitTextAreaRight);
+    when(panel.getWaitTextAreaTop()).thenReturn(waitTextAreaTop);
+    when(panel.getWaitTextRegex()).thenReturn(waitTextRegex);
+    when(panel.getWaitTextTimeout()).thenReturn(waitTextTimeout);
     when(panel.getPayload()).thenReturn(null);
 
     samplerGui.modifyTestElement(testElement);
-    assertThat(testElement.getAction()).isEqualTo(Action.ENTER);
-    assertThat(testElement.getDisconnect()).isEqualTo(true);
-    assertThat(testElement.getJustConnect()).isEqualTo(true);
-    assertThat(testElement.getWaitSync()).isEqualTo(true);
-    assertThat(testElement.getWaitCursor()).isEqualTo(true);
-    assertThat(testElement.getWaitSilent()).isEqualTo(true);
-    assertThat(testElement.getWaitText()).isEqualTo(true);
-    assertThat(testElement.getWaitSyncTimeout()).isEqualTo("1");
-    assertThat(testElement.getWaitCursorColumn()).isEqualTo("2");
-    assertThat(testElement.getWaitCursorRow()).isEqualTo("3");
-    assertThat(testElement.getWaitCursorTimeout()).isEqualTo("4");
-    assertThat(testElement.getWaitSilentTimeout()).isEqualTo("5");
-    assertThat(testElement.getWaitSilentTime()).isEqualTo("6");
-    assertThat(testElement.getWaitTextAreaBottom()).isEqualTo("7");
-    assertThat(testElement.getWaitTextAreaLeft()).isEqualTo("8");
-    assertThat(testElement.getWaitTextAreaRight()).isEqualTo("9");
-    assertThat(testElement.getWaitTextAreaTop()).isEqualTo("10");
-    assertThat(testElement.getWaitTextTimeout()).isEqualTo("11");
-    assertThat(testElement.getWaitTextRegex()).isEqualTo("regExp");
 
-
+    softly.assertThat(testElement.getAction()).as("Action").isEqualTo(action);
+    softly.assertThat(testElement.getDisconnect()).as("Disconnect").isEqualTo(t);
+    softly.assertThat(testElement.getJustConnect()).as("JustConnect").isEqualTo(t);
+    softly.assertThat(testElement.getWaitSync()).as("WaitSync").isEqualTo(t);
+    softly.assertThat(testElement.getWaitCursor()).as("WaitCursor").isEqualTo(t);
+    softly.assertThat(testElement.getWaitSilent()).as("WaitSilent").isEqualTo(t);
+    softly.assertThat(testElement.getWaitText()).as("WaitText").isEqualTo(t);
+    softly.assertThat(testElement.getWaitSyncTimeout()).as("WaitSyncTimeout")
+        .isEqualTo(waitSyncTimeout);
+    softly.assertThat(testElement.getWaitCursorColumn()).as("WaitCursorColumn")
+        .isEqualTo(waitCursorColumn);
+    softly.assertThat(testElement.getWaitCursorRow()).as("WaitCursorRow")
+        .isEqualTo(waitCursorRow);
+    softly.assertThat(testElement.getWaitCursorTimeout()).as("WaitCursorTimeout")
+        .isEqualTo(waitCursorTimeout);
+    softly.assertThat(testElement.getWaitSilentTimeout()).as("WaitSilentTimeout")
+        .isEqualTo(waitSilentTimeout);
+    softly.assertThat(testElement.getWaitSilentTime()).as("WaitSilentTime")
+        .isEqualTo(waitSilentTime);
+    softly.assertThat(testElement.getWaitTextAreaBottom()).as("WaitTextAreaBottom")
+        .isEqualTo(waitTextAreaBottom);
+    softly.assertThat(testElement.getWaitTextAreaLeft()).as("WaitTextAreaLeft")
+        .isEqualTo(waitTextAreaLeft);
+    softly.assertThat(testElement.getWaitTextAreaRight()).as("WaitTextAreaRight")
+        .isEqualTo(waitTextAreaRight);
+    softly.assertThat(testElement.getWaitTextAreaTop()).as("WaitTextAreaTop")
+        .isEqualTo(waitTextAreaTop);
+    softly.assertThat(testElement.getWaitTextTimeout()).as("WaitTextTimeout")
+        .isEqualTo(waitTextTimeout);
+    softly.assertThat(testElement.getWaitTextRegex()).as("WaitTextRegex")
+        .isEqualTo(waitTextRegex);
   }
 
 }
