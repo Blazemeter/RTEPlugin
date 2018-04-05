@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
@@ -30,7 +31,6 @@ import com.bytezone.dm3270.display.Screen;
 import com.bytezone.dm3270.display.ScreenDimensions;
 import com.bytezone.dm3270.display.ScreenPosition;
 import com.bytezone.dm3270.plugins.PluginsStage;
-import com.bytezone.dm3270.streams.TelnetState;
 import com.bytezone.dm3270.utilities.Site;
 import java.awt.Dimension;
 import java.lang.reflect.Method;
@@ -47,8 +47,12 @@ import java.util.function.Supplier;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Tn3270Client extends BaseProtocolClient {
+
+  private static final Logger LOG = LoggerFactory.getLogger(Tn3270Client.class);
 
   private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
       new Tn3270TerminalType(DeviceModel.M2, false),
@@ -99,7 +103,7 @@ public class Tn3270Client extends BaseProtocolClient {
       ReflectionUtils.getAccessibleMethod(ScreenPosition.class, "getCharString");
 
   private Screen screen;
-  private ConnectibleConsolePane consolePane;
+  private ExtendedConsolePane consolePane;
 
   private ScheduledExecutorService stableTimeoutExecutor;
 
@@ -118,7 +122,7 @@ public class Tn3270Client extends BaseProtocolClient {
     Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
     Site serverSite = new Site("", server, port, termType.isExtended(), termType.getModel(), false,
         "");
-    TelnetState telnetState = new TelnetState();
+    ExtendedTelnetState telnetState = new ExtendedTelnetState();
     telnetState.setDoDeviceType(termType.getModel());
     Preferences prefs = Preferences.userNodeForPackage(getClass());
     // we need to build instances in JavaFx thread due to JavaFx limitations
@@ -127,7 +131,7 @@ public class Tn3270Client extends BaseProtocolClient {
         termType.getScreenDimensions(), prefs, Function.TERMINAL, pluginsStage, serverSite,
         telnetState));
     screen.lockKeyboard("connect");
-    consolePane = new ConnectibleConsolePane(screen, serverSite, pluginsStage);
+    consolePane = new ExtendedConsolePane(screen, serverSite, pluginsStage);
     consolePane.connect();
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
@@ -164,7 +168,7 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public void send(List<CoordInput> input, Action action) {
+  public void send(List<CoordInput> input, Action action) throws RteIOException {
     input.forEach(i -> {
       int linearPosition = buildLinealPosition(i);
       Field field = screen.getFieldManager()
@@ -174,6 +178,7 @@ public class Tn3270Client extends BaseProtocolClient {
       screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
     });
     consolePane.sendAID(AID_COMMANDS.get(action), action.name());
+    consolePane.throwAnyPendingError();
   }
 
   private int buildLinealPosition(CoordInput i) {
@@ -255,10 +260,19 @@ public class Tn3270Client extends BaseProtocolClient {
     doDisconnect();
   }
 
-  private void doDisconnect() {
+  private void doDisconnect() throws RteIOException{
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
-    consolePane.disconnect();
+    try {
+      consolePane.doDisconnect();
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      LOG.warn("Disconnection process was interrupted");
+    }
+    // we need to close the screen in JavaFx thread due to JavaFx limitations
+    runOnJavaFxThread(() -> screen.close());
+    consolePane.throwAnyPendingError();
     //TODO: at some point we need to call Platform.exit()
   }
+
 }
