@@ -7,7 +7,7 @@ import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ScreenTextListener extends ConditionWaiter<TextWaitCondition> {
+public class ScreenTextListener extends ConditionWaiterTn5250<TextWaitCondition> {
 
   private static final Logger LOG = LoggerFactory.getLogger(ScreenTextListener.class);
 

@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import com.google.common.base.Stopwatch;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public abstract class ConditionWaiterIT {
+public abstract class ConditionWaiterTn5250IT {
 
   protected static final long TIMEOUT_MILLIS = 3000;
   protected static final long STABLE_MILLIS = 1000;
@@ -33,7 +32,7 @@ public abstract class ConditionWaiterIT {
   @Mock
   protected Tn5250Client client;
 
-  protected ConditionWaiter<?> listener;
+  protected ConditionWaiterTn5250<?> listener;
 
   @Before
   public void setup() throws Exception {
@@ -42,7 +41,7 @@ public abstract class ConditionWaiterIT {
     listener = buildConditionWaiter();
   }
 
-  protected abstract ConditionWaiter<?> buildConditionWaiter() throws Exception;
+  protected abstract ConditionWaiterTn5250<?> buildConditionWaiter() throws Exception;
 
   @After
   public void teardown() {

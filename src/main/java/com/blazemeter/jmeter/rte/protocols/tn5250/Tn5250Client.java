@@ -4,17 +4,17 @@ import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConditionWaiter;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConditionWaiterTn5250;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
@@ -134,12 +134,12 @@ public class Tn5250Client implements RteProtocolClient {
   @SuppressWarnings({"unchecked"})
   public void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException {
-    List<ConditionWaiter> listeners = waitConditions.stream()
+    List<ConditionWaiterTn5250> listeners = waitConditions.stream()
         .map(this::buildWaiter)
         .collect(Collectors.toList());
     listeners.forEach(em::addEmulatorListener);
     try {
-      for (ConditionWaiter listener : listeners) {
+      for (ConditionWaiterTn5250 listener : listeners) {
         listener.await();
       }
     } finally {
@@ -150,7 +150,7 @@ public class Tn5250Client implements RteProtocolClient {
     }
   }
 
-  private ConditionWaiter buildWaiter(WaitCondition waitCondition) {
+  private ConditionWaiterTn5250 buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
       return new UnlockListener((SyncWaitCondition) waitCondition, this, stableTimeoutExecutor);
     } else if (waitCondition instanceof CursorWaitCondition) {

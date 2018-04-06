@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class VisibleCursorListenerIT extends ConditionWaiterIT {
+public class VisibleCursorListenerIT extends ConditionWaiterTn5250IT {
 
   private static final Position EXPECTED_CURSOR_POSITION = new Position(7, 53);
 
@@ -25,7 +25,7 @@ public class VisibleCursorListenerIT extends ConditionWaiterIT {
   }
 
   @Override
-  protected ConditionWaiter<?> buildConditionWaiter() {
+  protected ConditionWaiterTn5250<?> buildConditionWaiter() {
     return new VisibleCursorListener(
         new CursorWaitCondition(EXPECTED_CURSOR_POSITION, TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
@@ -45,7 +45,7 @@ public class VisibleCursorListenerIT extends ConditionWaiterIT {
   @Test
   public void shouldUnblockWhenAlreadyInExpectedCursorPosition() throws Exception {
     when(client.getCursorPosition()).thenReturn(EXPECTED_CURSOR_POSITION);
-    ConditionWaiter<?> listener = buildConditionWaiter();
+    ConditionWaiterTn5250<?> listener = buildConditionWaiter();
     listener.await();
   }
 

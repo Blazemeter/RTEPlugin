@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class UnlockListenerIT extends ConditionWaiterIT {
+public class UnlockListenerIT extends ConditionWaiterTn5250IT {
 
   @Override
   @Before
@@ -22,7 +22,7 @@ public class UnlockListenerIT extends ConditionWaiterIT {
   }
 
   @Override
-  protected ConditionWaiter<?> buildConditionWaiter() {
+  protected ConditionWaiterTn5250<?> buildConditionWaiter() {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor);
@@ -41,7 +41,7 @@ public class UnlockListenerIT extends ConditionWaiterIT {
   @Test
   public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
     when(client.isInputInhibited()).thenReturn(false);
-    ConditionWaiter<?> listener = buildConditionWaiter();
+    ConditionWaiterTn5250<?> listener = buildConditionWaiter();
     listener.await();
   }
 

@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ConditionWaiter} which allows waiting until the terminal does not receive events
+ * A {@link ConditionWaiterTn5250} which allows waiting until the terminal does not receive events
  * for a given period of time.
  */
-public class SilenceListener extends ConditionWaiter<SilentWaitCondition> {
+public class SilenceListener extends ConditionWaiterTn5250<SilentWaitCondition> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
 

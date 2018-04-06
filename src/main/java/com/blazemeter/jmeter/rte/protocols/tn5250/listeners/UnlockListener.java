@@ -8,9 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ConditionWaiter} which allows waiting until the terminal is unlocked.
+ * A {@link ConditionWaiterTn5250} which allows waiting until the terminal is unlocked.
  */
-public class UnlockListener extends ConditionWaiter<SyncWaitCondition> {
+public class UnlockListener extends ConditionWaiterTn5250<SyncWaitCondition> {
 
   private static final Logger LOG = LoggerFactory.getLogger(UnlockListener.class);
   private boolean isInputInhibited;
