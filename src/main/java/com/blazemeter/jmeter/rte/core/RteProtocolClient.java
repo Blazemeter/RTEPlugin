@@ -8,6 +8,25 @@ import java.util.concurrent.TimeoutException;
 
 public interface RteProtocolClient {
 
+  /**
+   * Get the list of supported terminal types.
+   *
+   * @return The list of supported terminal types. First element in the list is used as default
+   * value.
+   */
+  List<TerminalType> getSupportedTerminalTypes();
+
+  default TerminalType getTerminalTypeById(String id) {
+    return getSupportedTerminalTypes().stream()
+        .filter(t -> id.equals(t.getId()))
+        .findAny()
+        .orElse(null);
+  }
+
+  default TerminalType getDefaultTerminalType() {
+    return getSupportedTerminalTypes().get(0);
+  }
+
   void connect(String server, int port, SSLType sslType,
       TerminalType terminalType, long timeoutMillis, long stableTimeout)
       throws RteIOException, TimeoutException, InterruptedException;

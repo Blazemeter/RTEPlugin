@@ -1,9 +1,9 @@
 package com.blazemeter.jmeter.rte.sampler;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -53,7 +53,7 @@ public class RTESamplerTest {
   private static final String BASE_REQUEST_HEADERS_FORMAT = "Server: server\n"
       + "Port: 23\n"
       + "Protocol: TN5250\n"
-      + "Terminal-type: IBM-3179-2: 24x80 color display\n"
+      + "Terminal-type: IBM-3179-2: 24x80\n"
       + "Security: %s\n";
   private static final String REQUEST_HEADERS_FORMAT = BASE_REQUEST_HEADERS_FORMAT
       + "Input-inhibited: true\n";
@@ -105,7 +105,7 @@ public class RTESamplerTest {
     configTestElement.setProperty(RTESampler.CONFIG_SERVER, server);
     configTestElement.setProperty(RTESampler.CONFIG_PORT, port);
     configTestElement
-        .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, terminalType.name());
+        .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, terminalType.getId());
     configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
     configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, sslType.name());
     configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);

@@ -6,7 +6,6 @@ import static org.assertj.swing.fixture.Containers.showInFrame;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.swing.JComboBox;
 import kg.apc.emulators.TestJMeterUtils;
@@ -31,14 +30,15 @@ public class RTEConfigPanelTest {
     frame = showInFrame(panel);
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void shouldChangeTheValuesOfTheTerminalComboBoxWhenChangeProtocolComboBox() {
     JComboBox protocolCombo = frame.robot().finder()
         .findByName("protocolComboBox", JComboBox.class);
-    JComboBox terminalCombo = frame.robot().finder()
+    JComboBox<TerminalType> terminalCombo = (JComboBox<TerminalType>) frame.robot().finder()
         .findByName("terminalTypeComboBox", JComboBox.class);
     protocolCombo.setSelectedItem(Protocol.TN3270);
-    assertThat(Arrays.asList(TerminalType.findByProtocol(Protocol.TN3270)))
+    assertThat(Protocol.TN3270.createProtocolClient().getSupportedTerminalTypes())
         .containsExactlyElementsOf(getComboValues(terminalCombo));
   }
 

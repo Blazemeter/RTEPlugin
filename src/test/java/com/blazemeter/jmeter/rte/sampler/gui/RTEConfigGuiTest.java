@@ -46,7 +46,7 @@ public class RTEConfigGuiTest {
     final String server = "Server";
     final String port = "80";
     final Protocol protocol = Protocol.TN5250;
-    final TerminalType terminalType = TerminalType.IBM_3179_2;
+    final TerminalType terminalType = protocol.createProtocolClient().getDefaultTerminalType();
     final SSLType sslType = SSLType.NONE;
     final String timeout = "10000";
     when(panel.getServer()).thenReturn(server);
@@ -65,7 +65,7 @@ public class RTEConfigGuiTest {
     softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_SSL_TYPE))
         .as(RTESampler.CONFIG_SSL_TYPE).isEqualTo(sslType.name());
     softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE))
-        .as(RTESampler.CONFIG_TERMINAL_TYPE).isEqualTo(terminalType.name());
+        .as(RTESampler.CONFIG_TERMINAL_TYPE).isEqualTo(terminalType.getId());
     softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT))
         .as(RTESampler.CONFIG_CONNECTION_TIMEOUT).isEqualTo(timeout);
   }

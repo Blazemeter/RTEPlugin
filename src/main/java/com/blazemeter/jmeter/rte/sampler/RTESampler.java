@@ -48,7 +48,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
   public static final Action DEFAULT_ACTION = Action.ENTER;
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
-  public static final TerminalType DEFAULT_TERMINAL_TYPE = TerminalType.IBM_3179_2;
+  public static final TerminalType DEFAULT_TERMINAL_TYPE = DEFAULT_PROTOCOL.createProtocolClient()
+      .getDefaultTerminalType();
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
   @VisibleForTesting
   protected static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
@@ -128,7 +129,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   }
 
   private TerminalType getTerminalType() {
-    return TerminalType.valueOf(getPropertyAsString(CONFIG_TERMINAL_TYPE));
+    return getProtocol().createProtocolClient()
+        .getTerminalTypeById(getPropertyAsString(CONFIG_TERMINAL_TYPE));
   }
 
   private long getConnectionTimeout() {
@@ -435,7 +437,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     StringBuilder ret = new StringBuilder("Server: " + getServer() + "\n" +
         "Port: " + getPort() + "\n" +
         "Protocol: " + getProtocol().toString() + "\n" +
-        "Terminal-type: " + getTerminalType().toString() + "\n" +
+        "Terminal-type: " + getTerminalType() + "\n" +
         "Security: " + getSSLType() + "\n"
     );
     if (getJustConnect()) {

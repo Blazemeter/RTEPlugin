@@ -23,6 +23,7 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListene
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Tn5250Client implements RteProtocolClient {
+
+  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
+
+  private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
+      new TerminalType("IBM-3179-2", new Dimension(80, 24)),
+      new TerminalType("IBM-3477-FC", new Dimension(132, 27))
+  );
 
   private static final Map<Action, KeyEventMap> KEY_EVENTS = new EnumMap<Action, KeyEventMap>(
       Action.class) {
@@ -74,9 +82,14 @@ public class Tn5250Client implements RteProtocolClient {
       put(Action.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
     }
   };
-  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
+
   private final ExtendedEmulator em = new ExtendedEmulator();
   private ScheduledExecutorService stableTimeoutExecutor;
+
+  @Override
+  public List<TerminalType> getSupportedTerminalTypes() {
+    return TERMINAL_TYPES;
+  }
 
   @Override
   public void connect(String server, int port, SSLType sslType,
@@ -87,7 +100,7 @@ public class Tn5250Client implements RteProtocolClient {
     em.setHost(server);
     em.setPort(port);
     em.setConnectionTimeoutMillis((int) timeoutMillis);
-    em.setTerminalType(terminalType.getType());
+    em.setTerminalType(terminalType.getId());
     em.setSslType(sslType);
     UnlockListener unlock = new UnlockListener(
         new SyncWaitCondition(timeoutMillis, stableTimeoutMillis), this,
