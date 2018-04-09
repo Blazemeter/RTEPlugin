@@ -10,12 +10,15 @@ import com.bytezone.dm3270.streams.TelnetState;
 import com.bytezone.dm3270.streams.TerminalServer;
 import com.bytezone.dm3270.utilities.Site;
 import java.lang.reflect.Method;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is an extension of {@link ConsolePane} but making connect method public.
  */
 public class ConnectibleConsolePane extends ConsolePane {
 
+  private final Logger LOG = LoggerFactory.getLogger(ConnectibleConsolePane.class);
   private TelnetListener telnetListener;
   private final TelnetState telnetState;
   private final Site server;
@@ -58,6 +61,29 @@ public class ConnectibleConsolePane extends ConsolePane {
 
       terminalServerThread = new Thread (terminalServer);
       terminalServerThread.start ();
+  }
+
+  @Override
+  public void disconnect()
+  {
+      if (terminalServer != null)
+          terminalServer.close ();
+
+      telnetState.close ();
+
+      if (terminalServerThread != null)
+      {
+          terminalServerThread.interrupt ();
+          try
+          {
+              terminalServerThread.join ();
+          }
+          catch (InterruptedException ex)
+          {
+              terminalServerThread.interrupt();
+              LOG.info("Communication error with Rte server, the disconnection process was interrupted.");
+          }
+      }
   }
 
 }

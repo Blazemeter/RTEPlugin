@@ -15,9 +15,12 @@ import java.time.LocalDateTime;
 
 import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExtendedTerminalServer extends TerminalServer {
 
+    private final Logger LOG = LoggerFactory.getLogger(ExtendedTerminalServer.class);
     private int connectionTimeoutMillis;
     private SSLType sslType;
 
@@ -66,7 +69,7 @@ public class ExtendedTerminalServer extends TerminalServer {
 
             while (running) {
                 if (Thread.interrupted()) {
-                    System.out.println("TerminalServer interrupted");
+                    LOG.info("TerminalServer interrupted");
                     break;
                 }
 
@@ -77,26 +80,21 @@ public class ExtendedTerminalServer extends TerminalServer {
                 }
 
                 if (Thread.currentThread().isInterrupted())
-                    System.out.println("TerminalServer was interrupted!");
+                    LOG.info("TerminalServer was interrupted");
 
                 if (debug) {
-                    System.out.println(toString());
-                    System.out.println("reading:");
-                    System.out.println(Dm3270Utility.toHex(buffer, 0, bytesRead));
+                    LOG.info(toString());
+                    LOG.info("reading:");
+                    LOG.info(Dm3270Utility.toHex(buffer, 0, bytesRead));
                 }
 
                 byte[] message = new byte[bytesRead];
                 System.arraycopy(buffer, 0, message, 0, bytesRead);
                 telnetListener.listen(Source.SERVER, message, LocalDateTime.now(), true);
             }
-        } catch (IOException ex) {
+        } catch (GeneralSecurityException | IOException ex) {
             if (running) {
-                ex.printStackTrace();
-                close();
-            }
-        } catch (GeneralSecurityException ex) {
-            if (running) {
-                ex.printStackTrace();
+                LOG.info("Communication with Rte server failed.");
                 close();
             }
         }
@@ -115,7 +113,7 @@ public class ExtendedTerminalServer extends TerminalServer {
             if (telnetListener != null)
                 telnetListener.close();
         } catch (IOException ex) {
-            ex.printStackTrace();
+            LOG.info("Communication with Rte server failed.");
         }
     }
 
