@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ConnectibleConsolePane extends ConsolePane {
 
-  private final Logger LOG = LoggerFactory.getLogger(ConnectibleConsolePane.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ConnectibleConsolePane.class);
   private TelnetListener telnetListener;
   private final TelnetState telnetState;
   private final Site server;
@@ -31,59 +31,57 @@ public class ConnectibleConsolePane extends ConsolePane {
   private static final Method CONNECT_METHOD = ReflectionUtils
       .getAccessibleMethod(ConsolePane.class, "connect");
 
-  public ConnectibleConsolePane(Screen screen, Site server, PluginsStage pluginsStage, TelnetState telnetState) {
+  public ConnectibleConsolePane(Screen screen, Site server, PluginsStage pluginsStage) {
     super(screen, server, pluginsStage);
     this.server = server;
-    this.telnetState = telnetState;
     this.screen = screen;
+    this.telnetState = screen.getTelnetState();
   }
 
-  public void setSslType(SSLType sslType){
-      this.sslType = sslType;
+  public void setSslType(SSLType sslType) {
+    this.sslType = sslType;
   }
 
-  public void setConnectionTimeoutMillis(int connectionTimeoutMillis){
-      this.connectionTimeoutMillis = connectionTimeoutMillis;
+  public void setConnectionTimeoutMillis(int connectionTimeoutMillis) {
+    this.connectionTimeoutMillis = connectionTimeoutMillis;
   }
 
-  public void connect () {
-      if (server == null)
-          throw new IllegalArgumentException ("Server must not be null");
+  public void connect() {
+    if (server == null) {
+      throw new IllegalArgumentException("Server must not be null");
+    }
 
-      // set preferences for this session
-      telnetState.setDo3270Extended (server.getExtended ());
-      telnetState.setDoTerminalType (true);
+    // set preferences for this session
+    telnetState.setDo3270Extended(server.getExtended());
+    telnetState.setDoTerminalType(true);
 
-      telnetListener = new TelnetListener(screen, telnetState);
-      terminalServer =
-              new ExtendedTerminalServer(server.getURL (), server.getPort (), telnetListener, sslType, connectionTimeoutMillis);
-      telnetState.setTerminalServer (terminalServer);
+    telnetListener = new TelnetListener(screen, telnetState);
+    terminalServer =
+        new ExtendedTerminalServer(server.getURL(), server.getPort(), telnetListener, sslType,
+            connectionTimeoutMillis);
+    telnetState.setTerminalServer(terminalServer);
 
-      terminalServerThread = new Thread (terminalServer);
-      terminalServerThread.start ();
+    terminalServerThread = new Thread(terminalServer);
+    terminalServerThread.start();
   }
 
   @Override
-  public void disconnect()
-  {
-      if (terminalServer != null)
-          terminalServer.close ();
+  public void disconnect() {
+    if (terminalServer != null) {
+      terminalServer.close();
+    }
 
-      telnetState.close ();
+    telnetState.close();
 
-      if (terminalServerThread != null)
-      {
-          terminalServerThread.interrupt ();
-          try
-          {
-              terminalServerThread.join ();
-          }
-          catch (InterruptedException ex)
-          {
-              terminalServerThread.interrupt();
-              LOG.info("Communication error with Rte server, the disconnection process was interrupted.");
-          }
+    if (terminalServerThread != null) {
+      terminalServerThread.interrupt();
+      try {
+        terminalServerThread.join();
+      } catch (InterruptedException ex) {
+        terminalServerThread.interrupt();
+        LOG.info("Communication error with Rte server, the disconnection process was interrupted.");
       }
+    }
   }
 
 }

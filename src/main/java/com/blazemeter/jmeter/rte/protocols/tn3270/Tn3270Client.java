@@ -174,7 +174,7 @@ public class Tn3270Client extends BaseProtocolClient {
       Field field = screen.getFieldManager()
           .getFieldAt(linearPosition)
           .orElseThrow(() -> new InvalidFieldPositionException(i.getPosition()));
-      screen.setFieldText(field, i.getInput());
+      field.setText(i.getInput());
       screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
     });
     consolePane.sendAID(AID_COMMANDS.get(action), action.name());

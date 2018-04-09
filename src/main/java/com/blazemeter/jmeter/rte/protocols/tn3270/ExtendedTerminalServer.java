@@ -20,101 +20,104 @@ import org.slf4j.LoggerFactory;
 
 public class ExtendedTerminalServer extends TerminalServer {
 
-    private final Logger LOG = LoggerFactory.getLogger(ExtendedTerminalServer.class);
-    private int connectionTimeoutMillis;
-    private SSLType sslType;
+  private final Logger LOG = LoggerFactory.getLogger(ExtendedTerminalServer.class);
+  private int connectionTimeoutMillis;
+  private SSLType sslType;
 
-    private final int serverPort;
-    private final String serverURL;
-    private Socket socket = new Socket();
-    private InputStream serverIn;
-    private OutputStream serverOut;
+  private final int serverPort;
+  private final String serverURL;
+  private Socket socket = new Socket();
+  private InputStream serverIn;
+  private OutputStream serverOut;
 
-    private final byte[] buffer = new byte[4096];
-    private int bytesRead;
-    private volatile boolean running;
+  private final byte[] buffer = new byte[4096];
+  private int bytesRead;
+  private volatile boolean running;
 
-    private final boolean debug = false;
-    private final BufferListener telnetListener;
+  private final boolean debug = false;
+  private final BufferListener telnetListener;
 
-    public ExtendedTerminalServer(String serverURL, int serverPort, BufferListener listener,
-                                  SSLType sslType, int connectionTimeoutMillis) {
-        super(serverURL, serverPort, listener);
-        this.serverPort = serverPort;
-        this.sslType = sslType;
-        this.serverURL = serverURL;
-        this.connectionTimeoutMillis = connectionTimeoutMillis;
-        this.telnetListener = listener;
+  public ExtendedTerminalServer(String serverURL, int serverPort, BufferListener listener,
+      SSLType sslType, int connectionTimeoutMillis) {
+    super(serverURL, serverPort, listener);
+    this.serverPort = serverPort;
+    this.sslType = sslType;
+    this.serverURL = serverURL;
+    this.connectionTimeoutMillis = connectionTimeoutMillis;
+    this.telnetListener = listener;
+  }
+
+  private Socket createSocket() throws IOException, GeneralSecurityException {
+    if (sslType != null && sslType != SSLType.NONE) {
+      SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslType);
+      sslSocketFactory.init();
+      return sslSocketFactory.createSocket(serverURL, serverPort, connectionTimeoutMillis);
+    } else {
+      Socket socket = new Socket();
+      socket.connect(new InetSocketAddress(serverURL, serverPort), connectionTimeoutMillis);
+      return socket;
     }
+  }
 
-    private Socket createSocket() throws IOException, GeneralSecurityException {
-        if (sslType != null && sslType != SSLType.NONE) {
-            SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslType);
-            sslSocketFactory.init();
-            return sslSocketFactory.createSocket(serverURL, serverPort, connectionTimeoutMillis);
-        } else {
-            Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(serverURL, serverPort), connectionTimeoutMillis);
-            return socket;
+  @Override
+  public void run() {
+    try {
+      socket = createSocket();
+      serverIn = socket.getInputStream();
+      serverOut = socket.getOutputStream();
+      running = true;
+
+      while (running) {
+        if (Thread.interrupted()) {
+          LOG.info("TerminalServer interrupted");
+          break;
         }
-    }
 
-    @Override
-    public void run() {
-        try {
-            socket = createSocket();
-            serverIn = socket.getInputStream();
-            serverOut = socket.getOutputStream();
-            running = true;
-
-            while (running) {
-                if (Thread.interrupted()) {
-                    LOG.info("TerminalServer interrupted");
-                    break;
-                }
-
-                bytesRead = serverIn.read(buffer);
-                if (bytesRead < 0) {
-                    close();
-                    break;
-                }
-
-                if (Thread.currentThread().isInterrupted())
-                    LOG.info("TerminalServer was interrupted");
-
-                if (debug) {
-                    LOG.info(toString());
-                    LOG.info("reading:");
-                    LOG.info(Dm3270Utility.toHex(buffer, 0, bytesRead));
-                }
-
-                byte[] message = new byte[bytesRead];
-                System.arraycopy(buffer, 0, message, 0, bytesRead);
-                telnetListener.listen(Source.SERVER, message, LocalDateTime.now(), true);
-            }
-        } catch (GeneralSecurityException | IOException ex) {
-            if (running) {
-                LOG.info("Communication with Rte server failed.");
-                close();
-            }
+        bytesRead = serverIn.read(buffer);
+        if (bytesRead < 0) {
+          close();
+          break;
         }
-    }
 
-    @Override
-    public void close() {
-        try {
-            running = false;
-            serverIn = null;
-            serverOut = null;
-
-            if (socket != null)
-                socket.close();
-
-            if (telnetListener != null)
-                telnetListener.close();
-        } catch (IOException ex) {
-            LOG.info("Communication with Rte server failed.");
+        if (Thread.currentThread().isInterrupted()) {
+          LOG.info("TerminalServer was interrupted");
         }
+
+        if (debug) {
+          LOG.info(toString());
+          LOG.info("reading:");
+          LOG.info(Dm3270Utility.toHex(buffer, 0, bytesRead));
+        }
+
+        byte[] message = new byte[bytesRead];
+        System.arraycopy(buffer, 0, message, 0, bytesRead);
+        telnetListener.listen(Source.SERVER, message, LocalDateTime.now(), true);
+      }
+    } catch (GeneralSecurityException | IOException ex) {
+      if (running) {
+        LOG.info("Communication with Rte server failed.");
+        close();
+      }
     }
+  }
+
+  @Override
+  public void close() {
+    try {
+      running = false;
+      serverIn = null;
+      serverOut = null;
+
+      if (socket != null) {
+        socket.close();
+      }
+
+      if (telnetListener != null) {
+        telnetListener.close();
+      }
+    } catch (IOException ex) {
+      LOG.info("Communication with Rte server failed.");
+    }
+  }
 
 }
