@@ -222,7 +222,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250
+                guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>
