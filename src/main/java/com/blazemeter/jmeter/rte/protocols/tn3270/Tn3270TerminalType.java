@@ -6,14 +6,14 @@ import java.awt.Dimension;
 
 public class Tn3270TerminalType extends TerminalType {
 
-  private static final String ID_PREFIX = "IBM_3278_";
+  private static final String ID_PREFIX = "IBM-3278-";
 
   private final int model;
   private final boolean extended;
   private final ScreenDimensions screenDimensions;
 
   public Tn3270TerminalType(DeviceModel model, boolean extended) {
-    super(ID_PREFIX + model + (extended ? "_E" : ""), model.screenSize);
+    super(ID_PREFIX + model + (extended ? "-E" : ""), model.screenSize);
     this.screenDimensions = new ScreenDimensions(model.screenSize.height, model.screenSize.width);
     this.model = model.id;
     this.extended = extended;

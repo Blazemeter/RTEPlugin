@@ -24,7 +24,7 @@ build:
   script: /execute-on-vnc.sh mvn --batch-mode clean install
   artifacts:
     paths:
-      - target/*.jar
+      - target/jmeter-bzm-rteplugin-*.jar
       - target/jmeter-test
     expire_in: 1 month
 build_and_analyze:
@@ -36,7 +36,7 @@ build_and_analyze:
   script: /execute-on-vnc.sh mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
   artifacts:
     paths:
-      - target/*.jar
+      - target/jmeter-bzm-rteplugin-*.jar
       - target/jmeter-test
     expire_in: 1 month
 jmeter_compatibility:

@@ -165,7 +165,7 @@ public class Tn3270Client implements RteProtocolClient {
       Field field = screen.getFieldManager()
           .getFieldAt(linearPosition)
           .orElseThrow(() -> new InvalidFieldPositionException(i.getPosition()));
-      field.setText(i.getInput());
+      screen.setFieldText(field, i.getInput());
       screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
     });
     consolePane.sendAID(AID_COMMANDS.get(action), action.name());
