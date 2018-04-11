@@ -5,10 +5,9 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.util.concurrent.ScheduledExecutorService;
 
 public abstract class ConditionWaiterTn3270<T extends WaitCondition> extends
-    ConditionWaiter {
+    ConditionWaiter<T> {
 
-  public ConditionWaiterTn3270(WaitCondition condition,
-      ScheduledExecutorService stableTimeoutExecutor) {
+  public ConditionWaiterTn3270(T condition, ScheduledExecutorService stableTimeoutExecutor) {
     super(condition, stableTimeoutExecutor);
   }
 }

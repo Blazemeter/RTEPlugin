@@ -32,6 +32,9 @@ public abstract class ConditionWaiterTn5250IT {
   @Mock
   protected Tn5250Client client;
 
+  @Mock
+  protected ExtendedEmulator em;
+
   protected ConditionWaiterTn5250<?> listener;
 
   @Before

@@ -24,7 +24,8 @@ public class SilenceListenerIT extends ConditionWaiterTn5250IT {
   protected ConditionWaiterTn5250<?> buildConditionWaiter() {
     return new SilenceListener(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
-        stableTimeoutExecutor);
+        stableTimeoutExecutor,
+        em);
   }
 
   @Test

@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
@@ -17,10 +18,12 @@ public abstract class ConditionWaiterTn5250<T extends WaitCondition> extends
     ConditionWaiter<T> implements XI5250EmulatorListener {
 
   protected final Tn5250Client client;
+  private final ExtendedEmulator em;
 
   public ConditionWaiterTn5250(T condition, Tn5250Client client,
-      ScheduledExecutorService stableTimeoutExecutor) {
+      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
     super(condition, stableTimeoutExecutor);
+    this.em = em;
     this.client = client;
   }
 
@@ -58,5 +61,11 @@ public abstract class ConditionWaiterTn5250<T extends WaitCondition> extends
   public void await() throws InterruptedException, TimeoutException, RteIOException {
     super.await();
     client.throwAnyPendingError();
+  }
+
+  @Override
+  public void stop() {
+    super.stop();
+    em.removeEmulatorListener(this);
   }
 }

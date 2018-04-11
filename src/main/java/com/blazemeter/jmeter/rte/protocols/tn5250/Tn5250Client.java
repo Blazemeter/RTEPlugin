@@ -1,12 +1,13 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -14,7 +15,6 @@ import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConditionWaiterTn5250;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
@@ -30,14 +30,13 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Tn5250Client implements RteProtocolClient {
+public class Tn5250Client extends BaseProtocolClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
 
@@ -111,7 +110,7 @@ public class Tn5250Client implements RteProtocolClient {
     em.setSslType(sslType);
     UnlockListener unlock = new UnlockListener(
         new SyncWaitCondition(timeoutMillis, stableTimeoutMillis), this,
-        stableTimeoutExecutor);
+        stableTimeoutExecutor, em);
     em.addEmulatorListener(unlock);
     try {
       em.setActive(true);
@@ -131,35 +130,28 @@ public class Tn5250Client implements RteProtocolClient {
     em.throwAnyPendingError();
   }
 
-  @SuppressWarnings({"unchecked"})
-  public void await(List<WaitCondition> waitConditions)
-      throws InterruptedException, TimeoutException, RteIOException {
-    List<ConditionWaiterTn5250> listeners = waitConditions.stream()
-        .map(this::buildWaiter)
-        .collect(Collectors.toList());
-    listeners.forEach(em::addEmulatorListener);
-    try {
-      for (ConditionWaiterTn5250 listener : listeners) {
-        listener.await();
-      }
-    } finally {
-      listeners.forEach(l -> {
-        l.stop();
-        em.removeEmulatorListener(l);
-      });
-    }
-  }
-
-  private ConditionWaiterTn5250 buildWaiter(WaitCondition waitCondition) {
+  @Override
+  protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
-      return new UnlockListener((SyncWaitCondition) waitCondition, this, stableTimeoutExecutor);
+      UnlockListener unlock = new UnlockListener((SyncWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, em);
+      em.addEmulatorListener(unlock);
+      return unlock;
     } else if (waitCondition instanceof CursorWaitCondition) {
-      return new VisibleCursorListener((CursorWaitCondition) waitCondition, this,
-          stableTimeoutExecutor);
+      VisibleCursorListener cursor = new VisibleCursorListener((CursorWaitCondition) waitCondition,
+          this, stableTimeoutExecutor, em);
+      em.addEmulatorListener(cursor);
+      return cursor;
     } else if (waitCondition instanceof SilentWaitCondition) {
-      return new SilenceListener((SilentWaitCondition) waitCondition, this, stableTimeoutExecutor);
+      SilenceListener silent = new SilenceListener((SilentWaitCondition) waitCondition,
+          this, stableTimeoutExecutor, em);
+      em.addEmulatorListener(silent);
+      return silent;
     } else if (waitCondition instanceof TextWaitCondition) {
-      return new ScreenTextListener((TextWaitCondition) waitCondition, this, stableTimeoutExecutor);
+      ScreenTextListener text = new ScreenTextListener((TextWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, em);
+      em.addEmulatorListener(text);
+      return text;
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");

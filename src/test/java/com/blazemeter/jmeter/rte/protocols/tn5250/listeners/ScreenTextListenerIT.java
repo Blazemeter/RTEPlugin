@@ -37,7 +37,8 @@ public class ScreenTextListenerIT extends ConditionWaiterTn5250IT {
         new TextWaitCondition(new Perl5Compiler().compile(regex), new Perl5Matcher(),
             Area.fromTopLeftBottomRight(1, 1, 1, 5), TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
-        stableTimeoutExecutor);
+        stableTimeoutExecutor,
+        em);
   }
 
   private void setupScreenWithText(String screen) {

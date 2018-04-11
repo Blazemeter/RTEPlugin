@@ -56,4 +56,5 @@ public abstract class ConditionWaiter<T extends WaitCondition> {
   public void stop() {
     cancelWait();
   }
+
 }
