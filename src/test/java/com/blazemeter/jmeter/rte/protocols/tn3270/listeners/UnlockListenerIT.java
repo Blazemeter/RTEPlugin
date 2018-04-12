@@ -4,15 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConditionWaiterTn5250;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 public class UnlockListenerIT extends ConditionWaiterTn3270IT {
 
@@ -31,12 +28,12 @@ public class UnlockListenerIT extends ConditionWaiterTn3270IT {
         screen);
   }
 
-  protected Runnable buildStateChangeGenerator(KeyboardStatusChangedEvent keyboardEvent) {
+  protected Runnable buildStateKeyboardChangeGenerator(KeyboardStatusChangedEvent keyboardEvent) {
     return () -> ((UnlockListener) listener)
         .keyboardStatusChanged(keyboardEvent);
   }
 
-  protected Runnable buildStateChangeGeneratorLockingAndUnlocking() {
+  protected Runnable buildStateLeyboardChangeGeneratorLockingAndUnlocking() {
     return new Runnable() {
 
       private boolean locked = true;
@@ -54,7 +51,7 @@ public class UnlockListenerIT extends ConditionWaiterTn3270IT {
     KeyboardStatusChangedEvent keyboardEvent = new KeyboardStatusChangedEvent(false, false, "");
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
-    startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator(keyboardEvent));
+    startSingleEventGenerator(unlockDelayMillis, buildStateKeyboardChangeGenerator(keyboardEvent));
     listener.await();
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
@@ -74,7 +71,7 @@ public class UnlockListenerIT extends ConditionWaiterTn3270IT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenKeepReceivingUnlockAndLockStateChanges()
       throws Exception {
-    startPeriodicEventGenerator(buildStateChangeGeneratorLockingAndUnlocking());
+    startPeriodicEventGenerator(buildStateLeyboardChangeGeneratorLockingAndUnlocking());
     listener.await();
   }
 }

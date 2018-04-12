@@ -10,11 +10,13 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
 import com.bytezone.dm3270.application.Console.Function;
 import com.bytezone.dm3270.commands.AIDCommand;
 import com.bytezone.dm3270.display.Cursor;
@@ -199,6 +201,11 @@ public class Tn3270Client extends BaseProtocolClient {
           stableTimeoutExecutor, screen);
       screen.addKeyboardStatusChangeListener(unlock);
       return unlock;
+    } else if (waitCondition instanceof CursorWaitCondition) {
+      VisibleCursorListener unlock = new VisibleCursorListener((CursorWaitCondition) waitCondition,
+          this, stableTimeoutExecutor, screen.getScreenCursor());
+      screen.getScreenCursor().addCursorMoveListener(unlock);
+      return unlock;
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
@@ -237,7 +244,7 @@ public class Tn3270Client extends BaseProtocolClient {
     Cursor cursor = screen.getScreenCursor();
     int location = cursor.getLocation();
     int columns = screen.getScreenDimensions().columns;
-    return cursor.isVisible() ? new Position(location % columns + 1, location / columns + 1) : null;
+    return cursor.isVisible() ? new Position(location / columns + 1, location % columns + 1) : null;
   }
 
   @Override
