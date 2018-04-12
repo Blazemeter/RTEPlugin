@@ -21,10 +21,10 @@ public class UnlockListener extends ConditionWaiterTn3270<SyncWaitCondition> imp
       ScheduledExecutorService stableTimeoutExecutor, Screen screen) {
     super(condition, stableTimeoutExecutor);
     isInputInhibited = client.isInputInhibited();
+    this.screen = screen;
     if (!isInputInhibited) {
       startStablePeriod();
     }
-    this.screen = screen;
   }
 
   @Override
