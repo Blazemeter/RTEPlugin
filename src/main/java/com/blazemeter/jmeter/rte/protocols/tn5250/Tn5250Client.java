@@ -83,7 +83,7 @@ public class Tn5250Client implements RteProtocolClient {
     }
   };
 
-  private final ExtendedEmulator em = new ExtendedEmulator();
+  private ExtendedEmulator em;
   private ScheduledExecutorService stableTimeoutExecutor;
 
   @Override
@@ -96,6 +96,13 @@ public class Tn5250Client implements RteProtocolClient {
       TerminalType terminalType, long timeoutMillis,
       long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
+    /*
+     we need to do this on connect to avoid leaving keyboard thread running when instance of client
+     is created for getting supported terminal types in jmeter
+      */
+    if (em == null) {
+      em = new ExtendedEmulator();
+    }
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
     em.setPort(port);

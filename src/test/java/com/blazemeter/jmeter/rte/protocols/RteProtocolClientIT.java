@@ -25,7 +25,7 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   protected static final String VIRTUAL_SERVER_HOST = "localhost";
   protected static final int VIRTUAL_SERVER_PORT = 2323;
   protected static final int TIMEOUT_MILLIS = 5000;
-  protected static final int STABLE_TIMEOUT_MILLIS = 1000;
+  protected static final int STABLE_TIMEOUT_MILLIS = 2000;
   protected static final long SERVER_STOP_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
   protected VirtualTcpService server;
@@ -43,7 +43,9 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   @After
   public void teardown() throws Exception {
     try {
-      client.disconnect();
+      if (client != null) {
+        client.disconnect();
+      }
     } catch (Exception e) {
       LOG.warn("Problem disconnecting client", e);
     } finally {

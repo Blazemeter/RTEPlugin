@@ -1,5 +1,6 @@
 #/bin/bash
-set -ex
+# this has been extracted from https://docs.gitlab.com/ee/ci/ssh_keys/#verifying-the-ssh-host-keys
+set -e
 
 echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
 mkdir -p ~/.ssh

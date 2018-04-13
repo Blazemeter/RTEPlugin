@@ -11,8 +11,6 @@ cache:
     - .jmeter/
 before_script:
   - set -e
-  - eval $(ssh-agent -s)
-  - /set-git-credentials.sh
   - /install-maven-dependency.sh https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/xtn5250_${XTN5250_VERSION//.}.jar net.sourceforge.xtn5250 xtn5250 $XTN5250_VERSION
   - /install-maven-dependency.sh https://github.com/dmolony/dm3270/releases/download/v$DM3270_VERSION/dm3270.jar com.bytezone.dm3270 dm3270 $DM3270_VERSION
 build:
