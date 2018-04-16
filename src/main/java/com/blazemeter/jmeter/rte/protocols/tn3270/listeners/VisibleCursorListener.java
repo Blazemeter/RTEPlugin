@@ -9,11 +9,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class VisibleCursorListener extends ConditionWaiterTn3270<CursorWaitCondition> implements
+public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondition> implements
     CursorMoveListener {
 
-  private static final Logger LOG = LoggerFactory
-      .getLogger(com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener.class);
+  private static final Logger LOG = LoggerFactory.getLogger(VisibleCursorListener.class);
 
   private Cursor cursor;
   private Tn3270Client client;

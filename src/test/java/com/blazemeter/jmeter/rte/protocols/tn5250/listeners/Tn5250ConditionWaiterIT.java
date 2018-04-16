@@ -18,7 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public abstract class ConditionWaiterTn5250IT {
+public abstract class Tn5250ConditionWaiterIT {
 
   protected static final long TIMEOUT_MILLIS = 3000;
   protected static final long STABLE_MILLIS = 1000;
@@ -35,7 +35,7 @@ public abstract class ConditionWaiterTn5250IT {
   @Mock
   protected ExtendedEmulator em;
 
-  protected ConditionWaiterTn5250<?> listener;
+  protected Tn5250ConditionWaiter<?> listener;
 
   @Before
   public void setup() throws Exception {
@@ -44,7 +44,7 @@ public abstract class ConditionWaiterTn5250IT {
     listener = buildConditionWaiter();
   }
 
-  protected abstract ConditionWaiterTn5250<?> buildConditionWaiter() throws Exception;
+  protected abstract Tn5250ConditionWaiter<?> buildConditionWaiter() throws Exception;
 
   @After
   public void teardown() {

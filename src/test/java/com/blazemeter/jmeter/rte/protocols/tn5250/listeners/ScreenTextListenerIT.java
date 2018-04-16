@@ -16,7 +16,7 @@ import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ScreenTextListenerIT extends ConditionWaiterTn5250IT {
+public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
 
   private static final String EXPECTED_SCREEN = "hello";
 
@@ -28,7 +28,7 @@ public class ScreenTextListenerIT extends ConditionWaiterTn5250IT {
   }
 
   @Override
-  protected ConditionWaiterTn5250<?> buildConditionWaiter() throws Exception {
+  protected Tn5250ConditionWaiter<?> buildConditionWaiter() throws Exception {
     return buildTextListener(EXPECTED_SCREEN);
   }
 

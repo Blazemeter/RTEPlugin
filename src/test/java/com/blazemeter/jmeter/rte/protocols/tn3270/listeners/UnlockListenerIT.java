@@ -11,7 +11,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class UnlockListenerIT extends ConditionWaiterTn3270IT {
+public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
 
   @Override
   @Before
@@ -21,19 +21,19 @@ public class UnlockListenerIT extends ConditionWaiterTn3270IT {
   }
 
   @Override
-  protected ConditionWaiterTn3270<?> buildConditionWaiter() {
+  protected Tn3270ConditionWaiter<?> buildConditionWaiter() {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
         screen);
   }
 
-  protected Runnable buildStateKeyboardChangeGenerator(KeyboardStatusChangedEvent keyboardEvent) {
+  protected Runnable buildKeyboardStateChangeGenerator(KeyboardStatusChangedEvent keyboardEvent) {
     return () -> ((UnlockListener) listener)
         .keyboardStatusChanged(keyboardEvent);
   }
 
-  protected Runnable buildStateLeyboardChangeGeneratorLockingAndUnlocking() {
+  protected Runnable buildKeyboardLockingAndUnlockingStateChangeGenerator() {
     return new Runnable() {
 
       private boolean locked = true;
@@ -51,7 +51,7 @@ public class UnlockListenerIT extends ConditionWaiterTn3270IT {
     KeyboardStatusChangedEvent keyboardEvent = new KeyboardStatusChangedEvent(false, false, "");
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
-    startSingleEventGenerator(unlockDelayMillis, buildStateKeyboardChangeGenerator(keyboardEvent));
+    startSingleEventGenerator(unlockDelayMillis, buildKeyboardStateChangeGenerator(keyboardEvent));
     listener.await();
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
@@ -59,7 +59,7 @@ public class UnlockListenerIT extends ConditionWaiterTn3270IT {
   @Test
   public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
     when(client.isInputInhibited()).thenReturn(false);
-    ConditionWaiterTn3270<?> listener = buildConditionWaiter();
+    Tn3270ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
 
@@ -71,7 +71,7 @@ public class UnlockListenerIT extends ConditionWaiterTn3270IT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenKeepReceivingUnlockAndLockStateChanges()
       throws Exception {
-    startPeriodicEventGenerator(buildStateLeyboardChangeGeneratorLockingAndUnlocking());
+    startPeriodicEventGenerator(buildKeyboardLockingAndUnlockingStateChangeGenerator());
     listener.await();
   }
 }

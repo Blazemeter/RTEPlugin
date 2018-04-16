@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
-import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.bytezone.dm3270.display.Screen;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,7 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public abstract class ConditionWaiterTn3270IT {
+public abstract class Tn3270ConditionWaiterIT {
 
   protected static final long TIMEOUT_MILLIS = 3000;
   protected static final long STABLE_MILLIS = 1000;
@@ -27,7 +26,7 @@ public abstract class ConditionWaiterTn3270IT {
   @Mock
   protected Tn3270Client client;
 
-  protected ConditionWaiterTn3270<?> listener;
+  protected Tn3270ConditionWaiter<?> listener;
 
   @Before
   public void setup() throws Exception {
@@ -36,7 +35,7 @@ public abstract class ConditionWaiterTn3270IT {
     listener = buildConditionWaiter();
   }
 
-  protected abstract ConditionWaiterTn3270<?> buildConditionWaiter() throws Exception;
+  protected abstract Tn3270ConditionWaiter<?> buildConditionWaiter() throws Exception;
 
   @After
   public void teardown() {

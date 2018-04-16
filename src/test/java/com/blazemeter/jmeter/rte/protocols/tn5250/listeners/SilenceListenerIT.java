@@ -9,7 +9,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SilenceListenerIT extends ConditionWaiterTn5250IT {
+public class SilenceListenerIT extends Tn5250ConditionWaiterIT {
 
   private Stopwatch waitTime;
 
@@ -21,7 +21,7 @@ public class SilenceListenerIT extends ConditionWaiterTn5250IT {
   }
 
   @Override
-  protected ConditionWaiterTn5250<?> buildConditionWaiter() {
+  protected Tn5250ConditionWaiter<?> buildConditionWaiter() {
     return new SilenceListener(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,

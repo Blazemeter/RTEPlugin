@@ -14,13 +14,13 @@ import net.infordata.em.tn5250.XI5250EmulatorListener;
  * An {@link XI5250EmulatorListener} which allows waiting for certain condition, and keeps in such
  * state for a given period of time.
  */
-public abstract class ConditionWaiterTn5250<T extends WaitCondition> extends
+public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
     ConditionWaiter<T> implements XI5250EmulatorListener {
 
   protected final Tn5250Client client;
   private final ExtendedEmulator em;
 
-  public ConditionWaiterTn5250(T condition, Tn5250Client client,
+  public Tn5250ConditionWaiter(T condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
     super(condition, stableTimeoutExecutor);
     this.em = em;

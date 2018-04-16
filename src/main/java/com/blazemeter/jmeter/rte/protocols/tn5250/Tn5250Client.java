@@ -17,6 +17,7 @@ import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
@@ -132,30 +133,25 @@ public class Tn5250Client extends BaseProtocolClient {
 
   @Override
   protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
+    Tn5250ConditionWaiter condition;
     if (waitCondition instanceof SyncWaitCondition) {
-      UnlockListener unlock = new UnlockListener((SyncWaitCondition) waitCondition, this,
+      condition = new UnlockListener((SyncWaitCondition) waitCondition, this,
           stableTimeoutExecutor, em);
-      em.addEmulatorListener(unlock);
-      return unlock;
     } else if (waitCondition instanceof CursorWaitCondition) {
-      VisibleCursorListener cursor = new VisibleCursorListener((CursorWaitCondition) waitCondition,
+      condition = new VisibleCursorListener((CursorWaitCondition) waitCondition,
           this, stableTimeoutExecutor, em);
-      em.addEmulatorListener(cursor);
-      return cursor;
     } else if (waitCondition instanceof SilentWaitCondition) {
-      SilenceListener silent = new SilenceListener((SilentWaitCondition) waitCondition,
+      condition = new SilenceListener((SilentWaitCondition) waitCondition,
           this, stableTimeoutExecutor, em);
-      em.addEmulatorListener(silent);
-      return silent;
     } else if (waitCondition instanceof TextWaitCondition) {
-      ScreenTextListener text = new ScreenTextListener((TextWaitCondition) waitCondition, this,
+      condition = new ScreenTextListener((TextWaitCondition) waitCondition, this,
           stableTimeoutExecutor, em);
-      em.addEmulatorListener(text);
-      return text;
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
     }
+    em.addEmulatorListener(condition);
+    return condition;
   }
 
   public RequestListener buildRequestListener() {

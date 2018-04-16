@@ -9,10 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ConditionWaiterTn5250} which allows waiting until the cursor shows up on the desired
+ * A {@link Tn5250ConditionWaiter} which allows waiting until the cursor shows up on the desired
  * position.
  */
-public class VisibleCursorListener extends ConditionWaiterTn5250<CursorWaitCondition> {
+public class VisibleCursorListener extends Tn5250ConditionWaiter<CursorWaitCondition> {
 
   private static final Logger LOG = LoggerFactory.getLogger(VisibleCursorListener.class);
 

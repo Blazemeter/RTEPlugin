@@ -9,7 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UnlockListener extends ConditionWaiterTn3270<SyncWaitCondition> implements
+public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> implements
     KeyboardStatusListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(
@@ -29,8 +29,7 @@ public class UnlockListener extends ConditionWaiterTn3270<SyncWaitCondition> imp
 
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
-    LOG.debug("keyboardStatusChanged\n");
-    LOG.debug(keyboardStatusChangedEvent.toString());
+    LOG.debug("keyboardStatusChanged {}", keyboardStatusChangedEvent.toString());
 
     boolean wasInputInhibited = isInputInhibited;
     isInputInhibited = keyboardStatusChangedEvent.keyboardLocked;
