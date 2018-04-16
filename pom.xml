@@ -169,13 +169,35 @@
         </executions>
       </plugin>
       <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.0.2</version>
+        <executions>
+          <execution>
+            <id>copy-jmeter-resources</id>
+            <phase>install</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/jmeter-test</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/test/resources/jmeter</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.0.2</version>
         <executions>
           <execution>
-            <id>copy-dependencies</id>
-            <phase>package</phase>
+            <id>copy-jmeter-dependencies</id>
+            <phase>install</phase>
             <goals>
               <goal>copy-dependencies</goal>
             </goals>
@@ -183,7 +205,34 @@
               <includeArtifactIds>
                 guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250
               </includeArtifactIds>
-              <outputDirectory>${project.build.directory}/taurus</outputDirectory>
+              <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
+              <stripVersion>true</stripVersion>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-plugin-to-jmeter-dependencies</id>
+            <phase>install</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <version>${project.version}</version>
+                  <type>${project.packaging}</type>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <version>${project.version}</version>
+                  <type>test-jar</type>
+                  <classifier>tests</classifier>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
+              <stripVersion>true</stripVersion>
             </configuration>
           </execution>
         </executions>

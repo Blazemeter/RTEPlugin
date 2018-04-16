@@ -2,7 +2,7 @@
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing config elements and samplers.
 
-Nowadays the plugin supports **IBM protocol's TN5250 and TN3270 (last one not implemented yet)** by using [xtn5250](https://sourceforge.net/projects/xtn5250/) [dm3270](http://dmolony.github.io/) emulators.
+Nowadays the plugin supports **IBM protocol's TN5250 and TN3270 (last one not implemented yet)** by using [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators.
 
 People who usually work with these IBM servers interact with it, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes.
 Following this, the sampler is designed in a way that the user could specify the position of fields on the screen and the text string to write on them. Besides, the sampler allows to simulate the action buttons existing on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc..    

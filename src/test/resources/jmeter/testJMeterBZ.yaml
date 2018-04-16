@@ -1,17 +1,24 @@
+provisioning: cloud
+
 modules:
   jmeter:
-    path: jmeter/3.1
-    version: 3.1
+    version: 3.3
   console:
     disable: true
+  cloud:
+    token: ${BZ_TOKEN}
 
 execution:
+- concurrency: 1
   scenario: test
+  hold-for: 1m
+  files:
+  - lib
 
 scenarios:
   test:
     script: RTESampler.jmx
-
+    
 reporting:
 - module: passfail
   criteria:
