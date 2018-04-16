@@ -1,7 +1,10 @@
 package com.blazemeter.jmeter.rte.virtualservice;
 
+import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.security.GeneralSecurityException;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,13 +39,24 @@ public class VirtualTcpService implements Runnable {
   private boolean stopped = false;
   private ClientConnection clientConnection;
 
-  public VirtualTcpService(int port, int readBufferSize) throws IOException {
-    server = new ServerSocket(port);
+  public VirtualTcpService(int port, SSLType sslType, int readBufferSize)
+      throws IOException, GeneralSecurityException {
+    if (sslType != null && sslType != SSLType.NONE) {
+      SSLSocketFactory socketFactory = new SSLSocketFactory(sslType);
+      socketFactory.init();
+      server = socketFactory.createServerSocket(port);
+    } else {
+      server = new ServerSocket(port);
+    }
     this.readBufferSize = readBufferSize;
   }
 
-  public VirtualTcpService(int port) throws IOException {
-    this(port, DEFAULT_READ_BUFFER_SIZE);
+  public VirtualTcpService(int port, SSLType sslType) throws IOException, GeneralSecurityException {
+    this(port, sslType, DEFAULT_READ_BUFFER_SIZE);
+  }
+
+  public VirtualTcpService(int port) throws IOException, GeneralSecurityException {
+    this(port, null);
   }
 
   public void setFlow(Flow flow) {

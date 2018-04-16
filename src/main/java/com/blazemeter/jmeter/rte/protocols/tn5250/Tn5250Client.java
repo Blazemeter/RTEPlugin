@@ -7,7 +7,7 @@ import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -78,7 +78,7 @@ public class Tn5250Client implements RteProtocolClient {
   private ScheduledExecutorService stableTimeoutExecutor;
 
   @Override
-  public void connect(String server, int port, SSLData sslData,
+  public void connect(String server, int port, SSLType sslType,
       TerminalType terminalType, long timeoutMillis,
       long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
@@ -87,7 +87,7 @@ public class Tn5250Client implements RteProtocolClient {
     em.setPort(port);
     em.setConnectionTimeoutMillis((int) timeoutMillis);
     em.setTerminalType(terminalType.getType());
-    em.setSslData(sslData);
+    em.setSslType(sslType);
     UnlockListener unlock = new UnlockListener(
         new SyncWaitCondition(timeoutMillis, stableTimeoutMillis), this,
         stableTimeoutExecutor);

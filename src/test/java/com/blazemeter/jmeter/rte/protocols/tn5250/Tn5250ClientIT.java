@@ -7,7 +7,7 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -88,8 +88,7 @@ public class Tn5250ClientIT {
   }
 
   private void connectToVirtualService() throws Exception {
-    SSLData ssldata = new SSLData(SSLType.NONE, null, null);
-    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, ssldata, TerminalType.IBM_3477_FC,
+    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, SSLType.NONE, TerminalType.IBM_3477_FC,
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
@@ -97,11 +96,25 @@ public class Tn5250ClientIT {
     return Resources.toString(findResource(file), Charsets.UTF_8);
   }
 
+  @Test
+  public void shouldGetWelcomeScreenWhenConnectWithSsl() throws Exception {
+    server.stop(SERVER_STOP_TIMEOUT);
+    SSLSocketFactory.setKeyStore(findResource("/.keystore").getFile());
+    SSLSocketFactory.setKeyStorePassword("changeit");
+    server = new VirtualTcpService(VIRTUAL_SERVER_PORT, SSLType.TLS);
+    server.start();
+    loadLoginInvalidCredsFlow();
+    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, SSLType.TLS, TerminalType.IBM_3477_FC,
+        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+    assertThat(client.getScreen())
+        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+  }
+
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    SSLData ssldata = new SSLData(SSLType.NONE, null, null);
-    client.connect(VIRTUAL_SERVER_HOST, 2222, ssldata,
-        TerminalType.IBM_3477_FC, TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+    client
+        .connect(VIRTUAL_SERVER_HOST, 2222, SSLType.NONE, TerminalType.IBM_3477_FC, TIMEOUT_MILLIS,
+            STABLE_TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)

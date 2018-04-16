@@ -17,6 +17,8 @@ import java.util.stream.StreamSupport;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.nodes.NodeTuple;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Representer;
 
@@ -95,7 +97,17 @@ public class Flow {
 
   @SuppressWarnings("unchecked")
   private static Representer buildYamlRepresenter() {
-    Representer representer = new Representer();
+    Representer representer = new Representer() {
+      @Override
+      protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
+        if (property.getType() == long.class && (long) propertyValue == 0) {
+          return null;
+        } else {
+          return super.representJavaBeanProperty(javaBean, property, propertyValue, customTag);
+        }
+      }
+    };
+
     YAML_TAGS.forEach((tag, clazz) -> representer.addClassTag(clazz, new Tag(tag)));
     return representer;
   }

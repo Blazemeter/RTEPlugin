@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
-import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.awt.Dimension;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.concurrent.TimeoutException;
 
 public interface RteProtocolClient {
 
-  void connect(String server, int port, SSLData sslData,
+  void connect(String server, int port, SSLType sslType,
       TerminalType terminalType, long timeoutMillis, long stableTimeout)
       throws RteIOException, TimeoutException, InterruptedException;
 
