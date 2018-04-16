@@ -76,7 +76,7 @@ public class VirtualTcpServiceMain {
     printStream.println();
     printStream.println("  Examples: \n"
         + command + " -p 2324 login-invalid-creds.yml\n"
-        + command + " -p 2324-w 0.0.0.0 login-invalid-creds-wireshark.json\n"
+        + command + " -p 2324 -w 0.0.0.0 login-invalid-creds-wireshark.json\n"
         + command + " -d login-invalid-creds.yml -w 0.0.0.0 login-invalid-creds-wireshark.json\n");
   }
 

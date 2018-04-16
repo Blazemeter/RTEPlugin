@@ -27,7 +27,7 @@ public class VirtualTcpService implements Runnable {
 
   public static final int DEFAULT_READ_BUFFER_SIZE = 2048;
 
-  private static final Logger LOG = LoggerFactory.getLogger(ClientPacket.class);
+  private static final Logger LOG = LoggerFactory.getLogger(VirtualTcpService.class);
 
   private final int readBufferSize;
   private final ServerSocket server;
