@@ -1,9 +1,8 @@
-image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:1.0.1
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:1.1
 
 variables:
   MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
   XTN5250_VERSION: 1.19m
-  XTN5250_JAR: xtn5250_119m.jar
 
 cache:
   paths:
@@ -11,18 +10,19 @@ cache:
     - .jmeter/
 before_script:
   - set -e
-  - mvn $MAVEN_OPTS com.googlecode.maven-download-plugin:download-maven-plugin:1.4.0:wget -Ddownload.url=https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/$XTN5250_JAR
-  - mvn $MAVEN_OPTS install:install-file -Dfile=target/$XTN5250_JAR -DgroupId=net.sourceforge.xtn5250 -DartifactId=xtn5250 -Dversion=$XTN5250_VERSION -Dpackaging=jar
+  - eval $(ssh-agent -s)
+  - /set-git-credentials.sh
+  - /install-maven-dependency.sh https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/xtn5250_${XTN5250_VERSION//.}.jar net.sourceforge.xtn5250 xtn5250 $XTN5250_VERSION
 build:
   stage: build
   tags:
     - docker
   except:
     - master
-  script: execute-on-vnc mvn --batch-mode clean install
+  script: /execute-on-vnc.sh mvn --batch-mode clean install
   artifacts:
     paths:
-      - target/jmeter-bzm-rteplugin-*.jar
+      - target/*.jar
       - target/jmeter-test
     expire_in: 1 month
 build_and_analyze:
@@ -31,10 +31,10 @@ build_and_analyze:
     - docker
   only:
     - master
-  script: execute-on-vnc mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
+  script: /execute-on-vnc.sh mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
   artifacts:
     paths:
-      - target/jmeter-bzm-rteplugin-*.jar
+      - target/*.jar
       - target/jmeter-test
     expire_in: 1 month
 jmeter_compatibility:
@@ -48,3 +48,16 @@ jmeter_compatibility:
     - sh testJMeter.sh 3.2
     - sh testJMeter.sh 3.1
     - bzt testJMeterBZ.yaml
+  artifacts:
+    when: on_failure
+    paths:
+      - target/jmeter-test
+    expire_in: 4 hour
+release:
+  stage: deploy
+  tags:
+    - docker
+  only:
+    - master
+  when: manual
+  script: /release.sh

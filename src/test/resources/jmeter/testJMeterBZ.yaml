@@ -11,7 +11,7 @@ modules:
 execution:
 - concurrency: 1
   scenario: test
-  hold-for: 1m
+  hold-for: 10s
   files:
   - lib
 
