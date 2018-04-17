@@ -2,7 +2,6 @@ package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
-import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.time.Duration;
 import java.time.Instant;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
