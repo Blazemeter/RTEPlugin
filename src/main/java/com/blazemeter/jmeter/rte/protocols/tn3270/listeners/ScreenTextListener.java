@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
-import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
 import com.bytezone.dm3270.display.CursorMoveListener;
@@ -11,20 +12,22 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> implements
+public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition> implements
     KeyboardStatusListener, CursorMoveListener, ScreenChangeListener {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ScreenTextListener.class);
 
-  public SilenceListener(SilentWaitCondition condition,
+  private final Tn3270Client client;
+  private boolean matched;
+
+  public ScreenTextListener(TextWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor) {
     super(condition, stableTimeoutExecutor);
-    startStablePeriod();
-  }
-
-  private void handleReceivedEvent(String event) {
-    LOG.debug("Restarting silent period since event received {}", event);
-    startStablePeriod();
+    this.client = client;
+    checkIfScreenMatchesCondition();
+    if (matched) {
+      startStablePeriod();
+    }
   }
 
   @Override
@@ -39,6 +42,21 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
 
   @Override
   public void screenChanged(ScreenWatcher screenWatcher) {
+    checkIfScreenMatchesCondition();
     handleReceivedEvent("screenChanged");
+  }
+
+  private void handleReceivedEvent(String event) {
+    if (matched) {
+      LOG.debug("Restart silent stable period since received event {}", event);
+      startStablePeriod();
+    }
+  }
+
+  private void checkIfScreenMatchesCondition() {
+    if (condition.matchesScreen(client.getScreen(), client.getScreenSize())) {
+      LOG.debug("Found matching text in screen, now waiting for silent period.");
+      matched = true;
+    }
   }
 }
