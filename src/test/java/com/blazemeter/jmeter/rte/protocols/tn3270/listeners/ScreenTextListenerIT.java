@@ -7,6 +7,9 @@ import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
+import com.bytezone.dm3270.display.Cursor;
+import com.bytezone.dm3270.display.FieldManager;
+import com.bytezone.dm3270.display.Screen;
 import com.bytezone.dm3270.display.ScreenWatcher;
 import com.google.common.base.Stopwatch;
 import java.awt.Dimension;
@@ -23,21 +26,29 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
 
   private static final String EXPECTED_SCREEN = "hello";
 
-  @Before
-  @Override
-  public void setup() throws Exception {
-    setupScreenWithText("Welcome");
-    super.setup();
-  }
-
   @Mock
   private ScreenWatcher screenWatcher;
+
+  @Mock
+  private Cursor cursor;
+
+  @Mock
+  private FieldManager fieldManager;
 
   @Mock
   private KeyboardStatusChangedEvent keyboardStatusChangedEvent;
 
   @Mock
   private Tn3270Client client;
+
+  @Before
+  @Override
+  public void setup() throws Exception {
+    when(screen.getScreenCursor()).thenReturn(cursor);
+    when(screen.getFieldManager()).thenReturn(fieldManager);
+    setupScreenWithText("Welcome");
+    super.setup();
+  }
 
   @Override
   protected Tn3270ConditionWaiter<?> buildConditionWaiter() throws Exception {
@@ -50,7 +61,8 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
             Area.fromTopLeftBottomRight(1, 1, 1, 5),
             TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
-        stableTimeoutExecutor);
+        stableTimeoutExecutor,
+        screen);
   }
 
   private void setupScreenWithText(String screen) {
