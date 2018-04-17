@@ -13,9 +13,11 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
@@ -205,12 +207,19 @@ public class Tn3270Client extends BaseProtocolClient {
       screen.getScreenCursor().addCursorMoveListener(unlock);
       return unlock;
     } else if (waitCondition instanceof SilentWaitCondition) {
-      SilenceListener unlock = new SilenceListener((SilentWaitCondition) waitCondition,
+      SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition,
           stableTimeoutExecutor);
-      screen.getScreenCursor().addCursorMoveListener(unlock);
-      screen.addKeyboardStatusChangeListener(unlock);
-
-      return unlock;
+      screen.getScreenCursor().addCursorMoveListener(silence);
+      screen.addKeyboardStatusChangeListener(silence);
+      screen.getFieldManager().addScreenChangeListener(silence);
+      return silence;
+    } else if (waitCondition instanceof TextWaitCondition) {
+      ScreenTextListener text = new ScreenTextListener((TextWaitCondition) waitCondition, this,
+          stableTimeoutExecutor);
+      screen.getScreenCursor().addCursorMoveListener(text);
+      screen.addKeyboardStatusChangeListener(text);
+      screen.getFieldManager().addScreenChangeListener(text);
+      return text;
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
@@ -253,17 +262,19 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public void disconnect() {
-    consolePane.disconnect();
-    // we need to close the screen in JavaFx thread due to JavaFx limitations
+  public void disconnect() throws RteIOException {
+    if (stableTimeoutExecutor == null) {
+      return;
+    }
     doDisconnect();
-    runOnJavaFxThread(() -> screen.close());
-    //TODO: at some point we need to call Platform.exit()
   }
 
   private void doDisconnect() {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
+    consolePane.disconnect();
+    runOnJavaFxThread(() -> screen.close());
+    //TODO: at some point we need to call Platform.exit()
   }
 
   private void runOnJavaFxThread(Runnable runnable) {
