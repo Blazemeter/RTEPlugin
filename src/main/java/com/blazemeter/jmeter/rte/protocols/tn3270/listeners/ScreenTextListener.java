@@ -6,6 +6,7 @@ import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
 import com.bytezone.dm3270.display.CursorMoveListener;
 import com.bytezone.dm3270.display.Field;
+import com.bytezone.dm3270.display.Screen;
 import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenWatcher;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,12 +19,14 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
   private static final Logger LOG = LoggerFactory.getLogger(ScreenTextListener.class);
 
   private final Tn3270Client client;
+  private final Screen screen;
   private boolean matched;
 
   public ScreenTextListener(TextWaitCondition condition, Tn3270Client client,
-      ScheduledExecutorService stableTimeoutExecutor) {
+      ScheduledExecutorService stableTimeoutExecutor, Screen screen) {
     super(condition, stableTimeoutExecutor);
     this.client = client;
+    this.screen = screen;
     checkIfScreenMatchesCondition();
     if (matched) {
       startStablePeriod();
@@ -58,5 +61,12 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
       LOG.debug("Found matching text in screen, now waiting for silent period.");
       matched = true;
     }
+  }
+
+  public void stop() {
+    super.stop();
+    screen.getScreenCursor().removeCursorMoveListener(this);
+    screen.removeKeyboardStatusChangeListener(this);
+    screen.getFieldManager().removeScreenChangeListener(this);
   }
 }

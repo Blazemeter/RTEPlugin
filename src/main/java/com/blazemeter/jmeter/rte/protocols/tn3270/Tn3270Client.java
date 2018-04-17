@@ -208,14 +208,14 @@ public class Tn3270Client extends BaseProtocolClient {
       return unlock;
     } else if (waitCondition instanceof SilentWaitCondition) {
       SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition,
-          stableTimeoutExecutor);
+          stableTimeoutExecutor, screen);
       screen.getScreenCursor().addCursorMoveListener(silence);
       screen.addKeyboardStatusChangeListener(silence);
       screen.getFieldManager().addScreenChangeListener(silence);
       return silence;
     } else if (waitCondition instanceof TextWaitCondition) {
       ScreenTextListener text = new ScreenTextListener((TextWaitCondition) waitCondition, this,
-          stableTimeoutExecutor);
+          stableTimeoutExecutor, screen);
       screen.getScreenCursor().addCursorMoveListener(text);
       screen.addKeyboardStatusChangeListener(text);
       screen.getFieldManager().addScreenChangeListener(text);
