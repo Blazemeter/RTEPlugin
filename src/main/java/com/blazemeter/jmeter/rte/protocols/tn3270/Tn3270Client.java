@@ -127,6 +127,7 @@ public class Tn3270Client extends BaseProtocolClient {
     screen = buildInJavaFxThread(() -> new Screen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
         termType.getScreenDimensions(), prefs, Function.TERMINAL, pluginsStage, serverSite,
         telnetState));
+    screen.lockKeyboard("connect");
     consolePane = new ConnectibleConsolePane(screen, serverSite, pluginsStage);
     consolePane.connect();
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -168,7 +169,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
       @Override
       public long getEndTime() {
-        return Duration.between(start, Instant.now()).toMillis();
+        return Instant.now().toEpochMilli();
       }
 
       @Override
@@ -262,7 +263,7 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public void disconnect() throws RteIOException {
+  public void disconnect() {
     if (stableTimeoutExecutor == null) {
       return;
     }
@@ -273,13 +274,7 @@ public class Tn3270Client extends BaseProtocolClient {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
     consolePane.disconnect();
-    // we need to close the screen in JavaFx thread due to JavaFx limitations
-    runOnJavaFxThread(() -> screen.close());
     //TODO: at some point we need to call Platform.exit()
-  }
-
-  private void runOnJavaFxThread(Runnable runnable) {
-    Platform.runLater(runnable);
   }
 
 }
