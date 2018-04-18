@@ -75,7 +75,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
     setupScreenWithText(EXPECTED_SCREEN);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
-    startSingleEventGenerator(unlockDelayMillis, buildScrenStateChangeGenerator());
+    startSingleEventGenerator(unlockDelayMillis, buildScreenStateChangeGenerator());
     listener.await();
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
@@ -87,17 +87,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
     listener.await();
   }
 
-  protected Runnable buildKeyboardStateChangeGenerator() {
-    return () -> ((ScreenTextListener) listener)
-        .keyboardStatusChanged(keyboardStatusChangedEvent);
-  }
-
-  protected Runnable buildCursorStateChangeGenerator() {
-    return () -> ((ScreenTextListener) listener)
-        .cursorMoved(1, 1, null);
-  }
-
-  protected Runnable buildScrenStateChangeGenerator() {
+  protected Runnable buildScreenStateChangeGenerator() {
     return () -> ((ScreenTextListener) listener)
         .screenChanged(screenWatcher);
   }
@@ -112,7 +102,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
   public void shouldThrowTimeoutExceptionWhenReceivedScreenNotMatchingRegexInArea()
       throws Exception {
     setupScreenWithText("Welcome");
-    buildScrenStateChangeGenerator().run();
+    buildScreenStateChangeGenerator().run();
     listener.await();
   }
 
@@ -120,8 +110,8 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
   public void shouldThrowTimeoutExceptionWhenReceivedExpectedScreenButKeepGettingStateChanges()
       throws Exception {
     setupScreenWithText(EXPECTED_SCREEN);
-    buildScrenStateChangeGenerator().run();
-    startPeriodicEventGenerator(buildScrenStateChangeGenerator());
+    buildScreenStateChangeGenerator().run();
+    startPeriodicEventGenerator(buildScreenStateChangeGenerator());
     listener.await();
   }
 
@@ -129,7 +119,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
   public void shouldThrowTimeoutExceptionWhenReceivedExpectedScreenButKeepGettingScreens()
       throws Exception {
     setupScreenWithText(EXPECTED_SCREEN);
-    startPeriodicEventGenerator(buildScrenStateChangeGenerator());
+    startPeriodicEventGenerator(buildScreenStateChangeGenerator());
     listener.await();
   }
 }

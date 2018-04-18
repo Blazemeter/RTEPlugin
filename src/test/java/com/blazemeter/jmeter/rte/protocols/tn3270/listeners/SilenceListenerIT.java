@@ -71,7 +71,7 @@ public class SilenceListenerIT extends Tn3270ConditionWaiterIT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenKeepReceivingScreenChanges()
       throws Exception {
-    startPeriodicEventGenerator(buildScrenStateChangeGenerator());
+    startPeriodicEventGenerator(buildScreenStateChangeGenerator());
     listener.await();
   }
 
@@ -85,7 +85,7 @@ public class SilenceListenerIT extends Tn3270ConditionWaiterIT {
         .cursorMoved(1, 1, null);
   }
 
-  protected Runnable buildScrenStateChangeGenerator() {
+  protected Runnable buildScreenStateChangeGenerator() {
     return () -> ((SilenceListener) listener)
         .screenChanged(screenWatcher);
   }

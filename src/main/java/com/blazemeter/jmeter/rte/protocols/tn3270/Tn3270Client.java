@@ -273,6 +273,7 @@ public class Tn3270Client extends BaseProtocolClient {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
     consolePane.disconnect();
+    // we need to close the screen in JavaFx thread due to JavaFx limitations
     runOnJavaFxThread(() -> screen.close());
     //TODO: at some point we need to call Platform.exit()
   }
