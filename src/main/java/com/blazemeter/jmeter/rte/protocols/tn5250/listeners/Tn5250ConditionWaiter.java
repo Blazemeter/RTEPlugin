@@ -66,6 +66,6 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
   @Override
   public void stop() {
     super.stop();
-    em.removeEmulatorListener(this);
+    client.removeListener(this);
   }
 }
