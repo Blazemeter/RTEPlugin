@@ -24,7 +24,7 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
 
   public ScreenTextListener(TextWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, Screen screen) {
-    super(condition, stableTimeoutExecutor);
+    super(condition, client, stableTimeoutExecutor);
     this.client = client;
     this.screen = screen;
     checkIfScreenMatchesCondition();
@@ -49,9 +49,18 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     handleReceivedEvent("screenChanged");
   }
 
+  @Override
+  public void stateChanged(String event) {
+    if (client.hasPendingError()) {
+      cancelWait();
+    } else {
+      handleReceivedEvent(event);
+    }
+  }
+
   private void handleReceivedEvent(String event) {
     if (matched) {
-      LOG.debug("Restart silent stable period since received event {}", event);
+      LOG.debug("Restart screen text stable period since received event {}", event);
       startStablePeriod();
     }
   }

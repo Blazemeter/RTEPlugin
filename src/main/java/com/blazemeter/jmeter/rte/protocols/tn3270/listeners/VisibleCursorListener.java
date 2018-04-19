@@ -19,12 +19,26 @@ public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondi
 
   public VisibleCursorListener(CursorWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, Cursor cursor) {
-    super(condition, stableTimeoutExecutor);
+    super(condition, client, stableTimeoutExecutor);
     this.client = client;
     this.cursor = cursor;
     if (condition.getPosition().equals(client.getCursorPosition())) {
       startStablePeriod();
     }
+  }
+
+  @Override
+  public void stateChanged(String event) {
+    if (client.hasPendingError()) {
+      cancelWait();
+    } else {
+      handleReceivedEvent(event);
+    }
+  }
+
+  private void handleReceivedEvent(String event) {
+    LOG.debug("Restarting wait for visible cursor period since event received {}", event);
+    startStablePeriod();
   }
 
   @Override

@@ -19,12 +19,26 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
 
   public UnlockListener(SyncWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, Screen screen) {
-    super(condition, stableTimeoutExecutor);
+    super(condition, client, stableTimeoutExecutor);
     isInputInhibited = client.isInputInhibited();
     this.screen = screen;
     if (!isInputInhibited) {
       startStablePeriod();
     }
+  }
+
+  @Override
+  public void stateChanged(String event) {
+    if (client.hasPendingError()) {
+      cancelWait();
+    } else {
+      handleReceivedEvent(event);
+    }
+  }
+
+  private void handleReceivedEvent(String event) {
+    LOG.debug("Restarting wait for sync period since event received {}", event);
+    startStablePeriod();
   }
 
   @Override

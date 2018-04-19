@@ -13,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
-import javax.net.ssl.SSLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,14 +50,22 @@ public class ExtendedTerminalServer extends TerminalServer {
     this.telnetListener = listener;
   }
 
+  public synchronized boolean hasPendingError() {
+    return pendingError != null;
+  }
+
   @Override
   public void run() {
     try {
       socket = createSocket();
+    } catch (GeneralSecurityException | IOException ex) {
+      setPendingError(ex);
+      return;
+    }
+    try {
+      running = true;
       serverIn = socket.getInputStream();
       serverOut = socket.getOutputStream();
-      running = true;
-
       while (running) {
 
         int bytesRead = serverIn.read(buffer);
@@ -71,11 +78,6 @@ public class ExtendedTerminalServer extends TerminalServer {
         System.arraycopy(buffer, 0, message, 0, bytesRead);
         telnetListener.listen(Source.SERVER, message, LocalDateTime.now(), true);
       }
-    } catch (GeneralSecurityException ex) {
-      if (running) {
-        close();
-      }
-      setPendingError(new SSLException(ex));
     } catch (IOException ex) {
       if (running) {
         close();

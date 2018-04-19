@@ -71,8 +71,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   private void sendUsernameWithSyncWait() throws Exception {
     client.send(buildUsernameField(), Action.ENTER);
-    //TODO: replace with actual client.await when the feature is implemented
-    Thread.sleep(3000);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   private List<CoordInput> buildUsernameField() {

@@ -221,7 +221,7 @@ public class Tn3270Client extends BaseProtocolClient {
       screen.getScreenCursor().addCursorMoveListener(unlock);
       return unlock;
     } else if (waitCondition instanceof SilentWaitCondition) {
-      SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition,
+      SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition, this,
           stableTimeoutExecutor, screen);
       screen.getScreenCursor().addCursorMoveListener(silence);
       screen.addKeyboardStatusChangeListener(silence);
@@ -275,15 +275,19 @@ public class Tn3270Client extends BaseProtocolClient {
     return cursor.isVisible() ? new Position(location / columns + 1, location % columns + 1) : null;
   }
 
+  public boolean hasPendingError() {
+    return consolePane.hasPendingError();
+  }
+
   @Override
-  public void disconnect() throws RteIOException{
+  public void disconnect() throws RteIOException {
     if (stableTimeoutExecutor == null) {
       return;
     }
     doDisconnect();
   }
 
-  private void doDisconnect() throws RteIOException{
+  private void doDisconnect() throws RteIOException {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
     try {

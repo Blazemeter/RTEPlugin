@@ -28,6 +28,10 @@ public class ExtendedConsolePane extends ConsolePane {
     this.screen = screen;
   }
 
+  public synchronized boolean hasPendingError() {
+    return terminalServer.hasPendingError();
+  }
+
   public void setSslType(SSLType sslType) {
     this.sslType = sslType;
   }
