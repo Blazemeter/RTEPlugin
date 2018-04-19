@@ -305,8 +305,7 @@ public class ExtendedTelnetState extends TelnetState {
   }
 
   @Override
-  public void setDoDeviceType (int modelNo)
-  {
+  public void setDoDeviceType(int modelNo) {
     doDeviceType = TERMINAL_TYPES[modelNo - 2];
     LOG.debug("setting: {}", doDeviceType);
   }

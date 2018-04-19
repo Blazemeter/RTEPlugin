@@ -142,11 +142,14 @@ public class Tn3270Client extends BaseProtocolClient {
     screen.lockKeyboard("connect");
     System.setProperty("user.home", homeDir);
     consolePane = new ExtendedConsolePane(screen, serverSite, pluginsStage);
+    consolePane.setConnectionTimeoutMillis((int) timeoutMillis);
+    consolePane.setSslType(sslType);
     consolePane.connect();
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
     try {
       unlock.await();
+      consolePane.throwAnyPendingError();
     } catch (TimeoutException | InterruptedException | RteIOException e) {
       doDisconnect();
       throw e;
@@ -155,13 +158,12 @@ public class Tn3270Client extends BaseProtocolClient {
     }
   }
 
-  private String buildDm3270TemporaryHomeDirectory() throws RteIOException{
-    try{
+  private String buildDm3270TemporaryHomeDirectory() throws RteIOException {
+    try {
       Path tmpDir = Files.createTempDirectory("dm3270-files");
       Files.createDirectories(tmpDir.resolve("dm3270/files"));
       return tmpDir.toString();
-    }
-    catch(IOException ex){
+    } catch (IOException ex) {
       throw new RteIOException(ex);
     }
   }
