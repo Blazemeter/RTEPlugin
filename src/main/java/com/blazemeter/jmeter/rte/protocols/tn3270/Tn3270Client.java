@@ -33,7 +33,10 @@ import com.bytezone.dm3270.display.ScreenPosition;
 import com.bytezone.dm3270.plugins.PluginsStage;
 import com.bytezone.dm3270.utilities.Site;
 import java.awt.Dimension;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -127,10 +130,17 @@ public class Tn3270Client extends BaseProtocolClient {
     Preferences prefs = Preferences.userNodeForPackage(getClass());
     // we need to build instances in JavaFx thread due to JavaFx limitations
     PluginsStage pluginsStage = buildInJavaFxThread(() -> new PluginsStage(prefs));
+    /*
+    Creating empty dm3270/files temporary directory and pointing user home directory to it to
+    avoid system.out log from dm3270 emulator
+    */
+    String homeDir = System.getProperty("user.home");
+    System.setProperty("user.home", buildDm3270TemporaryHomeDirectory());
     screen = buildInJavaFxThread(() -> new Screen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
         termType.getScreenDimensions(), prefs, Function.TERMINAL, pluginsStage, serverSite,
         telnetState));
     screen.lockKeyboard("connect");
+    System.setProperty("user.home", homeDir);
     consolePane = new ExtendedConsolePane(screen, serverSite, pluginsStage);
     consolePane.connect();
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -142,6 +152,17 @@ public class Tn3270Client extends BaseProtocolClient {
       throw e;
     } finally {
       unlock.stop();
+    }
+  }
+
+  private String buildDm3270TemporaryHomeDirectory() throws RteIOException{
+    try{
+      Path tmpDir = Files.createTempDirectory("dm3270-files");
+      Files.createDirectories(tmpDir.resolve("dm3270/files"));
+      return tmpDir.toString();
+    }
+    catch(IOException ex){
+      throw new RteIOException(ex);
     }
   }
 
@@ -253,7 +274,7 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public void disconnect() {
+  public void disconnect() throws RteIOException{
     if (stableTimeoutExecutor == null) {
       return;
     }
@@ -269,8 +290,6 @@ public class Tn3270Client extends BaseProtocolClient {
       Thread.currentThread().interrupt();
       LOG.warn("Disconnection process was interrupted");
     }
-    // we need to close the screen in JavaFx thread due to JavaFx limitations
-    runOnJavaFxThread(() -> screen.close());
     consolePane.throwAnyPendingError();
     //TODO: at some point we need to call Platform.exit()
   }
