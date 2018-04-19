@@ -23,7 +23,7 @@ public class Tn5250RequestListenerIT extends RequestListenerIT<Tn5250RequestList
   }
 
   @Override
-  protected void eventGenerator() {
+  protected void generateScreenChangeEvent() {
     listener.newPanelReceived(
         new XI5250EmulatorEvent(XI5250EmulatorEvent.NEW_PANEL_RECEIVED, emulator));
   }

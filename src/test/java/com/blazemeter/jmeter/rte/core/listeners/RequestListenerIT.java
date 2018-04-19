@@ -19,14 +19,14 @@ public abstract class RequestListenerIT<T extends RequestListener<?>> {
     listener = buildRequestListener();
   }
 
-  protected abstract void eventGenerator();
+  protected abstract void generateScreenChangeEvent();
 
   public abstract T buildRequestListener();
 
   @Test
   public void shouldReturnGreaterLatencyThanTheElapsedTime() throws Exception {
     Thread.sleep(500);
-    eventGenerator();
+    generateScreenChangeEvent();
     assertThat(listener.getLatency()).isGreaterThanOrEqualTo(500);
   }
 
@@ -37,7 +37,7 @@ public abstract class RequestListenerIT<T extends RequestListener<?>> {
     The end time must be the time where the last screen came.*/
     for (int i = 0; i < 3; i++) {
       Thread.sleep(100);
-      eventGenerator();
+      generateScreenChangeEvent();
     }
     assertThat(listener.getEndTime()).isGreaterThanOrEqualTo(startTime + 300);
   }

@@ -28,7 +28,7 @@ public class Tn3270RequestListenerIT extends RequestListenerIT<Tn3270RequestList
   private FieldManager fieldManager;
 
   @Override
-  protected void eventGenerator() {
+  protected void generateScreenChangeEvent() {
     listener.screenChanged(screenWatcher);
   }
 

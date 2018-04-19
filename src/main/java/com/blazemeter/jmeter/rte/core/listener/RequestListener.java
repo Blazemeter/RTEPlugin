@@ -1,12 +1,12 @@
 package com.blazemeter.jmeter.rte.core.listener;
 
-import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import java.time.Duration;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class RequestListener<T extends BaseProtocolClient> {
+public abstract class RequestListener<T extends RteProtocolClient> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequestListener.class);
 
