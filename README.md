@@ -2,7 +2,7 @@
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing config elements and samplers.
 
-Nowadays the plugin supports **IBM protocol's TN5250 and TN3270 (last one not implemented yet)** by using [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators.
+Nowadays the plugin supports **IBM protocol's TN5250 and TN3270 (last one not implemented yet)** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators.
 
 People who usually work with these IBM servers interact with it, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes.
 Following this, the sampler is designed in a way that the user could specify the position of fields on the screen and the text string to write on them. Besides, the sampler allows to simulate the action buttons existing on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc..    
@@ -29,7 +29,7 @@ The RTE Config element sets the parameters to be used by the sampler in order to
 - *SSL Type*. The SSL protocol to use if it's required by the server. The keystore file and the keystore password should be specified in *system.properties* file by adding the lines `javax.net.ssl.keyStore=</keystore_path/file.keystore>` and `javax.net.ssl.keyStorePassword=<changeit>`. 
 - *Timeout*. The maximum time to wait to establish the connection by the sampler. This time takes into account the time until the client receives a response screen from the server. 
 
-RTE Samplers in a same thread group share the connection in each thread created (different threads use separate connections).The RTE Sampler element checks if exists a connection to send the packets, if there isn't, it uses the RTE Config data to establish a new one. 
+RTE Samplers in a same thread group share the connection in each thread created (different threads use separate connections). The RTE Sampler element checks if exists a connection to send the packets, if there isn't, it uses the RTE Config data to establish a new one. 
 
 This means that it's **always required an RTE Config Element** in order to connect the RTE samplers to a server.
 
@@ -73,6 +73,10 @@ The RTE Config element should specify the server url in *Server* field, and the 
 Finally, the second sampler should specify in the Payload grid the position on the screen and the value to put on both *user* and *password* fields. Besides, the action button *ENTER* should be selected to simulate the user pressing that key after filling the fields. It should has also an assert who checks for the ¨Login Successful¨ message.
 
 ![alt text](docs/example_RTESampler2.png "RTE Sampler 2") 
+
+## Compatibility
+
+The plugin is tested with Jmeter 3.1, 3.2, 3.3 and 4.0 in Java 1.8. Code base is implemented in Java 1.8, so lower version of JVM are not supported.
 
 ## Contributing
 
