@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
@@ -17,8 +18,9 @@ public class VisibleCursorListener extends Tn5250ConditionWaiter<CursorWaitCondi
   private static final Logger LOG = LoggerFactory.getLogger(VisibleCursorListener.class);
 
   public VisibleCursorListener(CursorWaitCondition condition, Tn5250Client client,
-      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
-    super(condition, client, stableTimeoutExecutor, em);
+      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em,
+      ExceptionHandler exceptionHandler) {
+    super(condition, client, stableTimeoutExecutor, em, exceptionHandler);
     if (condition.getPosition().equals(client.getCursorPosition())) {
       startStablePeriod();
     }
@@ -26,10 +28,6 @@ public class VisibleCursorListener extends Tn5250ConditionWaiter<CursorWaitCondi
 
   @Override
   public synchronized void stateChanged(XI5250EmulatorEvent event) {
-    if (client.hasPendingError()) {
-      cancelWait();
-      return;
-    }
     if (condition.getPosition().equals(client.getCursorPosition())) {
       LOG.debug("Cursor is in expected position, now waiting for it to remain for stable period");
       startStablePeriod();

@@ -25,7 +25,8 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
-        screen);
+        screen,
+        exceptionHandler);
   }
 
   protected Runnable buildKeyboardStateChangeGenerator(KeyboardStatusChangedEvent keyboardEvent) {

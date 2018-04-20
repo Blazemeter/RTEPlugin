@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.display.Cursor;
@@ -18,27 +19,14 @@ public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondi
   private Tn3270Client client;
 
   public VisibleCursorListener(CursorWaitCondition condition, Tn3270Client client,
-      ScheduledExecutorService stableTimeoutExecutor, Cursor cursor) {
-    super(condition, client, stableTimeoutExecutor);
+      ScheduledExecutorService stableTimeoutExecutor, Cursor cursor,
+      ExceptionHandler exceptionHandler) {
+    super(condition, stableTimeoutExecutor, exceptionHandler);
     this.client = client;
     this.cursor = cursor;
     if (condition.getPosition().equals(client.getCursorPosition())) {
       startStablePeriod();
     }
-  }
-
-  @Override
-  public void stateChanged(String event) {
-    if (client.hasPendingError()) {
-      cancelWait();
-    } else {
-      handleReceivedEvent(event);
-    }
-  }
-
-  private void handleReceivedEvent(String event) {
-    LOG.debug("Restarting wait for visible cursor period since event received {}", event);
-    startStablePeriod();
   }
 
   @Override

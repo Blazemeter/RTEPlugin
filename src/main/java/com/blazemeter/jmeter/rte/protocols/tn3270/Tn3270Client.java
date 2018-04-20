@@ -3,9 +3,9 @@ package com.blazemeter.jmeter.rte.protocols.tn3270;
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
@@ -104,6 +104,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
   private static final Method FIELD_POSITION_GET_CHAR_STRING_METHOD =
       ReflectionUtils.getAccessibleMethod(ScreenPosition.class, "getCharString");
+  private static final String USER_HOME = "user.home";
 
   private Screen screen;
   private ExtendedConsolePane consolePane;
@@ -134,14 +135,15 @@ public class Tn3270Client extends BaseProtocolClient {
     Creating empty dm3270/files temporary directory and pointing user home directory to it to
     avoid system.out log from dm3270 emulator
     */
-    String homeDir = System.getProperty("user.home");
-    System.setProperty("user.home", buildDm3270TemporaryHomeDirectory());
+    String homeDir = System.getProperty(USER_HOME);
+    System.setProperty(USER_HOME, buildDm3270TemporaryHomeDirectory());
     screen = buildInJavaFxThread(() -> new Screen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
         termType.getScreenDimensions(), prefs, Function.TERMINAL, pluginsStage, serverSite,
         telnetState));
     screen.lockKeyboard("connect");
-    System.setProperty("user.home", homeDir);
-    consolePane = new ExtendedConsolePane(screen, serverSite, pluginsStage);
+    System.setProperty(USER_HOME, homeDir);
+    exceptionHandler = new ExceptionHandler();
+    consolePane = new ExtendedConsolePane(screen, serverSite, pluginsStage, exceptionHandler);
     consolePane.setConnectionTimeoutMillis((int) timeoutMillis);
     consolePane.setSslType(sslType);
     consolePane.connect();
@@ -149,7 +151,6 @@ public class Tn3270Client extends BaseProtocolClient {
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
     try {
       unlock.await();
-      consolePane.throwAnyPendingError();
     } catch (TimeoutException | InterruptedException | RteIOException e) {
       doDisconnect();
       throw e;
@@ -197,11 +198,11 @@ public class Tn3270Client extends BaseProtocolClient {
       Field field = screen.getFieldManager()
           .getFieldAt(linearPosition)
           .orElseThrow(() -> new InvalidFieldPositionException(i.getPosition()));
-      field.setText(i.getInput());
+      screen.setFieldText(field, i.getInput());
       screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
     });
     consolePane.sendAID(AID_COMMANDS.get(action), action.name());
-    consolePane.throwAnyPendingError();
+    exceptionHandler.throwAnyPendingError();
   }
 
   private int buildLinealPosition(CoordInput i) {
@@ -212,24 +213,24 @@ public class Tn3270Client extends BaseProtocolClient {
   protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
       UnlockListener unlock = new UnlockListener((SyncWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, screen);
+          stableTimeoutExecutor, screen, exceptionHandler);
       screen.addKeyboardStatusChangeListener(unlock);
       return unlock;
     } else if (waitCondition instanceof CursorWaitCondition) {
       VisibleCursorListener unlock = new VisibleCursorListener((CursorWaitCondition) waitCondition,
-          this, stableTimeoutExecutor, screen.getScreenCursor());
+          this, stableTimeoutExecutor, screen.getScreenCursor(), exceptionHandler);
       screen.getScreenCursor().addCursorMoveListener(unlock);
       return unlock;
     } else if (waitCondition instanceof SilentWaitCondition) {
-      SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, screen);
+      SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition,
+          stableTimeoutExecutor, screen, exceptionHandler);
       screen.getScreenCursor().addCursorMoveListener(silence);
       screen.addKeyboardStatusChangeListener(silence);
       screen.getFieldManager().addScreenChangeListener(silence);
       return silence;
     } else if (waitCondition instanceof TextWaitCondition) {
       ScreenTextListener text = new ScreenTextListener((TextWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, screen);
+          stableTimeoutExecutor, screen, exceptionHandler);
       screen.getScreenCursor().addCursorMoveListener(text);
       screen.addKeyboardStatusChangeListener(text);
       screen.getFieldManager().addScreenChangeListener(text);
@@ -275,10 +276,6 @@ public class Tn3270Client extends BaseProtocolClient {
     return cursor.isVisible() ? new Position(location / columns + 1, location % columns + 1) : null;
   }
 
-  public boolean hasPendingError() {
-    return consolePane.hasPendingError();
-  }
-
   @Override
   public void disconnect() throws RteIOException {
     if (stableTimeoutExecutor == null) {
@@ -296,8 +293,7 @@ public class Tn3270Client extends BaseProtocolClient {
       Thread.currentThread().interrupt();
       LOG.warn("Disconnection process was interrupted");
     }
-    consolePane.throwAnyPendingError();
-    //TODO: at some point we need to call Platform.exit()
+    exceptionHandler.throwAnyPendingError();
   }
 
 }

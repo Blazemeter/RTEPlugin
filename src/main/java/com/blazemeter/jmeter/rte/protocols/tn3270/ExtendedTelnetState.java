@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
+/*
  * An extension of {@link TelnetState} that performs the same but supports ExtendedTerminalServer,
  * also exceptions are properly handled and standard outputs are replaced with log framework
  */
@@ -57,6 +57,7 @@ public class ExtendedTelnetState extends TelnetState {
   private int totalWrites;
   private int totalBytesRead;
   private int totalBytesWritten;
+  private final Set<TelnetStateListener> listeners = new HashSet<>();
 
   public ExtendedTelnetState() {
     setDo3270Extended(true);       // prefer extended
@@ -93,10 +94,9 @@ public class ExtendedTelnetState extends TelnetState {
     ++totalWrites;
     totalBytesWritten += buffer.length;
   }
-
-  // This thread exists simply to keep the connection alive. It sleeps for a
-  // certain period, and when it wakes it issues a NOOP if nothing else has
   // communicated with the server.
+  // certain period, and when it wakes it issues a NOOP if nothing else has
+  // This thread exists simply to keep the connection alive. It sleeps for a
 
   @Override
   public void run() {
@@ -168,7 +168,6 @@ public class ExtendedTelnetState extends TelnetState {
 
     return text.toString();
   }
-
   // ---------------------------------------------------------------------------------//
   // Set actual (what was communicated during negotiations)
   // ---------------------------------------------------------------------------------//
@@ -197,8 +196,8 @@ public class ExtendedTelnetState extends TelnetState {
     LOG.debug("Terminal: {}", terminal);
     this.terminal = terminal;
   }
-
   // called from TN3270ExtendedSubcommand.process()
+
   @Override
   public void setDeviceType(String deviceType) {
     LOG.debug("Device Type: {}", deviceType);
@@ -229,13 +228,12 @@ public class ExtendedTelnetState extends TelnetState {
         LOG.debug("Model not found: {}", deviceType);
     }
   }
-
   // called from TN3270ExtendedSubcommand.process()
+
   public void setFunctions(List<Function> functions) {
     LOG.debug("Functions: {}", functions);
     this.functions = functions;
   }
-
   // ---------------------------------------------------------------------------------//
   // Ask actual
   // ---------------------------------------------------------------------------------//
@@ -259,7 +257,6 @@ public class ExtendedTelnetState extends TelnetState {
   public String getTerminal() {
     return terminal;
   }
-
   // ---------------------------------------------------------------------------------//
   // Ask preferences
   // ---------------------------------------------------------------------------------//
@@ -283,7 +280,6 @@ public class ExtendedTelnetState extends TelnetState {
   public String doDeviceType() {
     return doDeviceType;
   }
-
   // ---------------------------------------------------------------------------------//
   // Set preferences
   // ---------------------------------------------------------------------------------//
@@ -324,12 +320,9 @@ public class ExtendedTelnetState extends TelnetState {
 
     return text.toString();
   }
-
   // ---------------------------------------------------------------------------------//
   // Listener events
   // ---------------------------------------------------------------------------------//
-
-  private final Set<TelnetStateListener> listeners = new HashSet<>();
 
   private void fireTelnetStateChange() {
     listeners.forEach(listener -> listener.telnetStateChanged(this));

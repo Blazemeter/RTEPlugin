@@ -26,7 +26,8 @@ public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
-        em);
+        em,
+        exceptionHandler);
   }
 
   @Test

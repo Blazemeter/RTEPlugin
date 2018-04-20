@@ -38,7 +38,8 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
             Area.fromTopLeftBottomRight(1, 1, 1, 5), TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
-        em);
+        em,
+        exceptionHandler);
   }
 
   private void setupScreenWithText(String screen) {

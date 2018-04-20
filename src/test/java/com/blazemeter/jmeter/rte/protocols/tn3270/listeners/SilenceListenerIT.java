@@ -45,7 +45,8 @@ public class SilenceListenerIT extends Tn3270ConditionWaiterIT {
   protected Tn3270ConditionWaiter<?> buildConditionWaiter() throws Exception {
     return new SilenceListener(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
         stableTimeoutExecutor,
-        screen);
+        screen,
+        exceptionHandler);
   }
 
   @Test

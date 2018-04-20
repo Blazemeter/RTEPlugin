@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
-import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.bytezone.dm3270.streams.BufferListener;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
+/*
  * Performs the same as {@link TerminalServer}, but in this case uses a socket that supports SSL and
  * connection timeout. Apart from that, instead of handling the exceptions on the class itself, they
  * are thrown to tn3270class.
@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 public class ExtendedTerminalServer extends TerminalServer {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedTerminalServer.class);
+  private ExceptionHandler exceptionHandler;
   private int connectionTimeoutMillis;
   private SSLType sslType;
 
@@ -38,20 +39,15 @@ public class ExtendedTerminalServer extends TerminalServer {
 
   private final BufferListener telnetListener;
 
-  private Throwable pendingError;
-
   public ExtendedTerminalServer(String serverURL, int serverPort, BufferListener listener,
-      SSLType sslType, int connectionTimeoutMillis) {
+      SSLType sslType, int connectionTimeoutMillis, ExceptionHandler exceptionHandler) {
     super(serverURL, serverPort, listener);
     this.serverPort = serverPort;
     this.sslType = sslType;
     this.serverURL = serverURL;
     this.connectionTimeoutMillis = connectionTimeoutMillis;
     this.telnetListener = listener;
-  }
-
-  public synchronized boolean hasPendingError() {
-    return pendingError != null;
+    this.exceptionHandler = exceptionHandler;
   }
 
   @Override
@@ -59,7 +55,7 @@ public class ExtendedTerminalServer extends TerminalServer {
     try {
       socket = createSocket();
     } catch (GeneralSecurityException | IOException ex) {
-      setPendingError(ex);
+      exceptionHandler.setPendingError(ex);
       return;
     }
     try {
@@ -81,7 +77,7 @@ public class ExtendedTerminalServer extends TerminalServer {
     } catch (IOException ex) {
       if (running) {
         close();
-        setPendingError(ex);
+        exceptionHandler.setPendingError(ex);
       }
     }
   }
@@ -109,15 +105,7 @@ public class ExtendedTerminalServer extends TerminalServer {
       serverOut.write(buffer);
       serverOut.flush();
     } catch (IOException e) {
-      setPendingError(e);
-    }
-  }
-
-  private synchronized void setPendingError(Throwable ex) {
-    if (pendingError == null) {
-      pendingError = ex;
-    } else {
-      LOG.error("Exception ignored in step result due to previously thrown exception", ex);
+      exceptionHandler.setPendingError(e);
     }
   }
 
@@ -137,17 +125,8 @@ public class ExtendedTerminalServer extends TerminalServer {
         telnetListener.close();
       }
     } catch (IOException ex) {
-      setPendingError(ex);
+      exceptionHandler.setPendingError(ex);
       LOG.error("Communication with rte server failed.");
     }
   }
-
-  public synchronized void throwAnyPendingError() throws RteIOException {
-    if (pendingError != null) {
-      Throwable ret = pendingError;
-      pendingError = null;
-      throw new RteIOException(ret);
-    }
-  }
-
 }

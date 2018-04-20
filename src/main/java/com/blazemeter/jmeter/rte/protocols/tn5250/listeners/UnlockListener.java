@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
@@ -17,8 +18,9 @@ public class UnlockListener extends Tn5250ConditionWaiter<SyncWaitCondition> {
   private boolean isInputInhibited;
 
   public UnlockListener(SyncWaitCondition condition, Tn5250Client client,
-      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
-    super(condition, client, stableTimeoutExecutor, em);
+      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em,
+      ExceptionHandler exceptionHandler) {
+    super(condition, client, stableTimeoutExecutor, em, exceptionHandler);
     isInputInhibited = client.isInputInhibited();
     if (!isInputInhibited) {
       startStablePeriod();
@@ -27,10 +29,6 @@ public class UnlockListener extends Tn5250ConditionWaiter<SyncWaitCondition> {
 
   @Override
   public synchronized void stateChanged(XI5250EmulatorEvent event) {
-    if (client.hasPendingError()) {
-      cancelWait();
-      return;
-    }
     boolean wasInputInhibited = isInputInhibited;
     isInputInhibited = client.isInputInhibited();
     if (isInputInhibited != wasInputInhibited) {

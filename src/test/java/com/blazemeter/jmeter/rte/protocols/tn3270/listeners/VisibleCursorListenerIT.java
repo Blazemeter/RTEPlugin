@@ -35,7 +35,8 @@ public class VisibleCursorListenerIT extends Tn3270ConditionWaiterIT {
         new CursorWaitCondition(EXPECTED_CURSOR_POSITION, TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
-        cursor);
+        cursor,
+        exceptionHandler);
   }
 
   protected Runnable buildCursorStateChangeGenerator() {

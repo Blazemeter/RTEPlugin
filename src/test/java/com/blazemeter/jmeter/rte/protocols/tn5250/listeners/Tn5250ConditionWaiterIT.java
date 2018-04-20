@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listeners.ConditionWaiterIT;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
@@ -25,16 +26,6 @@ public abstract class Tn5250ConditionWaiterIT extends ConditionWaiterIT<Tn5250Co
 
   @Mock
   protected ExtendedEmulator em;
-
-  @Test
-  public void shouldUnblockAfterReceivingStateChangeAndExceptionInEmulator() throws Exception {
-    when(client.hasPendingError()).thenReturn(true);
-    long unlockDelayMillis = 500;
-    Stopwatch waitTime = Stopwatch.createStarted();
-    startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator());
-    listener.await();
-    assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
-  }
 
   protected Runnable buildStateChangeGenerator() {
     return () -> listener
