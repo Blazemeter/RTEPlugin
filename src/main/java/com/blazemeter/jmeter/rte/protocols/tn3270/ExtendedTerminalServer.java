@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
@@ -97,7 +98,7 @@ public class ExtendedTerminalServer extends TerminalServer {
   public synchronized void write(byte[] buffer) {
     if (serverOut == null) {
       // the no-op may come here if the program is not closed after disconnection
-      exceptionHandler.setPendingError(new Exception("Connection close"));
+      exceptionHandler.setPendingError(new SocketException("socketClosed "));
       return;
     }
 
