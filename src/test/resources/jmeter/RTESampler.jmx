@@ -88,8 +88,7 @@ println(&quot;server started...&quot;)</stringProp>
             </collectionProp>
           </elementProp>
           <stringProp name="RTESampler.action">ENTER</stringProp>
-          <boolProp name="RTESampler.disconnect">true</boolProp>
-          <boolProp name="RTESampler.justConnect">false</boolProp>
+          <stringProp name="RTESampler.mode">SEND_INPUT</stringProp>
           <boolProp name="RTESampler.waitSync">true</boolProp>
           <stringProp name="RTESampler.waitSyncTimeout">14000</stringProp>
           <boolProp name="RTESampler.waitCursor">false</boolProp>
@@ -119,6 +118,30 @@ println(&quot;server started...&quot;)</stringProp>
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
+        <com.blazemeter.jmeter.rte.sampler.RTESampler guiclass="com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui" testclass="com.blazemeter.jmeter.rte.sampler.RTESampler" testname="RTE Sampler" enabled="true">
+          <elementProp name="Inputs.inputs" elementType="com.blazemeter.jmeter.rte.sampler.Inputs">
+            <collectionProp name="Inputs.inputs"/>
+          </elementProp>
+          <stringProp name="RTESampler.action">ENTER</stringProp>
+          <stringProp name="RTESampler.mode">DISCONNECT</stringProp>
+          <boolProp name="RTESampler.waitSync">true</boolProp>
+          <stringProp name="RTESampler.waitSyncTimeout">60000</stringProp>
+          <boolProp name="RTESampler.waitCursor">false</boolProp>
+          <stringProp name="RTESampler.waitCursorRow">1</stringProp>
+          <stringProp name="RTESampler.waitCursorColumn">1</stringProp>
+          <stringProp name="RTESampler.waitCursorTimeout">30000</stringProp>
+          <boolProp name="RTESampler.waitSilent">false</boolProp>
+          <stringProp name="RTESampler.waitSilentTime">1000</stringProp>
+          <stringProp name="RTESampler.waitSilentTimeout">60000</stringProp>
+          <boolProp name="RTESampler.waitText">false</boolProp>
+          <stringProp name="RTESampler.waitTextRegex"></stringProp>
+          <stringProp name="RTESampler.waitTextTimeout">30000</stringProp>
+          <stringProp name="RTESampler.waitTextAreaTop">1</stringProp>
+          <stringProp name="RTESampler.waitTextAreaLeft">1</stringProp>
+          <stringProp name="RTESampler.waitTextAreaBottom"></stringProp>
+          <stringProp name="RTESampler.waitTextAreaRight"></stringProp>
+        </com.blazemeter.jmeter.rte.sampler.RTESampler>
+        <hashTree/>
       </hashTree>
       <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>

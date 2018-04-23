@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.sampler.Mode;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
@@ -40,7 +41,6 @@ public class RTESamplerGuiTest {
   @Test
   public void shouldSetTheTestElementFromThePanel() {
     final Action action = Action.ENTER;
-    final boolean t = true;
     final String waitSyncTimeout = "1";
     final String waitCursorColumn = "2";
     final String waitCursorRow = "3";
@@ -54,18 +54,17 @@ public class RTESamplerGuiTest {
     final String waitTextRegex = "regExp";
     final String waitTextTimeout = "11";
     when(panel.getAction()).thenReturn(action);
-    when(panel.getDisconnect()).thenReturn(t);
-    when(panel.getJustConnect()).thenReturn(t);
-    when(panel.getWaitSync()).thenReturn(t);
+    when(panel.getMode()).thenReturn(Mode.CONNECT);
+    when(panel.getWaitSync()).thenReturn(true);
     when(panel.getWaitSyncTimeout()).thenReturn(waitSyncTimeout);
-    when(panel.getWaitCursor()).thenReturn(t);
+    when(panel.getWaitCursor()).thenReturn(true);
     when(panel.getWaitCursorColumn()).thenReturn(waitCursorColumn);
     when(panel.getWaitCursorRow()).thenReturn(waitCursorRow);
     when(panel.getWaitCursorTimeout()).thenReturn(waitCursorTimeout);
-    when(panel.getWaitSilent()).thenReturn(t);
+    when(panel.getWaitSilent()).thenReturn(true);
     when(panel.getWaitSilentTimeout()).thenReturn(waitSilentTimeout);
     when(panel.getWaitSilentTime()).thenReturn(waitSilentTime);
-    when(panel.getWaitText()).thenReturn(t);
+    when(panel.getWaitText()).thenReturn(true);
     when(panel.getWaitTextAreaBottom()).thenReturn(waitTextAreaBottom);
     when(panel.getWaitTextAreaLeft()).thenReturn(waitTextAreaLeft);
     when(panel.getWaitTextAreaRight()).thenReturn(waitTextAreaRight);
@@ -77,12 +76,11 @@ public class RTESamplerGuiTest {
     samplerGui.modifyTestElement(testElement);
 
     softly.assertThat(testElement.getAction()).as("Action").isEqualTo(action);
-    softly.assertThat(testElement.getDisconnect()).as("Disconnect").isEqualTo(t);
-    softly.assertThat(testElement.getJustConnect()).as("JustConnect").isEqualTo(t);
-    softly.assertThat(testElement.getWaitSync()).as("WaitSync").isEqualTo(t);
-    softly.assertThat(testElement.getWaitCursor()).as("WaitCursor").isEqualTo(t);
-    softly.assertThat(testElement.getWaitSilent()).as("WaitSilent").isEqualTo(t);
-    softly.assertThat(testElement.getWaitText()).as("WaitText").isEqualTo(t);
+    softly.assertThat(testElement.getMode()).as("Mode").isEqualTo(Mode.CONNECT);
+    softly.assertThat(testElement.getWaitSync()).as("WaitSync").isEqualTo(true);
+    softly.assertThat(testElement.getWaitCursor()).as("WaitCursor").isEqualTo(true);
+    softly.assertThat(testElement.getWaitSilent()).as("WaitSilent").isEqualTo(true);
+    softly.assertThat(testElement.getWaitText()).as("WaitText").isEqualTo(true);
     softly.assertThat(testElement.getWaitSyncTimeout()).as("WaitSyncTimeout")
         .isEqualTo(waitSyncTimeout);
     softly.assertThat(testElement.getWaitCursorColumn()).as("WaitCursorColumn")

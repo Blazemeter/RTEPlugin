@@ -61,3 +61,6 @@ release:
     - master
   when: manual
   script: /release.sh
+  artifacts:
+    paths:
+      - target/jmeter-bzm-rte-*.jar

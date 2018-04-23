@@ -4,13 +4,18 @@ import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
-import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.sampler.Mode;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JPanel;
 import kg.apc.emulators.TestJMeterUtils;
+import org.assertj.swing.core.GenericTypeMatcher;
+import org.assertj.swing.driver.WaitForComponentToShowCondition;
 import org.assertj.swing.fixture.AbstractJComponentFixture;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JCheckBoxFixture;
+import org.assertj.swing.fixture.JPanelFixture;
+import org.assertj.swing.format.Formatting;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
@@ -19,10 +24,8 @@ import org.junit.Test;
 
 public class RTESamplerPanelTest {
 
-  private static final String JUST_CONNECT = "justConnect";
-  private static final String TABLE = "table";
-  private static final String ADD_BUTTON = "addButton";
-  private static final String ADD_FROM_CLIPBOARD_BUTTON = "addFromClipboardButton";
+  private static final String REQUEST_PANEL = "requestPanel";
+  private static final String WAITS_PANEL = "requestPanel";
   private static final String WAIT_SYNC = "waitSync";
   private static final String WAIT_SYNC_TIMEOUT = "waitSyncTimeout";
   private static final String WAIT_CURSOR = "waitCursor";
@@ -39,6 +42,7 @@ public class RTESamplerPanelTest {
   private static final String WAIT_TEXT_AREA_TOP = "waitTextAreaTop";
   private static final String WAIT_TEXT_AREA_BOTTOM = "waitTextAreaBottom";
   private static final String WAIT_TEXT_AREA_RIGHT = "waitTextAreaRight";
+  private static final long CHANGE_TIMEOUT_MILLIS = 10000;
 
   private FrameFixture frame;
 
@@ -54,38 +58,60 @@ public class RTESamplerPanelTest {
   }
 
   @Test
-  public void shouldDisableRequestFieldsWhenJustConnectIsChecked() {
-    JCheckBoxFixture check = frame.checkBox(JUST_CONNECT);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(true, check );
-    expected.add(frame.table(TABLE));
-    expected.add(frame.button(ADD_BUTTON));
-    expected.add(frame.button(ADD_FROM_CLIPBOARD_BUTTON));
-    for (Action a : Action.values()) {
-      expected.add(frame.radioButton(a.name()));
-    }
-    validateEnabled(false, expected);
+  public void shouldHideRequestPanelWhenNotSendInputModeMode() {
+    switchMode(Mode.SEND_INPUT, Mode.CONNECT);
+    assertPanelIsNotVisible(REQUEST_PANEL);
+  }
+
+  private void switchMode(Mode mode1, Mode mode2) {
+    frame.radioButton(mode1.name()).check();
+    frame.radioButton(mode2.name()).check();
+  }
+
+  private void assertPanelIsNotVisible(String panelName) {
+    JPanelFixture panel = findInvisiblePanelByName(panelName);
+    pause(new Condition("Component " + Formatting.format(panel.target()) + " is not visible") {
+      @Override
+      public boolean test() {
+        return !panel.target().isVisible();
+      }
+    }, CHANGE_TIMEOUT_MILLIS);
+  }
+
+  private JPanelFixture findInvisiblePanelByName(String name) {
+    return frame.panel(new GenericTypeMatcher<JPanel>(JPanel.class) {
+      @Override
+      protected boolean isMatching(JPanel component) {
+        return name.equals(component.getName());
+      }
+    });
   }
 
   @Test
-  public void shouldEnableRequestFieldsWhenJustConnectIsNotChecked() {
-    JCheckBoxFixture check = frame.checkBox(JUST_CONNECT);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(false, check );
-    expected.add(frame.table(TABLE));
-    expected.add(frame.button(ADD_BUTTON));
-    expected.add(frame.button(ADD_FROM_CLIPBOARD_BUTTON));
-    for (Action a : Action.values()) {
-      expected.add(frame.radioButton(a.name()));
-    }
-    validateEnabled(true, expected);
+  public void shouldShowRequestPanelWhenSendInputMode() {
+    switchMode(Mode.CONNECT, Mode.SEND_INPUT);
+    JPanelFixture panel = frame.panel(REQUEST_PANEL);
+    pause(WaitForComponentToShowCondition.untilIsShowing(panel.target()));
+  }
+
+  @Test
+  public void shouldHideWaitsPanelWhenDisconnectMode() {
+    switchMode(Mode.SEND_INPUT, Mode.DISCONNECT);
+    assertPanelIsNotVisible(WAITS_PANEL);
+  }
+
+  @Test
+  public void shouldShowWaitsPanelWhenNotDisconnectMode() {
+    switchMode(Mode.DISCONNECT, Mode.SEND_INPUT);
+    JPanelFixture panel = frame.panel(WAITS_PANEL);
+    pause(WaitForComponentToShowCondition.untilIsShowing(panel.target()));
   }
 
   @Test
   public void shouldDisableSyncWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_SYNC);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(false, check );
+    switchCheckboxTo(false, check);
     expected.add(frame.textBox(WAIT_SYNC_TIMEOUT));
     validateEnabled(false, expected);
   }
@@ -94,7 +120,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableSyncWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_SYNC);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(true, check );
+    switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_SYNC_TIMEOUT));
     validateEnabled(true, expected);
   }
@@ -103,7 +129,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableCursorWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_CURSOR);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(true, check );
+    switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_CURSOR_ROW));
     expected.add(frame.textBox(WAIT_CURSOR_COLUMN));
     expected.add(frame.textBox(WAIT_CURSOR_TIMEOUT));
@@ -114,7 +140,7 @@ public class RTESamplerPanelTest {
   public void shouldDisableCursorWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_CURSOR);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(false, check );
+    switchCheckboxTo(false, check);
     expected.add(frame.textBox(WAIT_CURSOR_ROW));
     expected.add(frame.textBox(WAIT_CURSOR_COLUMN));
     expected.add(frame.textBox(WAIT_CURSOR_TIMEOUT));
@@ -125,7 +151,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableSilentWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_SILENT);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(true, check );
+    switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_SILENT_TIME));
     expected.add(frame.textBox(WAIT_SILENT_TIMEOUT));
     validateEnabled(true, expected);
@@ -147,7 +173,7 @@ public class RTESamplerPanelTest {
   public void shouldEnableTextWaitFieldWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_TEXT);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(true, check );
+    switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_TEXT_REGEX));
     expected.add(frame.textBox(WAIT_TEXT_TIMEOUT));
     expected.add(frame.textBox(WAIT_TEXT_AREA_LEFT));
@@ -161,7 +187,7 @@ public class RTESamplerPanelTest {
   public void shouldDisableTextWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_TEXT);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchEnabledTo(false, check );
+    switchCheckboxTo(false, check);
     expected.add(frame.textBox(WAIT_TEXT_REGEX));
     expected.add(frame.textBox(WAIT_TEXT_TIMEOUT));
     expected.add(frame.textBox(WAIT_TEXT_AREA_LEFT));
@@ -176,14 +202,14 @@ public class RTESamplerPanelTest {
     frame.cleanUp();
   }
 
-  private void switchEnabledTo(boolean state, JCheckBoxFixture check ){
+  private void switchCheckboxTo(boolean state, JCheckBoxFixture check) {
     check.check(!state);
     check.check(state);
   }
 
   private void validateEnabled(boolean enable, List<AbstractJComponentFixture> components) {
 
-    pause(new Condition("All componentes are " + enable) {
+    pause(new Condition("All components are " + enable) {
       @Override
       public boolean test() {
         List<String> result = new ArrayList<>();
@@ -196,6 +222,6 @@ public class RTESamplerPanelTest {
         }
         return result.containsAll(expected) && expected.containsAll(result);
       }
-    }, timeout(10000));
+    }, timeout(CHANGE_TIMEOUT_MILLIS));
   }
 }

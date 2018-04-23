@@ -46,6 +46,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.terminalType";
   public static final int DEFAULT_PORT = 23;
   public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
+  public static final Mode DEFAULT_MODE = Mode.SEND_INPUT;
   public static final Action DEFAULT_ACTION = Action.ENTER;
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = DEFAULT_PROTOCOL.createProtocolClient()
@@ -69,9 +70,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   // jmeter.properties by adding a line like ths one:
   // "RTEConnectionConfig.stableTimeoutMillis=value"
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
+  private static final String MODE_PROPERTY = "RTESampler.mode";
   private static final String ACTION_PROPERTY = "RTESampler.action";
-  private static final String DISCONNECT_PROPERTY = "RTESampler.disconnect";
-  private static final String JUST_CONNECT_PROPERTY = "RTESampler.justConnect";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
   private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
   private static final String WAIT_CURSOR_PROPERTY = "RTESampler.waitCursor";
@@ -159,6 +159,18 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     setProperty(CONFIG_SSL_TYPE, sslType.name());
   }
 
+  public Mode getMode() {
+
+    if (getPropertyAsString(MODE_PROPERTY).isEmpty()) {
+      return DEFAULT_MODE;
+    }
+    return Mode.valueOf(getPropertyAsString(MODE_PROPERTY));
+  }
+
+  public void setMode(Mode mode) {
+    setProperty(MODE_PROPERTY, mode.name());
+  }
+
   public void setPayload(Inputs payload) {
     setProperty(new TestElementProperty(Inputs.INPUTS_PROPERTY, payload));
   }
@@ -172,22 +184,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
 
   public void setAction(Action action) {
     setProperty(ACTION_PROPERTY, action.name());
-  }
-
-  public boolean getDisconnect() {
-    return getPropertyAsBoolean(DISCONNECT_PROPERTY);
-  }
-
-  public void setDisconnect(boolean disconnect) {
-    setProperty(DISCONNECT_PROPERTY, disconnect);
-  }
-
-  public boolean getJustConnect() {
-    return getPropertyAsBoolean(JUST_CONNECT_PROPERTY);
-  }
-
-  public void setJustConnect(boolean disconnect) {
-    setProperty(JUST_CONNECT_PROPERTY, disconnect);
   }
 
   public boolean getWaitSync() {
@@ -372,15 +368,27 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     sampleResult.setSampleLabel(getName());
     sampleResult.sampleStart();
     sampleResult.setRequestHeaders(buildRequestHeaders());
-    sampleResult.setSamplerData(buildRequestBody());
 
     try {
       RteProtocolClient client = getClient();
+      if (getMode() == Mode.DISCONNECT) {
+        if (client != null) {
+          disconnect(client);
+        }
+        sampleResult.setSuccessful(true);
+        sampleResult.sampleEnd();
+        return sampleResult;
+      }
+
+      if (client == null) {
+        client = buildClient();
+      }
       sampleResult.connectEnd();
-      addClientRequestHeaders(client, sampleResult);
       RequestListener requestListener = client.buildRequestListener();
       try {
-        if (!getJustConnect()) {
+        addClientRequestHeaders(client, sampleResult);
+        if (getMode() == Mode.SEND_INPUT) {
+          sampleResult.setSamplerData(buildRequestBody());
           client.send(getCoordInputs(), getAction());
         }
         List<WaitCondition> waiters = getWaitersList();
@@ -395,9 +403,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       } finally {
         sampleResult.setEndTime(requestListener.getEndTime());
         requestListener.stop();
-        if (getDisconnect()) {
-          disconnect(client);
-        }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -408,60 +413,53 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     return sampleResult;
   }
 
-  private void addClientRequestHeaders(RteProtocolClient client, SampleResult result) {
-    result.setRequestHeaders(
-        result.getRequestHeaders() + "Input-inhibited: " + client.isInputInhibited() + "\n");
+  private String buildRequestHeaders() {
+    return "Server: " + getServer() + "\n" +
+        "Port: " + getPort() + "\n" +
+        "Protocol: " + getProtocol().toString() + "\n" +
+        "Terminal-type: " + getTerminalType() + "\n" +
+        "Security: " + getSSLType() + "\n" +
+        "Mode: " + getMode() + "\n";
   }
 
-  private RteProtocolClient getClient()
-      throws RteIOException, InterruptedException, TimeoutException {
+  private RteProtocolClient getClient() {
     String clientId = buildConnectionId();
     Map<String, RteProtocolClient> clients = connections.get();
-
-    if (clients.containsKey(clientId)) {
-      return clients.get(clientId);
-    }
-
-    RteProtocolClient client = protocolFactory.apply(getProtocol());
-    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
-        getStableTimeout());
-    clients.put(clientId, client);
-    return client;
+    return clients.get(clientId);
   }
 
   private String buildConnectionId() {
     return getServer() + ":" + getPort();
   }
 
-  private String buildRequestHeaders() {
-    StringBuilder ret = new StringBuilder("Server: " + getServer() + "\n" +
-        "Port: " + getPort() + "\n" +
-        "Protocol: " + getProtocol().toString() + "\n" +
-        "Terminal-type: " + getTerminalType() + "\n" +
-        "Security: " + getSSLType() + "\n"
-    );
-    if (getJustConnect()) {
-      ret.append("Just-connect: true\n");
-    }
-    return ret.toString();
+  private RteProtocolClient buildClient()
+      throws RteIOException, InterruptedException, TimeoutException {
+    RteProtocolClient client = protocolFactory.apply(getProtocol());
+    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
+        getStableTimeout());
+    connections.get().put(buildConnectionId(), client);
+    return client;
+  }
+
+  private void addClientRequestHeaders(RteProtocolClient client, SampleResult result) {
+    result.setRequestHeaders(
+        result.getRequestHeaders() + "Input-inhibited: " + client.isInputInhibited() + "\n");
   }
 
   private String buildRequestBody() {
     StringBuilder ret = new StringBuilder();
-    if (!getJustConnect()) {
-      ret.append("Action: ")
-          .append(getAction())
-          .append("\n")
-          .append("Inputs (Row,Column,Value):\n");
+    ret.append("Action: ")
+        .append(getAction())
+        .append("\n")
+        .append("Inputs (Row,Column,Value):\n");
 
-      for (CoordInput c : getCoordInputs()) {
-        ret.append(c.getPosition().getRow())
-            .append(",")
-            .append(c.getPosition().getColumn())
-            .append(",")
-            .append(c.getInput())
-            .append("\n");
-      }
+    for (CoordInput c : getCoordInputs()) {
+      ret.append(c.getPosition().getRow())
+          .append(",")
+          .append(c.getPosition().getColumn())
+          .append(",")
+          .append(c.getInput())
+          .append("\n");
     }
     return ret.toString();
   }
