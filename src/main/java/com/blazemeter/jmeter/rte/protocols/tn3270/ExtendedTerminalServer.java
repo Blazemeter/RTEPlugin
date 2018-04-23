@@ -97,7 +97,7 @@ public class ExtendedTerminalServer extends TerminalServer {
   public synchronized void write(byte[] buffer) {
     if (serverOut == null) {
       // the no-op may come here if the program is not closed after disconnection
-      LOG.debug("serverOut is null in TerminalServer");
+      exceptionHandler.setPendingError(new Exception("Connection close"));
       return;
     }
 
