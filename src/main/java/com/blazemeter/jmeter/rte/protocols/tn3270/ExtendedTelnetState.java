@@ -57,7 +57,6 @@ public class ExtendedTelnetState extends TelnetState {
   private int totalWrites;
   private int totalBytesRead;
   private int totalBytesWritten;
-  private final Set<TelnetStateListener> listeners = new HashSet<>();
 
   public ExtendedTelnetState() {
     setDo3270Extended(true);       // prefer extended
@@ -320,24 +319,4 @@ public class ExtendedTelnetState extends TelnetState {
 
     return text.toString();
   }
-  // ---------------------------------------------------------------------------------//
-  // Listener events
-  // ---------------------------------------------------------------------------------//
-
-  private void fireTelnetStateChange() {
-    listeners.forEach(listener -> listener.telnetStateChanged(this));
-  }
-
-  public void addTelnetStateListener(TelnetStateListener listener) {
-    if (!listeners.contains(listener)) {
-      listeners.add(listener);
-    }
-  }
-
-  public void removeTelnetStateListener(TelnetStateListener listener) {
-    if (listeners.contains(listener)) {
-      listeners.remove(listener);
-    }
-  }
-
 }

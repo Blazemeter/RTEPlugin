@@ -39,7 +39,7 @@ public abstract class ConditionWaiterIT<T extends ConditionWaiter<?>> {
   protected abstract T buildConditionWaiter() throws Exception;
 
   @Test
-  public void shouldUnblockAfterReceivingStateChangeAndExceptionInEmulator() throws Exception {
+  public void shouldUnblockAfterReceivingException() throws Exception {
     when(exceptionHandler.hasPendingError()).thenReturn(true);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();

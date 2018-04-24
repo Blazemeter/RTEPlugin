@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 /*
  * Performs the same as {@link TerminalServer}, but in this case uses a socket that supports SSL and
  * connection timeout. Apart from that, instead of handling the exceptions on the class itself, they
- * are thrown to tn3270class.
+ * are thrown to Tn3270Client.
  */
 public class ExtendedTerminalServer extends TerminalServer {
 
@@ -127,7 +127,6 @@ public class ExtendedTerminalServer extends TerminalServer {
       }
     } catch (IOException ex) {
       exceptionHandler.setPendingError(ex);
-      LOG.error("Communication with rte server failed.");
     }
   }
 }

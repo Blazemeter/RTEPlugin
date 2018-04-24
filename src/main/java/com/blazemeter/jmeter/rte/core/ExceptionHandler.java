@@ -16,7 +16,7 @@ public class ExceptionHandler {
   public synchronized void setPendingError(Throwable ex) {
     if (pendingError == null) {
       pendingError = ex;
-      listeners.forEach(l -> l.onException());
+      listeners.forEach(ConditionWaiter::onException);
     } else {
       LOG.error("Exception ignored in step result due to previously thrown exception", ex);
     }

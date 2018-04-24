@@ -11,7 +11,7 @@ import com.bytezone.dm3270.utilities.Site;
 /**
  * This is an extension of {@link ConsolePane} that provides connect method public visibility and
  * SSL / connection timeout support. Apart from that, instead of handling the exceptions on the
- * class itself, they are thrown to tn3270class.
+ * class itself, they are thrown to Tn3270Client.
  */
 public class ExtendedConsolePane extends ConsolePane {
 
