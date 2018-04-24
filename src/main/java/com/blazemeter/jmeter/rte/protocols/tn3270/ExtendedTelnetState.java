@@ -2,12 +2,9 @@ package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import com.bytezone.dm3270.display.ScreenDimensions;
 import com.bytezone.dm3270.streams.TelnetState;
-import com.bytezone.dm3270.streams.TelnetStateListener;
 import com.bytezone.dm3270.telnet.TN3270ExtendedSubcommand.Function;
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

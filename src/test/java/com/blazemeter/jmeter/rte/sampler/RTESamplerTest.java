@@ -48,8 +48,6 @@ public class RTESamplerTest {
   private static final long CUSTOM_TIMEOUT_MILLIS = 3000;
   private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
   private static final String TEST_SCREEN = "Test screen";
-  private static final String CUSTOM_SSL_KEY_STORE = "/apache-jmeter4.0/ssl/cert.keystore";
-  private static final String CUSTOM_SSL_KEY_STORE_PASSWORD = "pwd123";
   private static final String BASE_REQUEST_HEADERS_FORMAT = "Server: server\n"
       + "Port: 23\n"
       + "Protocol: TN5250\n"
