@@ -96,6 +96,9 @@ public class Tn3270Client extends BaseProtocolClient {
       put(Action.F23, AIDCommand.AID_PF23);
       put(Action.F24, AIDCommand.AID_PF24);
       put(Action.ENTER, AIDCommand.AID_ENTER);
+      put(Action.PA1, AIDCommand.AID_PA1);
+      put(Action.PA2, AIDCommand.AID_PA2);
+      put(Action.PA3, AIDCommand.AID_PA3);
     }
   };
 

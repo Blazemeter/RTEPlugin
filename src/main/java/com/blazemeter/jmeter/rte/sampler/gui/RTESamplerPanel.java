@@ -134,12 +134,19 @@ public class RTESamplerPanel extends JPanel {
     payloadPanel = SwingUtils.createComponent("payloadPanel", new CoordInputPanel());
     JPanel actionsPanel = buildActionsPanel();
 
+    JLabel warningLabel = SwingUtils
+        .createComponent("warningLabel", new JLabel("Warning: Action buttons ATTN, " +
+            "SYSRQ, RESET, ROLL_UP and ROLL_DN are only supported for TN5250 protocol. " +
+            "Action buttons PA1, PA2 and PA3 are only supported for TN3270 protocol."));
+    warningLabel.setFont(new Font(null, Font.ITALIC, 11));
+
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(payloadLabel)
         .addComponent(payloadPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            Short.MAX_VALUE));
+            Short.MAX_VALUE)
+        .addComponent(warningLabel));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -148,6 +155,8 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(warningLabel)
         .addPreferredGap(ComponentPlacement.UNRELATED));
 
     return panel;
@@ -190,17 +199,17 @@ public class RTESamplerPanel extends JPanel {
     warningLabel.setFont(new Font(null, Font.ITALIC, 11));
 
     layout.setHorizontalGroup(layout.createParallelGroup()
-        .addComponent(warningLabel)
         .addComponent(waitSyncPanel)
         .addComponent(waitCursorPanel)
         .addComponent(waitSilentPanel)
-        .addComponent(waitTextPanel));
+        .addComponent(waitTextPanel)
+        .addComponent(warningLabel));
     layout.setVerticalGroup(layout.createSequentialGroup()
-        .addComponent(warningLabel)
         .addComponent(waitSyncPanel)
         .addComponent(waitCursorPanel)
         .addComponent(waitSilentPanel)
-        .addComponent(waitTextPanel));
+        .addComponent(waitTextPanel)
+        .addComponent(warningLabel));
 
     return panel;
   }
