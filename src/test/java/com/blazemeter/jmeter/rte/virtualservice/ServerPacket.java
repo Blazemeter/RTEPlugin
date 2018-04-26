@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ServerPacket extends PacketStep {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ClientPacket.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ServerPacket.class);
 
   private long delayMillis;
 

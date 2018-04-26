@@ -1,0 +1,18 @@
+modules:
+  jmeter:
+    path: .jmeter/3.1
+    version: 3.1
+  console:
+    disable: true
+
+execution:
+  scenario: test
+
+scenarios:
+  test:
+    script: RTESampler.jmx
+
+reporting:
+- module: passfail
+  criteria:
+  - failures>0% 

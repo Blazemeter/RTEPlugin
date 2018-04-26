@@ -1,4 +1,4 @@
-image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus:1.0
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:1.0.1
 
 variables:
   MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
@@ -8,7 +8,7 @@ variables:
 cache:
   paths:
     - .m2/repository/
-    - jmeter/
+    - .jmeter/
 before_script:
   - set -e
   - mvn $MAVEN_OPTS com.googlecode.maven-download-plugin:download-maven-plugin:1.4.0:wget -Ddownload.url=https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/$XTN5250_JAR
@@ -19,11 +19,11 @@ build:
     - docker
   except:
     - master
-  script: execute-on-vnc mvn --batch-mode clean verify
+  script: execute-on-vnc mvn --batch-mode clean install
   artifacts:
     paths:
-      - target/*.jar
-      - target/taurus/*.jar
+      - target/jmeter-bzm-rteplugin-*.jar
+      - target/jmeter-test
     expire_in: 1 month
 build_and_analyze:
   stage: build
@@ -34,16 +34,17 @@ build_and_analyze:
   script: execute-on-vnc mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
   artifacts:
     paths:
-      - target/*.jar
-      - target/taurus/*.jar
+      - target/jmeter-bzm-rteplugin-*.jar
+      - target/jmeter-test
     expire_in: 1 month
 jmeter_compatibility:
   stage: test
   tags:
     - docker
   script:
-    - sh src/test/resources/JMeter/testJMeter.sh 4.0
-    - sh src/test/resources/JMeter/testJMeter.sh 3.3
-    - sh src/test/resources/JMeter/testJMeter.sh 3.2
-    - sh src/test/resources/JMeter/testJMeter.sh 3.1
-    - bzt src/test/resources/JMeter/testJMeterBZ.yaml
+    - cd target/jmeter-test
+    - sh testJMeter.sh 4.0
+    - sh testJMeter.sh 3.3
+    - sh testJMeter.sh 3.2
+    - sh testJMeter.sh 3.1
+    - bzt testJMeterBZ.yaml

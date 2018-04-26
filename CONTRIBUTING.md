@@ -8,7 +8,7 @@ We are using a custom [checkstyle](http://checkstyle.sourceforge.net/index.html)
 
 - [jdk 1.8+](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 - [maven 3.3+](https://maven.apache.org/)
-- [xtn5250 library](https://sourceforge.net/projects/xtn5250/) installed in installed in local maven repository:
+- [xtn5250 emulator](https://sourceforge.net/projects/xtn5250/) installed in local maven repository:
   - If not already installed, run 
     ```
     mvn com.googlecode.maven-download-plugin:download-maven-plugin:1.4.0:wget -Ddownload.url=https://sourceforge.net/projects/xtn5250/files/xtn5250/1.19m/xtn5250_119m.jar
@@ -18,13 +18,13 @@ We are using a custom [checkstyle](http://checkstyle.sourceforge.net/index.html)
 
 To build the plugin and run all tests just run `mvn clean verify`
 
-We are using a Docker image with Maven and BZ Taurus to build and test the plugin. The Dockerfile can be found on this repo.
-If it is needed modifying the image it should be tagged as a new version.
+We are using a Docker image with Maven and BZ Taurus to build and test the plugin. [Dockerfile](jmeter-plugins-build/Dockerfile).
+If it is needed to modify the image, it should be tagged with a new version.
 
-The following Docker commands should be ran to build and publish in the repository the new image.
+The following Docker commands should be ran to build and publish the new image to the private Docker registry.
   ```
-  docker build -t 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus:latest -t 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus:$VERSION $PATH_TO_DOCKERFILE
-  docker push 836525813842.dkr.ecr.us-east-1.amazonaws.com/maven-taurus
+  docker build -t 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:latest -t 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:$VERSION jmeter-plugins-build
+  docker push 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build
   ```
 
 ### Installation

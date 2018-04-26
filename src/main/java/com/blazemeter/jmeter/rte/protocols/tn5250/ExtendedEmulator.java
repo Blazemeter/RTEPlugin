@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import net.infordata.em.tn5250.XI5250Emulator;
@@ -19,6 +20,8 @@ import org.slf4j.LoggerFactory;
 public class ExtendedEmulator extends XI5250Emulator {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedEmulator.class);
+  private static final Field TELNET_FIELD = ReflectionUtils
+      .getAccessibleField(XI5250Emulator.class, "ivTelnet");
 
   private int port;
   private int connectionTimeoutMillis;
@@ -77,30 +80,11 @@ public class ExtendedEmulator extends XI5250Emulator {
   has ivTelnet as a private attribute without set and get methods
   */
   private XITelnet getIvTelnet() {
-    try {
-      return (XITelnet) getAccessibleIvTelnetField().get(this);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e); //NOSONAR
-    }
+    return ReflectionUtils.getFieldValue(TELNET_FIELD, XITelnet.class, this);
   }
 
   private void setIvTelnet(XITelnet ivTelnet) {
-    Field target = getAccessibleIvTelnetField();
-    try {
-      target.set(this, ivTelnet);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e); //NOSONAR
-    }
-  }
-
-  private Field getAccessibleIvTelnetField() {
-    try {
-      Field target = XI5250Emulator.class.getDeclaredField("ivTelnet");
-      target.setAccessible(true);
-      return target;
-    } catch (NoSuchFieldException e) {
-      throw new RuntimeException(e); //NOSONAR
-    }
+    ReflectionUtils.setFieldValue(TELNET_FIELD, ivTelnet, this);
   }
 
   @Override

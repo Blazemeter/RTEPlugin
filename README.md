@@ -2,7 +2,7 @@
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing config elements and samplers.
 
-Nowadays the plugin supports **IBM protocol's TN5250 and TN3270 (last one not implemented yet)** by using [xtn5250](https://sourceforge.net/projects/xtn5250/) and [JinTN3270](https://sourceforge.net/p/jintn3270/code/HEAD/tree/trunk/) libraries.
+Nowadays the plugin supports **IBM protocol's TN5250 and TN3270 (last one not implemented yet)** by using [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators.
 
 People who usually work with these IBM servers interact with it, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes.
 Following this, the sampler is designed in a way that the user could specify the position of fields on the screen and the text string to write on them. Besides, the sampler allows to simulate the action buttons existing on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc..    
@@ -15,11 +15,11 @@ The plugin adds two different elements to JMeter:
 
 A Config Element (RTE Config)
 
-![alt text](readme/RTEConfig.png "RTE Config GUI")
+![alt text](docs/RTEConfig.png "RTE Config GUI")
 
 and a Sampler (RTE Sampler)
 
-![alt text](readme/RTESampler.png "RTE Sampler GUI")
+![alt text](docs/RTESampler.png "RTE Sampler GUI")
 
 The RTE Config element sets the parameters to be used by the sampler in order to establish the connection to the server. These parameters are:
 - *Server* (required). The url or ip of the IBM server.
@@ -60,19 +60,19 @@ To do this, first of all it's required an RTE Config element specifying the serv
 
 The Test Plan will look like this:
 
-![alt text](readme/example_testplan.png "Test Plan")
+![alt text](docs/example_testplan.png "Test Plan")
 
 The RTE Config element should specify the server url in *Server* field, and the protocol TN5250 in *Protocol* field like it's shown below:
 
-![alt text](readme/example_RTEConfig.png "RTE Config")
+![alt text](docs/example_RTEConfig.png "RTE Config")
 
 "Just connect" option should be checked in first sampler to not send payload data or actions but get the Welcome screen after the connection. An assertion post processor should also be attached to it to validate the "Welcome" message.
 
-![alt text](readme/example_RTESampler1.png "RTE Sampler 1")
+![alt text](docs/example_RTESampler1.png "RTE Sampler 1")
 
 Finally, the second sampler should specify in the Payload grid the position on the screen and the value to put on both *user* and *password* fields. Besides, the action button *ENTER* should be selected to simulate the user pressing that key after filling the fields. It should has also an assert who checks for the ¨Login Successful¨ message.
 
-![alt text](readme/example_RTESampler2.png "RTE Sampler 2") 
+![alt text](docs/example_RTESampler2.png "RTE Sampler 2") 
 
 ## Contributing
 
