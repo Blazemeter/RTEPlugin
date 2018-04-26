@@ -15,13 +15,12 @@ import org.slf4j.LoggerFactory;
  */
 public class ExtendedTelnetState extends TelnetState {
 
+  public static final byte[] NO_OP = {(byte) 0xFF, (byte) 0xF1};
+
   private static final Logger LOG = LoggerFactory.getLogger(ExtendedTelnetState.class);
 
-  private static final byte[] NO_OP = {(byte) 0xFF, (byte) 0xF1};
-
-  private static final
-  String[] TERMINAL_TYPES =
-      {"IBM-3278-2-E", "IBM-3278-3-E", "IBM-3278-4-E", "IBM-3278-5-E"};
+  private static final String[] TERMINAL_TYPES = {"IBM-3278-2-E", "IBM-3278-3-E", "IBM-3278-4-E",
+      "IBM-3278-5-E"};
 
   // preferences
   private boolean do3270Extended;
@@ -36,7 +35,6 @@ public class ExtendedTelnetState extends TelnetState {
   private boolean doesBinary;
   private boolean doesTerminalType;
   private String deviceType = "";
-  private int modelNo;
   private List<Function> functions;
 
   private String terminal = "";
@@ -150,19 +148,15 @@ public class ExtendedTelnetState extends TelnetState {
     int totalIO = totalReads + totalWrites;
     int averageIO = totalIOBytes / totalIO;
 
-    StringBuilder text = new StringBuilder();
-
-    text.append(String.format("          Total        Bytes    Average%n"));
-    text.append(String.format("         -------   ----------   -------%n"));
-    text.append(String.format("Reads     %,5d       %,7d     %,4d %n", totalReads,
-        totalBytesRead, averageReads));
-    text.append(String.format("Writes    %,5d       %,7d     %,4d %n", totalWrites,
-        totalBytesWritten, averageWrites));
-    text.append(String.format("         -------   ----------   -------%n"));
-    text.append(String.format("          %,5d       %,7d     %,4d %n", totalIO,
-        totalIOBytes, averageIO));
-
-    return text.toString();
+    return String.format("          Total        Bytes    Average%n")
+        + String.format("         -------   ----------   -------%n")
+        + String
+        .format("Reads     %,5d       %,7d     %,4d %n", totalReads, totalBytesRead, averageReads)
+        + String.format("Writes    %,5d       %,7d     %,4d %n", totalWrites, totalBytesWritten,
+        averageWrites)
+        + String.format("         -------   ----------   -------%n")
+        + String.format("          %,5d       %,7d     %,4d %n", totalIO,
+        totalIOBytes, averageIO);
   }
   // ---------------------------------------------------------------------------------//
   // Set actual (what was communicated during negotiations)
@@ -198,7 +192,7 @@ public class ExtendedTelnetState extends TelnetState {
   public void setDeviceType(String deviceType) {
     LOG.debug("Device Type: {}", deviceType);
     this.deviceType = deviceType;
-    modelNo = 0;
+    int modelNo = 0;
     for (int i = 0; i <= 3; i++) {
       if (TERMINAL_TYPES[i].equals(deviceType)) {
         modelNo = i + 2;
@@ -304,16 +298,13 @@ public class ExtendedTelnetState extends TelnetState {
 
   @Override
   public String toString() {
-    StringBuilder text = new StringBuilder();
-
-    text.append(String.format("3270 ext ........ %s%n", does3270Extended));
-    text.append(String.format("binary .......... %s%n", doesBinary));
-    text.append(String.format("EOR ............. %s%n", doesEOR));
-    text.append(String.format("terminal type ... %s%n", doesTerminalType));
-    text.append(String.format("terminal ........ %s%n", terminal));
-    text.append(String.format("device type ..... %s%n", deviceType));
-    text.append(String.format("functions ....... %s", functions));
-
-    return text.toString();
+    return String.format("3270 ext ........ %s%n", does3270Extended)
+        + String.format("binary .......... %s%n", doesBinary)
+        + String.format("EOR ............. %s%n", doesEOR)
+        + String.format("terminal type ... %s%n", doesTerminalType)
+        + String.format("terminal ........ %s%n", terminal)
+        + String.format("device type ..... %s%n", deviceType)
+        + String.format("functions ....... %s", functions);
   }
+
 }

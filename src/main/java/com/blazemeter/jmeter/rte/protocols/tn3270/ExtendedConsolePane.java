@@ -60,11 +60,11 @@ public class ExtendedConsolePane extends ConsolePane {
   }
 
   public void doDisconnect() throws InterruptedException {
+    screen.getTelnetState().close();
+
     if (terminalServer != null) {
       terminalServer.close();
     }
-
-    screen.getTelnetState().close();
 
     if (terminalServerThread != null) {
       terminalServerThread.interrupt();
