@@ -88,6 +88,7 @@ public class RTEConfigPanel extends JPanel {
         .createComponent("terminalTypeLabel", new JLabel("Terminal Type:"));
 
     GroupLayout connectionPanelLayout = new GroupLayout(connectionPanel);
+    connectionPanelLayout.setAutoCreateContainerGaps(true);
     connectionPanel.setLayout(connectionPanelLayout);
     connectionPanelLayout.setHorizontalGroup(connectionPanelLayout
         .createParallelGroup(Alignment.LEADING)
@@ -235,4 +236,9 @@ public class RTEConfigPanel extends JPanel {
   public void setConnectionTimeout(String timeout) {
     connectionTimeout.setText(timeout);
   }
+
+  public void setSSLSupportEnabled(boolean sslSupportEnabled) {
+    sslPanel.setVisible(sslSupportEnabled);
+  }
+
 }

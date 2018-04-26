@@ -8,12 +8,12 @@ eval $(ssh-agent -s)
 ORIGINAL_VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
 
 # get a new clean copy of production branch
-(git branch -D production || true) && git checkout production
+git reset --hard origin/production && git checkout production
 git merge master
 mvn versions:set -DremoveSnapshot
 /execute-on-vnc.sh mvn --batch-mode clean verify
 mvn --batch-mode scm:checkin -Dmessage="[RELEASE][skip ci] Fix release version \${project.version}" -Dincludes=pom.xml
-mvn --batch-mode scm:check-local-modification -DpushChanges=false || git status
+mvn --batch-mode scm:check-local-modification -DpushChanges=false
 mvn --batch-mode scm:tag -Dtag="\${project.version}"
 
 git checkout master && git merge production

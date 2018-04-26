@@ -8,8 +8,11 @@ import java.awt.BorderLayout;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.config.gui.AbstractConfigGui;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.util.JMeterUtils;
 
 public class RTEConfigGui extends AbstractConfigGui {
+
+  private static final String SSL_SUPPORT_ENABLED = "RTEConnectionConfig.sslSupportEnabled";
 
   private static final long serialVersionUID = 8495980373764997386L;
   private RTEConfigPanel rteConfigPanelConfigPanel;
@@ -56,6 +59,7 @@ public class RTEConfigGui extends AbstractConfigGui {
       rteConfigPanelConfigPanel.setTerminalType(protocol.createProtocolClient().getTerminalTypeById(
           configTestElement.getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE,
               RTESampler.DEFAULT_TERMINAL_TYPE.getId())));
+      rteConfigPanelConfigPanel.setSSLSupportEnabled(isSSLSupportEnabled());
       rteConfigPanelConfigPanel.setSSLType(
           SSLType.valueOf(configTestElement
               .getPropertyAsString(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name())));
@@ -64,6 +68,15 @@ public class RTEConfigGui extends AbstractConfigGui {
               configTestElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT,
                   String.valueOf(RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS)));
     }
+  }
+
+  private boolean isSSLSupportEnabled() {
+    return JMeterUtils.getPropDefault(SSL_SUPPORT_ENABLED, false);
+  }
+
+  @VisibleForTesting
+  protected void setSSLSupportEnabled(boolean enabled) {
+    JMeterUtils.setProperty(SSL_SUPPORT_ENABLED, String.valueOf(enabled));
   }
 
   @Override
