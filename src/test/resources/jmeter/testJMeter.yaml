@@ -6,7 +6,7 @@ modules:
     disable: true
 
 execution:
-  scenario: test
+- scenario: test
 
 scenarios:
   test:

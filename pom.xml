@@ -6,7 +6,7 @@
   <groupId>jmeter.plugins.rteplugin</groupId>
   <artifactId>jmeter-bzm-rteplugin</artifactId>
   <packaging>jar</packaging>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1-SNAPSHOT</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
 
   <properties>
@@ -15,6 +15,12 @@
 
     <jmeter.version>3.1</jmeter.version>
   </properties>
+
+  <scm>
+    <connection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git</connection>
+    <developerConnection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git</developerConnection>
+    <url>http://gitlab.abstracta.us/BZ/jmeter-rte-plugin</url>
+  </scm>
 
   <dependencies>
 
@@ -147,6 +153,14 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <properties>
+            <property>
+              <name>listener</name>
+              <value>com.blazemeter.jmeter.rte.TestLoggerListener</value>
+            </property>
+          </properties>
+        </configuration>
         <executions>
           <execution>
             <goals>

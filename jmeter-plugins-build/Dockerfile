@@ -12,11 +12,14 @@ RUN apt-get -y update \
   && echo $PASSWORD | vncpasswd -f > /root/.vnc/passwd \
   && chmod 0600 /root/.vnc/passwd
 
-COPY execute-on-vnc.sh /usr/share/execute-on-vnc.sh
-
-RUN ln -s /usr/share/execute-on-vnc.sh /usr/bin/execute-on-vnc
-
 # install taurus for integration tests with blazemeter and different jmeter versions
 RUN apt-get -y update \
   && apt-get -y install python default-jre-headless python-tk python-pip python-dev libxml2-dev libxslt-dev zlib1g-dev net-tools \
   && pip install bzt
+
+# install ssh client to be able to release code and use git with ssh
+RUN apt-get update -y \
+  && apt-get -y install openssh-client
+
+COPY scripts/* /
+RUN chmod +x /*.sh
