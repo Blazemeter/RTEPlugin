@@ -17,7 +17,6 @@ import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -422,23 +421,17 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldConnectUsingSSLDataCustomValuesToEmulatorWhenKeyStorePropertiesEnabled()
+  public void shouldConnectUsingCustomSSLTypeValueToEmulatorWhenKeyStorePropertiesEnabled()
       throws Exception {
     rteSampler.setSslType(SSLType.TLS);
-    rteSampler.setKeyStore(CUSTOM_SSL_KEY_STORE);
-    rteSampler.setKeyStorePassword(CUSTOM_SSL_KEY_STORE_PASSWORD);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .connect(any(), anyInt(),
-            eq(new SSLData(SSLType.TLS, CUSTOM_SSL_KEY_STORE_PASSWORD, CUSTOM_SSL_KEY_STORE)),
-            any(), anyLong(), anyLong());
+        .connect(any(), anyInt(), eq(SSLType.TLS), any(), anyLong(), anyLong());
   }
 
   @Test
   public void shouldGetCustomSslHeaderWhenUsingCustomSsl() {
     rteSampler.setSslType(SSLType.TLS);
-    rteSampler.setKeyStore(CUSTOM_SSL_KEY_STORE);
-    rteSampler.setKeyStorePassword(CUSTOM_SSL_KEY_STORE_PASSWORD);
     assertSampleResult(rteSampler.sample(null), createExpectedSuccessfulResult(
         String.format(REQUEST_HEADERS_FORMAT, SSLType.TLS), REQUEST_BODY));
   }

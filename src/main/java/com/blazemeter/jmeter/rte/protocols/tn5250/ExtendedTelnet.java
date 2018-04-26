@@ -1,6 +1,5 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
-import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
@@ -36,13 +35,13 @@ public class ExtendedTelnet extends XITelnet {
   private static final int READ_BUFFER_SIZE_BYTES = 1024;
 
   private final int connectTimeoutMillis;
-  private final SSLData sslData;
+  private final SSLType sslType;
   private RxThread readThread;
 
-  public ExtendedTelnet(String aHost, int aPort, int connectTimeoutMillis, SSLData sslData) {
+  public ExtendedTelnet(String aHost, int aPort, int connectTimeoutMillis, SSLType sslType) {
     super(aHost, aPort);
     this.connectTimeoutMillis = connectTimeoutMillis;
-    this.sslData = sslData;
+    this.sslType = sslType;
   }
 
   @Override
@@ -72,9 +71,8 @@ public class ExtendedTelnet extends XITelnet {
   }
 
   private Socket createSocket() throws IOException, GeneralSecurityException {
-    if (sslData != null && sslData.getSslType() != SSLType.NONE) {
-      SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslData.getSslType(),
-          sslData.getPassword(), sslData.getKeyStorePath());
+    if (sslType != null && sslType != SSLType.NONE) {
+      SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslType);
       sslSocketFactory.init();
       /*
       In XITelnet is used ivFirstHost instead of getHost(), but we are not supposed to use hosts

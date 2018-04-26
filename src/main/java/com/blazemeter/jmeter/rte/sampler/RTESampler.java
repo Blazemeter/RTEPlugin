@@ -1,7 +1,5 @@
 package com.blazemeter.jmeter.rte.sampler;
 
-import static org.apache.jmeter.util.SSLManager.JAVAX_NET_SSL_KEY_STORE;
-
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
@@ -10,7 +8,6 @@ import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.ssl.SSLData;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -90,7 +87,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   private static final String WAIT_TEXT_AREA_BOTTOM_PROPERTY = "RTESampler.waitTextAreaBottom";
   private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
   private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTextTimeout";
-  private static final String KEY_STORE_PASSWORD_PROPERTY = "javax.net.ssl.keyStorePassword";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
@@ -149,24 +145,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       JMeterUtils.getJMeterProperties().remove(CONFIG_STABLE_TIMEOUT);
     } else {
       JMeterUtils.setProperty(CONFIG_STABLE_TIMEOUT, String.valueOf(timeoutMillis));
-    }
-  }
-
-  @VisibleForTesting
-  protected void setKeyStore(String keystore) {
-    if (keystore == null) {
-      System.getProperties().remove(JAVAX_NET_SSL_KEY_STORE);
-    } else {
-      System.setProperty(JAVAX_NET_SSL_KEY_STORE, keystore);
-    }
-  }
-
-  @VisibleForTesting
-  protected void setKeyStorePassword(String keystorePwd) {
-    if (keystorePwd == null) {
-      System.getProperties().remove(KEY_STORE_PASSWORD_PROPERTY);
-    } else {
-      System.setProperty(KEY_STORE_PASSWORD_PROPERTY, keystorePwd);
     }
   }
 
@@ -443,10 +421,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     }
 
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    SSLData ssldata = new SSLData(getSSLType(),
-        System.getProperty(KEY_STORE_PASSWORD_PROPERTY),
-        System.getProperty(JAVAX_NET_SSL_KEY_STORE));
-    client.connect(getServer(), getPort(), ssldata, getTerminalType(), getConnectionTimeout(),
+    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
         getStableTimeout());
     clients.put(clientId, client);
     return client;

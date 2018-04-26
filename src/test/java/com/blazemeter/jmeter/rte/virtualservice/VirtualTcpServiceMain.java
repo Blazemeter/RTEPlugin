@@ -2,9 +2,11 @@ package com.blazemeter.jmeter.rte.virtualservice;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.security.GeneralSecurityException;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -27,6 +29,13 @@ public class VirtualTcpServiceMain {
       "Size (in bytes) of buffer used to receive packets from client. Default value: "
           + VirtualTcpService.DEFAULT_READ_BUFFER_SIZE)
   private int readBufferSize = VirtualTcpService.DEFAULT_READ_BUFFER_SIZE;
+
+  @Option(name = "-s", aliases = "--ssl-protocol",
+      metaVar = "ssl (SSLv2, SSLv3 or TLS)",
+      usage = "Specifies if the server should start with ssl protocol support. When this "
+          + "option is provided javax.net.ssl.keyStore and javax.net.ssl.keyStorePassword JVM "
+          + "system properties must be specified.")
+  private SSLType sslType;
 
   @Option(name = "-w", aliases = "--wireshark-server-address", metaVar = "ip address",
       usage = "When specified, the flow config file is interpreted as a Wireshark generated JSON "
@@ -53,7 +62,7 @@ public class VirtualTcpServiceMain {
     return displayHelp;
   }
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, GeneralSecurityException {
     VirtualTcpServiceMain main = new VirtualTcpServiceMain();
     CmdLineParser parser = new CmdLineParser(main);
     try {
@@ -80,7 +89,7 @@ public class VirtualTcpServiceMain {
         + command + " -d login-invalid-creds.yml -w 0.0.0.0 login-invalid-creds-wireshark.json\n");
   }
 
-  private void run() throws IOException {
+  private void run() throws IOException, GeneralSecurityException {
     Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
     root.setLevel(verbose ? Level.DEBUG : Level.INFO);
 
@@ -90,7 +99,7 @@ public class VirtualTcpServiceMain {
     if (dumpFile != null) {
       flow.saveYml(dumpFile);
     } else {
-      VirtualTcpService service = new VirtualTcpService(port, readBufferSize);
+      VirtualTcpService service = new VirtualTcpService(port, sslType, readBufferSize);
       service.setFlow(flow);
       service.run();
     }

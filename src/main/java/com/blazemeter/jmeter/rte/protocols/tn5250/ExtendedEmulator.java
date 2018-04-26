@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.ssl.SSLData;
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -25,7 +25,7 @@ public class ExtendedEmulator extends XI5250Emulator {
 
   private int port;
   private int connectionTimeoutMillis;
-  private SSLData sslData;
+  private SSLType sslType;
 
   /**
    * Since we need to make aware the sampler of any communication problem raised in xtn5250 library
@@ -44,8 +44,8 @@ public class ExtendedEmulator extends XI5250Emulator {
     this.connectionTimeoutMillis = connectionTimeoutMillis;
   }
 
-  public void setSslData(SSLData sslData) {
-    this.sslData = sslData;
+  public void setSslType(SSLType sslType) {
+    this.sslType = sslType;
   }
 
   @Override
@@ -61,7 +61,7 @@ public class ExtendedEmulator extends XI5250Emulator {
         return;
       }
       if (activate) {
-        XITelnet ivTelnet = new ExtendedTelnet(getHost(), port, connectionTimeoutMillis, sslData);
+        XITelnet ivTelnet = new ExtendedTelnet(getHost(), port, connectionTimeoutMillis, sslType);
         setIvTelnet(ivTelnet);
         ivTelnet.setEmulator(new TelnetEmulator());
         ivTelnet.connect();
