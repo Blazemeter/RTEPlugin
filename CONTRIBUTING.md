@@ -36,6 +36,6 @@ The following Docker commands should be ran to build and publish the new image t
 
 ### Installation
 
-To use the plugin, install it (by copying the jar from `target` folder) in `lib/ext/` folder of the JMeter installation. Also copy `xtn5250_119m.jar` and `dm3270.jar` to the same JMeter folder.
+To use the plugin, install it (by copying the jar from `target` folder) in `lib/ext/` folder of the JMeter installation.
 
 Run JMeter and check the new config and sampler elements available.

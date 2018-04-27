@@ -3,10 +3,10 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>jmeter.plugins.rteplugin</groupId>
-  <artifactId>jmeter-bzm-rteplugin</artifactId>
+  <groupId>com.blazemeter.jmeter</groupId>
+  <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.2.1-SNAPSHOT</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
 
   <properties>
@@ -155,6 +155,32 @@
           </execution>
         </executions>
       </plugin>
+      <!-- we shade dependencies since we need to patch com.bytezone.dm3270.display.FontDetails
+      class to avoid issues with JRE 1.8.0_121-b13. Additionally, we shade both emulators to be
+      consistent and to provide simpler deployment of plugin.-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.1.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <filters>
+                <filter>
+                  <artifact>com.bytezone.dm3270:dm3270</artifact>
+                  <excludes>
+                    <exlude>com/bytezone/dm3270/display/FontDetails.class</exlude>
+                  </excludes>
+                </filter>
+              </filters>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
@@ -222,7 +248,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270
+                guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>
