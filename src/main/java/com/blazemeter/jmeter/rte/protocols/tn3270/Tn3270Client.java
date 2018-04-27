@@ -19,6 +19,7 @@ import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
 import com.bytezone.dm3270.application.Console.Function;
@@ -33,8 +34,6 @@ import com.bytezone.dm3270.streams.TelnetState;
 import com.bytezone.dm3270.utilities.Site;
 import java.awt.Dimension;
 import java.lang.reflect.Method;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -159,23 +158,9 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public RequestListener buildRequestListener() {
-    //TODO: replace this lame implementation with a proper one
-    Instant start = Instant.now();
-    return new RequestListener() {
-      @Override
-      public long getLatency() {
-        return Duration.between(start, Instant.now()).toMillis();
-      }
-
-      @Override
-      public long getEndTime() {
-        return Instant.now().toEpochMilli();
-      }
-
-      @Override
-      public void stop() {
-      }
-    };
+    Tn3270RequestListener listener = new Tn3270RequestListener(this, screen);
+    screen.getFieldManager().addScreenChangeListener(listener);
+    return listener;
   }
 
   @Override
@@ -276,5 +261,4 @@ public class Tn3270Client extends BaseProtocolClient {
     consolePane.disconnect();
     //TODO: at some point we need to call Platform.exit()
   }
-
 }
