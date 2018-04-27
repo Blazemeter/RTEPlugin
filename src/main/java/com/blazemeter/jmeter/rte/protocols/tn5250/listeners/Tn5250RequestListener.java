@@ -1,8 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
-import com.blazemeter.jmeter.rte.core.RequestListener;
+import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
-import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.time.Duration;
 import java.time.Instant;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
@@ -12,9 +11,9 @@ import org.slf4j.LoggerFactory;
 
 public class Tn5250RequestListener implements RequestListener, XI5250EmulatorListener {
 
-  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Tn5250RequestListener.class);
 
-  protected final Tn5250Client client;
+  private final Tn5250Client client;
   private Instant startTime = Instant.now();
   private Instant firstResponseTime = Instant.now();
   private long lastResponseTime = System.currentTimeMillis();

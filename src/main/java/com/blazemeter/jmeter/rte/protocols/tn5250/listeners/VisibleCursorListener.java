@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
@@ -8,16 +9,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ConditionWaiter} which allows waiting until the cursor shows up on the desired
+ * A {@link Tn5250ConditionWaiter} which allows waiting until the cursor shows up on the desired
  * position.
  */
-public class VisibleCursorListener extends ConditionWaiter<CursorWaitCondition> {
+public class VisibleCursorListener extends Tn5250ConditionWaiter<CursorWaitCondition> {
 
   private static final Logger LOG = LoggerFactory.getLogger(VisibleCursorListener.class);
 
   public VisibleCursorListener(CursorWaitCondition condition, Tn5250Client client,
-      ScheduledExecutorService stableTimeoutExecutor) {
-    super(condition, client, stableTimeoutExecutor);
+      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
+    super(condition, client, stableTimeoutExecutor, em);
     if (condition.getPosition().equals(client.getCursorPosition())) {
       startStablePeriod();
     }

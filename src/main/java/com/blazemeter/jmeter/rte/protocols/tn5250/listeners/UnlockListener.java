@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
@@ -8,16 +9,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link ConditionWaiter} which allows waiting until the terminal is unlocked.
+ * A {@link Tn5250ConditionWaiter} which allows waiting until the terminal is unlocked.
  */
-public class UnlockListener extends ConditionWaiter<SyncWaitCondition> {
+public class UnlockListener extends Tn5250ConditionWaiter<SyncWaitCondition> {
 
   private static final Logger LOG = LoggerFactory.getLogger(UnlockListener.class);
   private boolean isInputInhibited;
 
   public UnlockListener(SyncWaitCondition condition, Tn5250Client client,
-      ScheduledExecutorService stableTimeoutExecutor) {
-    super(condition, client, stableTimeoutExecutor);
+      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
+    super(condition, client, stableTimeoutExecutor, em);
     isInputInhibited = client.isInputInhibited();
     if (!isInputInhibited) {
       startStablePeriod();

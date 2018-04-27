@@ -1,16 +1,26 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RequestListener;
-import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.ScreenTextListener;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
 import com.bytezone.dm3270.application.Console.Function;
 import com.bytezone.dm3270.commands.AIDCommand;
 import com.bytezone.dm3270.display.Cursor;
@@ -31,12 +41,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 
-public class Tn3270Client implements RteProtocolClient {
+public class Tn3270Client extends BaseProtocolClient {
 
   private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
       new Tn3270TerminalType(DeviceModel.M2, false),
@@ -89,6 +102,8 @@ public class Tn3270Client implements RteProtocolClient {
   private Screen screen;
   private ConnectibleConsolePane consolePane;
 
+  private ScheduledExecutorService stableTimeoutExecutor;
+
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
     return TERMINAL_TYPES;
@@ -96,7 +111,8 @@ public class Tn3270Client implements RteProtocolClient {
 
   @Override
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
-      long timeoutMillis, long stableTimeout) throws InterruptedException {
+      long timeoutMillis, long stableTimeout)
+      throws InterruptedException, TimeoutException, RteIOException {
     //we need to initialize javafx and be able to use dm3270 classes
     //TODO: check if this is needed per thread or can/must be done just once
     initializeJavafx();
@@ -111,10 +127,19 @@ public class Tn3270Client implements RteProtocolClient {
     screen = buildInJavaFxThread(() -> new Screen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
         termType.getScreenDimensions(), prefs, Function.TERMINAL, pluginsStage, serverSite,
         telnetState));
+    screen.lockKeyboard("connect");
     consolePane = new ConnectibleConsolePane(screen, serverSite, pluginsStage);
     consolePane.connect();
-    //TODO: replace with proper sync wait
-    Thread.sleep(3000);
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+    ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
+    try {
+      unlock.await();
+    } catch (TimeoutException | InterruptedException | RteIOException e) {
+      doDisconnect();
+      throw e;
+    } finally {
+      unlock.stop();
+    }
   }
 
   private void initializeJavafx() {
@@ -133,11 +158,6 @@ public class Tn3270Client implements RteProtocolClient {
   }
 
   @Override
-  public void await(List<WaitCondition> waitConditions) {
-    throw new UnsupportedOperationException("No conditions have been implemented yet");
-  }
-
-  @Override
   public RequestListener buildRequestListener() {
     //TODO: replace this lame implementation with a proper one
     Instant start = Instant.now();
@@ -149,7 +169,7 @@ public class Tn3270Client implements RteProtocolClient {
 
       @Override
       public long getEndTime() {
-        return Duration.between(start, Instant.now()).toMillis();
+        return Instant.now().toEpochMilli();
       }
 
       @Override
@@ -173,6 +193,38 @@ public class Tn3270Client implements RteProtocolClient {
 
   private int buildLinealPosition(CoordInput i) {
     return (i.getPosition().getRow() - 1) * getScreenSize().width + i.getPosition().getColumn() - 1;
+  }
+
+  @Override
+  protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
+    if (waitCondition instanceof SyncWaitCondition) {
+      UnlockListener unlock = new UnlockListener((SyncWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, screen);
+      screen.addKeyboardStatusChangeListener(unlock);
+      return unlock;
+    } else if (waitCondition instanceof CursorWaitCondition) {
+      VisibleCursorListener unlock = new VisibleCursorListener((CursorWaitCondition) waitCondition,
+          this, stableTimeoutExecutor, screen.getScreenCursor());
+      screen.getScreenCursor().addCursorMoveListener(unlock);
+      return unlock;
+    } else if (waitCondition instanceof SilentWaitCondition) {
+      SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition,
+          stableTimeoutExecutor, screen);
+      screen.getScreenCursor().addCursorMoveListener(silence);
+      screen.addKeyboardStatusChangeListener(silence);
+      screen.getFieldManager().addScreenChangeListener(silence);
+      return silence;
+    } else if (waitCondition instanceof TextWaitCondition) {
+      ScreenTextListener text = new ScreenTextListener((TextWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, screen);
+      screen.getScreenCursor().addCursorMoveListener(text);
+      screen.addKeyboardStatusChangeListener(text);
+      screen.getFieldManager().addScreenChangeListener(text);
+      return text;
+    } else {
+      throw new UnsupportedOperationException(
+          "We still don't support " + waitCondition.getClass().getName() + " waiters");
+    }
   }
 
   //we don't just use screen.getPen().getScreenText()
@@ -207,19 +259,22 @@ public class Tn3270Client implements RteProtocolClient {
     Cursor cursor = screen.getScreenCursor();
     int location = cursor.getLocation();
     int columns = screen.getScreenDimensions().columns;
-    return cursor.isVisible() ? new Position(location % columns + 1, location / columns + 1) : null;
+    return cursor.isVisible() ? new Position(location / columns + 1, location % columns + 1) : null;
   }
 
   @Override
   public void disconnect() {
-    consolePane.disconnect();
-    // we need to close the screen in JavaFx thread due to JavaFx limitations
-    runOnJavaFxThread(() -> screen.close());
-    //TODO: at some point we need to call Platform.exit()
+    if (stableTimeoutExecutor == null) {
+      return;
+    }
+    doDisconnect();
   }
 
-  private void runOnJavaFxThread(Runnable runnable) {
-    Platform.runLater(runnable);
+  private void doDisconnect() {
+    stableTimeoutExecutor.shutdownNow();
+    stableTimeoutExecutor = null;
+    consolePane.disconnect();
+    //TODO: at some point we need to call Platform.exit()
   }
 
 }

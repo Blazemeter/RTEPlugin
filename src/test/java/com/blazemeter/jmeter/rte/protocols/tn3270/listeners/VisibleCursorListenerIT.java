@@ -1,21 +1,26 @@
-package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
+package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.bytezone.dm3270.display.Cursor;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
+public class VisibleCursorListenerIT extends Tn3270ConditionWaiterIT {
 
   private static final Position EXPECTED_CURSOR_POSITION = new Position(7, 53);
+
+  @Mock
+  private Cursor cursor;
 
   @Before
   @Override
@@ -25,12 +30,17 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
   }
 
   @Override
-  protected Tn5250ConditionWaiter<?> buildConditionWaiter() {
+  protected Tn3270ConditionWaiter<?> buildConditionWaiter() throws Exception {
     return new VisibleCursorListener(
         new CursorWaitCondition(EXPECTED_CURSOR_POSITION, TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
-        em);
+        cursor);
+  }
+
+  protected Runnable buildCursorStateChangeGenerator() {
+    return () -> ((VisibleCursorListener) listener)
+        .cursorMoved(1, 1, null);
   }
 
   @Test
@@ -38,7 +48,7 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
     when(client.getCursorPosition()).thenReturn(EXPECTED_CURSOR_POSITION);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
-    startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator());
+    startSingleEventGenerator(unlockDelayMillis, buildCursorStateChangeGenerator());
     listener.await();
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
@@ -46,28 +56,27 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
   @Test
   public void shouldUnblockWhenAlreadyInExpectedCursorPosition() throws Exception {
     when(client.getCursorPosition()).thenReturn(EXPECTED_CURSOR_POSITION);
-    Tn5250ConditionWaiter<?> listener = buildConditionWaiter();
+    Tn3270ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedUnexpectedCursorPosition() throws Exception {
-    when(client.getCursorPosition()).thenReturn(new Position(1, 1));
-    buildStateChangeGenerator().run();
+    buildCursorStateChangeGenerator().run();
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenNoVisibleCursorPosition() throws Exception {
     when(client.getCursorPosition()).thenReturn(null);
-    buildStateChangeGenerator().run();
+    buildCursorStateChangeGenerator().run();
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenCursorMovesWhileStablePeriod() throws Exception {
     setupCursorRepositioningEmulator();
-    startPeriodicEventGenerator(buildStateChangeGenerator());
+    startPeriodicEventGenerator(buildCursorStateChangeGenerator());
     listener.await();
   }
 
