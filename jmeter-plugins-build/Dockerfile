@@ -1,5 +1,9 @@
 FROM maven:3.5
 
+# install javaFX for dm3270 support
+RUN apt-get -y update \
+  && apt-get -y install openjfx
+
 # install tightvnc and execute-on-vnc script to be able to run UI unit tests with assertjswing
 ENV USER="root" \
   PASSWORD="password"
@@ -13,9 +17,10 @@ RUN apt-get -y update \
   && chmod 0600 /root/.vnc/passwd
 
 # install taurus for integration tests with blazemeter and different jmeter versions
+# we use 1.11.0 due to issues with authentication with 1.11.1
 RUN apt-get -y update \
   && apt-get -y install python default-jre-headless python-tk python-pip python-dev libxml2-dev libxslt-dev zlib1g-dev net-tools \
-  && pip install bzt
+  && pip install bzt==1.11.0
 
 # install ssh client to be able to release code and use git with ssh
 RUN apt-get update -y \

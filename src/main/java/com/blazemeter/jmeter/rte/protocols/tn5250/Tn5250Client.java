@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
@@ -22,6 +23,7 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListene
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Tn5250Client implements RteProtocolClient {
+
+  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
+
+  private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
+      new TerminalType("IBM-3179-2", new Dimension(80, 24)),
+      new TerminalType("IBM-3477-FC", new Dimension(132, 27))
+  );
 
   private static final Map<Action, KeyEventMap> KEY_EVENTS = new EnumMap<Action, KeyEventMap>(
       Action.class) {
@@ -73,20 +82,32 @@ public class Tn5250Client implements RteProtocolClient {
       put(Action.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
     }
   };
-  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
-  private final ExtendedEmulator em = new ExtendedEmulator();
+
+  private ExtendedEmulator em;
   private ScheduledExecutorService stableTimeoutExecutor;
+
+  @Override
+  public List<TerminalType> getSupportedTerminalTypes() {
+    return TERMINAL_TYPES;
+  }
 
   @Override
   public void connect(String server, int port, SSLType sslType,
       TerminalType terminalType, long timeoutMillis,
       long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
+    /*
+     we need to do this on connect to avoid leaving keyboard thread running when instance of client
+     is created for getting supported terminal types in jmeter
+      */
+    if (em == null) {
+      em = new ExtendedEmulator();
+    }
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
     em.setPort(port);
     em.setConnectionTimeoutMillis((int) timeoutMillis);
-    em.setTerminalType(terminalType.getType());
+    em.setTerminalType(terminalType.getId());
     em.setSslType(sslType);
     UnlockListener unlock = new UnlockListener(
         new SyncWaitCondition(timeoutMillis, stableTimeoutMillis), this,
@@ -159,9 +180,7 @@ public class Tn5250Client implements RteProtocolClient {
     XI5250Field field = em.getFieldFromPos(s.getPosition().getColumn() - 1,
         s.getPosition().getRow() - 1);
     if (field == null) {
-      throw new IllegalArgumentException(
-          "No field at row " + s.getPosition().getRow() + " and column " + s.getPosition()
-              .getColumn());
+      throw new InvalidFieldPositionException(s.getPosition());
     }
     field.setString(s.getInput());
   }

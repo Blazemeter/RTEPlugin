@@ -1,8 +1,9 @@
-image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:1.1
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:1.2
 
 variables:
   MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
   XTN5250_VERSION: 1.19m
+  DM3270_VERSION: 0.5-beta-37
 
 cache:
   paths:
@@ -10,9 +11,8 @@ cache:
     - .jmeter/
 before_script:
   - set -e
-  - eval $(ssh-agent -s)
-  - /set-git-credentials.sh
   - /install-maven-dependency.sh https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/xtn5250_${XTN5250_VERSION//.}.jar net.sourceforge.xtn5250 xtn5250 $XTN5250_VERSION
+  - /install-maven-dependency.sh https://github.com/dmolony/dm3270/releases/download/v$DM3270_VERSION/dm3270.jar com.bytezone.dm3270 dm3270 $DM3270_VERSION
 build:
   stage: build
   tags:
@@ -22,7 +22,7 @@ build:
   script: /execute-on-vnc.sh mvn --batch-mode clean install
   artifacts:
     paths:
-      - target/*.jar
+      - target/jmeter-bzm-rteplugin-*.jar
       - target/jmeter-test
     expire_in: 1 month
 build_and_analyze:
@@ -34,7 +34,7 @@ build_and_analyze:
   script: /execute-on-vnc.sh mvn --batch-mode -Psonar clean install sonar:sonar -Dsonar.host.url=http://sonar.abstracta.us -Dsonar.login=$SONAR_TOKEN
   artifacts:
     paths:
-      - target/*.jar
+      - target/jmeter-bzm-rteplugin-*.jar
       - target/jmeter-test
     expire_in: 1 month
 jmeter_compatibility:

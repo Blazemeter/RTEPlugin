@@ -68,7 +68,7 @@ println(&quot;server started...&quot;)</stringProp>
           <stringProp name="RTEConnectionConfig.port">2324</stringProp>
           <stringProp name="RTEConnectionConfig.protocol">TN5250</stringProp>
           <stringProp name="RTEConnectionConfig.sslType">NONE</stringProp>
-          <stringProp name="RTEConnectionConfig.terminalType">IBM_3477_FC</stringProp>
+          <stringProp name="RTEConnectionConfig.terminalType">IBM-3477-FC</stringProp>
           <stringProp name="RTEConnectionConfig.connectTimeout">60000</stringProp>
         </ConfigTestElement>
         <hashTree/>

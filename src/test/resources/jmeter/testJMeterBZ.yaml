@@ -18,8 +18,8 @@ execution:
 scenarios:
   test:
     script: RTESampler.jmx
-    
+
 reporting:
 - module: passfail
   criteria:
-  - failures>0% 
+  - failures>0%

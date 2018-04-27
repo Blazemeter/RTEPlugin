@@ -47,8 +47,12 @@ public class ReflectionUtils {
   }
 
   public static void invokeMethod(Method method, Object object) {
+    invokeMethod(method, Void.class, object);
+  }
+
+  public static <T> T invokeMethod(Method method, Class<T> returnType, Object object) {
     try {
-      method.invoke(object);
+      return returnType.cast(method.invoke(object));
     } catch (IllegalAccessException | InvocationTargetException e) {
       throw new RuntimeException(e); //NOSONAR
     }

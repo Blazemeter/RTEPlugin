@@ -34,10 +34,10 @@ public class RTEConfigPanel extends JPanel {
   private JComboBox<Protocol> protocolComboBox = SwingUtils
       .createComponent("protocolComboBox", new JComboBox<>(Protocol.values()));
 
-  private DefaultComboBoxModel<TerminalType> modelTN5250 = new DefaultComboBoxModel<>(
-      TerminalType.findByProtocol(Protocol.TN5250));
-  private DefaultComboBoxModel<TerminalType> modelTN3270 = new DefaultComboBoxModel<>(
-      TerminalType.findByProtocol(Protocol.TN3270));
+  private DefaultComboBoxModel<TerminalType> modelTN5250 = buildTerminalTypesComboBoxModel(
+      Protocol.TN5250);
+  private DefaultComboBoxModel<TerminalType> modelTN3270 = buildTerminalTypesComboBoxModel(
+      Protocol.TN3270);
 
   private JComboBox<TerminalType> terminalTypeComboBox = SwingUtils
       .createComponent("terminalTypeComboBox", new JComboBox<>(modelTN5250));
@@ -46,6 +46,13 @@ public class RTEConfigPanel extends JPanel {
 
   public RTEConfigPanel() {
     initComponents();
+  }
+
+  private static DefaultComboBoxModel<TerminalType> buildTerminalTypesComboBoxModel(
+      Protocol protocol) {
+    return new DefaultComboBoxModel<>(
+        protocol.createProtocolClient().getSupportedTerminalTypes()
+            .toArray(new TerminalType[0]));
   }
 
   private void initComponents() {

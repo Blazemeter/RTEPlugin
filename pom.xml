@@ -29,6 +29,11 @@
       <artifactId>xtn5250</artifactId>
       <version>1.19m</version>
     </dependency>
+    <dependency>
+      <groupId>com.bytezone.dm3270</groupId>
+      <artifactId>dm3270</artifactId>
+      <version>0.5-beta-37</version>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.jmeter</groupId>
@@ -217,7 +222,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250
+                guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>
