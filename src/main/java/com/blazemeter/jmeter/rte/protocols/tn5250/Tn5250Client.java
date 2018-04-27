@@ -241,7 +241,13 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   private KeyEventMap getKeyEvent(Action action) {
-    return KEY_EVENTS.get(action);
+    KeyEventMap actionCommand = KEY_EVENTS.get(action);
+    if (actionCommand == null) {
+      throw new UnsupportedOperationException(action.name() + " action is unsupported " +
+          "for protocol TN5250.");
+    } else {
+      return actionCommand;
+    }
   }
 
   public void removeListener(XI5250EmulatorListener listener) {

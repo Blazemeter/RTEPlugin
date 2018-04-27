@@ -204,7 +204,12 @@ public class Tn3270Client extends BaseProtocolClient {
       screen.setFieldText(field, i.getInput());
       screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
     });
-    consolePane.sendAID(AID_COMMANDS.get(action), action.name());
+    Byte actionCommand = AID_COMMANDS.get(action);
+    if (actionCommand == null) {
+      throw new UnsupportedOperationException(action.name() + " action is unsupported " +
+          "for protocol TN3270.");
+    }
+    consolePane.sendAID(actionCommand, action.name());
     exceptionHandler.throwAnyPendingError();
   }
 
