@@ -6,11 +6,15 @@ modules:
     disable: true
 
 execution:
-- scenario: test
+- scenario: test3270
+- scenario: test5250
 
 scenarios:
-  test:
-    script: RTESampler.jmx
+  test3270:
+    script: RTESampler3270.jmx
+  test5250:
+    script: RTESampler5250.jmx
+
 
 reporting:
 - module: passfail
