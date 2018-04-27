@@ -87,6 +87,7 @@ public class RTESamplerTest {
     when(rteProtocolClientMock.getScreen()).thenReturn(TEST_SCREEN);
 
     when(rteProtocolClientMock.buildRequestListener()).thenReturn(requestListenerMock);
+    when(rteProtocolClientMock.getSoundAlarm()).thenReturn(false);
     when(requestListenerMock.getEndTime()).thenReturn((long) 100);
     when(requestListenerMock.getLatency()).thenReturn((long) 100);
     when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position(1, 1));
@@ -199,6 +200,29 @@ public class RTESamplerTest {
     expected.setSuccessful(true);
     expected.setResponseHeaders("Input-inhibited: false\n"
         + "Cursor-position: 1,1");
+    expected.setDataType(SampleResult.TEXT);
+    expected.setResponseData(TEST_SCREEN, "utf-8");
+    return expected;
+  }
+
+  @Test
+  public void shouldGetSuccessfulSamplerWithResultAlarmHeaderResultWhenClientGetAlarmSignal() {
+    when(rteProtocolClientMock.getSoundAlarm()).thenReturn(true);
+    SampleResult result = rteSampler.sample(null);
+    SampleResult expected = createExpectedSuccessfulResultWithAlarmHeader(
+        String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE, Mode.SEND_INPUT, true), REQUEST_BODY);
+    assertSampleResult(result, expected);
+  }
+
+  private SampleResult createExpectedSuccessfulResultWithAlarmHeader(String requestHeaders, String samplerData) {
+    SampleResult expected = new SampleResult();
+    expected.setSampleLabel(rteSampler.getName());
+    expected.setRequestHeaders(requestHeaders);
+    expected.setSamplerData(samplerData);
+    expected.setSuccessful(true);
+    expected.setResponseHeaders("Input-inhibited: false\n"
+        + "Cursor-position: 1,1\n" +
+        "Sound-Alarm: true");
     expected.setDataType(SampleResult.TEXT);
     expected.setResponseData(TEST_SCREEN, "utf-8");
     return expected;

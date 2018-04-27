@@ -27,7 +27,6 @@ import com.bytezone.dm3270.application.Console.Function;
 import com.bytezone.dm3270.commands.AIDCommand;
 import com.bytezone.dm3270.display.Cursor;
 import com.bytezone.dm3270.display.Field;
-import com.bytezone.dm3270.display.Screen;
 import com.bytezone.dm3270.display.ScreenDimensions;
 import com.bytezone.dm3270.display.ScreenPosition;
 import com.bytezone.dm3270.plugins.PluginsStage;
@@ -109,7 +108,7 @@ public class Tn3270Client extends BaseProtocolClient {
       ReflectionUtils.getAccessibleMethod(ScreenPosition.class, "getCharString");
   private static final String USER_HOME = "user.home";
 
-  private Screen screen;
+  private SilentScreen screen;
   private ExtendedConsolePane consolePane;
 
   private ScheduledExecutorService stableTimeoutExecutor;
@@ -140,7 +139,7 @@ public class Tn3270Client extends BaseProtocolClient {
     */
     String homeDir = System.getProperty(USER_HOME);
     System.setProperty(USER_HOME, buildDm3270TemporaryHomeDirectory());
-    screen = buildInJavaFxThread(() -> new Screen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
+    screen = buildInJavaFxThread(() -> new SilentScreen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
         termType.getScreenDimensions(), prefs, Function.TERMINAL, pluginsStage, serverSite,
         telnetState));
     screen.lockKeyboard("connect");
@@ -282,6 +281,11 @@ public class Tn3270Client extends BaseProtocolClient {
     int location = cursor.getLocation();
     int columns = screen.getScreenDimensions().columns;
     return cursor.isVisible() ? new Position(location / columns + 1, location % columns + 1) : null;
+  }
+
+  @Override
+  public boolean getSoundAlarm() {
+    return screen.resetAlarm();
   }
 
   @Override

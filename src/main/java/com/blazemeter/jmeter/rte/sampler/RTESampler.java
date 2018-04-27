@@ -525,9 +525,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   private String buildResponseHeaders(RteProtocolClient client) {
     Position cursorPosition = client.getCursorPosition();
+    boolean soundAlarm = client.getSoundAlarm();
     return "Input-inhibited: " + client.isInputInhibited() + "\n" +
         "Cursor-position: " + (cursorPosition == null ? ""
-        : cursorPosition.getRow() + "," + cursorPosition.getColumn());
+        : cursorPosition.getRow() + "," + cursorPosition.getColumn()) +
+        (soundAlarm ? "\nSound-Alarm: true" : "");
   }
 
   private void disconnect(RteProtocolClient client) throws RteIOException {
