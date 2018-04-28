@@ -49,7 +49,9 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
     } catch (Exception e) {
       LOG.warn("Problem disconnecting client", e);
     } finally {
-      server.stop(SERVER_STOP_TIMEOUT);
+      if (server != null) {
+        server.stop(SERVER_STOP_TIMEOUT);
+      }
     }
   }
 

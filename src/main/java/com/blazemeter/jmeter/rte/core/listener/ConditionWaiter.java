@@ -47,6 +47,7 @@ public abstract class ConditionWaiter<T extends WaitCondition> {
   }
 
   public void await() throws InterruptedException, TimeoutException, RteIOException {
+    exceptionHandler.throwAnyPendingError();
     if (!lock.await(condition.getTimeoutMillis(), TimeUnit.MILLISECONDS)) {
       cancelWait();
       throw new TimeoutException(
