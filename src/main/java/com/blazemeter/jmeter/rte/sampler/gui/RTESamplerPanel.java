@@ -1,9 +1,11 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
 import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.sampler.Mode;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ItemEvent;
@@ -28,14 +30,13 @@ public class RTESamplerPanel extends JPanel {
   private static final int TIME_WIDTH = 60;
   private static final String TIMEOUT_LABEL = "Timeout (millis): ";
 
+  private ButtonGroup modesGroup = new ButtonGroup();
+  private Map<Mode, JRadioButton> modes = new EnumMap<>(Mode.class);
   private final JPanel requestPanel;
   private CoordInputPanel payloadPanel;
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
-  private JCheckBox disconnect = SwingUtils
-      .createComponent("disconnect", new JCheckBox("Disconnect?"));
-  private JCheckBox justConnect = SwingUtils
-      .createComponent("justConnect", new JCheckBox("Just connect"));
+  private final JPanel waitPanel;
   private JPanel waitSyncPanel;
   private JCheckBox waitSync = SwingUtils.createComponent("waitSync", new JCheckBox("Sync?"));
   private JTextField waitSyncTimeout = SwingUtils
@@ -73,20 +74,53 @@ public class RTESamplerPanel extends JPanel {
     layout.setAutoCreateGaps(true);
     this.setLayout(layout);
 
+    JPanel modePanel = buildModePanel();
     requestPanel = buildRequestPanel();
-    JPanel waitPanel = buildWaitsPanel();
+    waitPanel = buildWaitsPanel();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
+        .addComponent(modePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
         .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE)
         .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
+        .addComponent(modePanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
         .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             GroupLayout.DEFAULT_SIZE)
         .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             GroupLayout.DEFAULT_SIZE)
     );
+  }
+
+  private JPanel buildModePanel() {
+    JPanel panel = SwingUtils.createComponent("modePanel", new JPanel());
+    panel.setBorder(BorderFactory.createTitledBorder("Mode"));
+    panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+    Arrays.stream(Mode.values()).forEach(t -> {
+      JRadioButton r = SwingUtils.createComponent(t.toString(), new JRadioButton(t.getLabel()));
+      r.setActionCommand(t.name());
+      panel.add(r);
+      modes.put(t, r);
+      modesGroup.add(r);
+    });
+
+    modes.get(Mode.SEND_INPUT).addItemListener(e -> {
+      requestPanel.setVisible(e.getStateChange() == ItemEvent.SELECTED);
+      validate();
+      repaint();
+    });
+
+    modes.get(Mode.DISCONNECT).addItemListener(e -> {
+      waitPanel.setVisible(e.getStateChange() != ItemEvent.SELECTED);
+      validate();
+      repaint();
+    });
+
+    return panel;
   }
 
   private JPanel buildRequestPanel() {
@@ -100,22 +134,12 @@ public class RTESamplerPanel extends JPanel {
     payloadPanel = SwingUtils.createComponent("payloadPanel", new CoordInputPanel());
     JPanel actionsPanel = buildActionsPanel();
 
-    justConnect.addItemListener(e -> {
-      updateJustConnect(e.getStateChange() == ItemEvent.SELECTED);
-      validate();
-      repaint();
-    });
-
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(payloadLabel)
         .addComponent(payloadPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            Short.MAX_VALUE)
-        .addGroup(layout.createSequentialGroup()
-            .addComponent(disconnect)
-            .addPreferredGap(ComponentPlacement.UNRELATED)
-            .addComponent(justConnect)));
+            Short.MAX_VALUE));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addPreferredGap(ComponentPlacement.UNRELATED)
@@ -124,27 +148,9 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addGroup(layout.createParallelGroup()
-            .addComponent(disconnect)
-            .addComponent(justConnect)));
+        .addPreferredGap(ComponentPlacement.UNRELATED));
 
     return panel;
-  }
-
-  private void updateJustConnect(boolean checked) {
-    setEnabled(requestPanel, !checked);
-    disconnect.setEnabled(true);
-    justConnect.setEnabled(true);
-  }
-
-  private void setEnabled(Component component, boolean enabled) {
-    component.setEnabled(enabled);
-    if (component instanceof Container) {
-      for (Component child : ((Container) component).getComponents()) {
-        setEnabled(child, enabled);
-      }
-    }
   }
 
   private JPanel buildActionsPanel() {
@@ -229,6 +235,15 @@ public class RTESamplerPanel extends JPanel {
   private void updateWait(JCheckBox waitCheck, JPanel panel, boolean checked) {
     setEnabled(panel, checked);
     waitCheck.setEnabled(true);
+  }
+
+  private void setEnabled(Component component, boolean enabled) {
+    component.setEnabled(enabled);
+    if (component instanceof Container) {
+      for (Component child : ((Container) component).getComponents()) {
+        setEnabled(child, enabled);
+      }
+    }
   }
 
   private JPanel buildWaitCursorPanel() {
@@ -410,6 +425,19 @@ public class RTESamplerPanel extends JPanel {
     payloadPanel.clear();
   }
 
+  public Mode getMode() {
+    String mode = modesGroup.getSelection().getActionCommand();
+    return Mode.valueOf(mode);
+  }
+
+  public void setMode(Mode mode) {
+    if (modes.containsKey(mode)) {
+      modes.get(mode).setSelected(true);
+    } else {
+      modes.get(RTESampler.DEFAULT_MODE).setSelected(true);
+    }
+  }
+
   public CoordInputPanel getPayload() {
     return this.payloadPanel;
   }
@@ -425,23 +453,6 @@ public class RTESamplerPanel extends JPanel {
     } else {
       actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);
     }
-  }
-
-  public boolean getDisconnect() {
-    return this.disconnect.isSelected();
-  }
-
-  public void setDisconnect(boolean disconnect) {
-    this.disconnect.setSelected(disconnect);
-  }
-
-  public boolean getJustConnect() {
-    return justConnect.isSelected();
-  }
-
-  public void setJustConnect(boolean justConnect) {
-    this.justConnect.setSelected(justConnect);
-    updateJustConnect(justConnect);
   }
 
   public boolean getWaitSync() {

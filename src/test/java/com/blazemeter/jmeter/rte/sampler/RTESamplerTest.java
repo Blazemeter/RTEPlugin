@@ -54,9 +54,10 @@ public class RTESamplerTest {
       + "Port: 23\n"
       + "Protocol: TN5250\n"
       + "Terminal-type: IBM-3179-2: 24x80\n"
-      + "Security: %s\n";
+      + "Security: %s\n"
+      + "Mode: %s\n";
   private static final String REQUEST_HEADERS_FORMAT = BASE_REQUEST_HEADERS_FORMAT
-      + "Input-inhibited: true\n";
+      + "Input-inhibited: %b\n";
   private static final String REQUEST_BODY = "Action: ENTER\n"
       + "Inputs (Row,Column,Value):\n"
       + "1,1,input\n";
@@ -129,7 +130,7 @@ public class RTESamplerTest {
     doThrow(e).when(rteProtocolClientMock)
         .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
     assertSampleResult(rteSampler.sample(null), createExpectedErrorResult(e,
-        BASE_REQUEST_HEADERS_FORMAT));
+        BASE_REQUEST_HEADERS_FORMAT, null));
   }
 
   @Test
@@ -138,16 +139,18 @@ public class RTESamplerTest {
     doThrow(e).when(rteProtocolClientMock)
         .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
     assertSampleResult(rteSampler.sample(null), createExpectedErrorResult(e,
-        BASE_REQUEST_HEADERS_FORMAT));
+        BASE_REQUEST_HEADERS_FORMAT, null));
   }
 
-  private SampleResult createExpectedErrorResult(Exception e, String requestHeadersFormat) {
+  private SampleResult createExpectedErrorResult(Exception e, String requestHeadersFormat,
+      String requestBody) {
     SampleResult expected = new SampleResult();
     expected.setSampleLabel(rteSampler.getName());
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));
-    expected.setRequestHeaders(String.format(requestHeadersFormat, SSLType.NONE));
-    expected.setSamplerData(REQUEST_BODY);
+    expected.setRequestHeaders(
+        String.format(requestHeadersFormat, SSLType.NONE, Mode.SEND_INPUT, true));
+    expected.setSamplerData(requestBody);
     expected.setSuccessful(false);
     expected.setResponseCode(e.getClass().getName());
     expected.setResponseMessage(e.getMessage());
@@ -169,7 +172,7 @@ public class RTESamplerTest {
     doThrow(e).when(rteProtocolClientMock)
         .send(any(), any());
     assertSampleResult(rteSampler.sample(null),
-        createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT));
+        createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT, REQUEST_BODY));
   }
 
   @Test
@@ -178,14 +181,14 @@ public class RTESamplerTest {
     doThrow(e).
         when(rteProtocolClientMock).await(any());
     assertSampleResult(rteSampler.sample(null),
-        createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT));
+        createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT, REQUEST_BODY));
   }
 
   @Test
   public void shouldGetSuccessfulSamplerResultWhenSend() {
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedSuccessfulResult(
-        String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE), REQUEST_BODY);
+        String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE, Mode.SEND_INPUT, true), REQUEST_BODY);
     assertSampleResult(result, expected);
   }
 
@@ -219,33 +222,63 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldNotSendInputToEmulatorWhenSampleWithJustConnect() throws Exception {
-    rteSampler.setJustConnect(true);
+  public void shouldNotSendInputToEmulatorWhenSampleWithConnectMode() throws Exception {
+    rteSampler.setMode(Mode.CONNECT);
     rteSampler.sample(null);
     verify(rteProtocolClientMock, never())
         .send(any(), any());
   }
 
   @Test
-  public void shouldGetJustConnectResultWhenSampleWithJustConnect() {
-    rteSampler.setJustConnect(true);
+  public void shouldGetConnectModeResultWhenSampleWithConnectMode() {
+    rteSampler.setMode(Mode.CONNECT);
     assertSampleResult(rteSampler.sample(null),
         createExpectedSuccessfulResult(
-            String.format(BASE_REQUEST_HEADERS_FORMAT, SSLType.NONE)
-                + "Just-connect: true\n"
-                + "Input-inhibited: true\n", ""));
+            String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE, Mode.CONNECT, true), null));
   }
 
   @Test
-  public void shouldDisconnectEmulatorWhenSampleWithDisconnect() throws Exception {
-    rteSampler.setDisconnect(true);
+  public void shouldDisconnectEmulatorWhenSampleWithDisconnectMode() throws Exception {
+    connectClient();
+    rteSampler.setMode(Mode.DISCONNECT);
     rteSampler.sample(null);
     verify(rteProtocolClientMock).disconnect();
   }
 
+  private void connectClient() {
+    RTESampler sampler = new RTESampler(p -> rteProtocolClientMock);
+    sampler.addTestElement(configTestElement);
+    sampler.setPayload(createInputs());
+    sampler.setMode(Mode.CONNECT);
+    sampler.sample(null);
+  }
+
+  @Test
+  public void shouldGetDisconnectModeResultWhenSampleWithDisconnectMode() {
+    connectClient();
+    rteSampler.setMode(Mode.DISCONNECT);
+    assertSampleResult(rteSampler.sample(null), createExpectedDisconnectSuccessfulResult());
+  }
+
+  private SampleResult createExpectedDisconnectSuccessfulResult() {
+    SampleResult expected = new SampleResult();
+    expected.setSampleLabel(rteSampler.getName());
+    expected.setRequestHeaders(
+        String.format(BASE_REQUEST_HEADERS_FORMAT, SSLType.NONE, Mode.DISCONNECT));
+    expected.setSuccessful(true);
+    return expected;
+  }
+
+  @Test
+  public void shouldGetDisconnectModeResultWhenSampleWithDisconnectModeAndNoExistingConnection() {
+    rteSampler.setMode(Mode.DISCONNECT);
+    assertSampleResult(rteSampler.sample(null), createExpectedDisconnectSuccessfulResult());
+  }
+
   @Test
   public void shouldGetErrorSamplerResultWhenDisconnectThrowRteIOException() throws Exception {
-    rteSampler.setDisconnect(true);
+    connectClient();
+    rteSampler.setMode(Mode.DISCONNECT);
     RteIOException e = new RteIOException(null);
     doThrow(e)
         .when(rteProtocolClientMock).disconnect();
@@ -257,8 +290,8 @@ public class RTESamplerTest {
   private SampleResult createExpectedErrorResultDisconnect(Exception e) {
     SampleResult expected = new SampleResult();
     expected.setSampleLabel(rteSampler.getName());
-    expected.setRequestHeaders(String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE));
-    expected.setSamplerData(REQUEST_BODY);
+    expected.setRequestHeaders(
+        String.format(BASE_REQUEST_HEADERS_FORMAT, SSLType.NONE, Mode.DISCONNECT));
     expected.setSuccessful(false);
     expected.setResponseCode(e.getClass().getName());
     expected.setResponseMessage(e.getMessage());
@@ -433,7 +466,7 @@ public class RTESamplerTest {
   public void shouldGetCustomSslHeaderWhenUsingCustomSsl() {
     rteSampler.setSslType(SSLType.TLS);
     assertSampleResult(rteSampler.sample(null), createExpectedSuccessfulResult(
-        String.format(REQUEST_HEADERS_FORMAT, SSLType.TLS), REQUEST_BODY));
+        String.format(REQUEST_HEADERS_FORMAT, SSLType.TLS, Mode.SEND_INPUT, true), REQUEST_BODY));
   }
 
 }
