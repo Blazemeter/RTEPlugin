@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,19 +30,24 @@ import org.slf4j.LoggerFactory;
 public class VirtualTcpService implements Runnable {
 
   public static final int DEFAULT_READ_BUFFER_SIZE = 2048;
+  public static final int DEFAULT_MAX_CONNECTION_COUNT = 1;
 
   private static final int DYNAMIC_PORT = 0;
   private static final Logger LOG = LoggerFactory.getLogger(VirtualTcpService.class);
 
-  private final int readBufferSize;
+  private final int maxConnections;
   private final ServerSocket server;
+  private final int readBufferSize;
   private Flow flow;
   private ExecutorService serverExecutorService = Executors.newSingleThreadExecutor();
   private boolean stopped = false;
-  private ClientConnection clientConnection;
+  private ArrayList<ClientConnection> clientConnections = new ArrayList<>();
+  private ExecutorService clientExecutorService;
 
-  public VirtualTcpService(int port, SSLType sslType, int readBufferSize)
+  public VirtualTcpService(int port, SSLType sslType, int readBufferSize, int maxConnections)
       throws IOException, GeneralSecurityException {
+    this.maxConnections = maxConnections;
+    clientExecutorService = Executors.newFixedThreadPool(maxConnections);
     if (sslType != null && sslType != SSLType.NONE) {
       SSLSocketFactory socketFactory = new SSLSocketFactory(sslType);
       socketFactory.init();
@@ -53,7 +59,11 @@ public class VirtualTcpService implements Runnable {
   }
 
   public VirtualTcpService(SSLType sslType) throws IOException, GeneralSecurityException {
-    this(DYNAMIC_PORT, sslType, DEFAULT_READ_BUFFER_SIZE);
+    this(DYNAMIC_PORT, sslType, DEFAULT_READ_BUFFER_SIZE, DEFAULT_MAX_CONNECTION_COUNT);
+  }
+
+  public VirtualTcpService(int port) throws IOException, GeneralSecurityException {
+    this(port, null, DEFAULT_READ_BUFFER_SIZE, DEFAULT_MAX_CONNECTION_COUNT);
   }
 
   public VirtualTcpService() throws IOException, GeneralSecurityException {
@@ -86,16 +96,13 @@ public class VirtualTcpService implements Runnable {
     LOG.info("Waiting for connections on {}", server.getLocalPort());
     while (!stopped) {
       try {
-        addClient(new ClientConnection(server.accept(), readBufferSize, flow));
-        clientConnection.run();
+        addClient(new ClientConnection(this, server.accept(), readBufferSize, flow));
       } catch (IOException e) {
         if (stopped) {
           LOG.trace("Received expected exception when server socket has been closed", e);
         } else {
           LOG.error("Problem waiting for client connection. Keep waiting.", e);
         }
-      } finally {
-        removeClient();
       }
     }
   }
@@ -104,22 +111,34 @@ public class VirtualTcpService implements Runnable {
     if (stopped) {
       clientConnection.close();
       return;
+    } else if (clientConnections.size() >= maxConnections) {
+      LOG.warn("Rejecting connection {}, due to max connections {} reached.", clientConnection,
+          maxConnections);
+      clientConnection.close();
+      return;
     }
-    this.clientConnection = clientConnection;
+    clientConnections.add(clientConnection);
+    clientExecutorService.submit(clientConnection);
   }
 
-  private synchronized void removeClient() {
-    clientConnection = null;
+  public synchronized void removeClient(ClientConnection clientConnection) {
+    clientConnections.remove(clientConnection);
   }
 
   public void stop(long timeoutMillis) throws IOException, InterruptedException {
     synchronized (this) {
       stopped = true;
       server.close();
-      if (clientConnection != null) {
-        clientConnection.close();
-      }
+      clientConnections.forEach(c -> {
+        try {
+          c.close();
+        } catch (IOException e) {
+          LOG.error("Problem closing connection {}", c.getId(), e);
+        }
+      });
     }
+    clientExecutorService.shutdown();
+    clientExecutorService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS);
     serverExecutorService.shutdownNow();
     if (!serverExecutorService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
       LOG.warn("Server thread didn't stop after {} millis", timeoutMillis);

@@ -65,8 +65,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, server.getPort() + 1, SSLType.NONE,
-        client.getDefaultTerminalType(), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+    client.connect(VIRTUAL_SERVER_HOST, 0, SSLType.NONE, client.getDefaultTerminalType(),
+        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)
