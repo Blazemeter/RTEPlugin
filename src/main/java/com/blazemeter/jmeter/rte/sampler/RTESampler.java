@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
+import org.apache.jmeter.engine.event.LoopIterationEvent;
+import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -36,7 +38,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RTESampler extends AbstractSampler implements ThreadListener {
+public class RTESampler extends AbstractSampler implements ThreadListener, LoopIterationListener {
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.port";
   public static final String CONFIG_SERVER = "RTEConnectionConfig.server";
@@ -71,6 +73,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
   // "RTEConnectionConfig.stableTimeoutMillis=value"
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
   private static final String MODE_PROPERTY = "RTESampler.mode";
+  private static final String REUSE_CONNECTIONS_PROPERTY = "RTESampler.reuseConnections";
   private static final String ACTION_PROPERTY = "RTESampler.action";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
   private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
@@ -148,6 +151,15 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
     } else {
       JMeterUtils.setProperty(CONFIG_STABLE_TIMEOUT, String.valueOf(timeoutMillis));
     }
+  }
+
+  private boolean isReuseConnections() {
+    return JMeterUtils.getPropDefault(REUSE_CONNECTIONS_PROPERTY, false);
+  }
+
+  @VisibleForTesting
+  protected void setReuseConnections(boolean doReuse) {
+    JMeterUtils.setProperty(REUSE_CONNECTIONS_PROPERTY, Boolean.toString(doReuse));
   }
 
   private SSLType getSSLType() {
@@ -554,6 +566,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener {
       }
     });
     connections.get().clear();
+  }
+
+  @Override
+  public void iterationStart(LoopIterationEvent loopIterationEvent) {
+    if (!isReuseConnections()) {
+      closeConnections();
+    }
   }
 
 }

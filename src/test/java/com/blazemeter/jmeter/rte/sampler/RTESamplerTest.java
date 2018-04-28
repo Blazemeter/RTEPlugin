@@ -87,6 +87,7 @@ public class RTESamplerTest {
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
     when(rteProtocolClientMock.isInputInhibited()).thenReturn(true, false);
     when(rteProtocolClientMock.getScreen()).thenReturn(TEST_SCREEN);
+
     when(rteProtocolClientMock.buildRequestListener()).thenReturn(requestListenerMock);
     when(requestListenerMock.getEndTime()).thenReturn((long) 100);
     when(requestListenerMock.getLatency()).thenReturn((long) 100);
@@ -243,6 +244,25 @@ public class RTESamplerTest {
     rteSampler.setMode(Mode.DISCONNECT);
     rteSampler.sample(null);
     verify(rteProtocolClientMock).disconnect();
+  }
+
+  @Test
+  public void shouldDisconnectEmulatorWhenIterationStart() throws Exception {
+    rteSampler.sample(null);
+    rteSampler.iterationStart(null);
+    verify(rteProtocolClientMock).disconnect();
+  }
+
+  @Test
+  public void shouldNotDisconnectEmulatorWhenIterationStartAndReuseConnectionsEnabled() throws Exception {
+    rteSampler.setReuseConnections(true);
+    try {
+      rteSampler.sample(null);
+      rteSampler.iterationStart(null);
+      verify(rteProtocolClientMock, never()).disconnect();
+    } finally {
+      rteSampler.setReuseConnections(false);
+    }
   }
 
   private void connectClient() {
