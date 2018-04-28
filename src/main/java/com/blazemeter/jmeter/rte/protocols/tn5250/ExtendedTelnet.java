@@ -162,7 +162,7 @@ public class ExtendedTelnet extends XITelnet {
       try {
         while (!this.ivTerminate) {
           InputStream input = getIvIn();
-          // the input may be null if disconnect was invoked after the while condition evaluation
+          // the input may be null if doDisconnect was invoked after the while condition evaluation
           if (input == null) {
             return;
           }

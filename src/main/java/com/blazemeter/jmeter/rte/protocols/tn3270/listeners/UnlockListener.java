@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
@@ -18,8 +19,9 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
   private final Screen screen;
 
   public UnlockListener(SyncWaitCondition condition, Tn3270Client client,
-      ScheduledExecutorService stableTimeoutExecutor, Screen screen) {
-    super(condition, stableTimeoutExecutor);
+      ScheduledExecutorService stableTimeoutExecutor, Screen screen,
+      ExceptionHandler exceptionHandler) {
+    super(condition, stableTimeoutExecutor, exceptionHandler);
     isInputInhibited = client.isInputInhibited();
     this.screen = screen;
     if (!isInputInhibited) {

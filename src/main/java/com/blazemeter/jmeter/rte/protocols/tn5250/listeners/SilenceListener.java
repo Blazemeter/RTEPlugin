@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
@@ -17,8 +18,9 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
   private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
 
   public SilenceListener(SilentWaitCondition condition, Tn5250Client client,
-      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
-    super(condition, client, stableTimeoutExecutor, em);
+      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em,
+      ExceptionHandler exceptionHandler) {
+    super(condition, client, stableTimeoutExecutor, em, exceptionHandler);
     startStablePeriod();
   }
 
@@ -44,11 +46,7 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
 
   @Override
   public void stateChanged(XI5250EmulatorEvent event) {
-    if (client.hasPendingError()) {
-      cancelWait();
-    } else {
-      handleReceivedEvent(event);
-    }
+    handleReceivedEvent(event);
   }
 
   @Override

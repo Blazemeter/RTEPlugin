@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import com.blazemeter.jmeter.rte.core.Action;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
@@ -100,8 +101,9 @@ public class Tn5250Client extends BaseProtocolClient {
      we need to do this on connect to avoid leaving keyboard thread running when instance of client
      is created for getting supported terminal types in jmeter
       */
+    exceptionHandler = new ExceptionHandler();
     if (em == null) {
-      em = new ExtendedEmulator();
+      em = new ExtendedEmulator(exceptionHandler);
     }
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
@@ -109,10 +111,7 @@ public class Tn5250Client extends BaseProtocolClient {
     em.setConnectionTimeoutMillis((int) timeoutMillis);
     em.setTerminalType(terminalType.getId());
     em.setSslType(sslType);
-    UnlockListener unlock = new UnlockListener(
-        new SyncWaitCondition(timeoutMillis, stableTimeoutMillis), this,
-        stableTimeoutExecutor, em);
-    em.addEmulatorListener(unlock);
+    ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeoutMillis));
     try {
       em.setActive(true);
       unlock.await();
@@ -120,7 +119,7 @@ public class Tn5250Client extends BaseProtocolClient {
       doDisconnect();
       throw e;
     } finally {
-      em.removeEmulatorListener(unlock);
+      unlock.stop();
     }
   }
 
@@ -128,7 +127,7 @@ public class Tn5250Client extends BaseProtocolClient {
   public void send(List<CoordInput> input, Action action) throws RteIOException {
     input.forEach(this::setField);
     sendActionKey(action);
-    em.throwAnyPendingError();
+    exceptionHandler.throwAnyPendingError();
   }
 
   @Override
@@ -136,21 +135,22 @@ public class Tn5250Client extends BaseProtocolClient {
     Tn5250ConditionWaiter condition;
     if (waitCondition instanceof SyncWaitCondition) {
       condition = new UnlockListener((SyncWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, em);
+          stableTimeoutExecutor, em, exceptionHandler);
     } else if (waitCondition instanceof CursorWaitCondition) {
       condition = new VisibleCursorListener((CursorWaitCondition) waitCondition,
-          this, stableTimeoutExecutor, em);
+          this, stableTimeoutExecutor, em, exceptionHandler);
     } else if (waitCondition instanceof SilentWaitCondition) {
       condition = new SilenceListener((SilentWaitCondition) waitCondition,
-          this, stableTimeoutExecutor, em);
+          this, stableTimeoutExecutor, em, exceptionHandler);
     } else if (waitCondition instanceof TextWaitCondition) {
       condition = new ScreenTextListener((TextWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, em);
+          stableTimeoutExecutor, em, exceptionHandler);
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
     }
     em.addEmulatorListener(condition);
+    exceptionHandler.addListener(condition);
     return condition;
   }
 
@@ -225,21 +225,13 @@ public class Tn5250Client extends BaseProtocolClient {
     return em.isCursorVisible() ? new Position(em.getCursorRow() + 1, em.getCursorCol() + 1) : null;
   }
 
-  public boolean hasPendingError() {
-    return em.hasPendingError();
-  }
-
-  public void throwAnyPendingError() throws RteIOException {
-    em.throwAnyPendingError();
-  }
-
   @Override
   public void disconnect() throws RteIOException {
     if (stableTimeoutExecutor == null) {
       return;
     }
     doDisconnect();
-    em.throwAnyPendingError();
+    exceptionHandler.throwAnyPendingError();
   }
 
   private void doDisconnect() {

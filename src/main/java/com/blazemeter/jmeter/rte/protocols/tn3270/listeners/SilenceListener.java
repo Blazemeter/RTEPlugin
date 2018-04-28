@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
@@ -19,8 +20,9 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
   private final Screen screen;
 
   public SilenceListener(SilentWaitCondition condition,
-      ScheduledExecutorService stableTimeoutExecutor, Screen screen) {
-    super(condition, stableTimeoutExecutor);
+      ScheduledExecutorService stableTimeoutExecutor, Screen screen,
+      ExceptionHandler exceptionHandler) {
+    super(condition, stableTimeoutExecutor, exceptionHandler);
     this.screen = screen;
     startStablePeriod();
   }

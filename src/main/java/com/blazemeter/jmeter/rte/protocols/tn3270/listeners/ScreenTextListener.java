@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
@@ -23,8 +24,9 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
   private boolean matched;
 
   public ScreenTextListener(TextWaitCondition condition, Tn3270Client client,
-      ScheduledExecutorService stableTimeoutExecutor, Screen screen) {
-    super(condition, stableTimeoutExecutor);
+      ScheduledExecutorService stableTimeoutExecutor, Screen screen,
+      ExceptionHandler exceptionHandler) {
+    super(condition, stableTimeoutExecutor, exceptionHandler);
     this.client = client;
     this.screen = screen;
     checkIfScreenMatchesCondition();
@@ -51,7 +53,7 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
 
   private void handleReceivedEvent(String event) {
     if (matched) {
-      LOG.debug("Restart silent stable period since received event {}", event);
+      LOG.debug("Restart screen text stable period since received event {}", event);
       startStablePeriod();
     }
   }

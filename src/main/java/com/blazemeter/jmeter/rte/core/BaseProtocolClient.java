@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 public abstract class BaseProtocolClient implements RteProtocolClient {
 
+  protected ExceptionHandler exceptionHandler;
+
   @Override
   public void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException {

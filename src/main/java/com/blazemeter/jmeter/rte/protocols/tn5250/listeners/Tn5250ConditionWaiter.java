@@ -1,12 +1,11 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
-import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeoutException;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
 
@@ -21,8 +20,9 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
   private final ExtendedEmulator em;
 
   public Tn5250ConditionWaiter(T condition, Tn5250Client client,
-      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em) {
-    super(condition, stableTimeoutExecutor);
+      ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em,
+      ExceptionHandler exceptionHandler) {
+    super(condition, stableTimeoutExecutor, exceptionHandler);
     this.em = em;
     this.client = client;
   }
@@ -41,9 +41,6 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
 
   @Override
   public void stateChanged(XI5250EmulatorEvent event) {
-    if (client.hasPendingError()) {
-      cancelWait();
-    }
   }
 
   @Override
@@ -56,11 +53,6 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
 
   @Override
   public void dataSended(XI5250EmulatorEvent event) {
-  }
-
-  public void await() throws InterruptedException, TimeoutException, RteIOException {
-    super.await();
-    client.throwAnyPendingError();
   }
 
   @Override

@@ -43,7 +43,6 @@
     <module name="OneStatementPerLine"/>
     <module name="OverloadMethodsDeclarationOrder"/>
     <module name="StringLiteralEquality"/>
-    <module name="VariableDeclarationUsageDistance"/>
 
     <module name="AvoidStarImport"/>
     <module name="IllegalImport"/>

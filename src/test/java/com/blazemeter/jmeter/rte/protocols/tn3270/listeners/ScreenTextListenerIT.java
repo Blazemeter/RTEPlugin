@@ -62,7 +62,8 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
             TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
-        screen);
+        screen,
+        exceptionHandler);
   }
 
   private void setupScreenWithText(String screen) {
