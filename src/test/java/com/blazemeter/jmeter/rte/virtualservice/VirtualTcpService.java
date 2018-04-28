@@ -30,6 +30,7 @@ public class VirtualTcpService implements Runnable {
 
   public static final int DEFAULT_READ_BUFFER_SIZE = 2048;
 
+  private static final int DYNAMIC_PORT = 0;
   private static final Logger LOG = LoggerFactory.getLogger(VirtualTcpService.class);
 
   private final int readBufferSize;
@@ -51,12 +52,16 @@ public class VirtualTcpService implements Runnable {
     this.readBufferSize = readBufferSize;
   }
 
-  public VirtualTcpService(int port, SSLType sslType) throws IOException, GeneralSecurityException {
-    this(port, sslType, DEFAULT_READ_BUFFER_SIZE);
+  public VirtualTcpService(SSLType sslType) throws IOException, GeneralSecurityException {
+    this(DYNAMIC_PORT, sslType, DEFAULT_READ_BUFFER_SIZE);
   }
 
-  public VirtualTcpService(int port) throws IOException, GeneralSecurityException {
-    this(port, null);
+  public VirtualTcpService() throws IOException, GeneralSecurityException {
+    this(null);
+  }
+
+  public int getPort() {
+    return server.getLocalPort();
   }
 
   public void setFlow(Flow flow) {

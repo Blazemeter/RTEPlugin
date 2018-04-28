@@ -23,7 +23,6 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   private static final Logger LOG = LoggerFactory.getLogger(Tn5250ClientIT.class);
 
   protected static final String VIRTUAL_SERVER_HOST = "localhost";
-  protected static final int VIRTUAL_SERVER_PORT = 2323;
   protected static final int TIMEOUT_MILLIS = 5000;
   protected static final int STABLE_TIMEOUT_MILLIS = 2000;
   protected static final long SERVER_STOP_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
@@ -33,7 +32,7 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
 
   @Before
   public void setup() throws Exception {
-    server = new VirtualTcpService(VIRTUAL_SERVER_PORT);
+    server = new VirtualTcpService();
     server.start();
     client = buildClient();
   }
@@ -65,7 +64,7 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   }
 
   protected void connectToVirtualService() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, SSLType.NONE, getDefaultTerminalType(),
+    client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE, getDefaultTerminalType(),
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 

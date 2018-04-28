@@ -56,10 +56,10 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     server.stop(SERVER_STOP_TIMEOUT);
     SSLSocketFactory.setKeyStore(findResource("/.keystore").getFile());
     SSLSocketFactory.setKeyStorePassword("changeit");
-    server = new VirtualTcpService(VIRTUAL_SERVER_PORT, SSLType.TLS);
+    server = new VirtualTcpService(SSLType.TLS);
     server.start();
     loadLoginInvalidCredsFlow();
-    client.connect(VIRTUAL_SERVER_HOST, VIRTUAL_SERVER_PORT, SSLType.TLS, getDefaultTerminalType(),
+    client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
     assertThat(client.getScreen())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
@@ -67,8 +67,9 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, 2222, SSLType.NONE, getDefaultTerminalType(),
-        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+    client
+        .connect(VIRTUAL_SERVER_HOST, server.getPort() + 1, SSLType.NONE, getDefaultTerminalType(),
+            TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)
