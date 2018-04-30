@@ -7,9 +7,7 @@ import static org.assertj.swing.timing.Timeout.timeout;
 import com.blazemeter.jmeter.rte.sampler.Mode;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JPanel;
 import kg.apc.emulators.TestJMeterUtils;
-import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.driver.WaitForComponentToShowCondition;
 import org.assertj.swing.fixture.AbstractJComponentFixture;
 import org.assertj.swing.fixture.FrameFixture;
@@ -69,7 +67,7 @@ public class RTESamplerPanelTest {
   }
 
   private void assertPanelIsNotVisible(String panelName) {
-    JPanelFixture panel = findInvisiblePanelByName(panelName);
+    JPanelFixture panel = AssertJUtils.findInvisiblePanelByName(frame, panelName);
     pause(new Condition("Component " + Formatting.format(panel.target()) + " is not visible") {
       @Override
       public boolean test() {
@@ -78,14 +76,7 @@ public class RTESamplerPanelTest {
     }, CHANGE_TIMEOUT_MILLIS);
   }
 
-  private JPanelFixture findInvisiblePanelByName(String name) {
-    return frame.panel(new GenericTypeMatcher<JPanel>(JPanel.class) {
-      @Override
-      protected boolean isMatching(JPanel component) {
-        return name.equals(component.getName());
-      }
-    });
-  }
+
 
   @Test
   public void shouldShowRequestPanelWhenSendInputMode() {

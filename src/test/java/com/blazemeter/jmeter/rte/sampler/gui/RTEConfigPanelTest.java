@@ -10,8 +10,8 @@ import java.util.List;
 import javax.swing.JComboBox;
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JComboBoxFixture;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -24,27 +24,21 @@ public class RTEConfigPanelTest {
     TestJMeterUtils.createJmeterEnv();
   }
 
-  @Before
-  public void setup() {
-    RTEConfigPanel panel = new RTEConfigPanel();
-    frame = showInFrame(panel);
+  @After
+  public void tearDown() {
+    frame.cleanUp();
   }
 
   @SuppressWarnings("unchecked")
   @Test
   public void shouldChangeTheValuesOfTheTerminalComboBoxWhenChangeProtocolComboBox() {
-    JComboBox protocolCombo = frame.robot().finder()
-        .findByName("protocolComboBox", JComboBox.class);
-    JComboBox<TerminalType> terminalCombo = (JComboBox<TerminalType>) frame.robot().finder()
-        .findByName("terminalTypeComboBox", JComboBox.class);
-    protocolCombo.setSelectedItem(Protocol.TN3270);
+    RTEConfigPanel panel = new RTEConfigPanel();
+    frame = showInFrame(panel);
+    JComboBoxFixture protocolCombo = frame.comboBox("protocolComboBox");
+    JComboBox<TerminalType> terminalCombo = frame.comboBox("terminalTypeComboBox").target();
+    protocolCombo.selectItem(Protocol.TN3270.name());
     assertThat(Protocol.TN3270.createProtocolClient().getSupportedTerminalTypes())
         .containsExactlyElementsOf(getComboValues(terminalCombo));
-  }
-
-  @After
-  public void tearDown() {
-    frame.cleanUp();
   }
 
   private <T> List<T> getComboValues(JComboBox<T> combo) {
@@ -54,4 +48,21 @@ public class RTEConfigPanelTest {
     }
     return ret;
   }
+
+  @Test
+  public void shouldNotShowSslPanelWhenSslSupportIsNotEnabled() {
+    RTEConfigPanel panel = new RTEConfigPanel();
+    panel.setSSLSupportEnabled(false);
+    frame = showInFrame(panel);
+    AssertJUtils.findInvisiblePanelByName(frame, "sslPanel").requireNotVisible();
+  }
+
+  @Test
+  public void shouldShowSslPanelWhenSslSupportIsEnabled() {
+    RTEConfigPanel panel = new RTEConfigPanel();
+    panel.setSSLSupportEnabled(true);
+    frame = showInFrame(panel);
+    frame.panel("sslPanel");
+  }
+
 }
