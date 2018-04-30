@@ -226,6 +226,11 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
+  public boolean getSoundAlarm() {
+    return false;
+  }
+
+  @Override
   public void disconnect() throws RteIOException {
     if (stableTimeoutExecutor == null) {
       return;
