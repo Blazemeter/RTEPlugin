@@ -14,8 +14,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /*
  * Performs the same as {@link TerminalServer}, but in this case uses a socket that supports SSL and
@@ -24,7 +22,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ExtendedTerminalServer extends TerminalServer {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ExtendedTerminalServer.class);
   private ExceptionHandler exceptionHandler;
   private int connectionTimeoutMillis;
   private SSLType sslType;
@@ -32,7 +29,6 @@ public class ExtendedTerminalServer extends TerminalServer {
   private final int serverPort;
   private final String serverURL;
   private Socket socket = new Socket();
-  private InputStream serverIn;
   private OutputStream serverOut;
 
   private final byte[] buffer = new byte[4096];
@@ -60,11 +56,10 @@ public class ExtendedTerminalServer extends TerminalServer {
       return;
     }
     try {
-      running = true;
-      serverIn = socket.getInputStream();
+      InputStream serverIn = socket.getInputStream();
       serverOut = socket.getOutputStream();
+      running = true;
       while (running) {
-
         int bytesRead = serverIn.read(buffer);
         if (bytesRead < 0) {
           close();
@@ -96,9 +91,11 @@ public class ExtendedTerminalServer extends TerminalServer {
   }
 
   public synchronized void write(byte[] buffer) {
-    if (serverOut == null) {
-      // the no-op may come here if the program is not closed after disconnection
-      exceptionHandler.setPendingError(new SocketException("socketClosed "));
+    if (!running) {
+      // the no-op may come here if socket is closed from remote end and client has not been closed
+      if (buffer != ExtendedTelnetState.NO_OP) {
+        exceptionHandler.setPendingError(new SocketException("socketClosed "));
+      }
       return;
     }
 
@@ -114,9 +111,6 @@ public class ExtendedTerminalServer extends TerminalServer {
   public void close() {
     try {
       running = false;
-
-      serverIn = null;
-      serverOut = null;
 
       if (socket != null) {
         socket.close();
