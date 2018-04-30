@@ -180,8 +180,6 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login-and-stats.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), Action.SYSRQ);
-    client.await(
-        Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
 }

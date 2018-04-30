@@ -199,8 +199,6 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
     client.send(buildInvalidCredsFields(), Action.PA1);
-    client.await(Collections.singletonList(
-        new CursorWaitCondition(new Position(1, 1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
 }
