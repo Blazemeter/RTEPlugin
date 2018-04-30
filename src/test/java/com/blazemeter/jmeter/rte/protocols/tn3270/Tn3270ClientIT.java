@@ -124,7 +124,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenCursorWaitAndNotExpectedCursorPosition()
       throws Exception {
-    loadLoginAndStatsFlow();;
+    loadLoginAndStatsFlow();
     connectToVirtualService();
     client.send(buildUsernameField(), Action.ENTER);
     client.await(Collections.singletonList(
@@ -173,6 +173,15 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
     client.disconnect();
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void shouldThrowUnsupportedOperationExceptionWhenSelectActionUnsupported() throws Exception {
+    loadFlow("login-and-stats.yml");
+    connectToVirtualService();
+    client.send(buildUsernameField(), Action.SYSRQ);
+    client.await(
+        Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
 }
