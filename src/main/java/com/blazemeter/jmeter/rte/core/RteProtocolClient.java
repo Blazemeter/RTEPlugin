@@ -52,6 +52,8 @@ public interface RteProtocolClient {
    */
   Position getCursorPosition();
 
+  boolean getSoundAlarm();
+
   void disconnect() throws RteIOException;
 
 }

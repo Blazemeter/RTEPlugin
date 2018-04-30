@@ -44,6 +44,21 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
+  @Test
+  public void shouldGetTrueSoundAlarmWhenServerSendTheSignal() throws Exception {
+    loadLoginAndStatsFlow();
+    connectToVirtualService();
+    sendUsernameWithSyncWait();
+    assertThat(client.getSoundAlarm()).isEqualTo(true);
+  }
+
+  @Test
+  public void shouldGetFalseSoundAlarmWhenServerDoNotSendTheSignal() throws Exception {
+    loadLoginAndStatsFlow();
+    connectToVirtualService();
+    assertThat(client.getSoundAlarm()).isEqualTo(false);
+  }
+
   private void loadLoginAndStatsFlow() throws FileNotFoundException {
     loadFlow("login-and-stats.yml");
   }
