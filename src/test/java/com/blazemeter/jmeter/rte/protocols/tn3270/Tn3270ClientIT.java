@@ -53,7 +53,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   @Test
-  public void shouldGetTrueSoundAlarmWhenServerDoNotSendTheSignal() throws Exception {
+  public void shouldGetFalseSoundAlarmWhenServerDoNotSendTheSignal() throws Exception {
     loadLoginAndStatsFlow();
     connectToVirtualService();
     assertThat(client.getSoundAlarm()).isEqualTo(false);
