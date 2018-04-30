@@ -31,5 +31,8 @@ public enum Action {
   SYSRQ,
   RESET,
   ROLL_UP,
-  ROLL_DN
+  ROLL_DN,
+  PA1,
+  PA2,
+  PA3
 }
