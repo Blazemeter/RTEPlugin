@@ -38,7 +38,7 @@ def findResource(String file) {
 	return Resources.getResource(&quot;com/blazemeter/jmeter/rte/protocols/tn3270/&quot;+file)
 }
 
-def server = new VirtualTcpService(2324)
+def server = new VirtualTcpService(2323)
 props.put(&quot;SERVER&quot;,server)
 server.start()
 server.setFlow(Flow.fromYmlStream(findResource(&quot;login-and-stats.yml&quot;).openStream()))
@@ -62,7 +62,7 @@ println(&quot;server started...&quot;)
       <hashTree>
         <ConfigTestElement guiclass="com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui" testclass="ConfigTestElement" testname="RTE Config" enabled="true">
           <stringProp name="RTEConnectionConfig.server">localhost</stringProp>
-          <stringProp name="RTEConnectionConfig.port">2324</stringProp>
+          <stringProp name="RTEConnectionConfig.port">2323</stringProp>
           <stringProp name="RTEConnectionConfig.protocol">TN3270</stringProp>
           <stringProp name="RTEConnectionConfig.sslType">NONE</stringProp>
           <stringProp name="RTEConnectionConfig.terminalType">IBM-3278-M2</stringProp>
