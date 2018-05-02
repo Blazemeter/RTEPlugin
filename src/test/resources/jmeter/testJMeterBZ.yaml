@@ -2,7 +2,7 @@ provisioning: cloud
 
 modules:
   jmeter:
-    version: 3.3
+    version: "4.0"
   console:
     disable: true
   cloud:
@@ -11,7 +11,7 @@ modules:
 execution:
 - concurrency: 1
   scenario: test3270
-  iterations: 3
+  iterations : 3
   files:
   - lib
 - concurrency: 1
@@ -29,4 +29,4 @@ scenarios:
 reporting:
 - module: passfail
   criteria:
-  - failures>0%
+  - failures>0% 

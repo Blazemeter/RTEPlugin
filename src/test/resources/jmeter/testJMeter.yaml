@@ -1,14 +1,18 @@
 modules:
   jmeter:
-    path: .jmeter/3.1
-    version: 3.1
+    path: .jmeter/4.0
+    version: "4.0"
   console:
     disable: true
 
 execution:
-- scenario: test3270
-- scenario: test5250
-
+- concurrency: 1
+  scenario: test3270
+  iterations : 3
+- concurrency: 1
+  scenario: test5250
+  iterations: 3
+  
 scenarios:
   test3270:
     script: RTESampler3270.jmx
