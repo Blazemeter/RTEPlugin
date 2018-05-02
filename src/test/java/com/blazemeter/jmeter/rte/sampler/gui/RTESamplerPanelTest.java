@@ -77,7 +77,6 @@ public class RTESamplerPanelTest {
   }
 
 
-
   @Test
   public void shouldShowRequestPanelWhenSendInputMode() {
     switchMode(Mode.CONNECT, Mode.SEND_INPUT);
@@ -152,9 +151,7 @@ public class RTESamplerPanelTest {
   public void shouldDisableSilentWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_SILENT);
     List<AbstractJComponentFixture> expected = new ArrayList<>();
-    //set true previously to assure that the event is triggered
-    check.check(true);
-    check.check(false);
+    switchCheckboxTo(false, check);
     expected.add(frame.textBox(WAIT_SILENT_TIME));
     expected.add(frame.textBox(WAIT_SILENT_TIMEOUT));
     validateEnabled(false, expected);
@@ -200,7 +197,7 @@ public class RTESamplerPanelTest {
 
   private void validateEnabled(boolean enable, List<AbstractJComponentFixture> components) {
 
-    pause(new Condition("All components are " + enable) {
+    pause(new Condition("Components are " + (enable ? "enabled" : "disabled")) {
       @Override
       public boolean test() {
         List<String> result = new ArrayList<>();

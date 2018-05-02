@@ -16,12 +16,14 @@ public class ClientConnection implements Runnable {
 
   private static final Logger LOG = LoggerFactory.getLogger(ClientConnection.class);
 
+  private final VirtualTcpService service;
   private final Socket socket;
   private final Queue<PacketStep> flowSteps;
   private final ByteBuffer readBuffer;
   private volatile boolean closed;
 
-  public ClientConnection(Socket socket, int readBufferSize, Flow flow) {
+  public ClientConnection(VirtualTcpService service, Socket socket, int readBufferSize, Flow flow) {
+    this.service = service;
     this.socket = socket;
     this.flowSteps = new LinkedList<>(flow.getSteps());
     readBuffer = ByteBuffer.allocate(readBufferSize);
@@ -38,6 +40,8 @@ public class ClientConnection implements Runnable {
         step.process(this);
       }
       LOG.info("flow completed!");
+    } catch (ConnectionClosedException e) {
+      LOG.warn("Connection closed by client", e);
     } catch (IOException e) {
       if (closed) {
         LOG.trace("Received expected exception when server socket has been closed", e);
@@ -53,11 +57,13 @@ public class ClientConnection implements Runnable {
       } catch (IOException e) {
         LOG.error("Problem when releasing client connection socket", e);
       }
+      service.removeClient(this);
+
       MDC.clear();
     }
   }
 
-  private String getId() {
+  public String getId() {
     return socket.getInetAddress().toString() + ":" + socket.getPort();
   }
 

@@ -30,6 +30,11 @@ public class VirtualTcpServiceMain {
           + VirtualTcpService.DEFAULT_READ_BUFFER_SIZE)
   private int readBufferSize = VirtualTcpService.DEFAULT_READ_BUFFER_SIZE;
 
+  @Option(name = "-c", aliases = "--max-concurrent-connections", metaVar = "connection count",
+      usage = "Maximum number of concurrent client connections to attend. Default value: "
+          + VirtualTcpService.DEFAULT_MAX_CONNECTION_COUNT)
+  private int maxConnectionCount = VirtualTcpService.DEFAULT_MAX_CONNECTION_COUNT;
+
   @Option(name = "-s", aliases = "--ssl-protocol",
       metaVar = "ssl (SSLv2, SSLv3 or TLS)",
       usage = "Specifies if the server should start with ssl protocol support. When this "
@@ -99,7 +104,8 @@ public class VirtualTcpServiceMain {
     if (dumpFile != null) {
       flow.saveYml(dumpFile);
     } else {
-      VirtualTcpService service = new VirtualTcpService(port, sslType, readBufferSize);
+      VirtualTcpService service = new VirtualTcpService(port, sslType, readBufferSize,
+          maxConnectionCount);
       service.setFlow(flow);
       service.run();
     }
