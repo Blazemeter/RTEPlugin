@@ -2,6 +2,8 @@ modules:
   jmeter:
     path: .jmeter/4.0
     version: "4.0"
+    properties:
+      log_level: DEBUG
   console:
     disable: true
 

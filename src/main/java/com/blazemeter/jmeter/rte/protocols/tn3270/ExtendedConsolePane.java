@@ -4,7 +4,6 @@ import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.bytezone.dm3270.application.ConsolePane;
 import com.bytezone.dm3270.display.Screen;
-import com.bytezone.dm3270.plugins.PluginsStage;
 import com.bytezone.dm3270.streams.TelnetListener;
 import com.bytezone.dm3270.utilities.Site;
 
@@ -23,9 +22,9 @@ public class ExtendedConsolePane extends ConsolePane {
   private SSLType sslType;
   private int connectionTimeoutMillis;
 
-  public ExtendedConsolePane(Screen screen, Site server, PluginsStage pluginsStage,
+  public ExtendedConsolePane(Screen screen, Site server,
       ExceptionHandler exceptionHandler) {
-    super(screen, server, pluginsStage);
+    super(screen, server);
     this.server = server;
     this.screen = screen;
     this.exceptionHandler = exceptionHandler;

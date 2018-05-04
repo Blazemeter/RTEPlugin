@@ -159,9 +159,10 @@
           </execution>
         </executions>
       </plugin>
-      <!-- we shade dependencies since we need to patch com.bytezone.dm3270.display.FontDetails
-      class to avoid issues with JRE 1.8.0_121-b13. Additionally, we shade both emulators to be
-      consistent and to provide simpler deployment of plugin.-->
+      <!-- we shade dependencies since we need to patch dm3270 classes to remove javafx dependencies
+      to allow using the plugin with openjdk without requiring to install javafx module and to be
+      able to run it in headless jvms or servers without graphic window managers. Additionally, we
+      shade both emulators to be consistent and to provide simpler deployment of plugin.-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -177,7 +178,26 @@
                 <filter>
                   <artifact>com.bytezone.dm3270:dm3270</artifact>
                   <excludes>
-                    <exlude>com/bytezone/dm3270/display/FontDetails.class</exlude>
+                    <exlude>com/bytezone/dm3270/application/ConsolePane.class</exlude>
+                    <exlude>com/bytezone/dm3270/assistant/Dataset.class</exlude>
+                    <exlude>com/bytezone/dm3270/attributes/ColorAttribute.class</exlude>
+                    <exlude>com/bytezone/dm3270/attributes/StartFieldAttribute.class</exlude>
+                    <exlude>com/bytezone/dm3270/commands/ReadStructuredFieldCommand.class</exlude>
+                    <exlude>com/bytezone/dm3270/commands/SystemMessage.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/ContextManager.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/Pen.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/PenType1.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/PenType1$1.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/Screen.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/Screen$ScreenOption.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/ScreenContext.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/ScreenPosition.class</exlude>
+                    <exlude>com/bytezone/dm3270/plugins/PluginsStage.class</exlude>
+                    <exlude>com/bytezone/dm3270/session/SessionRecord.class</exlude>
+                    <exlude>com/bytezone/dm3270/session/SessionRecord$SessionRecordType.class</exlude>
+                    <exlude>com/bytezone/dm3270/streams/TelnetListener.class</exlude>
+                    <exlude>com/bytezone/dm3270/utilities/Dm3270Utility.class</exlude>
+                    <exlude>com/bytezone/dm3270/utilities/Site.class</exlude>
                   </excludes>
                 </filter>
               </filters>

@@ -3,6 +3,8 @@ provisioning: cloud
 modules:
   jmeter:
     version: "4.0"
+    properties:
+      log_level: DEBUG
   console:
     disable: true
   cloud:
