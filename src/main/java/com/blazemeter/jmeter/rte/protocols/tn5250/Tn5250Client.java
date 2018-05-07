@@ -97,15 +97,15 @@ public class Tn5250Client extends BaseProtocolClient {
       TerminalType terminalType, long timeoutMillis,
       long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+    exceptionHandler = new ExceptionHandler();
     /*
      we need to do this on connect to avoid leaving keyboard thread running when instance of client
      is created for getting supported terminal types in jmeter
-      */
-    exceptionHandler = new ExceptionHandler();
+    */
     if (em == null) {
       em = new ExtendedEmulator(exceptionHandler);
     }
-    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     em.setHost(server);
     em.setPort(port);
     em.setConnectionTimeoutMillis((int) timeoutMillis);

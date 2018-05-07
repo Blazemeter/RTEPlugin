@@ -95,7 +95,6 @@ public class Tn3270Client extends BaseProtocolClient {
 
   private static final Method FIELD_POSITION_GET_CHAR_STRING_METHOD =
       ReflectionUtils.getAccessibleMethod(ScreenPosition.class, "getCharString");
-  private static final String USER_HOME = "user.home";
 
   private SilentScreen screen;
   private ExtendedConsolePane consolePane;
@@ -111,6 +110,7 @@ public class Tn3270Client extends BaseProtocolClient {
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
       long timeoutMillis, long stableTimeout)
       throws InterruptedException, TimeoutException, RteIOException {
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
     ExtendedTelnetState telnetState = new ExtendedTelnetState();
     telnetState.setDoDeviceType(termType.getModel());
@@ -123,7 +123,6 @@ public class Tn3270Client extends BaseProtocolClient {
     consolePane.setConnectionTimeoutMillis((int) timeoutMillis);
     consolePane.setSslType(sslType);
     consolePane.connect();
-    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
     try {
       unlock.await();
