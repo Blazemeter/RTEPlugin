@@ -305,6 +305,10 @@
     <profile>
       <id>sonar</id>
 
+      <properties>
+        <sonar.exclusions>com/bytezone/dm3270/**/*</sonar.exclusions>
+      </properties>
+
       <build>
         <pluginManagement>
           <plugins>
@@ -331,6 +335,7 @@
                 </goals>
                 <configuration>
                   <propertyName>jacoco.agent.ut.arg</propertyName>
+                  <excludes>com/bytezone/dm3270/**/*</excludes>
                 </configuration>
               </execution>
               <execution>
@@ -340,6 +345,7 @@
                 </goals>
                 <configuration>
                   <propertyName>jacoco.agent.it.arg</propertyName>
+                  <excludes>com/bytezone/dm3270/**/*</excludes>
                 </configuration>
               </execution>
             </executions>
