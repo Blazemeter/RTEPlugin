@@ -35,7 +35,6 @@ public class VirtualTcpService implements Runnable {
   private static final int DYNAMIC_PORT = 0;
   private static final Logger LOG = LoggerFactory.getLogger(VirtualTcpService.class);
 
-  private final int maxConnections;
   private final ServerSocket server;
   private final int readBufferSize;
   private Flow flow;
@@ -46,7 +45,6 @@ public class VirtualTcpService implements Runnable {
 
   public VirtualTcpService(int port, SSLType sslType, int readBufferSize, int maxConnections)
       throws IOException, GeneralSecurityException {
-    this.maxConnections = maxConnections;
     clientExecutorService = Executors.newFixedThreadPool(maxConnections);
     if (sslType != null && sslType != SSLType.NONE) {
       SSLSocketFactory socketFactory = new SSLSocketFactory(sslType);
@@ -109,11 +107,6 @@ public class VirtualTcpService implements Runnable {
 
   private synchronized void addClient(ClientConnection clientConnection) throws IOException {
     if (stopped) {
-      clientConnection.close();
-      return;
-    } else if (clientConnections.size() >= maxConnections) {
-      LOG.warn("Rejecting connection {}, due to max connections {} reached.", clientConnection,
-          maxConnections);
       clientConnection.close();
       return;
     }

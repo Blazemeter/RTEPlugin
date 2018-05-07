@@ -23,32 +23,21 @@ import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
-import com.bytezone.dm3270.application.Console.Function;
 import com.bytezone.dm3270.commands.AIDCommand;
 import com.bytezone.dm3270.display.Cursor;
 import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenDimensions;
 import com.bytezone.dm3270.display.ScreenPosition;
-import com.bytezone.dm3270.plugins.PluginsStage;
 import com.bytezone.dm3270.utilities.Site;
 import java.awt.Dimension;
-import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
-import java.util.prefs.Preferences;
-import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,30 +111,15 @@ public class Tn3270Client extends BaseProtocolClient {
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
       long timeoutMillis, long stableTimeout)
       throws InterruptedException, TimeoutException, RteIOException {
-    //we need to initialize javafx and be able to use dm3270 classes
-    //TODO: check if this is needed per thread or can/must be done just once
-    initializeJavafx();
     Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
-    Site serverSite = new Site("", server, port, termType.isExtended(), termType.getModel(), false,
-        "");
     ExtendedTelnetState telnetState = new ExtendedTelnetState();
     telnetState.setDoDeviceType(termType.getModel());
-    Preferences prefs = Preferences.userNodeForPackage(getClass());
-    // we need to build instances in JavaFx thread due to JavaFx limitations
-    PluginsStage pluginsStage = buildInJavaFxThread(() -> new PluginsStage(prefs));
-    /*
-    Creating empty dm3270/files temporary directory and pointing user home directory to it to
-    avoid system.out log from dm3270 emulator
-    */
-    String homeDir = System.getProperty(USER_HOME);
-    System.setProperty(USER_HOME, buildDm3270TemporaryHomeDirectory());
-    screen = buildInJavaFxThread(() -> new SilentScreen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
-        termType.getScreenDimensions(), prefs, Function.TERMINAL, pluginsStage, serverSite,
-        telnetState));
+    screen = new SilentScreen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
+        termType.getScreenDimensions(), telnetState);
     screen.lockKeyboard("connect");
-    System.setProperty(USER_HOME, homeDir);
     exceptionHandler = new ExceptionHandler();
-    consolePane = new ExtendedConsolePane(screen, serverSite, pluginsStage, exceptionHandler);
+    Site serverSite = new Site("", server, port, termType.isExtended(), termType.getModel());
+    consolePane = new ExtendedConsolePane(screen, serverSite, exceptionHandler);
     consolePane.setConnectionTimeoutMillis((int) timeoutMillis);
     consolePane.setSslType(sslType);
     consolePane.connect();
@@ -158,31 +132,6 @@ public class Tn3270Client extends BaseProtocolClient {
       throw e;
     } finally {
       unlock.stop();
-    }
-  }
-
-  private String buildDm3270TemporaryHomeDirectory() throws RteIOException {
-    try {
-      Path tmpDir = Files.createTempDirectory("dm3270-files");
-      Files.createDirectories(tmpDir.resolve("dm3270/files"));
-      return tmpDir.toString();
-    } catch (IOException ex) {
-      throw new RteIOException(ex);
-    }
-  }
-
-  private void initializeJavafx() {
-    new JFXPanel();
-  }
-
-  private <T> T buildInJavaFxThread(Supplier<T> supplier)
-      throws InterruptedException {
-    CompletableFuture<T> ret = new CompletableFuture<>();
-    Platform.runLater(() -> ret.complete(supplier.get()));
-    try {
-      return ret.get();
-    } catch (ExecutionException e) {
-      throw new RuntimeException(e); //NOSONAR
     }
   }
 

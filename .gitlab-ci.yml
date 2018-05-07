@@ -24,7 +24,9 @@ build:
     paths:
       - target/jmeter-bzm-rte-*.jar
       - target/jmeter-test
+      - target/failsafe-reports
     expire_in: 1 month
+    when: always
 build_and_analyze:
   stage: build
   tags:
@@ -36,7 +38,9 @@ build_and_analyze:
     paths:
       - target/jmeter-bzm-rte-*.jar
       - target/jmeter-test
+      - target/failsafe-reports
     expire_in: 1 month
+    when: always
 jmeter_compatibility:
   stage: test
   tags:

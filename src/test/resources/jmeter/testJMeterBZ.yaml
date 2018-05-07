@@ -2,7 +2,9 @@ provisioning: cloud
 
 modules:
   jmeter:
-    version: 3.3
+    version: "4.0"
+    properties:
+      log_level: DEBUG
   console:
     disable: true
   cloud:
@@ -10,16 +12,23 @@ modules:
 
 execution:
 - concurrency: 1
-  scenario: test
-  hold-for: 10s
+  scenario: test3270
+  iterations : 3
+  files:
+  - lib
+- concurrency: 1
+  scenario: test5250
+  iterations: 3
   files:
   - lib
 
 scenarios:
-  test:
-    script: RTESampler.jmx
-
+  test3270:
+    script: RTESampler3270.jmx
+  test5250:
+    script: RTESampler5250.jmx
+    
 reporting:
 - module: passfail
   criteria:
-  - failures>0%
+  - failures>0% 

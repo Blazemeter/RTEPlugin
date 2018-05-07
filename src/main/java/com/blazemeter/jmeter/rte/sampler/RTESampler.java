@@ -416,17 +416,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         sampleResult.setEndTime(requestListener.getEndTime());
         requestListener.stop();
         getCoordInputs().forEach(i -> {
-          LOG.debug("Input(Row,Column,Value): " + i.getPosition().getRow() + ","
-              + i.getPosition().getColumn() + "," + i.getInput() + " - "
-              + getThreadName());
+          LOG.debug("Input(Row,Column,Value): {},{},{} - {}", i.getPosition().getRow(),
+              i.getPosition().getColumn(), i.getInput(), getThreadName());
         });
-        LOG.debug("Action sent: " + getAction().name() + " - " + getThreadName());
-        LOG.debug("Request Headers: " + sampleResult.getRequestHeaders() +
-            " - " + getThreadName());
-        LOG.debug("Response Headers: " + sampleResult.getResponseHeaders() +
-            " - " + getThreadName());
-        LOG.debug("Response Screen: " + sampleResult.getResponseDataAsString() +
-            " - " + getThreadName());
+        LOG.debug("Action sent: {} - {}", getAction().name(), getThreadName());
+        LOG.debug("Request Headers: {} - {}", sampleResult.getRequestHeaders(), getThreadName());
+        LOG.debug("Response Headers: {} - {}", sampleResult.getResponseHeaders(), getThreadName());
+        LOG.debug("Response Screen: {} - {}", sampleResult.getResponseDataAsString(),
+            getThreadName());
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
