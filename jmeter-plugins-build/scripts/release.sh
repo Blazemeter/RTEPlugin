@@ -4,11 +4,14 @@ set -ex
 eval $(ssh-agent -s)
 /set-git-credentials.sh
 
+# get a new clean copy of master branch
+git checkout master && git reset --hard origin/master
+
 # we need this to later on use with nextSnapshot due to https://github.com/mojohaus/versions-maven-plugin/issues/207
 ORIGINAL_VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.version}' --non-recursive exec:exec)
 
 # get a new clean copy of production branch
-git reset --hard origin/production && git checkout production
+git checkout production && git reset --hard origin/production
 git merge master
 mvn versions:set -DremoveSnapshot
 /execute-on-vnc.sh mvn --batch-mode clean verify
