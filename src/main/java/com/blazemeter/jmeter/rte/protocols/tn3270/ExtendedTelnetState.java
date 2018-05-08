@@ -41,7 +41,7 @@ public class ExtendedTelnetState extends TelnetState {
   private ExtendedTerminalServer terminalServer;
 
   // IO
-  private AtomicLong lastAccess;
+  private final AtomicLong lastAccess;
   private volatile boolean running = false;
   private Thread thread;
 
@@ -60,6 +60,7 @@ public class ExtendedTelnetState extends TelnetState {
     setDoEOR(true);
     setDoBinary(true);
     setDoTerminalType(true);
+    lastAccess = new AtomicLong(System.currentTimeMillis());
   }
 
   public void setTerminalServer(ExtendedTerminalServer terminalServer) {
@@ -81,9 +82,7 @@ public class ExtendedTelnetState extends TelnetState {
       terminalServer.write(buffer);
     }
 
-    if (lastAccess != null) {
-      lastAccess.set(System.currentTimeMillis());
-    }
+    lastAccess.set(System.currentTimeMillis());
 
     ++totalWrites;
     totalBytesWritten += buffer.length;
@@ -95,7 +94,6 @@ public class ExtendedTelnetState extends TelnetState {
   @Override
   public void run() {
     long lastTimeIChecked;
-    lastAccess = new AtomicLong(System.currentTimeMillis());
     running = true;
     long limit = 120;      // seconds to wait
 
