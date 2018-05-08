@@ -136,7 +136,7 @@ public class RTESamplerPanel extends JPanel {
 
     JLabel warningLabel = SwingUtils
         .createComponent("warningLabel", new JLabel("Warning: Action buttons ATTN, " +
-            "SYSRQ, RESET, ROLL_UP and ROLL_DN are only supported for TN5250 protocol. " +
+            "RESET, ROLL_UP and ROLL_DN are only supported for TN5250 protocol. " +
             "Action buttons PA1, PA2 and PA3 are only supported for TN3270 protocol."));
     warningLabel.setFont(new Font(null, Font.ITALIC, 11));
 

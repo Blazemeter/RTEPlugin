@@ -182,6 +182,8 @@
                     <exlude>com/bytezone/dm3270/assistant/Dataset.class</exlude>
                     <exlude>com/bytezone/dm3270/attributes/ColorAttribute.class</exlude>
                     <exlude>com/bytezone/dm3270/attributes/StartFieldAttribute.class</exlude>
+                    <exlude>com/bytezone/dm3270/commands/AIDCommand.class</exlude>
+                    <exlude>com/bytezone/dm3270/commands/AIDCommand$ModifiedField.class</exlude>
                     <exlude>com/bytezone/dm3270/commands/ReadStructuredFieldCommand.class</exlude>
                     <exlude>com/bytezone/dm3270/commands/SystemMessage.class</exlude>
                     <exlude>com/bytezone/dm3270/display/ContextManager.class</exlude>
