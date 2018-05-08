@@ -1,9 +1,5 @@
 FROM maven:3.5
 
-# install javaFX for dm3270 support
-RUN apt-get -y update \
-  && apt-get -y install openjfx
-
 # install tightvnc and execute-on-vnc script to be able to run UI unit tests with assertjswing
 ENV USER="root" \
   PASSWORD="password"
