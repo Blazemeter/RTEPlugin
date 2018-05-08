@@ -23,7 +23,8 @@ We are using a custom [checkstyle](http://checkstyle.sourceforge.net/index.html)
 
 ### Build
 
-To build the plugin and run all tests just run `mvn clean verify`
+To build the plugin and run all tests just run `mvn clean verify`. Since test suite include user interface tests, and such tests use UI with actual mouse interactions, avoid moving the mouse while running them.
+Another option to avoid mouse interactions to affect tests is to build docker image and use it to run the build: `docker build -t jmeter-plugins-build jmeter-plugins-build && docker run --rm -v $(pwd):/src -v ~/.m2:/root/.m2 jmeter-plugins-build bash -c 'cd /src && /execute-on-vnc.sh mvn --batch-mode -Dmaven.repo.local=/root/.m2/repository clean verify'` for unix systems (some changes on the command would be required for Windows OS). 
 
 We are using a Docker image with Maven and BZ Taurus to build and test the plugin. [Dockerfile](jmeter-plugins-build/Dockerfile).
 If it is needed to modify the image, it should be tagged with a new version.

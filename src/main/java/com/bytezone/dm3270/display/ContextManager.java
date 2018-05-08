@@ -1,75 +1,44 @@
 package com.bytezone.dm3270.display;
 
-import com.bytezone.dm3270.attributes.ColorAttribute;
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
- * Class extracted from dm3270 source code but removing javafx dependencies, unnecessary code and
- * general refactor to comply with code style.
+ * Mock of the original class from dm3270 which only uses one screen context.
+ * <p/>
+ * The implementation of this class in dm3270 has race condition problems due to CONTEXT_POOL not
+ * supporting concurrent modifications and, additionally, the list is never cleared which would
+ * produce a minor leak (since not that many context are expected for an application).
+ * <p/>
+ * Since the context attributes are only used in ScreenPosition.draw and we don't need
  */
 public class ContextManager {
 
-  private static final List<ScreenContext> CONTEXT_POOL = new ArrayList<>();
-
-  public ContextManager() {
-    addNewContext(ColorAttribute.COLORS[0], ColorAttribute.COLORS[8], (byte) 0, false);
-  }
+  private static final ScreenContext DEFAULT_CONTEXT = new ScreenContext();
 
   public ScreenContext getDefaultScreenContext() {
-    return CONTEXT_POOL.get(0);
+    return DEFAULT_CONTEXT;
   }
 
   public ScreenContext getScreenContext(Color foregroundColor, Color backgroundColor,
       byte highlight, boolean highIntensity) {
-    Optional<ScreenContext> opt = CONTEXT_POOL.stream().filter(sc -> sc
-        .matches(foregroundColor, backgroundColor, highlight, highIntensity))
-        .findFirst();
-
-    return opt
-        .orElseGet(() -> addNewContext(foregroundColor, backgroundColor, highlight, highIntensity));
+    return DEFAULT_CONTEXT;
   }
 
   public ScreenContext setForeground(ScreenContext oldContext, Color foregroundColor) {
-    Optional<ScreenContext> opt = CONTEXT_POOL.stream()
-        .filter(sc -> sc.matches(foregroundColor, oldContext.backgroundColor,
-            oldContext.highlight, oldContext.highIntensity))
-        .findFirst();
-
-    return opt.orElseGet(() -> addNewContext(foregroundColor, oldContext.backgroundColor,
-        oldContext.highlight, oldContext.highIntensity));
+    return DEFAULT_CONTEXT;
   }
 
   public ScreenContext setBackground(ScreenContext oldContext, Color backgroundColor) {
-    Optional<ScreenContext> opt = CONTEXT_POOL.stream()
-        .filter(sc -> sc.matches(oldContext.foregroundColor, backgroundColor,
-            oldContext.highlight, oldContext.highIntensity))
-        .findFirst();
-
-    return opt.orElseGet(() -> addNewContext(oldContext.foregroundColor, backgroundColor,
-        oldContext.highlight, oldContext.highIntensity));
+    return DEFAULT_CONTEXT;
   }
 
   public ScreenContext setHighlight(ScreenContext oldContext, byte highlight) {
-    Optional<ScreenContext> opt =
-        CONTEXT_POOL.stream()
-            .filter(sc -> sc.matches(oldContext.foregroundColor,
-                oldContext.backgroundColor, highlight,
-                oldContext.highIntensity))
-            .findFirst();
-
-    return opt.orElseGet(() -> addNewContext(oldContext.foregroundColor, oldContext.backgroundColor,
-        highlight, oldContext.highIntensity));
+    return DEFAULT_CONTEXT;
   }
 
   private ScreenContext addNewContext(Color foregroundColor, Color backgroundColor,
       byte highlight, boolean highIntensity) {
-    ScreenContext newContext = new ScreenContext(foregroundColor, backgroundColor,
-        highlight, highIntensity);
-    CONTEXT_POOL.add(newContext);
-    return newContext;
+    return DEFAULT_CONTEXT;
   }
 
 }
