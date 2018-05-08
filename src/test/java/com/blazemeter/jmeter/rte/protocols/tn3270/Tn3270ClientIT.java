@@ -194,7 +194,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldThrowUnsupportedOperationExceptionWhenSelectActionUnsupported() throws Exception {
     loadFlow("login-and-stats.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), Action.SYSRQ);
+    client.send(buildUsernameField(), Action.ROLL_UP);
   }
 
 }
