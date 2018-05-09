@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.security.GeneralSecurityException;
 import javax.net.ssl.SSLException;
 import net.infordata.em.tnprot.XITelnet;
@@ -121,6 +122,34 @@ public class ExtendedTelnet extends XITelnet {
 
   private int getivIACParserStatus() {
     return ReflectionUtils.getFieldValue(IAC_PARSER_STATUS_FIELD, Integer.class, this);
+  }
+
+  @Override
+  public synchronized void sendEOR() throws IOException {
+    checkIfAlreadyClosed();
+    super.sendEOR();
+  }
+
+  private void checkIfAlreadyClosed() throws IOException {
+    if (getIvSocket() == null) {
+      throw new SocketException("Connection already closed");
+    }
+  }
+
+  @Override
+  protected synchronized int processIAC(byte bb) throws IOException {
+    checkIfAlreadyClosed();
+    return super.processIAC(bb);
+  }
+
+  @Override
+  public synchronized void send(byte[] aBuf, int aLen) {
+    try {
+      checkIfAlreadyClosed();
+      super.send(aBuf, aLen);
+    } catch (IOException e) {
+      catchedIOException(e);
+    }
   }
 
   @Override

@@ -8,8 +8,6 @@ import java.lang.reflect.Field;
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tnprot.XITelnet;
 import net.infordata.em.tnprot.XITelnetEmulator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Allows configuring port and connection timeout to be used in {@link XI5250Emulator} connections,
@@ -18,7 +16,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ExtendedEmulator extends XI5250Emulator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(ExtendedEmulator.class);
   private static final Field TELNET_FIELD = ReflectionUtils
       .getAccessibleField(XI5250Emulator.class, "ivTelnet");
 
@@ -29,6 +26,11 @@ public class ExtendedEmulator extends XI5250Emulator {
 
   public ExtendedEmulator(ExceptionHandler exceptionHandler) {
     this.exceptionHandler = exceptionHandler;
+    setKeyboardQueue(false);
+  }
+
+  // we overwrite this method to avoid any initialization of the thread which is never used
+  protected void startKeybThread() {
   }
 
   public void setPort(int port) {
@@ -48,7 +50,6 @@ public class ExtendedEmulator extends XI5250Emulator {
     boolean wasActive;
     synchronized (this) {
       if (!activate) {
-        stopKeybThread();
         setBlinkingCursor(false);
       }
       wasActive = isActive();

@@ -86,10 +86,8 @@ public class RTESamplerTest {
     when(rteProtocolClientMock.isInputInhibited()).thenReturn(true, false);
     when(rteProtocolClientMock.getScreen()).thenReturn(TEST_SCREEN);
 
-    when(rteProtocolClientMock.buildRequestListener()).thenReturn(requestListenerMock);
+    when(rteProtocolClientMock.buildRequestListener(any())).thenReturn(requestListenerMock);
     when(rteProtocolClientMock.getSoundAlarm()).thenReturn(false);
-    when(requestListenerMock.getEndTime()).thenReturn((long) 100);
-    when(requestListenerMock.getLatency()).thenReturn((long) 100);
     when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position(1, 1));
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);

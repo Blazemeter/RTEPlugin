@@ -7,13 +7,15 @@ import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.display.FieldManager;
 import com.bytezone.dm3270.display.Screen;
 import com.bytezone.dm3270.display.ScreenWatcher;
+import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class Tn3270RequestListenerIT extends RequestListenerIT<Tn3270RequestListener> {
+public class Tn3270RequestListenerIT extends
+    RequestListenerIT<Tn3270RequestListener> {
 
   @Mock
   private Tn3270Client client;
@@ -33,8 +35,8 @@ public class Tn3270RequestListenerIT extends RequestListenerIT<Tn3270RequestList
   }
 
   @Override
-  public Tn3270RequestListener buildRequestListener() {
-    return new Tn3270RequestListener(client, screen);
+  public Tn3270RequestListener buildRequestListener(SampleResult result) {
+    return new Tn3270RequestListener(result, client, screen);
   }
 
   @Override
