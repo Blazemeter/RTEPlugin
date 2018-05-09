@@ -35,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
+import org.apache.jmeter.samplers.SampleResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,8 +153,9 @@ public class Tn5250Client extends BaseProtocolClient {
     return condition;
   }
 
-  public RequestListener buildRequestListener() {
-    Tn5250RequestListener listener = new Tn5250RequestListener(this);
+  @Override
+  public RequestListener buildRequestListener(SampleResult result) {
+    Tn5250RequestListener listener = new Tn5250RequestListener(result, this);
     em.addEmulatorListener(listener);
     return listener;
   }

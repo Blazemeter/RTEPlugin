@@ -1,8 +1,7 @@
 package com.blazemeter.jmeter.rte.core.listener;
 
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
-import java.time.Duration;
-import java.time.Instant;
+import org.apache.jmeter.samplers.SampleResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,34 +10,29 @@ public abstract class RequestListener<T extends RteProtocolClient> {
   private static final Logger LOG = LoggerFactory.getLogger(RequestListener.class);
 
   protected final T client;
-  private Instant startTime = Instant.now();
-  private Instant firstResponseTime = Instant.now();
-  private long lastResponseTime = System.currentTimeMillis();
+  private final SampleResult result;
+  private long lastResponseTime;
   private boolean receivedFirstResponse = false;
 
-  public RequestListener(T client) {
+  public RequestListener(SampleResult result, T client) {
+    this.result = result;
     this.client = client;
-  }
-
-  public long getLatency() {
-    return Duration.between(startTime, firstResponseTime).toMillis();
-  }
-
-  public long getEndTime() {
-    return lastResponseTime;
+    lastResponseTime = result.currentTimeInMillis();
   }
 
   protected void newScreenReceived() {
     if (!receivedFirstResponse) {
       receivedFirstResponse = true;
-      firstResponseTime = Instant.now();
+      result.latencyEnd();
     }
-    lastResponseTime = System.currentTimeMillis();
+    lastResponseTime = result.currentTimeInMillis();
     if (LOG.isTraceEnabled()) {
       LOG.trace(client.getScreen());
     }
   }
 
-  public abstract void stop();
+  public void stop() {
+    result.setEndTime(lastResponseTime);
+  }
 
 }

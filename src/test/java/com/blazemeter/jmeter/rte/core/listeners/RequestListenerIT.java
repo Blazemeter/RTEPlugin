@@ -3,7 +3,7 @@ package com.blazemeter.jmeter.rte.core.listeners;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
-import org.junit.After;
+import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,22 +12,26 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public abstract class RequestListenerIT<T extends RequestListener<?>> {
 
+  private SampleResult result;
+
   protected T listener;
 
   @Before
   public void setup() throws Exception {
-    listener = buildRequestListener();
+    result = new SampleResult();
+    listener = buildRequestListener(result);
   }
 
   protected abstract void generateScreenChangeEvent();
 
-  public abstract T buildRequestListener();
+  public abstract T buildRequestListener(SampleResult result);
 
   @Test
   public void shouldReturnGreaterLatencyThanTheElapsedTime() throws Exception {
     Thread.sleep(500);
     generateScreenChangeEvent();
-    assertThat(listener.getLatency()).isGreaterThanOrEqualTo(500);
+    listener.stop();
+    assertThat(result.getLatency()).isGreaterThanOrEqualTo(500);
   }
 
   @Test
@@ -39,11 +43,8 @@ public abstract class RequestListenerIT<T extends RequestListener<?>> {
       Thread.sleep(100);
       generateScreenChangeEvent();
     }
-    assertThat(listener.getEndTime()).isGreaterThanOrEqualTo(startTime + 300);
+    listener.stop();
+    assertThat(result.getEndTime()).isGreaterThanOrEqualTo(startTime + 300);
   }
 
-  @After
-  public void teardown() {
-    listener.stop();
-  }
 }

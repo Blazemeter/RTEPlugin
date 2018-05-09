@@ -396,7 +396,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         client = buildClient();
       }
       sampleResult.connectEnd();
-      RequestListener requestListener = client.buildRequestListener();
+      RequestListener requestListener = client.buildRequestListener(sampleResult);
       try {
         addClientRequestHeaders(client, sampleResult);
         if (getMode() == Mode.SEND_INPUT) {
@@ -411,9 +411,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         sampleResult.setResponseHeaders(buildResponseHeaders(client));
         sampleResult.setDataType(SampleResult.TEXT);
         sampleResult.setResponseData(client.getScreen(), "utf-8");
-        sampleResult.setLatency(requestListener.getLatency());
       } finally {
-        sampleResult.setEndTime(requestListener.getEndTime());
         requestListener.stop();
         getCoordInputs().forEach(i -> {
           LOG.debug("Input(Row,Column,Value): {},{},{} - {}", i.getPosition().getRow(),

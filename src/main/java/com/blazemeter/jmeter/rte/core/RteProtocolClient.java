@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.awt.Dimension;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import org.apache.jmeter.samplers.SampleResult;
 
 public interface RteProtocolClient {
 
@@ -35,7 +36,7 @@ public interface RteProtocolClient {
   void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException;
 
-  RequestListener buildRequestListener();
+  RequestListener buildRequestListener(SampleResult result);
 
   void send(List<CoordInput> input, Action action) throws RteIOException;
 

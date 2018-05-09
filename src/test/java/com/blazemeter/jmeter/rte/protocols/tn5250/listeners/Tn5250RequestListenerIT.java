@@ -4,12 +4,14 @@ import com.blazemeter.jmeter.rte.core.listeners.RequestListenerIT;
 import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
+import org.apache.jmeter.samplers.SampleResult;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class Tn5250RequestListenerIT extends RequestListenerIT<Tn5250RequestListener> {
+public class Tn5250RequestListenerIT extends
+    RequestListenerIT<Tn5250RequestListener> {
 
   @Mock
   private Tn5250Client client;
@@ -18,8 +20,8 @@ public class Tn5250RequestListenerIT extends RequestListenerIT<Tn5250RequestList
   private ExtendedEmulator emulator;
 
   @Override
-  public Tn5250RequestListener buildRequestListener() {
-    return new Tn5250RequestListener(client);
+  public Tn5250RequestListener buildRequestListener(SampleResult result) {
+    return new Tn5250RequestListener(result, client);
   }
 
   @Override

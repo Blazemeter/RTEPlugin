@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
+import org.apache.jmeter.samplers.SampleResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,8 +138,8 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public RequestListener buildRequestListener() {
-    Tn3270RequestListener listener = new Tn3270RequestListener(this, screen);
+  public RequestListener buildRequestListener(SampleResult result) {
+    Tn3270RequestListener listener = new Tn3270RequestListener(result, this, screen);
     screen.getFieldManager().addScreenChangeListener(listener);
     return listener;
   }
