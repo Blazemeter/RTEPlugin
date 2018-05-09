@@ -103,9 +103,7 @@ public class Tn5250Client extends BaseProtocolClient {
      we need to do this on connect to avoid leaving keyboard thread running when instance of client
      is created for getting supported terminal types in jmeter
     */
-    if (em == null) {
-      em = new ExtendedEmulator(exceptionHandler);
-    }
+    em = new ExtendedEmulator(exceptionHandler);
     em.setHost(server);
     em.setPort(port);
     em.setConnectionTimeoutMillis((int) timeoutMillis);
