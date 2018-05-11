@@ -39,7 +39,7 @@ public class RTEConfigPanelTest {
     JComboBoxFixture protocolCombo = frame.comboBox("protocolComboBox");
     JComboBox<TerminalType> terminalCombo = frame.comboBox("terminalTypeComboBox").target();
     protocolCombo.selectItem(Protocol.TN3270.name());
-    pause(new Condition("Listener triggered") {
+    pause(new Condition("TN3270 terminal type listed in terminal combo") {
       @Override
       public boolean test() {
         return Protocol.TN3270.createProtocolClient().getSupportedTerminalTypes().containsAll(getComboValues(terminalCombo));
