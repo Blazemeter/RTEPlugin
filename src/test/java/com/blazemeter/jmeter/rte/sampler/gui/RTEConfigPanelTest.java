@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
+import static org.assertj.swing.timing.Pause.pause;
 
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -11,6 +12,7 @@ import javax.swing.JComboBox;
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JComboBoxFixture;
+import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -37,8 +39,12 @@ public class RTEConfigPanelTest {
     JComboBoxFixture protocolCombo = frame.comboBox("protocolComboBox");
     JComboBox<TerminalType> terminalCombo = frame.comboBox("terminalTypeComboBox").target();
     protocolCombo.selectItem(Protocol.TN3270.name());
-    assertThat(Protocol.TN3270.createProtocolClient().getSupportedTerminalTypes())
-        .containsExactlyElementsOf(getComboValues(terminalCombo));
+    pause(new Condition("Listener triggered") {
+      @Override
+      public boolean test() {
+        return Protocol.TN3270.createProtocolClient().getSupportedTerminalTypes().containsAll(getComboValues(terminalCombo));
+      }
+    });
   }
 
   private <T> List<T> getComboValues(JComboBox<T> combo) {
