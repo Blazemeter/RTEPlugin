@@ -7,7 +7,8 @@ import org.assertj.swing.fixture.JPanelFixture;
 
 public final class AssertJUtils {
 
-  private AssertJUtils() {}
+  private AssertJUtils() {
+  }
 
   public static JPanelFixture findInvisiblePanelByName(FrameFixture frame, String name) {
     return frame.panel(new GenericTypeMatcher<JPanel>(JPanel.class) {
@@ -17,5 +18,4 @@ public final class AssertJUtils {
       }
     });
   }
-
 }

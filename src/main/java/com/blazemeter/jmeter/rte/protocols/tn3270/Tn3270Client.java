@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
-import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
@@ -57,39 +57,39 @@ public class Tn3270Client extends BaseProtocolClient {
       new Tn3270TerminalType(DeviceModel.M5, true)
   );
 
-  private static final Map<Action, Byte> AID_COMMANDS = new EnumMap<Action, Byte>(
-      Action.class) {
+  private static final Map<AttentionKey, Byte> AID_COMMANDS = new EnumMap<AttentionKey, Byte>(
+      AttentionKey.class) {
     {
-      put(Action.F1, AIDCommand.AID_PF1);
-      put(Action.F2, AIDCommand.AID_PF2);
-      put(Action.F3, AIDCommand.AID_PF3);
-      put(Action.F4, AIDCommand.AID_PF4);
-      put(Action.F5, AIDCommand.AID_PF5);
-      put(Action.F6, AIDCommand.AID_PF6);
-      put(Action.F7, AIDCommand.AID_PF7);
-      put(Action.F8, AIDCommand.AID_PF8);
-      put(Action.F9, AIDCommand.AID_PF9);
-      put(Action.F10, AIDCommand.AID_PF10);
-      put(Action.F11, AIDCommand.AID_PF11);
-      put(Action.F12, AIDCommand.AID_PF12);
-      put(Action.F13, AIDCommand.AID_PF13);
-      put(Action.F14, AIDCommand.AID_PF14);
-      put(Action.F15, AIDCommand.AID_PF15);
-      put(Action.F16, AIDCommand.AID_PF16);
-      put(Action.F17, AIDCommand.AID_PF17);
-      put(Action.F18, AIDCommand.AID_PF18);
-      put(Action.F19, AIDCommand.AID_PF19);
-      put(Action.F20, AIDCommand.AID_PF20);
-      put(Action.F21, AIDCommand.AID_PF21);
-      put(Action.F22, AIDCommand.AID_PF22);
-      put(Action.F23, AIDCommand.AID_PF23);
-      put(Action.F24, AIDCommand.AID_PF24);
-      put(Action.ENTER, AIDCommand.AID_ENTER);
-      put(Action.PA1, AIDCommand.AID_PA1);
-      put(Action.PA2, AIDCommand.AID_PA2);
-      put(Action.PA3, AIDCommand.AID_PA3);
-      put(Action.SYSRQ, AIDCommand.AID_SYSREQ);
-      put(Action.CLEAR, AIDCommand.AID_CLEAR);
+      put(AttentionKey.F1, AIDCommand.AID_PF1);
+      put(AttentionKey.F2, AIDCommand.AID_PF2);
+      put(AttentionKey.F3, AIDCommand.AID_PF3);
+      put(AttentionKey.F4, AIDCommand.AID_PF4);
+      put(AttentionKey.F5, AIDCommand.AID_PF5);
+      put(AttentionKey.F6, AIDCommand.AID_PF6);
+      put(AttentionKey.F7, AIDCommand.AID_PF7);
+      put(AttentionKey.F8, AIDCommand.AID_PF8);
+      put(AttentionKey.F9, AIDCommand.AID_PF9);
+      put(AttentionKey.F10, AIDCommand.AID_PF10);
+      put(AttentionKey.F11, AIDCommand.AID_PF11);
+      put(AttentionKey.F12, AIDCommand.AID_PF12);
+      put(AttentionKey.F13, AIDCommand.AID_PF13);
+      put(AttentionKey.F14, AIDCommand.AID_PF14);
+      put(AttentionKey.F15, AIDCommand.AID_PF15);
+      put(AttentionKey.F16, AIDCommand.AID_PF16);
+      put(AttentionKey.F17, AIDCommand.AID_PF17);
+      put(AttentionKey.F18, AIDCommand.AID_PF18);
+      put(AttentionKey.F19, AIDCommand.AID_PF19);
+      put(AttentionKey.F20, AIDCommand.AID_PF20);
+      put(AttentionKey.F21, AIDCommand.AID_PF21);
+      put(AttentionKey.F22, AIDCommand.AID_PF22);
+      put(AttentionKey.F23, AIDCommand.AID_PF23);
+      put(AttentionKey.F24, AIDCommand.AID_PF24);
+      put(AttentionKey.ENTER, AIDCommand.AID_ENTER);
+      put(AttentionKey.PA1, AIDCommand.AID_PA1);
+      put(AttentionKey.PA2, AIDCommand.AID_PA2);
+      put(AttentionKey.PA3, AIDCommand.AID_PA3);
+      put(AttentionKey.SYSRQ, AIDCommand.AID_SYSREQ);
+      put(AttentionKey.CLEAR, AIDCommand.AID_CLEAR);
     }
   };
 
@@ -145,7 +145,7 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public void send(List<CoordInput> input, Action action) throws RteIOException {
+  public void send(List<CoordInput> input, AttentionKey attentionKey) throws RteIOException {
     input.forEach(i -> {
       int linearPosition = buildLinealPosition(i);
       Field field = screen.getFieldManager()
@@ -154,12 +154,13 @@ public class Tn3270Client extends BaseProtocolClient {
       screen.setFieldText(field, i.getInput());
       screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
     });
-    Byte actionCommand = AID_COMMANDS.get(action);
+    Byte actionCommand = AID_COMMANDS.get(attentionKey);
     if (actionCommand == null) {
-      throw new UnsupportedOperationException(action.name() + " action is unsupported " +
-          "for protocol TN3270.");
+      throw new UnsupportedOperationException(
+          attentionKey.name() + " attentionKey is unsupported " +
+              "for protocol TN3270.");
     }
-    consolePane.sendAID(actionCommand, action.name());
+    consolePane.sendAID(actionCommand, attentionKey.name());
     exceptionHandler.throwAnyPendingError();
   }
 

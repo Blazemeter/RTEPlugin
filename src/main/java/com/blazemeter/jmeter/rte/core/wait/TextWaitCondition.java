@@ -30,7 +30,7 @@ public class TextWaitCondition extends WaitCondition {
 
   @Override
   public String getDescription() {
-    return "emulator screen area " + searchArea + " to contain " + regex;
+    return "emulator screen area " + searchArea + " to contain " + regex.getPattern();
   }
 
   public boolean matchesScreen(String screen, Dimension screenSize) {

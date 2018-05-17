@@ -2,8 +2,8 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 
 import static org.mockito.Mockito.when;
 
-import com.blazemeter.jmeter.rte.core.Action;
-import com.blazemeter.jmeter.rte.sampler.Mode;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
@@ -40,7 +40,7 @@ public class RTESamplerGuiTest {
 
   @Test
   public void shouldSetTheTestElementFromThePanel() {
-    final Action action = Action.ENTER;
+    final AttentionKey attentionKey = AttentionKey.ENTER;
     final String waitSyncTimeout = "1";
     final String waitCursorColumn = "2";
     final String waitCursorRow = "3";
@@ -53,8 +53,8 @@ public class RTESamplerGuiTest {
     final String waitTextAreaTop = "10";
     final String waitTextRegex = "regExp";
     final String waitTextTimeout = "11";
-    when(panel.getAction()).thenReturn(action);
-    when(panel.getMode()).thenReturn(Mode.CONNECT);
+    when(panel.getAttentionKey()).thenReturn(attentionKey);
+    when(panel.getAction()).thenReturn(Action.CONNECT);
     when(panel.getWaitSync()).thenReturn(true);
     when(panel.getWaitSyncTimeout()).thenReturn(waitSyncTimeout);
     when(panel.getWaitCursor()).thenReturn(true);
@@ -75,8 +75,8 @@ public class RTESamplerGuiTest {
 
     samplerGui.modifyTestElement(testElement);
 
-    softly.assertThat(testElement.getAction()).as("Action").isEqualTo(action);
-    softly.assertThat(testElement.getMode()).as("Mode").isEqualTo(Mode.CONNECT);
+    softly.assertThat(testElement.getAttentionKey()).as("AttentionKey").isEqualTo(attentionKey);
+    softly.assertThat(testElement.getAction()).as("Action").isEqualTo(Action.CONNECT);
     softly.assertThat(testElement.getWaitSync()).as("WaitSync").isEqualTo(true);
     softly.assertThat(testElement.getWaitCursor()).as("WaitCursor").isEqualTo(true);
     softly.assertThat(testElement.getWaitSilent()).as("WaitSilent").isEqualTo(true);

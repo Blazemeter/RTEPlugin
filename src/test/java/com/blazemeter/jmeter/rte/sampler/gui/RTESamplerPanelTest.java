@@ -4,7 +4,7 @@ import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
-import com.blazemeter.jmeter.rte.sampler.Mode;
+import com.blazemeter.jmeter.rte.sampler.Action;
 import java.util.ArrayList;
 import java.util.List;
 import kg.apc.emulators.TestJMeterUtils;
@@ -56,14 +56,14 @@ public class RTESamplerPanelTest {
   }
 
   @Test
-  public void shouldHideRequestPanelWhenNotSendInputModeMode() {
-    switchMode(Mode.SEND_INPUT, Mode.CONNECT);
+  public void shouldHideRequestPanelWhenNotSendInputAction() {
+    switchAction(Action.SEND_INPUT, Action.CONNECT);
     assertPanelIsNotVisible(REQUEST_PANEL);
   }
 
-  private void switchMode(Mode mode1, Mode mode2) {
-    frame.radioButton(mode1.name()).check();
-    frame.radioButton(mode2.name()).check();
+  private void switchAction(Action action1, Action action2) {
+    frame.radioButton(action1.name()).check();
+    frame.radioButton(action2.name()).check();
   }
 
   private void assertPanelIsNotVisible(String panelName) {
@@ -78,21 +78,21 @@ public class RTESamplerPanelTest {
 
 
   @Test
-  public void shouldShowRequestPanelWhenSendInputMode() {
-    switchMode(Mode.CONNECT, Mode.SEND_INPUT);
+  public void shouldShowRequestPanelWhenSendInputAction() {
+    switchAction(Action.CONNECT, Action.SEND_INPUT);
     JPanelFixture panel = frame.panel(REQUEST_PANEL);
     pause(WaitForComponentToShowCondition.untilIsShowing(panel.target()));
   }
 
   @Test
-  public void shouldHideWaitsPanelWhenDisconnectMode() {
-    switchMode(Mode.SEND_INPUT, Mode.DISCONNECT);
+  public void shouldHideWaitsPanelWhenDisconnectAction() {
+    switchAction(Action.SEND_INPUT, Action.DISCONNECT);
     assertPanelIsNotVisible(WAITS_PANEL);
   }
 
   @Test
-  public void shouldShowWaitsPanelWhenNotDisconnectMode() {
-    switchMode(Mode.DISCONNECT, Mode.SEND_INPUT);
+  public void shouldShowWaitsPanelWhenNotDisconnectAction() {
+    switchAction(Action.DISCONNECT, Action.SEND_INPUT);
     JPanelFixture panel = frame.panel(WAITS_PANEL);
     pause(WaitForComponentToShowCondition.untilIsShowing(panel.target()));
   }

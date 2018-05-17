@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.core.Action;
-import com.blazemeter.jmeter.rte.sampler.Mode;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Component;
 import java.awt.Container;
@@ -30,12 +30,12 @@ public class RTESamplerPanel extends JPanel {
   private static final int TIME_WIDTH = 60;
   private static final String TIMEOUT_LABEL = "Timeout (millis): ";
 
-  private ButtonGroup modesGroup = new ButtonGroup();
-  private Map<Mode, JRadioButton> modes = new EnumMap<>(Mode.class);
-  private final JPanel requestPanel;
-  private CoordInputPanel payloadPanel;
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
+  private final JPanel requestPanel;
+  private CoordInputPanel payloadPanel;
+  private ButtonGroup attentionKeysGroup = new ButtonGroup();
+  private Map<AttentionKey, JRadioButton> attentionKeys = new EnumMap<>(AttentionKey.class);
   private final JPanel waitPanel;
   private JPanel waitSyncPanel;
   private JCheckBox waitSync = SwingUtils.createComponent("waitSync", new JCheckBox("Sync?"));
@@ -97,24 +97,24 @@ public class RTESamplerPanel extends JPanel {
 
   private JPanel buildModePanel() {
     JPanel panel = SwingUtils.createComponent("modePanel", new JPanel());
-    panel.setBorder(BorderFactory.createTitledBorder("Mode"));
+    panel.setBorder(BorderFactory.createTitledBorder("Action"));
     panel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-    Arrays.stream(Mode.values()).forEach(t -> {
+    Arrays.stream(Action.values()).forEach(t -> {
       JRadioButton r = SwingUtils.createComponent(t.toString(), new JRadioButton(t.getLabel()));
       r.setActionCommand(t.name());
       panel.add(r);
-      modes.put(t, r);
-      modesGroup.add(r);
+      actions.put(t, r);
+      actionsGroup.add(r);
     });
 
-    modes.get(Mode.SEND_INPUT).addItemListener(e -> {
+    actions.get(Action.SEND_INPUT).addItemListener(e -> {
       requestPanel.setVisible(e.getStateChange() == ItemEvent.SELECTED);
       validate();
       repaint();
     });
 
-    modes.get(Mode.DISCONNECT).addItemListener(e -> {
+    actions.get(Action.DISCONNECT).addItemListener(e -> {
       waitPanel.setVisible(e.getStateChange() != ItemEvent.SELECTED);
       validate();
       repaint();
@@ -132,19 +132,19 @@ public class RTESamplerPanel extends JPanel {
 
     JLabel payloadLabel = SwingUtils.createComponent("payloadLabel", new JLabel("Payload: "));
     payloadPanel = SwingUtils.createComponent("payloadPanel", new CoordInputPanel());
-    JPanel actionsPanel = buildActionsPanel();
+    JPanel attentionKeysPanel = buildAttentionKeysPanel();
 
     JLabel warningLabel = SwingUtils
-        .createComponent("warningLabel", new JLabel("Warning: Action buttons ATTN, " +
+        .createComponent("warningLabel", new JLabel("Warning: AttentionKey buttons ATTN, " +
             "RESET, ROLL_UP and ROLL_DN are only supported for TN5250 protocol. " +
-            "Action buttons PA1, PA2 and PA3 are only supported for TN3270 protocol."));
+            "AttentionKey buttons PA1, PA2 and PA3 are only supported for TN3270 protocol."));
     warningLabel.setFont(new Font(null, Font.ITALIC, 11));
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(payloadLabel)
         .addComponent(payloadPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(attentionKeysPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE)
         .addComponent(warningLabel));
 
@@ -154,7 +154,7 @@ public class RTESamplerPanel extends JPanel {
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(actionsPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+        .addComponent(attentionKeysPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(warningLabel)
         .addPreferredGap(ComponentPlacement.UNRELATED));
@@ -162,17 +162,17 @@ public class RTESamplerPanel extends JPanel {
     return panel;
   }
 
-  private JPanel buildActionsPanel() {
-    JPanel panel = SwingUtils.createComponent("actionPanel", new JPanel());
-    panel.setBorder(BorderFactory.createTitledBorder("Actions"));
+  private JPanel buildAttentionKeysPanel() {
+    JPanel panel = SwingUtils.createComponent("attentionKeysPanel", new JPanel());
+    panel.setBorder(BorderFactory.createTitledBorder("Attention keys"));
     panel.setLayout(new GridLayout(0, 12));
 
-    Arrays.stream(Action.values()).forEach(t -> {
+    Arrays.stream(AttentionKey.values()).forEach(t -> {
       JRadioButton r = SwingUtils.createComponent(t.toString(), new JRadioButton(t.toString()));
       r.setActionCommand(t.toString());
       panel.add(r);
-      actions.put(t, r);
-      actionsGroup.add(r);
+      attentionKeys.put(t, r);
+      attentionKeysGroup.add(r);
     });
 
     return panel;
@@ -434,26 +434,9 @@ public class RTESamplerPanel extends JPanel {
     payloadPanel.clear();
   }
 
-  public Mode getMode() {
-    String mode = modesGroup.getSelection().getActionCommand();
-    return Mode.valueOf(mode);
-  }
-
-  public void setMode(Mode mode) {
-    if (modes.containsKey(mode)) {
-      modes.get(mode).setSelected(true);
-    } else {
-      modes.get(RTESampler.DEFAULT_MODE).setSelected(true);
-    }
-  }
-
-  public CoordInputPanel getPayload() {
-    return this.payloadPanel;
-  }
-
   public Action getAction() {
-    String action = actionsGroup.getSelection().getActionCommand();
-    return Action.valueOf(action);
+    String mode = actionsGroup.getSelection().getActionCommand();
+    return Action.valueOf(mode);
   }
 
   public void setAction(Action action) {
@@ -461,6 +444,23 @@ public class RTESamplerPanel extends JPanel {
       actions.get(action).setSelected(true);
     } else {
       actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);
+    }
+  }
+
+  public CoordInputPanel getPayload() {
+    return this.payloadPanel;
+  }
+
+  public AttentionKey getAttentionKey() {
+    String attentionKey = attentionKeysGroup.getSelection().getActionCommand();
+    return AttentionKey.valueOf(attentionKey);
+  }
+
+  public void setAttentionKey(AttentionKey attentionKey) {
+    if (attentionKeys.containsKey(attentionKey)) {
+      attentionKeys.get(attentionKey).setSelected(true);
+    } else {
+      attentionKeys.get(RTESampler.DEFAULT_ATTENTION_KEY).setSelected(true);
     }
   }
 

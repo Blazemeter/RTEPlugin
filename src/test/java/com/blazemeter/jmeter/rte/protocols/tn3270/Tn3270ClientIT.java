@@ -2,7 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
@@ -85,7 +85,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   private void sendUsernameWithSyncWait() throws Exception {
-    client.send(buildUsernameField(), Action.ENTER);
+    client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -101,7 +101,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
         new CoordInput(new Position(81, 1), "TEST"));
-    client.send(input, Action.ENTER);
+    client.send(input, AttentionKey.ENTER);
   }
 
   @Test(expected = RteIOException.class)
@@ -131,7 +131,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), Action.ENTER);
+    client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -141,7 +141,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
       throws Exception {
     loadLoginAndStatsFlow();
     connectToVirtualService();
-    client.send(buildUsernameField(), Action.ENTER);
+    client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1,
             1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
@@ -151,7 +151,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), Action.ENTER);
+    client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -161,7 +161,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
       throws Exception {
     loadLoginAndStatsFlow();
     connectToVirtualService();
-    client.send(buildUsernameField(), Action.ENTER);
+    client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(Collections
         .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
             new Perl5Matcher(),
@@ -191,10 +191,10 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void shouldThrowUnsupportedOperationExceptionWhenSelectActionUnsupported() throws Exception {
+  public void shouldThrowUnsupportedOperationExceptionWhenSelectAttentionKeyUnsupported() throws Exception {
     loadFlow("login-and-stats.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), Action.ROLL_UP);
+    client.send(buildUsernameField(), AttentionKey.ROLL_UP);
   }
 
 }

@@ -15,10 +15,10 @@ import com.bytezone.dm3270.plugins.PluginsStage;
 import com.bytezone.dm3270.streams.TelnetState;
 import com.bytezone.dm3270.structuredfields.SetReplyModeSF;
 import java.io.UnsupportedEncodingException;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class Screen implements DisplayScreen {
   private boolean insertMode;
   private boolean readModifiedAll = false;
 
-  private final Set<KeyboardStatusListener> keyboardChangeListeners = new HashSet<>();
+  private final Set<KeyboardStatusListener> keyboardChangeListeners = ConcurrentHashMap.newKeySet();
 
   public enum ScreenOption {
     DEFAULT, ALTERNATE
