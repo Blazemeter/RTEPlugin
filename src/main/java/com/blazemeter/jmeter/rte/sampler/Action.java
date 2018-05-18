@@ -1,11 +1,11 @@
 package com.blazemeter.jmeter.rte.sampler;
 
-public enum Mode {
+public enum Action {
   CONNECT("Connect"), SEND_INPUT("Send keys"), DISCONNECT("Disconnect");
 
   private final String label;
 
-  Mode(String label) {
+  Action(String label) {
     this.label = label;
   }
 

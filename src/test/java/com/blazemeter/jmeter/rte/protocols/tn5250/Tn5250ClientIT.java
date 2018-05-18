@@ -2,7 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
@@ -87,7 +87,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   private void sendInvalidCredsWithSyncWait() throws Exception {
-    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -105,7 +105,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
         new CoordInput(new Position(7, 1), "TEST"));
-    client.send(input, Action.ENTER);
+    client.send(input, AttentionKey.ENTER);
   }
 
   @Test(expected = RteIOException.class)
@@ -135,7 +135,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -145,7 +145,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
     client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1, 1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -154,7 +154,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -164,7 +164,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.ENTER);
+    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
     client.await(Collections
         .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
             new Perl5Matcher(),
@@ -194,11 +194,11 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void shouldThrowUnsupportedOperationExceptionWhenSelectActionUnsupported()
+  public void shouldThrowUnsupportedOperationExceptionWhenSelectAttentionKeyUnsupported()
       throws Exception {
     loadLoginInvalidCredsFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), Action.PA1);
+    client.send(buildInvalidCredsFields(), AttentionKey.PA1);
   }
 
 }

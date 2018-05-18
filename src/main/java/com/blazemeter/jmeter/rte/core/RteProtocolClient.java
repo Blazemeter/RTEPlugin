@@ -38,7 +38,7 @@ public interface RteProtocolClient {
 
   RequestListener buildRequestListener(SampleResult result);
 
-  void send(List<CoordInput> input, Action action) throws RteIOException;
+  void send(List<CoordInput> input, AttentionKey attentionKey) throws RteIOException;
 
   String getScreen();
 

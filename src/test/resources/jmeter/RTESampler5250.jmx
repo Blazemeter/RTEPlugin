@@ -87,8 +87,8 @@ println(&quot;server started...&quot;)</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
-          <stringProp name="RTESampler.action">ENTER</stringProp>
-          <stringProp name="RTESampler.mode">SEND_INPUT</stringProp>
+          <stringProp name="RTESampler.attentionKey">ENTER</stringProp>
+          <stringProp name="RTESampler.action">SEND_INPUT</stringProp>
           <boolProp name="RTESampler.waitSync">true</boolProp>
           <stringProp name="RTESampler.waitSyncTimeout">14000</stringProp>
           <boolProp name="RTESampler.waitCursor">false</boolProp>
@@ -122,8 +122,8 @@ println(&quot;server started...&quot;)</stringProp>
           <elementProp name="Inputs.inputs" elementType="com.blazemeter.jmeter.rte.sampler.Inputs">
             <collectionProp name="Inputs.inputs"/>
           </elementProp>
-          <stringProp name="RTESampler.action">ENTER</stringProp>
-          <stringProp name="RTESampler.mode">DISCONNECT</stringProp>
+          <stringProp name="RTESampler.attentionKey">ENTER</stringProp>
+          <stringProp name="RTESampler.action">DISCONNECT</stringProp>
           <boolProp name="RTESampler.waitSync">true</boolProp>
           <stringProp name="RTESampler.waitSyncTimeout">60000</stringProp>
           <boolProp name="RTESampler.waitCursor">false</boolProp>

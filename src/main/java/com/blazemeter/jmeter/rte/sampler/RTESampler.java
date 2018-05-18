@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.sampler;
 
-import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
@@ -48,8 +48,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   public static final String CONFIG_TERMINAL_TYPE = "RTEConnectionConfig.terminalType";
   public static final int DEFAULT_PORT = 23;
   public static final long DEFAULT_CONNECTION_TIMEOUT_MILLIS = 60000;
-  public static final Mode DEFAULT_MODE = Mode.SEND_INPUT;
-  public static final Action DEFAULT_ACTION = Action.ENTER;
+  public static final Action DEFAULT_ACTION = Action.SEND_INPUT;
+  public static final AttentionKey DEFAULT_ATTENTION_KEY = AttentionKey.ENTER;
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = DEFAULT_PROTOCOL.createProtocolClient()
       .getDefaultTerminalType();
@@ -72,9 +72,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   // jmeter.properties by adding a line like ths one:
   // "RTEConnectionConfig.stableTimeoutMillis=value"
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
-  private static final String MODE_PROPERTY = "RTESampler.mode";
-  private static final String REUSE_CONNECTIONS_PROPERTY = "RTESampler.reuseConnections";
   private static final String ACTION_PROPERTY = "RTESampler.action";
+  private static final String REUSE_CONNECTIONS_PROPERTY = "RTESampler.reuseConnections";
+  private static final String ATTENTION_KEY_PROPERTY = "RTESampler.attentionKey";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
   private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
   private static final String WAIT_CURSOR_PROPERTY = "RTESampler.waitCursor";
@@ -171,23 +171,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     setProperty(CONFIG_SSL_TYPE, sslType.name());
   }
 
-  public Mode getMode() {
-
-    if (getPropertyAsString(MODE_PROPERTY).isEmpty()) {
-      return DEFAULT_MODE;
-    }
-    return Mode.valueOf(getPropertyAsString(MODE_PROPERTY));
-  }
-
-  public void setMode(Mode mode) {
-    setProperty(MODE_PROPERTY, mode.name());
-  }
-
-  public void setPayload(Inputs payload) {
-    setProperty(new TestElementProperty(Inputs.INPUTS_PROPERTY, payload));
-  }
-
   public Action getAction() {
+
     if (getPropertyAsString(ACTION_PROPERTY).isEmpty()) {
       return DEFAULT_ACTION;
     }
@@ -196,6 +181,21 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   public void setAction(Action action) {
     setProperty(ACTION_PROPERTY, action.name());
+  }
+
+  public void setPayload(Inputs payload) {
+    setProperty(new TestElementProperty(Inputs.INPUTS_PROPERTY, payload));
+  }
+
+  public AttentionKey getAttentionKey() {
+    if (getPropertyAsString(ATTENTION_KEY_PROPERTY).isEmpty()) {
+      return DEFAULT_ATTENTION_KEY;
+    }
+    return AttentionKey.valueOf(getPropertyAsString(ATTENTION_KEY_PROPERTY));
+  }
+
+  public void setAttentionKey(AttentionKey attentionKey) {
+    setProperty(ATTENTION_KEY_PROPERTY, attentionKey.name());
   }
 
   public boolean getWaitSync() {
@@ -381,9 +381,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     sampleResult.sampleStart();
     sampleResult.setRequestHeaders(buildRequestHeaders());
 
+    RteProtocolClient client = null;
+
     try {
-      RteProtocolClient client = getClient();
-      if (getMode() == Mode.DISCONNECT) {
+      client = getClient();
+      if (getAction() == Action.DISCONNECT) {
         if (client != null) {
           disconnect(client);
         }
@@ -399,9 +401,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       RequestListener requestListener = client.buildRequestListener(sampleResult);
       try {
         addClientRequestHeaders(client, sampleResult);
-        if (getMode() == Mode.SEND_INPUT) {
+        if (getAction() == Action.SEND_INPUT) {
           sampleResult.setSamplerData(buildRequestBody());
-          client.send(getCoordInputs(), getAction());
+          client.send(getCoordInputs(), getAttentionKey());
         }
         List<WaitCondition> waiters = getWaitersList();
         if (!waiters.isEmpty()) {
@@ -417,7 +419,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
           LOG.debug("Input(Row,Column,Value): {},{},{} - {}", i.getPosition().getRow(),
               i.getPosition().getColumn(), i.getInput(), getThreadName());
         });
-        LOG.debug("Action sent: {} - {}", getAction().name(), getThreadName());
+        LOG.debug("AttentionKey sent: {} - {}", getAttentionKey().name(), getThreadName());
         LOG.debug("Request Headers: {} - {}", sampleResult.getRequestHeaders(), getThreadName());
         LOG.debug("Response Headers: {} - {}", sampleResult.getResponseHeaders(), getThreadName());
         LOG.debug("Response Screen: {} - {}", sampleResult.getResponseDataAsString(),
@@ -426,6 +428,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       return errorResult("The sampling has been interrupted", e, sampleResult);
+    } catch (TimeoutException e) {
+      return timeoutErrorResult("Timeout error", e, sampleResult,
+          client != null ? client.getScreen() : "");
     } catch (Exception e) {
       return errorResult("Error while sampling the remote terminal", e, sampleResult);
     }
@@ -438,7 +443,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         "Protocol: " + getProtocol().toString() + "\n" +
         "Terminal-type: " + getTerminalType() + "\n" +
         "Security: " + getSSLType() + "\n" +
-        "Mode: " + getMode() + "\n";
+        "Action: " + getAction() + "\n";
   }
 
   private RteProtocolClient getClient() {
@@ -467,8 +472,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   private String buildRequestBody() {
     StringBuilder ret = new StringBuilder();
-    ret.append("Action: ")
-        .append(getAction())
+    ret.append("AttentionKey: ")
+        .append(getAttentionKey())
         .append("\n")
         .append("Inputs (Row,Column,Value):\n");
 
@@ -554,6 +559,18 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     e.printStackTrace(new PrintWriter(sw));
     sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
     LOG.error(message, e);
+    return sampleResult;
+  }
+
+  private SampleResult timeoutErrorResult(String message, Throwable e, SampleResult sampleResult,
+      String screen) {
+    sampleResult.setSuccessful(false);
+    sampleResult.setResponseHeaders("");
+    sampleResult.setResponseCode(e.getClass().getName());
+    sampleResult.setResponseMessage(e.getMessage());
+    sampleResult.setDataType(SampleResult.TEXT);
+    sampleResult.setResponseData(screen, SampleResult.DEFAULT_HTTP_ENCODING);
+    LOG.warn(message, e);
     return sampleResult;
   }
 

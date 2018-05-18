@@ -47,8 +47,8 @@ public class RTESamplerGui extends AbstractSamplerGui {
       if (payload != null) {
         rteSamplerPanel.getPayload().configure(payload);
       }
+      rteSamplerPanel.setAttentionKey(sampler.getAttentionKey());
       rteSamplerPanel.setAction(sampler.getAction());
-      rteSamplerPanel.setMode(sampler.getMode());
       rteSamplerPanel.setWaitSync(sampler.getWaitSync());
       rteSamplerPanel.setWaitSyncTimeout(sampler.getWaitSyncTimeout());
       rteSamplerPanel.setWaitCursor(sampler.getWaitCursor());
@@ -84,8 +84,8 @@ public class RTESamplerGui extends AbstractSamplerGui {
       if (payload != null) {
         sampler.setPayload((Inputs) payload.createTestElement());
       }
+      sampler.setAttentionKey(rteSamplerPanel.getAttentionKey());
       sampler.setAction(rteSamplerPanel.getAction());
-      sampler.setMode(rteSamplerPanel.getMode());
       sampler.setWaitSync(rteSamplerPanel.getWaitSync());
       sampler.setWaitSyncTimeout(rteSamplerPanel.getWaitSyncTimeout());
       sampler.setWaitCursor(rteSamplerPanel.getWaitCursor());

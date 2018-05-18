@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
-public enum Action {
+public enum AttentionKey {
   F1,
   F2,
   F3,

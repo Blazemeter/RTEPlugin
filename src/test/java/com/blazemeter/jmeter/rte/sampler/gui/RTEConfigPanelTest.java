@@ -1,6 +1,5 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 
@@ -42,7 +41,8 @@ public class RTEConfigPanelTest {
     pause(new Condition("TN3270 terminal type listed in terminal combo") {
       @Override
       public boolean test() {
-        return Protocol.TN3270.createProtocolClient().getSupportedTerminalTypes().containsAll(getComboValues(terminalCombo));
+        return Protocol.TN3270.createProtocolClient().getSupportedTerminalTypes()
+            .containsAll(getComboValues(terminalCombo));
       }
     });
   }

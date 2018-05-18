@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
-import com.blazemeter.jmeter.rte.core.Action;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
@@ -48,42 +48,43 @@ public class Tn5250Client extends BaseProtocolClient {
       new TerminalType("IBM-3477-FC", new Dimension(132, 27))
   );
 
-  private static final Map<Action, KeyEventMap> KEY_EVENTS = new EnumMap<Action, KeyEventMap>(
-      Action.class) {
-    {
-      put(Action.F1, new KeyEventMap(0, KeyEvent.VK_F1));
-      put(Action.F2, new KeyEventMap(0, KeyEvent.VK_F2));
-      put(Action.F3, new KeyEventMap(0, KeyEvent.VK_F3));
-      put(Action.F4, new KeyEventMap(0, KeyEvent.VK_F4));
-      put(Action.F5, new KeyEventMap(0, KeyEvent.VK_F5));
-      put(Action.F6, new KeyEventMap(0, KeyEvent.VK_F6));
-      put(Action.F7, new KeyEventMap(0, KeyEvent.VK_F7));
-      put(Action.F8, new KeyEventMap(0, KeyEvent.VK_F8));
-      put(Action.F9, new KeyEventMap(0, KeyEvent.VK_F9));
-      put(Action.F10, new KeyEventMap(0, KeyEvent.VK_F10));
-      put(Action.F11, new KeyEventMap(0, KeyEvent.VK_F11));
-      put(Action.F12, new KeyEventMap(0, KeyEvent.VK_F12));
-      put(Action.F13, new KeyEventMap(0, KeyEvent.VK_F13));
-      put(Action.F14, new KeyEventMap(0, KeyEvent.VK_F14));
-      put(Action.F15, new KeyEventMap(0, KeyEvent.VK_F15));
-      put(Action.F16, new KeyEventMap(0, KeyEvent.VK_F16));
-      put(Action.F17, new KeyEventMap(0, KeyEvent.VK_F17));
-      put(Action.F18, new KeyEventMap(0, KeyEvent.VK_F18));
-      put(Action.F19, new KeyEventMap(0, KeyEvent.VK_F19));
-      put(Action.F20, new KeyEventMap(0, KeyEvent.VK_F20));
-      put(Action.F21, new KeyEventMap(0, KeyEvent.VK_F21));
-      put(Action.F22, new KeyEventMap(0, KeyEvent.VK_F22));
-      put(Action.F23, new KeyEventMap(0, KeyEvent.VK_F23));
-      put(Action.F24, new KeyEventMap(0, KeyEvent.VK_F24));
-      put(Action.ENTER, new KeyEventMap(0, KeyEvent.VK_ENTER));
-      put(Action.ATTN, new KeyEventMap(0, KeyEvent.VK_ESCAPE));
-      put(Action.CLEAR, new KeyEventMap(0, KeyEvent.VK_PAUSE));
-      put(Action.SYSRQ, new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_ESCAPE));
-      put(Action.RESET, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_CONTROL));
-      put(Action.ROLL_UP, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_UP));
-      put(Action.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
-    }
-  };
+  private static final Map<AttentionKey, KeyEventMap> KEY_EVENTS =
+      new EnumMap<AttentionKey, KeyEventMap>(
+          AttentionKey.class) {
+        {
+          put(AttentionKey.F1, new KeyEventMap(0, KeyEvent.VK_F1));
+          put(AttentionKey.F2, new KeyEventMap(0, KeyEvent.VK_F2));
+          put(AttentionKey.F3, new KeyEventMap(0, KeyEvent.VK_F3));
+          put(AttentionKey.F4, new KeyEventMap(0, KeyEvent.VK_F4));
+          put(AttentionKey.F5, new KeyEventMap(0, KeyEvent.VK_F5));
+          put(AttentionKey.F6, new KeyEventMap(0, KeyEvent.VK_F6));
+          put(AttentionKey.F7, new KeyEventMap(0, KeyEvent.VK_F7));
+          put(AttentionKey.F8, new KeyEventMap(0, KeyEvent.VK_F8));
+          put(AttentionKey.F9, new KeyEventMap(0, KeyEvent.VK_F9));
+          put(AttentionKey.F10, new KeyEventMap(0, KeyEvent.VK_F10));
+          put(AttentionKey.F11, new KeyEventMap(0, KeyEvent.VK_F11));
+          put(AttentionKey.F12, new KeyEventMap(0, KeyEvent.VK_F12));
+          put(AttentionKey.F13, new KeyEventMap(0, KeyEvent.VK_F13));
+          put(AttentionKey.F14, new KeyEventMap(0, KeyEvent.VK_F14));
+          put(AttentionKey.F15, new KeyEventMap(0, KeyEvent.VK_F15));
+          put(AttentionKey.F16, new KeyEventMap(0, KeyEvent.VK_F16));
+          put(AttentionKey.F17, new KeyEventMap(0, KeyEvent.VK_F17));
+          put(AttentionKey.F18, new KeyEventMap(0, KeyEvent.VK_F18));
+          put(AttentionKey.F19, new KeyEventMap(0, KeyEvent.VK_F19));
+          put(AttentionKey.F20, new KeyEventMap(0, KeyEvent.VK_F20));
+          put(AttentionKey.F21, new KeyEventMap(0, KeyEvent.VK_F21));
+          put(AttentionKey.F22, new KeyEventMap(0, KeyEvent.VK_F22));
+          put(AttentionKey.F23, new KeyEventMap(0, KeyEvent.VK_F23));
+          put(AttentionKey.F24, new KeyEventMap(0, KeyEvent.VK_F24));
+          put(AttentionKey.ENTER, new KeyEventMap(0, KeyEvent.VK_ENTER));
+          put(AttentionKey.ATTN, new KeyEventMap(0, KeyEvent.VK_ESCAPE));
+          put(AttentionKey.CLEAR, new KeyEventMap(0, KeyEvent.VK_PAUSE));
+          put(AttentionKey.SYSRQ, new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_ESCAPE));
+          put(AttentionKey.RESET, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_CONTROL));
+          put(AttentionKey.ROLL_UP, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_UP));
+          put(AttentionKey.ROLL_DN, new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_PAGE_DOWN));
+        }
+      };
 
   private ExtendedEmulator em;
   private ScheduledExecutorService stableTimeoutExecutor;
@@ -123,9 +124,9 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public void send(List<CoordInput> input, Action action) throws RteIOException {
+  public void send(List<CoordInput> input, AttentionKey attentionKey) throws RteIOException {
     input.forEach(this::setField);
-    sendActionKey(action);
+    sendAttentionKey(attentionKey);
     exceptionHandler.throwAnyPendingError();
   }
 
@@ -173,9 +174,9 @@ public class Tn5250Client extends BaseProtocolClient {
     field.setString(s.getInput());
   }
 
-  private void sendActionKey(Action action) {
+  private void sendAttentionKey(AttentionKey attentionKey) {
     KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
-        getKeyEvent(action).modifier, getKeyEvent(action).specialKey,
+        getKeyEvent(attentionKey).modifier, getKeyEvent(attentionKey).specialKey,
         KeyEvent.CHAR_UNDEFINED);
     em.processRawKeyEvent(keyEvent);
   }
@@ -245,11 +246,12 @@ public class Tn5250Client extends BaseProtocolClient {
     em.setActive(false);
   }
 
-  private KeyEventMap getKeyEvent(Action action) {
-    KeyEventMap actionCommand = KEY_EVENTS.get(action);
+  private KeyEventMap getKeyEvent(AttentionKey attentionKey) {
+    KeyEventMap actionCommand = KEY_EVENTS.get(attentionKey);
     if (actionCommand == null) {
-      throw new UnsupportedOperationException(action.name() + " action is unsupported " +
-          "for protocol TN5250.");
+      throw new UnsupportedOperationException(
+          attentionKey.name() + " attentionKey is unsupported " +
+              "for protocol TN5250.");
     } else {
       return actionCommand;
     }
