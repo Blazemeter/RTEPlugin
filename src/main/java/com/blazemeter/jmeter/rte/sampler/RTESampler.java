@@ -429,7 +429,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       Thread.currentThread().interrupt();
       return errorResult("The sampling has been interrupted", e, sampleResult);
     } catch (TimeoutException e) {
-      return timeoutErrorResult("The sampling has been interrupted", e, sampleResult,
+      return timeoutErrorResult("Timeout error", e, sampleResult,
           client != null ? client.getScreen() : "");
     } catch (Exception e) {
       return errorResult("Error while sampling the remote terminal", e, sampleResult);
