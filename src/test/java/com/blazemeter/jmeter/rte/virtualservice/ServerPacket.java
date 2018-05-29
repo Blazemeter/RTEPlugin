@@ -15,8 +15,9 @@ public class ServerPacket extends PacketStep {
 
   public ServerPacket() {}
 
-  public ServerPacket(String hexDump) {
+  public ServerPacket(String hexDump, long delayMillis) {
     super(hexDump);
+    this.delayMillis = delayMillis;
   }
 
   public long getDelayMillis() {

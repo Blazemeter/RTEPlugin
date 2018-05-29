@@ -124,10 +124,39 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public void send(List<CoordInput> input, AttentionKey attentionKey) throws RteIOException {
-    input.forEach(this::setField);
-    sendAttentionKey(attentionKey);
-    exceptionHandler.throwAnyPendingError();
+  protected void setField(CoordInput s) {
+    /*
+    The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
+    core input values which are one-indexed.
+   */
+    int column = s.getPosition().getColumn() - 1;
+    int row = s.getPosition().getRow() - 1;
+    XI5250Field field = em.getFieldFromPos(column, row);
+    if (field == null) {
+      throw new InvalidFieldPositionException(s.getPosition());
+    }
+    field.setString(s.getInput());
+    em.setCursorPos((column + s.getInput().length()) % getScreenSize().width,
+        row + (column + s.getInput().length()) / getScreenSize().width);
+  }
+
+  @Override
+  protected void sendAttentionKey(AttentionKey attentionKey) {
+    KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
+        getKeyEvent(attentionKey).modifier, getKeyEvent(attentionKey).specialKey,
+        KeyEvent.CHAR_UNDEFINED);
+    em.processRawKeyEvent(keyEvent);
+  }
+
+  private KeyEventMap getKeyEvent(AttentionKey attentionKey) {
+    KeyEventMap actionCommand = KEY_EVENTS.get(attentionKey);
+    if (actionCommand == null) {
+      throw new UnsupportedOperationException(
+          attentionKey.name() + " attentionKey is unsupported " +
+              "for protocol TN5250.");
+    } else {
+      return actionCommand;
+    }
   }
 
   @Override
@@ -159,26 +188,6 @@ public class Tn5250Client extends BaseProtocolClient {
     Tn5250RequestListener listener = new Tn5250RequestListener(result, this);
     em.addEmulatorListener(listener);
     return listener;
-  }
-
-  private void setField(CoordInput s) {
-    /*
-    The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
-    core input values which are one-indexed.
-   */
-    XI5250Field field = em.getFieldFromPos(s.getPosition().getColumn() - 1,
-        s.getPosition().getRow() - 1);
-    if (field == null) {
-      throw new InvalidFieldPositionException(s.getPosition());
-    }
-    field.setString(s.getInput());
-  }
-
-  private void sendAttentionKey(AttentionKey attentionKey) {
-    KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
-        getKeyEvent(attentionKey).modifier, getKeyEvent(attentionKey).specialKey,
-        KeyEvent.CHAR_UNDEFINED);
-    em.processRawKeyEvent(keyEvent);
   }
 
   @Override
@@ -246,17 +255,6 @@ public class Tn5250Client extends BaseProtocolClient {
     em.setActive(false);
   }
 
-  private KeyEventMap getKeyEvent(AttentionKey attentionKey) {
-    KeyEventMap actionCommand = KEY_EVENTS.get(attentionKey);
-    if (actionCommand == null) {
-      throw new UnsupportedOperationException(
-          attentionKey.name() + " attentionKey is unsupported " +
-              "for protocol TN5250.");
-    } else {
-      return actionCommand;
-    }
-  }
-
   public void removeListener(XI5250EmulatorListener listener) {
     em.removeEmulatorListener(listener);
   }
@@ -270,6 +268,7 @@ public class Tn5250Client extends BaseProtocolClient {
       this.modifier = modifier;
       this.specialKey = specialKey;
     }
+
   }
 
 }

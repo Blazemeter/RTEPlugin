@@ -42,7 +42,7 @@ def findResource(String file) {
 def server = new VirtualTcpService(2324)
 props.put(&quot;SERVER&quot;,server)
 server.start()
-server.setFlow(Flow.fromYmlStream(findResource(&quot;login-invalid-creds.yml&quot;).openStream()))
+server.setFlow(Flow.fromYmlStream(findResource(&quot;login.yml&quot;).openStream()))
 println(&quot;server started...&quot;)</stringProp>
           <stringProp name="scriptLanguage">groovy</stringProp>
         </JSR223Sampler>
@@ -76,14 +76,14 @@ println(&quot;server started...&quot;)</stringProp>
           <elementProp name="Inputs.inputs" elementType="com.blazemeter.jmeter.rte.sampler.Inputs">
             <collectionProp name="Inputs.inputs">
               <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI">
-                <intProp name="CoordInputRowGUI.row">7</intProp>
+                <intProp name="CoordInputRowGUI.row">6</intProp>
                 <intProp name="CoordInputRowGUI.column">53</intProp>
-                <stringProp name="CoordInputRowGUI.input">TEST</stringProp>
+                <stringProp name="CoordInputRowGUI.input">TESTUSR</stringProp>
               </elementProp>
               <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI">
-                <intProp name="CoordInputRowGUI.row">9</intProp>
+                <intProp name="CoordInputRowGUI.row">7</intProp>
                 <intProp name="CoordInputRowGUI.column">53</intProp>
-                <stringProp name="CoordInputRowGUI.input">PASS</stringProp>
+                <stringProp name="CoordInputRowGUI.input">TESTPSW</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -109,7 +109,7 @@ println(&quot;server started...&quot;)</stringProp>
         <hashTree>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
             <collectionProp name="Asserion.test_strings">
-              <stringProp name="-1918681433">User profile TEST cannot sign on</stringProp>
+              <stringProp name="-1918681433">IBM i Main Menu</stringProp>
             </collectionProp>
             <stringProp name="Assertion.custom_message"></stringProp>
             <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>

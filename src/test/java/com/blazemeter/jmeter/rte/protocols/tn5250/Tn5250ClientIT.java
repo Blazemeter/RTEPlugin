@@ -41,14 +41,14 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   @Test
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     assertThat(client.getScreen())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
-  private void loadLoginInvalidCredsFlow() throws FileNotFoundException {
-    loadFlow("login-invalid-creds.yml");
+  private void loadLoginFlow() throws FileNotFoundException {
+    loadFlow("login.yml");
   }
 
   @Test
@@ -58,7 +58,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     SSLSocketFactory.setKeyStorePassword("changeit");
     server = new VirtualTcpService(SSLType.TLS);
     server.start();
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
     assertThat(client.getScreen())
@@ -78,48 +78,48 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   @Test
-  public void shouldGetInvalidCredentialsScreenWhenSendInvalidCreds() throws Exception {
-    loadLoginInvalidCredsFlow();
+  public void shouldGetUserMenuScreenWhenSendCreds() throws Exception {
+    loadLoginFlow();
     connectToVirtualService();
-    sendInvalidCredsWithSyncWait();
+    sendCredsWithSyncWait();
     assertThat(client.getScreen())
-        .isEqualTo(getFileContent("login-invalid-creds.txt"));
+        .isEqualTo(getFileContent("user-menu-screen.txt"));
   }
 
-  private void sendInvalidCredsWithSyncWait() throws Exception {
-    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
+  private void sendCredsWithSyncWait() throws Exception {
+    client.send(buildCredsFields(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
-  private List<CoordInput> buildInvalidCredsFields() {
+  private List<CoordInput> buildCredsFields() {
     return Arrays.asList(
-        new CoordInput(new Position(7, 53), "TEST"),
-        new CoordInput(new Position(9, 53), "PASS"));
+        new CoordInput(new Position(6, 53), "TESTUSR"),
+        new CoordInput(new Position(7, 53), "TESTPSW"));
   }
 
   @Test(expected = InvalidFieldPositionException.class)
   public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPosition()
       throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
-        new CoordInput(new Position(7, 1), "TEST"));
+        new CoordInput(new Position(7, 1), "TESTUSR"));
     client.send(input, AttentionKey.ENTER);
   }
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenSendAndServerDown() throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
-    sendInvalidCredsWithSyncWait();
+    sendCredsWithSyncWait();
   }
 
   @Test(expected = UnsupportedOperationException.class)
   public void shouldThrowUnsupportedOperationExceptionWhenAwaitWithUndefinedCondition()
       throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     List<WaitCondition> conditions = Collections
         .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
@@ -135,7 +135,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFields(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -143,9 +143,9 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenCursorWaitAndNotExpectedCursorPosition()
       throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFields(), AttentionKey.ENTER);
     client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1, 1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -154,7 +154,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFields(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -162,9 +162,9 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenTextWaitWithNoMatchingRegex()
       throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFields(), AttentionKey.ENTER);
     client.await(Collections
         .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
             new Perl5Matcher(),
@@ -175,10 +175,10 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   @Test
-  public void shouldGetWelcomeScreenWhenConnectAfterDisconnectInvalidCreds() throws Exception {
-    loadLoginInvalidCredsFlow();
+  public void shouldGetWelcomeScreenWhenConnectAfterDisconnect() throws Exception {
+    loadLoginFlow();
     connectToVirtualService();
-    sendInvalidCredsWithSyncWait();
+    sendCredsWithSyncWait();
     client.disconnect();
     connectToVirtualService();
     assertThat(client.getScreen())
@@ -187,7 +187,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   @Test
   public void shouldNotThrowExceptionWhenDisconnectAndServerDown() throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
     client.disconnect();
@@ -196,9 +196,9 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   @Test(expected = UnsupportedOperationException.class)
   public void shouldThrowUnsupportedOperationExceptionWhenSelectAttentionKeyUnsupported()
       throws Exception {
-    loadLoginInvalidCredsFlow();
+    loadLoginFlow();
     connectToVirtualService();
-    client.send(buildInvalidCredsFields(), AttentionKey.PA1);
+    client.send(buildCredsFields(), AttentionKey.PA1);
   }
 
 }

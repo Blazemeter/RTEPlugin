@@ -41,7 +41,7 @@ def findResource(String file) {
 def server = new VirtualTcpService(2323)
 props.put(&quot;SERVER&quot;,server)
 server.start()
-server.setFlow(Flow.fromYmlStream(findResource(&quot;login-and-stats.yml&quot;).openStream()))
+server.setFlow(Flow.fromYmlStream(findResource(&quot;login.yml&quot;).openStream()))
 println(&quot;server started...&quot;)
 </stringProp>
         </JSR223Sampler>

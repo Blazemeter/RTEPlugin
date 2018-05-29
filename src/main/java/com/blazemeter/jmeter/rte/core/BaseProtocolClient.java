@@ -11,6 +11,17 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   protected ExceptionHandler exceptionHandler;
 
   @Override
+  public void send(List<CoordInput> input, AttentionKey attentionKey) throws RteIOException {
+    input.forEach(this::setField);
+    sendAttentionKey(attentionKey);
+    exceptionHandler.throwAnyPendingError();
+  }
+
+  protected abstract void setField(CoordInput coordInput);
+
+  protected abstract void sendAttentionKey(AttentionKey attentionKey);
+
+  @Override
   public void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException {
     List<ConditionWaiter> listeners = waitConditions.stream()
@@ -21,9 +32,7 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
         listener.await();
       }
     } finally {
-      listeners.forEach(l -> {
-        l.stop();
-      });
+      listeners.forEach(ConditionWaiter::stop);
     }
   }
 
