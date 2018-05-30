@@ -36,6 +36,8 @@ public class Flow {
   private static final JsonPointer WIRESHARK_TCP_PAYLOAD_PATH = JsonPointer
       .valueOf("/tcp/tcp.payload");
   private static final JsonPointer WIRESHARK_IP_PATH = JsonPointer.valueOf("/ip/ip.src");
+  private static final JsonPointer WIRESHARK_TIME_DELTA_PATH = JsonPointer
+      .valueOf("/frame/frame.time_delta_displayed");
 
   private final List<PacketStep> steps;
 
@@ -57,12 +59,17 @@ public class Flow {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode json = mapper.readTree(wiresharkJsonDumpFile);
     return new Flow(StreamSupport.stream(json.spliterator(), false)
+        .filter(packet -> !packet.at(WIRESHARK_LAYERS_PATH).at(WIRESHARK_TCP_PAYLOAD_PATH).asText()
+            .isEmpty())
         .map(packet -> {
           JsonNode layers = packet.at(WIRESHARK_LAYERS_PATH);
           String ipSource = layers.at(WIRESHARK_IP_PATH).asText();
           String hexDump = layers.at(WIRESHARK_TCP_PAYLOAD_PATH).asText()
               .replace(":", "");
-          return serverAddress.equals(ipSource) ? new ServerPacket(hexDump)
+          long timeDeltaMillis =
+              Long.valueOf(layers.at(WIRESHARK_TIME_DELTA_PATH).asText().replace(".", ""))
+                  / 1000000;
+          return serverAddress.equals(ipSource) ? new ServerPacket(hexDump, timeDeltaMillis)
               : new ClientPacket(hexDump);
         })
         .collect(Collectors.toList()));
@@ -99,7 +106,8 @@ public class Flow {
   private static Representer buildYamlRepresenter() {
     Representer representer = new Representer() {
       @Override
-      protected NodeTuple representJavaBeanProperty(Object javaBean, Property property, Object propertyValue, Tag customTag) {
+      protected NodeTuple representJavaBeanProperty(Object javaBean, Property property,
+          Object propertyValue, Tag customTag) {
         if (property.getType() == long.class && (long) propertyValue == 0) {
           return null;
         } else {

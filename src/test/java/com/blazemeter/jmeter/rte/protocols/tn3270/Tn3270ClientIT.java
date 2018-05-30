@@ -38,7 +38,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     assertThat(client.getScreen())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
@@ -46,7 +46,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test
   public void shouldGetTrueSoundAlarmWhenServerSendTheSignal() throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     sendUsernameWithSyncWait();
     assertThat(client.getSoundAlarm()).isEqualTo(true);
@@ -54,13 +54,13 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test
   public void shouldGetFalseSoundAlarmWhenServerDoNotSendTheSignal() throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     assertThat(client.getSoundAlarm()).isEqualTo(false);
   }
 
-  private void loadLoginAndStatsFlow() throws FileNotFoundException {
-    loadFlow("login-and-stats.yml");
+  private void loadLoginFlow() throws FileNotFoundException {
+    loadFlow("login.yml");
   }
 
   @Test(expected = RteIOException.class)
@@ -77,7 +77,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test
   public void shouldGetUserMenuScreenWhenSendUsername() throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     sendUsernameWithSyncWait();
     assertThat(client.getScreen())
@@ -97,7 +97,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Test(expected = InvalidFieldPositionException.class)
   public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPosition()
       throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     List<CoordInput> input = Collections.singletonList(
         new CoordInput(new Position(81, 1), "TEST"));
@@ -106,7 +106,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenSendAndServerDown() throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
     sendUsernameWithSyncWait();
@@ -115,7 +115,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Test(expected = UnsupportedOperationException.class)
   public void shouldThrowUnsupportedOperationExceptionWhenAwaitWithUndefinedCondition()
       throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     List<WaitCondition> conditions = Collections
         .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
@@ -139,7 +139,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenCursorWaitAndNotExpectedCursorPosition()
       throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(Collections.singletonList(
@@ -159,7 +159,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenTextWaitWithNoMatchingRegex()
       throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(Collections
@@ -173,7 +173,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test
   public void shouldGetWelcomeScreenWhenConnectAfterDisconnectInvalidCreds() throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     sendUsernameWithSyncWait();
     client.disconnect();
@@ -184,7 +184,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test
   public void shouldNotThrowExceptionWhenDisconnectAndServerDown() throws Exception {
-    loadLoginAndStatsFlow();
+    loadLoginFlow();
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
     client.disconnect();
@@ -192,7 +192,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test(expected = UnsupportedOperationException.class)
   public void shouldThrowUnsupportedOperationExceptionWhenSelectAttentionKeyUnsupported() throws Exception {
-    loadFlow("login-and-stats.yml");
+    loadFlow("login.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ROLL_UP);
   }

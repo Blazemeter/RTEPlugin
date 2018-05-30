@@ -187,6 +187,9 @@
                     <exlude>com/bytezone/dm3270/commands/ReadStructuredFieldCommand.class</exlude>
                     <exlude>com/bytezone/dm3270/commands/SystemMessage.class</exlude>
                     <exlude>com/bytezone/dm3270/display/ContextManager.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/Cursor.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/Cursor$Direction.class</exlude>
+                    <exlude>com/bytezone/dm3270/display/FieldManager.class</exlude>
                     <exlude>com/bytezone/dm3270/display/Pen.class</exlude>
                     <exlude>com/bytezone/dm3270/display/PenType1.class</exlude>
                     <exlude>com/bytezone/dm3270/display/PenType1$1.class</exlude>

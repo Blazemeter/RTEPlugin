@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.GridLayout;
+import java.awt.event.ItemEvent;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
@@ -60,6 +61,9 @@ public class RTEConfigPanel extends JPanel {
     connectionPanel.setBorder(BorderFactory.createTitledBorder("Connection"));
 
     protocolComboBox.addItemListener(e -> {
+      if (e.getStateChange() != ItemEvent.SELECTED) {
+        return;
+      }
       Protocol protocolEnum = (Protocol) e.getItem();
       if (protocolEnum.equals(Protocol.TN5250)) {
         terminalTypeComboBox.setModel(modelTN5250);

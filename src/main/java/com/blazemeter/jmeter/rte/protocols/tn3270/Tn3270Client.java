@@ -145,27 +145,27 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public void send(List<CoordInput> input, AttentionKey attentionKey) throws RteIOException {
-    input.forEach(i -> {
-      int linearPosition = buildLinealPosition(i);
-      Field field = screen.getFieldManager()
-          .getFieldAt(linearPosition)
-          .orElseThrow(() -> new InvalidFieldPositionException(i.getPosition()));
-      screen.setFieldText(field, i.getInput());
-      screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
-    });
-    Byte actionCommand = AID_COMMANDS.get(attentionKey);
-    if (actionCommand == null) {
-      throw new UnsupportedOperationException(
-          attentionKey.name() + " attentionKey is unsupported " +
-              "for protocol TN3270.");
-    }
-    consolePane.sendAID(actionCommand, attentionKey.name());
-    exceptionHandler.throwAnyPendingError();
+  protected void setField(CoordInput i) {
+    int linearPosition = buildLinealPosition(i);
+    Field field = screen.getFieldManager()
+        .getFieldAt(linearPosition)
+        .orElseThrow(() -> new InvalidFieldPositionException(i.getPosition()));
+    screen.setFieldText(field, i.getInput());
+    screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
   }
 
   private int buildLinealPosition(CoordInput i) {
     return (i.getPosition().getRow() - 1) * getScreenSize().width + i.getPosition().getColumn() - 1;
+  }
+
+  @Override
+  protected void sendAttentionKey(AttentionKey attentionKey) {
+    Byte actionCommand = AID_COMMANDS.get(attentionKey);
+    if (actionCommand == null) {
+      throw new UnsupportedOperationException(
+          attentionKey.name() + " attentionKey is unsupported for protocol TN3270.");
+    }
+    consolePane.sendAID(actionCommand, attentionKey.name());
   }
 
   @Override

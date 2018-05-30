@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,6 +39,7 @@ public class ExtendedTelnet extends XITelnet {
   private final int connectTimeoutMillis;
   private final SSLType sslType;
   private RxThread readThread;
+  private BufferedOutputStream ivOut;
 
   public ExtendedTelnet(String aHost, int aPort, int connectTimeoutMillis, SSLType sslType) {
     super(aHost, aPort);
@@ -57,7 +59,11 @@ public class ExtendedTelnet extends XITelnet {
         setIvSocket(ivSocket);
         InputStream ivIn = getIvSocket().getInputStream();
         setIvIn(ivIn);
-        OutputStream ivOut = getIvSocket().getOutputStream();
+        /*
+         we use a BufferedOutputStream to avoid sending many small packets and ease tracing with
+         Wireshark by keeping packets unaltered
+          */
+        ivOut = new BufferedOutputStream(getIvSocket().getOutputStream());
         setIvOut(ivOut);
         readThread = new ExtendedTelnet.RxThread();
         readThread.start();
@@ -137,9 +143,23 @@ public class ExtendedTelnet extends XITelnet {
   }
 
   @Override
-  protected synchronized int processIAC(byte bb) throws IOException {
-    checkIfAlreadyClosed();
-    return super.processIAC(bb);
+  public synchronized void sendIACCmd(byte aCmd, byte aOpt) {
+    try {
+      checkIfAlreadyClosed();
+      super.sendIACCmd(aCmd, aOpt);
+    } catch (IOException e) {
+      catchedIOException(e);
+    }
+  }
+
+  @Override
+  public synchronized void sendIACStr(byte aCmd, byte aOpt, boolean sendIS, String aString) {
+    try {
+      checkIfAlreadyClosed();
+      super.sendIACStr(aCmd, aOpt, sendIS, aString);
+    } catch (IOException e) {
+      catchedIOException(e);
+    }
   }
 
   @Override
@@ -147,6 +167,21 @@ public class ExtendedTelnet extends XITelnet {
     try {
       checkIfAlreadyClosed();
       super.send(aBuf, aLen);
+      /*
+       this is the only method from XITelnet that does not invoke flush, and since we are now using
+       a BufferedOutputStream we need all methods to flush.
+        */
+      ivOut.flush();
+    } catch (IOException e) {
+      catchedIOException(e);
+    }
+  }
+
+  @Override
+  public synchronized void flush() {
+    try {
+      checkIfAlreadyClosed();
+      super.flush();
     } catch (IOException e) {
       catchedIOException(e);
     }
