@@ -1,8 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
+import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
-import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
-import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.bytezone.dm3270.streams.BufferListener;
 import com.bytezone.dm3270.streams.TelnetSocket.Source;
 import com.bytezone.dm3270.streams.TerminalServer;
@@ -11,9 +10,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketException;
-import java.security.GeneralSecurityException;
 import java.time.LocalDateTime;
+import javax.net.SocketFactory;
 
 /*
  * Performs the same as {@link TerminalServer}, but in this case uses a socket that supports SSL and
@@ -24,7 +22,7 @@ public class ExtendedTerminalServer extends TerminalServer {
 
   private ExceptionHandler exceptionHandler;
   private int connectionTimeoutMillis;
-  private SSLType sslType;
+  private SocketFactory socketFactory;
 
   private final int serverPort;
   private final String serverURL;
@@ -37,10 +35,10 @@ public class ExtendedTerminalServer extends TerminalServer {
   private final BufferListener telnetListener;
 
   public ExtendedTerminalServer(String serverURL, int serverPort, BufferListener listener,
-      SSLType sslType, int connectionTimeoutMillis, ExceptionHandler exceptionHandler) {
+      SocketFactory socketFactory, int connectionTimeoutMillis, ExceptionHandler exceptionHandler) {
     super(serverURL, serverPort, listener);
     this.serverPort = serverPort;
-    this.sslType = sslType;
+    this.socketFactory = socketFactory;
     this.serverURL = serverURL;
     this.connectionTimeoutMillis = connectionTimeoutMillis;
     this.telnetListener = listener;
@@ -50,8 +48,9 @@ public class ExtendedTerminalServer extends TerminalServer {
   @Override
   public void run() {
     try {
-      socket = createSocket();
-    } catch (GeneralSecurityException | IOException ex) {
+      socket = socketFactory.createSocket();
+      socket.connect(new InetSocketAddress(serverURL, serverPort), connectionTimeoutMillis);
+    } catch (IOException ex) {
       exceptionHandler.setPendingError(ex);
       return;
     }
@@ -63,6 +62,7 @@ public class ExtendedTerminalServer extends TerminalServer {
         int bytesRead = serverIn.read(buffer);
         if (bytesRead < 0) {
           close();
+          exceptionHandler.setPendingError(new ConnectionClosedException());
           break;
         }
 
@@ -78,23 +78,11 @@ public class ExtendedTerminalServer extends TerminalServer {
     }
   }
 
-  private Socket createSocket() throws IOException, GeneralSecurityException {
-    if (sslType != null && sslType != SSLType.NONE) {
-      SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslType);
-      sslSocketFactory.init();
-      return sslSocketFactory.createSocket(serverURL, serverPort, connectionTimeoutMillis);
-    } else {
-      Socket socket = new Socket();
-      socket.connect(new InetSocketAddress(serverURL, serverPort), connectionTimeoutMillis);
-      return socket;
-    }
-  }
-
   public synchronized void write(byte[] buffer) {
     if (!running) {
       // the no-op may come here if socket is closed from remote end and client has not been closed
       if (buffer != ExtendedTelnetState.NO_OP) {
-        exceptionHandler.setPendingError(new SocketException("socketClosed "));
+        exceptionHandler.setPendingError(new ConnectionClosedException());
       }
       return;
     }

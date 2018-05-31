@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.virtualservice;
 
-import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
+import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -47,9 +47,8 @@ public class VirtualTcpService implements Runnable {
       throws IOException, GeneralSecurityException {
     clientExecutorService = Executors.newFixedThreadPool(maxConnections);
     if (sslType != null && sslType != SSLType.NONE) {
-      SSLSocketFactory socketFactory = new SSLSocketFactory(sslType);
-      socketFactory.init();
-      server = socketFactory.createServerSocket(port);
+      server = SSLContextFactory.buildSSLContext(sslType).getServerSocketFactory()
+          .createServerSocket(port);
     } else {
       server = new ServerSocket(port);
     }

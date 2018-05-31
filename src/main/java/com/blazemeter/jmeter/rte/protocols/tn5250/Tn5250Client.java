@@ -30,7 +30,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250Emulator;
@@ -87,7 +86,6 @@ public class Tn5250Client extends BaseProtocolClient {
       };
 
   private ExtendedEmulator em;
-  private ScheduledExecutorService stableTimeoutExecutor;
 
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
@@ -110,7 +108,7 @@ public class Tn5250Client extends BaseProtocolClient {
     em.setPort(port);
     em.setConnectionTimeoutMillis((int) timeoutMillis);
     em.setTerminalType(terminalType.getId());
-    em.setSslType(sslType);
+    em.setSocketFactory(getSocketFactory(sslType));
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeoutMillis));
     try {
       em.setActive(true);
@@ -179,7 +177,6 @@ public class Tn5250Client extends BaseProtocolClient {
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
     }
     em.addEmulatorListener(condition);
-    exceptionHandler.addListener(condition);
     return condition;
   }
 
@@ -241,15 +238,7 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public void disconnect() throws RteIOException {
-    if (stableTimeoutExecutor == null) {
-      return;
-    }
-    doDisconnect();
-    exceptionHandler.throwAnyPendingError();
-  }
-
-  private void doDisconnect() {
+  protected void doDisconnect() {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
     em.setActive(false);

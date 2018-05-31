@@ -1,10 +1,10 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
-import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import javax.net.SocketFactory;
 import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tnprot.XITelnet;
 import net.infordata.em.tnprot.XITelnetEmulator;
@@ -21,7 +21,7 @@ public class ExtendedEmulator extends XI5250Emulator {
 
   private int port;
   private int connectionTimeoutMillis;
-  private SSLType sslType;
+  private SocketFactory socketFactory;
   private ExceptionHandler exceptionHandler;
 
   public ExtendedEmulator(ExceptionHandler exceptionHandler) {
@@ -41,8 +41,8 @@ public class ExtendedEmulator extends XI5250Emulator {
     this.connectionTimeoutMillis = connectionTimeoutMillis;
   }
 
-  public void setSslType(SSLType sslType) {
-    this.sslType = sslType;
+  public void setSocketFactory(SocketFactory socketFactory) {
+    this.socketFactory = socketFactory;
   }
 
   @Override
@@ -57,7 +57,8 @@ public class ExtendedEmulator extends XI5250Emulator {
         return;
       }
       if (activate) {
-        XITelnet ivTelnet = new ExtendedTelnet(getHost(), port, connectionTimeoutMillis, sslType);
+        XITelnet ivTelnet = new ExtendedTelnet(getHost(), port, connectionTimeoutMillis,
+            socketFactory);
         setIvTelnet(ivTelnet);
         ivTelnet.setEmulator(new TelnetEmulator());
         ivTelnet.connect();

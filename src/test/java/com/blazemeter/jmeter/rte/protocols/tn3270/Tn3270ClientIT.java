@@ -60,12 +60,12 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   private void loadLoginFlow() throws FileNotFoundException {
-    loadFlow("login.yml");
+    loadFlow("login-immediate-responses.yml");
   }
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, 0, SSLType.NONE, client.getDefaultTerminalType(),
+    client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, client.getDefaultTerminalType(),
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
   }
 
@@ -77,7 +77,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test
   public void shouldGetUserMenuScreenWhenSendUsername() throws Exception {
-    loadLoginFlow();
+    loadFlow("login.yml");
     connectToVirtualService();
     sendUsernameWithSyncWait();
     assertThat(client.getScreen())

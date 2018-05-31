@@ -201,6 +201,11 @@
                     <exlude>com/bytezone/dm3270/session/SessionRecord.class</exlude>
                     <exlude>com/bytezone/dm3270/session/SessionRecord$SessionRecordType.class</exlude>
                     <exlude>com/bytezone/dm3270/streams/TelnetListener.class</exlude>
+                    <exlude>com/bytezone/dm3270/telnet/TelnetCommand.class</exlude>
+                    <exlude>com/bytezone/dm3270/telnet/TelnetCommand$CommandName.class</exlude>
+                    <exlude>com/bytezone/dm3270/telnet/TelnetCommand$CommandType.class</exlude>
+                    <exlude>com/bytezone/dm3270/telnet/TelnetSubcommand.class</exlude>
+                    <exlude>com/bytezone/dm3270/telnet/TelnetSubcommand$SubcommandType.class</exlude>
                     <exlude>com/bytezone/dm3270/utilities/Dm3270Utility.class</exlude>
                     <exlude>com/bytezone/dm3270/utilities/Site.class</exlude>
                   </excludes>

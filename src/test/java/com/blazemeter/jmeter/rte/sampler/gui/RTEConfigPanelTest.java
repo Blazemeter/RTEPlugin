@@ -55,20 +55,4 @@ public class RTEConfigPanelTest {
     return ret;
   }
 
-  @Test
-  public void shouldNotShowSslPanelWhenSslSupportIsNotEnabled() {
-    RTEConfigPanel panel = new RTEConfigPanel();
-    panel.setSSLSupportEnabled(false);
-    frame = showInFrame(panel);
-    AssertJUtils.findInvisiblePanelByName(frame, "sslPanel").requireNotVisible();
-  }
-
-  @Test
-  public void shouldShowSslPanelWhenSslSupportIsEnabled() {
-    RTEConfigPanel panel = new RTEConfigPanel();
-    panel.setSSLSupportEnabled(true);
-    frame = showInFrame(panel);
-    frame.panel("sslPanel");
-  }
-
 }
