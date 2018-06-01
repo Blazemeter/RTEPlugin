@@ -23,12 +23,7 @@ public abstract class ConditionWaiter<T extends WaitCondition> {
     this.condition = condition;
     this.stableTimeoutExecutor = stableTimeoutExecutor;
     this.exceptionHandler = exceptionHandler;
-  }
-
-  protected synchronized void cancelWait() {
-    ended = true;
-    lock.countDown();
-    endStablePeriod();
+    exceptionHandler.addListener(this);
   }
 
   protected synchronized void startStablePeriod() {
@@ -57,6 +52,12 @@ public abstract class ConditionWaiter<T extends WaitCondition> {
               "are greater than Stable time or Silent interval.");
     }
     exceptionHandler.throwAnyPendingError();
+  }
+
+  private synchronized void cancelWait() {
+    ended = true;
+    lock.countDown();
+    endStablePeriod();
   }
 
   public void onException() {

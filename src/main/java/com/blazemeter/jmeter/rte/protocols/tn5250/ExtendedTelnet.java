@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
-import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
-import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -12,13 +11,19 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
-import java.security.GeneralSecurityException;
-import javax.net.ssl.SSLException;
+import javax.net.SocketFactory;
 import net.infordata.em.tnprot.XITelnet;
+import net.infordata.em.tnprot.XITelnetEmulator;
 
 /**
  * Handle telnet connection by providing connection timeout and security on top of {@link
  * XITelnet}.
+ * <p/>
+ * Additionally, solves concurrency issue when closing connection which may cause IOExceptions,
+ * improves communication with server by sending entire packets instead of potentially splitting
+ * them before they reach TCP layer, throws a ConnectionClosedException to be able to properly
+ * identify this scenario, and does not close connection on exception to avoid missing fields when
+ * sending and instead fail with an IOException.
  */
 public class ExtendedTelnet extends XITelnet {
 
@@ -37,14 +42,16 @@ public class ExtendedTelnet extends XITelnet {
   private static final int READ_BUFFER_SIZE_BYTES = 1024;
 
   private final int connectTimeoutMillis;
-  private final SSLType sslType;
+  private final SocketFactory socketFactory;
   private RxThread readThread;
   private BufferedOutputStream ivOut;
+  private XITelnetEmulator ivEmulator;
 
-  public ExtendedTelnet(String aHost, int aPort, int connectTimeoutMillis, SSLType sslType) {
+  public ExtendedTelnet(String aHost, int aPort, int connectTimeoutMillis,
+      SocketFactory socketFactory) {
     super(aHost, aPort);
     this.connectTimeoutMillis = connectTimeoutMillis;
-    this.sslType = sslType;
+    this.socketFactory = socketFactory;
   }
 
   @Override
@@ -55,8 +62,14 @@ public class ExtendedTelnet extends XITelnet {
       this.disconnect();
       this.connecting();
       try {
-        Socket ivSocket = createSocket();
+        Socket ivSocket = socketFactory.createSocket();
         setIvSocket(ivSocket);
+        /*
+        In XITelnet is used ivFirstHost instead of getHost(), but we are not supposed to use hosts
+        with firstHostIp#SecondHostIp format in JMeter
+        */
+        ivSocket
+            .connect(new InetSocketAddress(this.getHost(), this.getPort()), connectTimeoutMillis);
         InputStream ivIn = getIvSocket().getInputStream();
         setIvIn(ivIn);
         /*
@@ -71,26 +84,7 @@ public class ExtendedTelnet extends XITelnet {
         this.connected();
       } catch (IOException e) {
         catchedIOException(e);
-      } catch (GeneralSecurityException e) {
-        catchedIOException(new SSLException(e));
       }
-    }
-  }
-
-  private Socket createSocket() throws IOException, GeneralSecurityException {
-    if (sslType != null && sslType != SSLType.NONE) {
-      SSLSocketFactory sslSocketFactory = new SSLSocketFactory(sslType);
-      sslSocketFactory.init();
-      /*
-      In XITelnet is used ivFirstHost instead of getHost(), but we are not supposed to use hosts
-      with firstHostIp#SecondHostIp format in JMeter
-       */
-      return sslSocketFactory
-          .createSocket(this.getHost(), this.getPort(), connectTimeoutMillis);
-    } else {
-      Socket socket = new Socket();
-      socket.connect(new InetSocketAddress(this.getHost(), this.getPort()), connectTimeoutMillis);
-      return socket;
     }
   }
 
@@ -196,6 +190,19 @@ public class ExtendedTelnet extends XITelnet {
     closeIvSocket();
   }
 
+  @Override
+  public void setEmulator(XITelnetEmulator aEmulator) {
+    ivEmulator = aEmulator;
+    super.setEmulator(aEmulator);
+  }
+
+  @Override
+  protected synchronized void catchedIOException(IOException ex) {
+    if (ivEmulator != null) {
+      ivEmulator.catchedIOException(ex);
+    }
+  }
+
   private void closeIvSocket() {
     ReflectionUtils.invokeMethod(CLOSE_SOCKET_METHOD, this);
   }
@@ -231,7 +238,9 @@ public class ExtendedTelnet extends XITelnet {
             return;
           }
           int len = input.read(buf);
-
+          if (len < 0) {
+            throw new ConnectionClosedException();
+          }
           int i = 0;
           int j;
           for (j = 0; i < len; ++i) {

@@ -36,7 +36,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeoutException;
 import org.apache.jmeter.samplers.SampleResult;
 import org.slf4j.Logger;
@@ -102,8 +101,6 @@ public class Tn3270Client extends BaseProtocolClient {
   private SilentScreen screen;
   private ExtendedConsolePane consolePane;
 
-  private ScheduledExecutorService stableTimeoutExecutor;
-
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
     return TERMINAL_TYPES;
@@ -124,7 +121,7 @@ public class Tn3270Client extends BaseProtocolClient {
     Site serverSite = new Site("", server, port, termType.isExtended(), termType.getModel());
     consolePane = new ExtendedConsolePane(screen, serverSite, exceptionHandler);
     consolePane.setConnectionTimeoutMillis((int) timeoutMillis);
-    consolePane.setSslType(sslType);
+    consolePane.setSocketFactory(getSocketFactory(sslType));
     consolePane.connect();
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
     try {
@@ -241,14 +238,7 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public void disconnect() throws RteIOException {
-    if (stableTimeoutExecutor == null) {
-      return;
-    }
-    doDisconnect();
-  }
-
-  private void doDisconnect() throws RteIOException {
+  protected void doDisconnect() {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
     try {
@@ -257,7 +247,6 @@ public class Tn3270Client extends BaseProtocolClient {
       Thread.currentThread().interrupt();
       LOG.warn("Disconnection process was interrupted");
     }
-    exceptionHandler.throwAnyPendingError();
   }
 
 }

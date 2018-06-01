@@ -1,11 +1,11 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
-import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.bytezone.dm3270.application.ConsolePane;
 import com.bytezone.dm3270.display.Screen;
 import com.bytezone.dm3270.streams.TelnetListener;
 import com.bytezone.dm3270.utilities.Site;
+import javax.net.SocketFactory;
 
 /**
  * This is an extension of {@link ConsolePane} that provides connect method public visibility and
@@ -19,7 +19,7 @@ public class ExtendedConsolePane extends ConsolePane {
   private ExtendedTerminalServer terminalServer;
   private final Screen screen;
   private Thread terminalServerThread;
-  private SSLType sslType;
+  private SocketFactory socketFactory;
   private int connectionTimeoutMillis;
 
   public ExtendedConsolePane(Screen screen, Site server,
@@ -30,8 +30,8 @@ public class ExtendedConsolePane extends ConsolePane {
     this.exceptionHandler = exceptionHandler;
   }
 
-  public void setSslType(SSLType sslType) {
-    this.sslType = sslType;
+  public void setSocketFactory(SocketFactory socketFactory) {
+    this.socketFactory = socketFactory;
   }
 
   public void setConnectionTimeoutMillis(int connectionTimeoutMillis) {
@@ -50,7 +50,7 @@ public class ExtendedConsolePane extends ConsolePane {
 
     TelnetListener telnetListener = new TelnetListener(screen, telnetState);
     terminalServer =
-        new ExtendedTerminalServer(server.getURL(), server.getPort(), telnetListener, sslType,
+        new ExtendedTerminalServer(server.getURL(), server.getPort(), telnetListener, socketFactory,
             connectionTimeoutMillis, exceptionHandler);
     telnetState.setTerminalServer(terminalServer);
 

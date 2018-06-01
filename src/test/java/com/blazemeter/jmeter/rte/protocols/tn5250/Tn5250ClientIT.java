@@ -8,7 +8,7 @@ import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.ssl.SSLSocketFactory;
+import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -48,14 +48,14 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   private void loadLoginFlow() throws FileNotFoundException {
-    loadFlow("login.yml");
+    loadFlow("login-immediate-responses.yml");
   }
 
   @Test
   public void shouldGetWelcomeScreenWhenConnectWithSsl() throws Exception {
     server.stop(SERVER_STOP_TIMEOUT);
-    SSLSocketFactory.setKeyStore(findResource("/.keystore").getFile());
-    SSLSocketFactory.setKeyStorePassword("changeit");
+    SSLContextFactory.setKeyStore(findResource("/.keystore").getFile());
+    SSLContextFactory.setKeyStorePassword("changeit");
     server = new VirtualTcpService(SSLType.TLS);
     server.start();
     loadLoginFlow();
@@ -67,7 +67,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, 0, SSLType.NONE, getDefaultTerminalType(), TIMEOUT_MILLIS,
+    client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, getDefaultTerminalType(), TIMEOUT_MILLIS,
         STABLE_TIMEOUT_MILLIS);
   }
 
@@ -79,7 +79,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   @Test
   public void shouldGetUserMenuScreenWhenSendCreds() throws Exception {
-    loadLoginFlow();
+    loadFlow("login.yml");
     connectToVirtualService();
     sendCredsWithSyncWait();
     assertThat(client.getScreen())
