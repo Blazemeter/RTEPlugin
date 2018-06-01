@@ -18,6 +18,12 @@ import net.infordata.em.tnprot.XITelnetEmulator;
 /**
  * Handle telnet connection by providing connection timeout and security on top of {@link
  * XITelnet}.
+ * <p/>
+ * Additionally, solves concurrency issue when closing connection which may cause IOExceptions,
+ * improves communication with server by sending entire packets instead of potentially splitting
+ * them before they reach TCP layer, throws a ConnectionClosedException to be able to properly
+ * identify this scenario, and does not close connection on exception to avoid missing fields when
+ * sending and instead fail with an IOException.
  */
 public class ExtendedTelnet extends XITelnet {
 

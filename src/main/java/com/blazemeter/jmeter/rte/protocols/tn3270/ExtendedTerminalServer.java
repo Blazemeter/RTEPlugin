@@ -15,8 +15,11 @@ import javax.net.SocketFactory;
 
 /*
  * Performs the same as {@link TerminalServer}, but in this case uses a socket that supports SSL and
- * connection timeout. Apart from that, instead of handling the exceptions on the class itself, they
- * are thrown to Tn3270Client.
+ * connection timeout.
+ * <p/>
+ * Additionally, instead of handling the exceptions on the class itself, they
+ * are thrown to Tn3270Client, and throws a ConnectionClosedException when connection is
+ * closed by remote end to be able to report and error in such case.
  */
 public class ExtendedTerminalServer extends TerminalServer {
 
