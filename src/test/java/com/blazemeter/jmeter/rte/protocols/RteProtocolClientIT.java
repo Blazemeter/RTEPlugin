@@ -4,8 +4,6 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250ClientIT;
-import com.blazemeter.jmeter.rte.virtualservice.Flow;
-import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.io.File;
@@ -17,6 +15,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import us.abstracta.wiresham.Flow;
+import us.abstracta.wiresham.VirtualTcpService;
 
 public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
 
@@ -27,12 +27,11 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   protected static final int STABLE_TIMEOUT_MILLIS = 2000;
   protected static final long SERVER_STOP_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
 
-  protected VirtualTcpService server;
+  protected VirtualTcpService server = new VirtualTcpService();
   protected T client;
 
   @Before
   public void setup() throws Exception {
-    server = new VirtualTcpService();
     server.start();
     client = buildClient();
   }

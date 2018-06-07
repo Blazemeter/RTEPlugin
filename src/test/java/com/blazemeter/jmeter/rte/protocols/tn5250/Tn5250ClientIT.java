@@ -17,7 +17,6 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.RteProtocolClientIT;
-import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,11 +53,11 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   @Test
   public void shouldGetWelcomeScreenWhenConnectWithSsl() throws Exception {
     server.stop(SERVER_STOP_TIMEOUT);
+    loadLoginFlow();
     SSLContextFactory.setKeyStore(findResource("/.keystore").getFile());
     SSLContextFactory.setKeyStorePassword("changeit");
-    server = new VirtualTcpService(SSLType.TLS);
+    server.setSslEnabled(true);
     server.start();
-    loadLoginFlow();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
     assertThat(client.getScreen())

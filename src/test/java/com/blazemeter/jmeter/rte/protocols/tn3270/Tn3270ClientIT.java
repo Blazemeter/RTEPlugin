@@ -8,6 +8,7 @@ import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -44,6 +45,24 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
+  private void loadLoginFlow() throws FileNotFoundException {
+    loadFlow("login-immediate-responses.yml");
+  }
+
+  @Test
+  public void shouldGetWelcomeScreenWhenConnectWithSsl() throws Exception {
+    server.stop(SERVER_STOP_TIMEOUT);
+    loadLoginFlow();
+    SSLContextFactory.setKeyStore(findResource("/.keystore").getFile());
+    SSLContextFactory.setKeyStorePassword("changeit");
+    server.setSslEnabled(true);
+    server.start();
+    client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
+        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+    assertThat(client.getScreen())
+        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+  }
+
   @Test
   public void shouldGetTrueSoundAlarmWhenServerSendTheSignal() throws Exception {
     loadLoginFlow();
@@ -57,10 +76,6 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadLoginFlow();
     connectToVirtualService();
     assertThat(client.getSoundAlarm()).isEqualTo(false);
-  }
-
-  private void loadLoginFlow() throws FileNotFoundException {
-    loadFlow("login-immediate-responses.yml");
   }
 
   @Test(expected = RteIOException.class)
