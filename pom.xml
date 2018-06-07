@@ -215,18 +215,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.0.2</version>
         <executions>
@@ -242,6 +230,13 @@
                 <resource>
                   <directory>src/test/resources/jmeter</directory>
                   <filtering>true</filtering>
+                </resource>
+                <resource>
+                  <directory>src/test/resources/com/blazemeter/jmeter/rte/protocols</directory>
+                  <includes>
+                    <include>tn3270/login.yml</include>
+                    <include>tn5250/login.yml</include>
+                  </includes>
                 </resource>
               </resources>
             </configuration>
@@ -261,7 +256,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations
+                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>
@@ -280,13 +275,6 @@
                   <artifactId>${project.artifactId}</artifactId>
                   <version>${project.version}</version>
                   <type>${project.packaging}</type>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>${project.version}</version>
-                  <type>test-jar</type>
-                  <classifier>tests</classifier>
                 </artifactItem>
               </artifactItems>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
