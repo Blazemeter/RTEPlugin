@@ -34,7 +34,7 @@
 import us.abstracta.wiresham.Flow
 
 def server = new VirtualTcpService()
-server.setPort(2324)
+server.setPort(2323)
 props.put(&quot;SERVER&quot;,server)
 server.start()
 server.setFlow(Flow.fromYml(new File(&quot;tn3270/login.yml&quot;)))
