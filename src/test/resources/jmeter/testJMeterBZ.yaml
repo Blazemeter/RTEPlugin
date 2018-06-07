@@ -16,13 +16,13 @@ execution:
   iterations : 3
   files:
   - lib
-  - tn3270/login.yml
+  - tn3270
 - concurrency: 1
   scenario: test5250
   iterations: 3
   files:
   - lib
-  - tn5250/login.yml
+  - tn5250
 
 scenarios:
   test3270:
