@@ -31,18 +31,14 @@
           <stringProp name="cacheKey">true</stringProp>
           <stringProp name="filename"></stringProp>
           <stringProp name="parameters"></stringProp>
-          <stringProp name="script">import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService
-import com.blazemeter.jmeter.rte.virtualservice.Flow
-import com.google.common.io.Resources
+          <stringProp name="script">import us.abstracta.wiresham.VirtualTcpService
+import us.abstracta.wiresham.Flow
 
-def findResource(String file) {
-	return Resources.getResource(&quot;com/blazemeter/jmeter/rte/protocols/tn5250/&quot;+file)
-}
-
-def server = new VirtualTcpService(2324)
+def server = new VirtualTcpService()
+server.setPort(2324)
 props.put(&quot;SERVER&quot;,server)
 server.start()
-server.setFlow(Flow.fromYmlStream(findResource(&quot;login.yml&quot;).openStream()))
+server.setFlow(Flow.fromYml(new File(&quot;tn5250/login.yml&quot;)))
 println(&quot;server started...&quot;)</stringProp>
           <stringProp name="scriptLanguage">groovy</stringProp>
         </JSR223Sampler>
@@ -163,7 +159,7 @@ println(&quot;server started...&quot;)</stringProp>
           <stringProp name="parameters"></stringProp>
           <stringProp name="filename"></stringProp>
           <stringProp name="cacheKey">true</stringProp>
-          <stringProp name="script">import com.blazemeter.jmeter.rte.virtualservice.VirtualTcpService
+          <stringProp name="script">import us.abstracta.wiresham.VirtualTcpService
 
 def server = props.get(&quot;SERVER&quot;)
 server.stop(10000)
