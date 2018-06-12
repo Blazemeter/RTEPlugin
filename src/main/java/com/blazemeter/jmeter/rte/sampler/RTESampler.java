@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import org.apache.jmeter.engine.event.LoopIterationEvent;
@@ -536,11 +537,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private String buildResponseHeaders(RteProtocolClient client) {
-    Position cursorPosition = client.getCursorPosition();
+    Optional<Position> cursorPosition = client.getCursorPosition();
     boolean soundAlarm = client.getSoundAlarm();
     return "Input-inhibited: " + client.isInputInhibited() + "\n" +
-        "Cursor-position: " + (cursorPosition == null ? ""
-        : cursorPosition.getRow() + "," + cursorPosition.getColumn()) +
+        "Cursor-position: " + cursorPosition.map(c -> c.getRow() + "," + c.getColumn()).orElse("") +
         (soundAlarm ? "\nSound-Alarm: true" : "");
   }
 

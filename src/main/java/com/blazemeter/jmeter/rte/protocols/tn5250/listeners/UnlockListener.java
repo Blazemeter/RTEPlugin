@@ -23,6 +23,7 @@ public class UnlockListener extends Tn5250ConditionWaiter<SyncWaitCondition> {
     super(condition, client, stableTimeoutExecutor, em, exceptionHandler);
     isInputInhibited = client.isInputInhibited();
     if (!isInputInhibited) {
+      LOG.debug("Start stable period since input is not inhibited");
       startStablePeriod();
     }
   }

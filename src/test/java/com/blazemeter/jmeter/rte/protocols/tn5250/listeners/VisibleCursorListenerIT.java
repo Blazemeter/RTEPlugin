@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.google.common.base.Stopwatch;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
@@ -20,7 +21,7 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
   @Before
   @Override
   public void setup() throws Exception {
-    when(client.getCursorPosition()).thenReturn(new Position(1, 1));
+    when(client.getCursorPosition()).thenReturn(Optional.of(new Position(1, 1)));
     super.setup();
   }
 
@@ -36,7 +37,7 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingExpectedCursorPosition() throws Exception {
-    when(client.getCursorPosition()).thenReturn(EXPECTED_CURSOR_POSITION);
+    when(client.getCursorPosition()).thenReturn(Optional.of(EXPECTED_CURSOR_POSITION));
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
     startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator());
@@ -46,21 +47,21 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
 
   @Test
   public void shouldUnblockWhenAlreadyInExpectedCursorPosition() throws Exception {
-    when(client.getCursorPosition()).thenReturn(EXPECTED_CURSOR_POSITION);
+    when(client.getCursorPosition()).thenReturn(Optional.of(EXPECTED_CURSOR_POSITION));
     Tn5250ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedUnexpectedCursorPosition() throws Exception {
-    when(client.getCursorPosition()).thenReturn(new Position(1, 1));
+    when(client.getCursorPosition()).thenReturn(Optional.of(new Position(1, 1)));
     buildStateChangeGenerator().run();
     listener.await();
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenNoVisibleCursorPosition() throws Exception {
-    when(client.getCursorPosition()).thenReturn(null);
+    when(client.getCursorPosition()).thenReturn(Optional.empty());
     buildStateChangeGenerator().run();
     listener.await();
   }

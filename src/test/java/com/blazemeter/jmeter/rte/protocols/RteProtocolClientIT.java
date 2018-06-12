@@ -32,6 +32,7 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
 
   @Before
   public void setup() throws Exception {
+    server.setSslEnabled(false);
     server.start();
     client = buildClient();
   }

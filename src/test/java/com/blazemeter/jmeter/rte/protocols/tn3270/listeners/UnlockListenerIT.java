@@ -16,35 +16,16 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
   @Override
   @Before
   public void setup() throws Exception {
-    when(client.isInputInhibited()).thenReturn(true);
+    when(client.isKeyboardLocked()).thenReturn(true);
     super.setup();
   }
 
   @Override
   protected Tn3270ConditionWaiter<?> buildConditionWaiter() {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
-        client,
         stableTimeoutExecutor,
-        screen,
-        exceptionHandler);
-  }
-
-  protected Runnable buildKeyboardStateChangeGenerator(KeyboardStatusChangedEvent keyboardEvent) {
-    return () -> ((UnlockListener) listener)
-        .keyboardStatusChanged(keyboardEvent);
-  }
-
-  protected Runnable buildKeyboardLockingAndUnlockingStateChangeGenerator() {
-    return new Runnable() {
-
-      private boolean locked = true;
-
-      @Override
-      public void run() {
-        ((UnlockListener) listener).keyboardStatusChanged(new KeyboardStatusChangedEvent(false, locked, ""));
-        locked = !locked;
-      }
-    };
+        exceptionHandler,
+        client);
   }
 
   @Test
@@ -57,9 +38,14 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
 
+  private Runnable buildKeyboardStateChangeGenerator(KeyboardStatusChangedEvent keyboardEvent) {
+    return () -> ((UnlockListener) listener)
+        .keyboardStatusChanged(keyboardEvent);
+  }
+
   @Test
   public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
-    when(client.isInputInhibited()).thenReturn(false);
+    when(client.isKeyboardLocked()).thenReturn(false);
     Tn3270ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
@@ -75,4 +61,18 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
     startPeriodicEventGenerator(buildKeyboardLockingAndUnlockingStateChangeGenerator());
     listener.await();
   }
+
+  private Runnable buildKeyboardLockingAndUnlockingStateChangeGenerator() {
+    return new Runnable() {
+
+      private boolean locked = true;
+
+      @Override
+      public void run() {
+        ((UnlockListener) listener).keyboardStatusChanged(new KeyboardStatusChangedEvent(false, locked, ""));
+        locked = !locked;
+      }
+    };
+  }
+
 }
