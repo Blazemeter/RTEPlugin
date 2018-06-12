@@ -5,6 +5,7 @@ modules:
     version: "4.0"
     properties:
       log_level: DEBUG
+      user.classpath: lib
   console:
     disable: true
   cloud:
@@ -12,25 +13,21 @@ modules:
 
 execution:
 - concurrency: 1
-  scenario: test3270
+  scenario:
+    script: RTESampler3270.jmx
   iterations : 3
   files:
   - lib
   - tn3270
 - concurrency: 1
-  scenario: test5250
+  scenario:
+    script: RTESampler5250.jmx
   iterations: 3
   files:
   - lib
   - tn5250
 
-scenarios:
-  test3270:
-    script: RTESampler3270.jmx
-  test5250:
-    script: RTESampler5250.jmx
-    
 reporting:
 - module: passfail
   criteria:
-  - failures>0% 
+  - failures>0%

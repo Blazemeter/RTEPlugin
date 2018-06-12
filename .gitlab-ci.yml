@@ -44,11 +44,12 @@ jmeter_compatibility:
   tags:
     - docker
   script:
+    - export JMETER_PATH=$(pwd)/.jmeter
     - cd target/jmeter-test
-    - sh testJMeter.sh 4.0
-    - sh testJMeter.sh 3.3
-    - sh testJMeter.sh 3.2
-    - sh testJMeter.sh 3.1
+    - JMETER_VERSION=4.0 bzt testJMeter.yaml
+    - JMETER_VERSION=3.3 bzt testJMeter.yaml
+    - JMETER_VERSION=3.2 bzt testJMeter.yaml
+    - JMETER_VERSION=3.1 bzt testJMeter.yaml
     - bzt testJMeterBZ.yaml
   artifacts:
     when: on_failure
