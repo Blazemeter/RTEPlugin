@@ -1,26 +1,22 @@
 modules:
   jmeter:
-    path: .jmeter/4.0
-    version: "4.0"
+    path: ${JMETER_PATH}/${JMETER_VERSION}
+    version: ${JMETER_VERSION}
     properties:
       log_level: DEBUG
+      user.classpath: lib
   console:
     disable: true
 
 execution:
 - concurrency: 1
-  scenario: test3270
+  scenario:
+    script: RTESampler3270.jmx
   iterations : 3
 - concurrency: 1
-  scenario: test5250
-  iterations: 3
-  
-scenarios:
-  test3270:
-    script: RTESampler3270.jmx
-  test5250:
+  scenario:
     script: RTESampler5250.jmx
-
+  iterations: 3
 
 reporting:
 - module: passfail
