@@ -5,14 +5,9 @@ import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
-import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
-import com.bytezone.dm3270.display.Cursor;
-import com.bytezone.dm3270.display.FieldManager;
-import com.bytezone.dm3270.display.Screen;
+import com.bytezone.dm3270.display.ScreenDimensions;
 import com.bytezone.dm3270.display.ScreenWatcher;
 import com.google.common.base.Stopwatch;
-import java.awt.Dimension;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.oro.text.regex.MalformedPatternException;
@@ -29,25 +24,16 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
   @Mock
   private ScreenWatcher screenWatcher;
 
-  @Mock
-  private Cursor cursor;
-
-  @Mock
-  private FieldManager fieldManager;
-
-  @Mock
-  private KeyboardStatusChangedEvent keyboardStatusChangedEvent;
-
-  @Mock
-  private Tn3270Client client;
-
   @Before
   @Override
   public void setup() throws Exception {
-    when(screen.getScreenCursor()).thenReturn(cursor);
-    when(screen.getFieldManager()).thenReturn(fieldManager);
     setupScreenWithText("Welcome");
     super.setup();
+  }
+
+  private void setupScreenWithText(String screen) {
+    when(client.getScreenText()).thenReturn(screen);
+    when(client.getScreenDimensions()).thenReturn(new ScreenDimensions(1, screen.length()));
   }
 
   @Override
@@ -60,15 +46,9 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
         new TextWaitCondition(new Perl5Compiler().compile(regex), new Perl5Matcher(),
             Area.fromTopLeftBottomRight(1, 1, 1, 5),
             TIMEOUT_MILLIS, STABLE_MILLIS),
-        client,
         stableTimeoutExecutor,
-        screen,
-        exceptionHandler);
-  }
-
-  private void setupScreenWithText(String screen) {
-    when(client.getScreen()).thenReturn(screen);
-    when(client.getScreenSize()).thenReturn(new Dimension(screen.length(), 1));
+        exceptionHandler,
+        client);
   }
 
   @Test
@@ -88,7 +68,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
     listener.await();
   }
 
-  protected Runnable buildScreenStateChangeGenerator() {
+  private Runnable buildScreenStateChangeGenerator() {
     return () -> ((ScreenTextListener) listener)
         .screenChanged(screenWatcher);
   }
@@ -123,4 +103,5 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
     startPeriodicEventGenerator(buildScreenStateChangeGenerator());
     listener.await();
   }
+
 }

@@ -17,13 +17,12 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
     ConditionWaiter<T> implements XI5250EmulatorListener {
 
   protected final Tn5250Client client;
-  private final ExtendedEmulator em;
 
   public Tn5250ConditionWaiter(T condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExtendedEmulator em,
       ExceptionHandler exceptionHandler) {
     super(condition, stableTimeoutExecutor, exceptionHandler);
-    this.em = em;
+    em.addEmulatorListener(this);
     this.client = client;
   }
 

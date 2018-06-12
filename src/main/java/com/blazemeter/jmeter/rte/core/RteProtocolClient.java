@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.awt.Dimension;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import org.apache.jmeter.samplers.SampleResult;
 
@@ -46,12 +47,7 @@ public interface RteProtocolClient {
 
   boolean isInputInhibited();
 
-  /**
-   * Gets the position of the cursor in the screen.
-   *
-   * @return the position of the cursor in the screen or null if is not visible
-   */
-  Position getCursorPosition();
+  Optional<Position> getCursorPosition();
 
   boolean getSoundAlarm();
 

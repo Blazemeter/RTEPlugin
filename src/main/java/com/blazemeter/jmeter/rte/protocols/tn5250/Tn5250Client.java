@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.crt5250.XI5250Field;
@@ -176,15 +177,12 @@ public class Tn5250Client extends BaseProtocolClient {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
     }
-    em.addEmulatorListener(condition);
     return condition;
   }
 
   @Override
   public RequestListener buildRequestListener(SampleResult result) {
-    Tn5250RequestListener listener = new Tn5250RequestListener(result, this);
-    em.addEmulatorListener(listener);
-    return listener;
+    return new Tn5250RequestListener(result, this, em);
   }
 
   @Override
@@ -228,8 +226,9 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public Position getCursorPosition() {
-    return em.isCursorVisible() ? new Position(em.getCursorRow() + 1, em.getCursorCol() + 1) : null;
+  public Optional<Position> getCursorPosition() {
+    return em.isCursorVisible() ? Optional
+        .of(new Position(em.getCursorRow() + 1, em.getCursorCol() + 1)) : Optional.empty();
   }
 
   @Override

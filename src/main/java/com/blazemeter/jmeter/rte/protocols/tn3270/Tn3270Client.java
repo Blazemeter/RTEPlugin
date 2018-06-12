@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
+import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
@@ -16,25 +17,21 @@ import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.protocols.ReflectionUtils;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
+import com.bytezone.dm3270.TerminalClient;
 import com.bytezone.dm3270.commands.AIDCommand;
-import com.bytezone.dm3270.display.Cursor;
-import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenDimensions;
-import com.bytezone.dm3270.display.ScreenPosition;
-import com.bytezone.dm3270.utilities.Site;
 import java.awt.Dimension;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import org.apache.jmeter.samplers.SampleResult;
@@ -92,14 +89,7 @@ public class Tn3270Client extends BaseProtocolClient {
     }
   };
 
-  private static final Tn3270TerminalType DEFAULT_TERMINAL_TYPE =
-      (Tn3270TerminalType) TERMINAL_TYPES.get(0);
-
-  private static final Method FIELD_POSITION_GET_CHAR_STRING_METHOD =
-      ReflectionUtils.getAccessibleMethod(ScreenPosition.class, "getCharString");
-
-  private SilentScreen screen;
-  private ExtendedConsolePane consolePane;
+  private TerminalClient client;
 
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
@@ -111,18 +101,27 @@ public class Tn3270Client extends BaseProtocolClient {
       long timeoutMillis, long stableTimeout)
       throws InterruptedException, TimeoutException, RteIOException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+    client = new TerminalClient();
     Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
-    ExtendedTelnetState telnetState = new ExtendedTelnetState();
-    telnetState.setDoDeviceType(termType.getModel());
-    screen = new SilentScreen(DEFAULT_TERMINAL_TYPE.getScreenDimensions(),
-        termType.getScreenDimensions(), telnetState);
-    screen.lockKeyboard("connect");
+    client.setModel(termType.getModel());
+    client.setScreenDimensions(termType.getScreenDimensions());
+    client.setUsesExtended3270(termType.isExtended());
     exceptionHandler = new ExceptionHandler();
-    Site serverSite = new Site("", server, port, termType.isExtended(), termType.getModel());
-    consolePane = new ExtendedConsolePane(screen, serverSite, exceptionHandler);
-    consolePane.setConnectionTimeoutMillis((int) timeoutMillis);
-    consolePane.setSocketFactory(getSocketFactory(sslType));
-    consolePane.connect();
+    client.setExceptionHandler(new com.bytezone.dm3270.ExceptionHandler() {
+
+      @Override
+      public void onException(Exception e) {
+        exceptionHandler.setPendingError(e);
+      }
+
+      @Override
+      public void onConnectionClosed() {
+        exceptionHandler.setPendingError(new ConnectionClosedException());
+      }
+    });
+    client.setConnectionTimeoutMillis((int) timeoutMillis);
+    client.setSocketFactory(getSocketFactory(sslType));
+    client.connect(server, port);
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
     try {
       unlock.await();
@@ -136,23 +135,16 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public RequestListener buildRequestListener(SampleResult result) {
-    Tn3270RequestListener listener = new Tn3270RequestListener(result, this, screen);
-    screen.getFieldManager().addScreenChangeListener(listener);
-    return listener;
+    return new Tn3270RequestListener(result, this, client);
   }
 
   @Override
   protected void setField(CoordInput i) {
-    int linearPosition = buildLinealPosition(i);
-    Field field = screen.getFieldManager()
-        .getFieldAt(linearPosition)
-        .orElseThrow(() -> new InvalidFieldPositionException(i.getPosition()));
-    screen.setFieldText(field, i.getInput());
-    screen.getScreenCursor().moveTo(linearPosition + i.getInput().length());
-  }
-
-  private int buildLinealPosition(CoordInput i) {
-    return (i.getPosition().getRow() - 1) * getScreenSize().width + i.getPosition().getColumn() - 1;
+    try {
+      client.setFieldText(i.getPosition().getRow(), i.getPosition().getColumn(), i.getInput());
+    } catch (IllegalArgumentException e) {
+      throw new InvalidFieldPositionException(i.getPosition(), e);
+    }
   }
 
   @Override
@@ -162,79 +154,54 @@ public class Tn3270Client extends BaseProtocolClient {
       throw new UnsupportedOperationException(
           attentionKey.name() + " attentionKey is unsupported for protocol TN3270.");
     }
-    consolePane.sendAID(actionCommand, attentionKey.name());
+    client.sendAID(actionCommand, attentionKey.name());
   }
 
   @Override
   protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
-      UnlockListener unlock = new UnlockListener((SyncWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, screen, exceptionHandler);
-      screen.addKeyboardStatusChangeListener(unlock);
-      return unlock;
+      return new UnlockListener((SyncWaitCondition) waitCondition, stableTimeoutExecutor,
+          exceptionHandler, client);
     } else if (waitCondition instanceof CursorWaitCondition) {
-      VisibleCursorListener unlock = new VisibleCursorListener((CursorWaitCondition) waitCondition,
-          this, stableTimeoutExecutor, screen.getScreenCursor(), exceptionHandler);
-      screen.getScreenCursor().addCursorMoveListener(unlock);
-      return unlock;
+      return new VisibleCursorListener((CursorWaitCondition) waitCondition, stableTimeoutExecutor,
+          exceptionHandler, client);
     } else if (waitCondition instanceof SilentWaitCondition) {
-      SilenceListener silence = new SilenceListener((SilentWaitCondition) waitCondition,
-          stableTimeoutExecutor, screen, exceptionHandler);
-      screen.getScreenCursor().addCursorMoveListener(silence);
-      screen.addKeyboardStatusChangeListener(silence);
-      screen.getFieldManager().addScreenChangeListener(silence);
-      return silence;
+      return new SilenceListener((SilentWaitCondition) waitCondition, stableTimeoutExecutor,
+          exceptionHandler, client);
     } else if (waitCondition instanceof TextWaitCondition) {
-      ScreenTextListener text = new ScreenTextListener((TextWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, screen, exceptionHandler);
-      screen.getScreenCursor().addCursorMoveListener(text);
-      screen.addKeyboardStatusChangeListener(text);
-      screen.getFieldManager().addScreenChangeListener(text);
-      return text;
+      return new ScreenTextListener((TextWaitCondition) waitCondition, stableTimeoutExecutor,
+          exceptionHandler, client);
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
     }
   }
 
-  //we don't just use screen.getPen().getScreenText()
   @Override
   public String getScreen() {
-    StringBuilder text = new StringBuilder();
-    int pos = 0;
-    for (ScreenPosition sp : screen.getPen()) {
-      text.append(
-          ReflectionUtils.invokeMethod(FIELD_POSITION_GET_CHAR_STRING_METHOD, String.class, sp));
-      if (++pos % getScreenSize().width == 0) {
-        text.append("\n");
-      }
-    }
-
-    return text.toString();
+    return client.getScreenText();
   }
 
   @Override
   public Dimension getScreenSize() {
-    ScreenDimensions dimensions = screen.getScreenDimensions();
+    ScreenDimensions dimensions = client.getScreenDimensions();
     return new Dimension(dimensions.columns, dimensions.rows);
   }
 
   @Override
   public boolean isInputInhibited() {
-    return screen.isKeyboardLocked();
+    return client.isKeyboardLocked();
   }
 
   @Override
-  public Position getCursorPosition() {
-    Cursor cursor = screen.getScreenCursor();
-    int location = cursor.getLocation();
-    int columns = screen.getScreenDimensions().columns;
-    return cursor.isVisible() ? new Position(location / columns + 1, location % columns + 1) : null;
+  public Optional<Position> getCursorPosition() {
+    return client.getCursorPosition()
+        .map(p -> new Position(p.y, p.x));
   }
 
   @Override
   public boolean getSoundAlarm() {
-    return screen.resetAlarm();
+    return client.resetAlarm();
   }
 
   @Override
@@ -242,7 +209,7 @@ public class Tn3270Client extends BaseProtocolClient {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
     try {
-      consolePane.doDisconnect();
+      client.disconnect();
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       LOG.warn("Disconnection process was interrupted");

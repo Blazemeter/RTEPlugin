@@ -13,10 +13,10 @@ import static org.mockito.Mockito.when;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -88,7 +89,7 @@ public class RTESamplerTest {
 
     when(rteProtocolClientMock.buildRequestListener(any())).thenReturn(requestListenerMock);
     when(rteProtocolClientMock.getSoundAlarm()).thenReturn(false);
-    when(rteProtocolClientMock.getCursorPosition()).thenReturn(new Position(1, 1));
+    when(rteProtocolClientMock.getCursorPosition()).thenReturn(Optional.of(new Position(1, 1)));
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs());
@@ -157,7 +158,8 @@ public class RTESamplerTest {
     return expected;
   }
 
-  private SampleResult createExpectedConnectTimeoutErrorResult(Exception e, String requestHeadersFormat,
+  private SampleResult createExpectedConnectTimeoutErrorResult(Exception e,
+      String requestHeadersFormat,
       String requestBody) {
     SampleResult expected = new SampleResult();
     expected.setSampleLabel(rteSampler.getName());
@@ -175,7 +177,8 @@ public class RTESamplerTest {
 
   private SampleResult createExpectedTimeoutErrorResult(Exception e, String requestHeadersFormat,
       String requestBody) {
-    SampleResult expected = createExpectedConnectTimeoutErrorResult(e, requestHeadersFormat, requestBody);
+    SampleResult expected = createExpectedConnectTimeoutErrorResult(e, requestHeadersFormat,
+        requestBody);
     expected.setResponseData(TEST_SCREEN, SampleResult.DEFAULT_HTTP_ENCODING);
     return expected;
   }
@@ -236,7 +239,8 @@ public class RTESamplerTest {
     assertSampleResult(result, expected);
   }
 
-  private SampleResult createExpectedSuccessfulResultWithAlarmHeader(String requestHeaders, String samplerData) {
+  private SampleResult createExpectedSuccessfulResultWithAlarmHeader(String requestHeaders,
+      String samplerData) {
     SampleResult expected = new SampleResult();
     expected.setSampleLabel(rteSampler.getName());
     expected.setRequestHeaders(requestHeaders);
@@ -259,7 +263,8 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldSendCustomAttentionKeyToEmulatorWhenSampleWithCustomAttentionKey() throws Exception {
+  public void shouldSendCustomAttentionKeyToEmulatorWhenSampleWithCustomAttentionKey()
+      throws Exception {
     rteSampler.setAttentionKey(AttentionKey.F1);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
@@ -298,7 +303,8 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldNotDisconnectEmulatorWhenIterationStartAndReuseConnectionsEnabled() throws Exception {
+  public void shouldNotDisconnectEmulatorWhenIterationStartAndReuseConnectionsEnabled()
+      throws Exception {
     rteSampler.setReuseConnections(true);
     try {
       rteSampler.sample(null);

@@ -30,9 +30,9 @@
       <version>1.19m</version>
     </dependency>
     <dependency>
-      <groupId>com.bytezone.dm3270</groupId>
-      <artifactId>dm3270</artifactId>
-      <version>0.5-beta-37</version>
+      <groupId>us.abstracta</groupId>
+      <artifactId>dm3270-lib</artifactId>
+      <version>0.5</version>
     </dependency>
 
     <dependency>
@@ -147,62 +147,6 @@
           </execution>
         </executions>
       </plugin>
-      <!-- we shade dependencies since we need to patch dm3270 classes to remove javafx dependencies
-      to allow using the plugin with openjdk without requiring to install javafx module and to be
-      able to run it in headless jvms or servers without graphic window managers. Additionally, we
-      shade both emulators to be consistent and to provide simpler deployment of plugin.-->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.1.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <filters>
-                <filter>
-                  <artifact>com.bytezone.dm3270:dm3270</artifact>
-                  <excludes>
-                    <exlude>com/bytezone/dm3270/application/ConsolePane.class</exlude>
-                    <exlude>com/bytezone/dm3270/assistant/Dataset.class</exlude>
-                    <exlude>com/bytezone/dm3270/attributes/ColorAttribute.class</exlude>
-                    <exlude>com/bytezone/dm3270/attributes/StartFieldAttribute.class</exlude>
-                    <exlude>com/bytezone/dm3270/commands/AIDCommand.class</exlude>
-                    <exlude>com/bytezone/dm3270/commands/AIDCommand$ModifiedField.class</exlude>
-                    <exlude>com/bytezone/dm3270/commands/ReadStructuredFieldCommand.class</exlude>
-                    <exlude>com/bytezone/dm3270/commands/SystemMessage.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/ContextManager.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/Cursor.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/Cursor$Direction.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/FieldManager.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/Pen.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/PenType1.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/PenType1$1.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/Screen.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/Screen$ScreenOption.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/ScreenContext.class</exlude>
-                    <exlude>com/bytezone/dm3270/display/ScreenPosition.class</exlude>
-                    <exlude>com/bytezone/dm3270/plugins/PluginsStage.class</exlude>
-                    <exlude>com/bytezone/dm3270/session/SessionRecord.class</exlude>
-                    <exlude>com/bytezone/dm3270/session/SessionRecord$SessionRecordType.class</exlude>
-                    <exlude>com/bytezone/dm3270/streams/TelnetListener.class</exlude>
-                    <exlude>com/bytezone/dm3270/telnet/TelnetCommand.class</exlude>
-                    <exlude>com/bytezone/dm3270/telnet/TelnetCommand$CommandName.class</exlude>
-                    <exlude>com/bytezone/dm3270/telnet/TelnetCommand$CommandType.class</exlude>
-                    <exlude>com/bytezone/dm3270/telnet/TelnetSubcommand.class</exlude>
-                    <exlude>com/bytezone/dm3270/telnet/TelnetSubcommand$SubcommandType.class</exlude>
-                    <exlude>com/bytezone/dm3270/utilities/Dm3270Utility.class</exlude>
-                    <exlude>com/bytezone/dm3270/utilities/Site.class</exlude>
-                  </excludes>
-                </filter>
-              </filters>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
@@ -257,7 +201,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations
+                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270-lib
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>
@@ -290,11 +234,6 @@
   <profiles>
     <profile>
       <id>sonar</id>
-
-      <properties>
-        <sonar.exclusions>com/bytezone/dm3270/**/*</sonar.exclusions>
-      </properties>
-
       <build>
         <pluginManagement>
           <plugins>
@@ -321,7 +260,6 @@
                 </goals>
                 <configuration>
                   <propertyName>jacoco.agent.ut.arg</propertyName>
-                  <excludes>com/bytezone/dm3270/**/*</excludes>
                 </configuration>
               </execution>
               <execution>
@@ -331,7 +269,6 @@
                 </goals>
                 <configuration>
                   <propertyName>jacoco.agent.it.arg</propertyName>
-                  <excludes>com/bytezone/dm3270/**/*</excludes>
                 </configuration>
               </execution>
             </executions>

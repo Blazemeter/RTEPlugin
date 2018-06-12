@@ -21,7 +21,7 @@ public class Tn5250RequestListenerIT extends
 
   @Override
   public Tn5250RequestListener buildRequestListener(SampleResult result) {
-    return new Tn5250RequestListener(result, client);
+    return new Tn5250RequestListener(result, client, emulator);
   }
 
   @Override
