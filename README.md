@@ -79,12 +79,25 @@ Finally, the second sampler should use "Send keys" action (the default option) a
 
 ![alt text](docs/send-keys.png "RTE Sampler 2") 
 
+#### Waiters usage
+As explained previously, the RTE Sampler has 4 types of waiters which work as synchronization functions, in order to ensure that the response shown by the sampler is the screen that the server wants to show. It's recommended to always have at least one waiter checked on each sampler.
+
+- *Wait for Sync*: When the system is on Input Inhibited mode the user can't interact with it, in those cases it's a good idea to enable the *wait for sync* waiter to be sure that the system has returned from this mode before move to the next action of the flow. Sometimes the system enters in Input Inhibited mode for a time too short to be perceived by the user but not for JMeter, for this reason it's recommended to have always the *wait for sync* waiter checked in the sampler.
+- *Wait for Cursor*: It's useful to use it, for example, in a step before a sampler that will put some text in a field. By using this waiter the user makes sure that the system has returned the control of the cursor.
+- *Wait for Silent*: The client is considered to be silent when the terminal does not receive any characters from the server so, by setting the proper silent interval, the user could ensure that the server has sent all the information available to the client before continue the execution.    
+- *Wait for Text*: This waiter could be useful to check for a specific message before continue the execution. For example, it could be used to wait for a message with the confirmation that a specific process ended correctly or to check if a search returned any result before continue. 
+
+ 
+
+
 ## Compatibility
 
-The plugin is tested with Jmeter 3.1, 3.2, 3.3 and 4.0 in Java 1.8. Code base is implemented in Java 1.8, so lower version of JVM are not supported.
+The plugin is tested with Jmeter 3.1, 3.2, 3.3 and 4.0 in Java 1.8. Code base is implemented in Java 1.8, so lower versions of JVM are not supported.
 
 ## Contributing
 
-If you find any issue or something that is not supported by this plugin, please report it and we will try to fix it. 
+If you find any issue or something that is not supported by this plugin, please report it and we will try to fix it. It will help a lot if you send us the JMeter logs with **debug log level** enabled.
+
+*Debug log level* could be enabled by configuring the Log4j 2 Configuration File (adding `<Logger name="com.blazemeter.jmeter.rte" level="debug" />`) or via JMeter menu, how to do it from both ways are explained [here](https://www.blazemeter.com/blog/how-to-configure-jmeter-logging).
 
 Otherwise you could [contribute](CONTRIBUTING.md) to the project. 
