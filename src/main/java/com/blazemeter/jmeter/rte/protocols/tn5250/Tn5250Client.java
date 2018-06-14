@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
+import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
@@ -22,7 +23,6 @@ import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaite
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
-import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
@@ -32,16 +32,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
-import net.infordata.em.crt5250.XI5250Field;
-import net.infordata.em.tn5250.XI5250Emulator;
+import net.infordata.em.TerminalClient;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
 import org.apache.jmeter.samplers.SampleResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Tn5250Client extends BaseProtocolClient {
-
-  private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
 
   private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
       new TerminalType("IBM-3179-2", new Dimension(80, 24)),
@@ -86,7 +81,7 @@ public class Tn5250Client extends BaseProtocolClient {
         }
       };
 
-  private ExtendedEmulator em;
+  private TerminalClient client;
 
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
@@ -99,20 +94,30 @@ public class Tn5250Client extends BaseProtocolClient {
       long stableTimeoutMillis)
       throws RteIOException, InterruptedException, TimeoutException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
-    exceptionHandler = new ExceptionHandler();
     /*
      we need to do this on connect to avoid leaving keyboard thread running when instance of client
      is created for getting supported terminal types in jmeter
     */
-    em = new ExtendedEmulator(exceptionHandler);
-    em.setHost(server);
-    em.setPort(port);
-    em.setConnectionTimeoutMillis((int) timeoutMillis);
-    em.setTerminalType(terminalType.getId());
-    em.setSocketFactory(getSocketFactory(sslType));
+    client = new TerminalClient();
+    exceptionHandler = new ExceptionHandler();
+    client.setExceptionHandler(new net.infordata.em.ExceptionHandler() {
+
+      @Override
+      public void onException(Throwable e) {
+        exceptionHandler.setPendingError(e);
+      }
+
+      @Override
+      public void onConnectionClosed() {
+        exceptionHandler.setPendingError(new ConnectionClosedException());
+      }
+    });
+    client.setConnectionTimeoutMillis((int) timeoutMillis);
+    client.setTerminalType(terminalType.getId());
+    client.setSocketFactory(getSocketFactory(sslType));
     ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeoutMillis));
     try {
-      em.setActive(true);
+      client.connect(server, port);
       unlock.await();
     } catch (TimeoutException | InterruptedException | RteIOException e) {
       doDisconnect();
@@ -123,28 +128,17 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  protected void setField(CoordInput s) {
-    /*
-    The values for row and column in getFieldFromPos are zero-indexed so we need to translate the
-    core input values which are one-indexed.
-   */
-    int column = s.getPosition().getColumn() - 1;
-    int row = s.getPosition().getRow() - 1;
-    XI5250Field field = em.getFieldFromPos(column, row);
-    if (field == null) {
-      throw new InvalidFieldPositionException(s.getPosition());
+  protected void setField(CoordInput i) {
+    try {
+      client.setFieldText(i.getPosition().getRow(), i.getPosition().getColumn(), i.getInput());
+    } catch (IllegalArgumentException e) {
+      throw new InvalidFieldPositionException(i.getPosition(), e);
     }
-    field.setString(s.getInput());
-    em.setCursorPos((column + s.getInput().length()) % getScreenSize().width,
-        row + (column + s.getInput().length()) / getScreenSize().width);
   }
 
   @Override
   protected void sendAttentionKey(AttentionKey attentionKey) {
-    KeyEvent keyEvent = new KeyEvent(em, KeyEvent.KEY_PRESSED, 0,
-        getKeyEvent(attentionKey).modifier, getKeyEvent(attentionKey).specialKey,
-        KeyEvent.CHAR_UNDEFINED);
-    em.processRawKeyEvent(keyEvent);
+    client.sendKeyEvent(getKeyEvent(attentionKey).specialKey, getKeyEvent(attentionKey).modifier);
   }
 
   private KeyEventMap getKeyEvent(AttentionKey attentionKey) {
@@ -163,16 +157,16 @@ public class Tn5250Client extends BaseProtocolClient {
     Tn5250ConditionWaiter condition;
     if (waitCondition instanceof SyncWaitCondition) {
       condition = new UnlockListener((SyncWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, em, exceptionHandler);
+          stableTimeoutExecutor, exceptionHandler);
     } else if (waitCondition instanceof CursorWaitCondition) {
       condition = new VisibleCursorListener((CursorWaitCondition) waitCondition,
-          this, stableTimeoutExecutor, em, exceptionHandler);
+          this, stableTimeoutExecutor, exceptionHandler);
     } else if (waitCondition instanceof SilentWaitCondition) {
       condition = new SilenceListener((SilentWaitCondition) waitCondition,
-          this, stableTimeoutExecutor, em, exceptionHandler);
+          this, stableTimeoutExecutor, exceptionHandler);
     } else if (waitCondition instanceof TextWaitCondition) {
       condition = new ScreenTextListener((TextWaitCondition) waitCondition, this,
-          stableTimeoutExecutor, em, exceptionHandler);
+          stableTimeoutExecutor, exceptionHandler);
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
@@ -182,69 +176,48 @@ public class Tn5250Client extends BaseProtocolClient {
 
   @Override
   public RequestListener buildRequestListener(SampleResult result) {
-    return new Tn5250RequestListener(result, this, em);
+    return new Tn5250RequestListener(result, this);
   }
 
   @Override
   public String getScreen() {
-    int height = em.getCrtSize().height;
-    int width = em.getCrtSize().width;
-    StringBuilder screen = new StringBuilder();
-    for (int i = 0; i < height; i++) {
-      screen.append(em.getString(0, i, width).replaceAll("[\\x00-\\x19]", " "));
-      screen.append("\n");
-    }
-    return screen.toString();
+    return client.getScreenText();
   }
 
   @Override
   public Dimension getScreenSize() {
-    return em.getCrtSize();
+    return client.getScreenDimensions();
   }
 
   @Override
   public boolean isInputInhibited() {
-    int state = em.getState();
-    switch (state) {
-      case XI5250Emulator.ST_NULL:
-      case XI5250Emulator.ST_TEMPORARY_LOCK:
-      case XI5250Emulator.ST_NORMAL_LOCKED:
-      case XI5250Emulator.ST_POWER_ON:
-      case XI5250Emulator.ST_POWERED:
-        return true;
-      case XI5250Emulator.ST_HARDWARE_ERROR:
-      case XI5250Emulator.ST_POST_HELP:
-      case XI5250Emulator.ST_PRE_HELP:
-      case XI5250Emulator.ST_SS_MESSAGE:
-      case XI5250Emulator.ST_SYSTEM_REQUEST:
-      case XI5250Emulator.ST_NORMAL_UNLOCKED:
-        return false;
-      default:
-        LOG.debug("Unexpected state: {}", state);
-        return false;
-    }
+    return client.isKeyboardLocked();
   }
 
   @Override
   public Optional<Position> getCursorPosition() {
-    return em.isCursorVisible() ? Optional
-        .of(new Position(em.getCursorRow() + 1, em.getCursorCol() + 1)) : Optional.empty();
+    return client.getCursorPosition()
+        .map(p -> new Position(p.y, p.x));
   }
 
   @Override
   public boolean getSoundAlarm() {
-    return false;
+    return client.resetAlarm();
+  }
+
+  public void addEmulatorListener(XI5250EmulatorListener listener) {
+    client.addEmulatorListener(listener);
+  }
+
+  public void removeEmulatorListener(XI5250EmulatorListener listener) {
+    client.removeEmulatorListener(listener);
   }
 
   @Override
   protected void doDisconnect() {
     stableTimeoutExecutor.shutdownNow();
     stableTimeoutExecutor = null;
-    em.setActive(false);
-  }
-
-  public void removeListener(XI5250EmulatorListener listener) {
-    em.removeEmulatorListener(listener);
+    client.disconnect();
   }
 
   private static class KeyEventMap {

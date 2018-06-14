@@ -1,8 +1,8 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
 import com.blazemeter.jmeter.rte.core.listeners.RequestListenerIT;
-import com.blazemeter.jmeter.rte.protocols.tn5250.ExtendedEmulator;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
+import net.infordata.em.tn5250.XI5250Emulator;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.runner.RunWith;
@@ -17,11 +17,11 @@ public class Tn5250RequestListenerIT extends
   private Tn5250Client client;
 
   @Mock
-  private ExtendedEmulator emulator;
+  private XI5250Emulator emulator;
 
   @Override
   public Tn5250RequestListener buildRequestListener(SampleResult result) {
-    return new Tn5250RequestListener(result, client, emulator);
+    return new Tn5250RequestListener(result, client);
   }
 
   @Override

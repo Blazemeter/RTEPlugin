@@ -2,15 +2,13 @@ package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
-import com.bytezone.dm3270.TerminalClient;
+import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
 import com.bytezone.dm3270.display.CursorMoveListener;
 import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenChangeListener;
-import com.bytezone.dm3270.display.ScreenDimensions;
 import com.bytezone.dm3270.display.ScreenWatcher;
-import java.awt.Dimension;
 import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +20,9 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
 
   private boolean matched;
 
-  public ScreenTextListener(TextWaitCondition condition,
-      ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler,
-      TerminalClient client) {
-    super(condition, stableTimeoutExecutor, exceptionHandler, client);
+  public ScreenTextListener(TextWaitCondition condition, Tn3270Client client,
+      ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
+    super(condition, client, stableTimeoutExecutor, exceptionHandler);
     client.addCursorMoveListener(this);
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
@@ -59,9 +56,7 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
   }
 
   private void checkIfScreenMatchesCondition() {
-    ScreenDimensions dimensions = client.getScreenDimensions();
-    if (condition.matchesScreen(client.getScreenText(),
-        new Dimension(dimensions.columns, dimensions.rows))) {
+    if (condition.matchesScreen(client.getScreen(), client.getScreenSize())) {
       LOG.debug("Found matching text in screen, now waiting for silent period.");
       matched = true;
     }
@@ -73,4 +68,5 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     client.removeKeyboardStatusListener(this);
     client.removeScreenChangeListener(this);
   }
+
 }
