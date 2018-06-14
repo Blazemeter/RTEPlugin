@@ -92,7 +92,7 @@ As explained previously, the RTE Sampler has 4 types of waiters which work as sy
 
 ## Compatibility
 
-The plugin is tested with Jmeter 3.1, 3.2, 3.3 and 4.0 in Java 1.8. Code base is implemented in Java 1.8, so lower versions of JVM are not supported.
+The plugin is tested with Jmeter 3.1, 3.2, 3.3 and 4.0 in Java 8 and 9. Code base is implemented in Java 1.8, so lower versions of JVM are not supported.
 
 ## Contributing
 

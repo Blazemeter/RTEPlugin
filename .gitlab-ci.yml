@@ -1,4 +1,4 @@
-image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:3.0
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:3.1
 
 variables:
   MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
@@ -40,12 +40,12 @@ jmeter_compatibility:
   tags:
     - docker
   script:
-    - export JMETER_PATH=$(pwd)/.jmeter
     - cd target/jmeter-test
-    - JMETER_VERSION=4.0 bzt testJMeter.yaml
-    - JMETER_VERSION=3.3 bzt testJMeter.yaml
-    - JMETER_VERSION=3.2 bzt testJMeter.yaml
-    - JMETER_VERSION=3.1 bzt testJMeter.yaml
+    - JMETER_VERSION=4.0 sh testJmeter.sh
+    - JMETER_VERSION=3.3 sh testJmeter.sh
+    - JMETER_VERSION=3.2 sh testJmeter.sh
+    - JMETER_VERSION=3.1 sh testJmeter.sh
+    - JMETER_VERSION=4.0 JVM_VERSION=9 sh testJmeter.sh
     - bzt testJMeterBZ.yaml
   artifacts:
     when: on_failure
