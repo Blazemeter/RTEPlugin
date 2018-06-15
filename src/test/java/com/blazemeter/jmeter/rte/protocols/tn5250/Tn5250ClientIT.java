@@ -107,6 +107,21 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     client.send(input, AttentionKey.ENTER);
   }
 
+  @Test
+  public void shouldGetTrueSoundAlarmWhenServerSendTheSignal() throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    sendCredsWithSyncWait();
+    assertThat(client.getSoundAlarm()).isTrue();
+  }
+
+  @Test
+  public void shouldGetFalseSoundAlarmWhenServerDoNotSendTheSignal() throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    assertThat(client.getSoundAlarm()).isFalse();
+  }
+
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenSendAndServerDown() throws Exception {
     loadLoginFlow();

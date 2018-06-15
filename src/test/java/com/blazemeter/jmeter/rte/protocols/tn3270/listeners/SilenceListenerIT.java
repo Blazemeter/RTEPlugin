@@ -32,9 +32,9 @@ public class SilenceListenerIT extends Tn3270ConditionWaiterIT {
   @Override
   protected Tn3270ConditionWaiter<?> buildConditionWaiter() {
     return new SilenceListener(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
+        client,
         stableTimeoutExecutor,
-        exceptionHandler,
-        client);
+        exceptionHandler);
   }
 
   @Test

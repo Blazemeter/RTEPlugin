@@ -3,7 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
-import com.bytezone.dm3270.TerminalClient;
+import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.display.CursorMoveListener;
 import com.bytezone.dm3270.display.Field;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,10 +15,9 @@ public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondi
 
   private static final Logger LOG = LoggerFactory.getLogger(VisibleCursorListener.class);
 
-  public VisibleCursorListener(CursorWaitCondition condition,
-      ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler,
-      TerminalClient client) {
-    super(condition, stableTimeoutExecutor, exceptionHandler, client);
+  public VisibleCursorListener(CursorWaitCondition condition, Tn3270Client client,
+      ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
+    super(condition, client, stableTimeoutExecutor, exceptionHandler);
     client.addCursorMoveListener(this);
     if (condition.getPosition().equals(getCursorPosition())) {
       LOG.debug("Cursor is in expected position, now waiting for it to remain for stable period");
@@ -27,9 +26,7 @@ public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondi
   }
 
   private Position getCursorPosition() {
-    return client.getCursorPosition()
-        .map(p -> new Position(p.y, p.x))
-        .orElse(null);
+    return client.getCursorPosition().orElse(null);
   }
 
   @Override

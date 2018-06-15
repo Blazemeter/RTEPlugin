@@ -1,16 +1,12 @@
-image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:2.0
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:3.0
 
 variables:
   MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
-  XTN5250_VERSION: 1.19m
 
 cache:
   paths:
     - .m2/repository/
     - .jmeter/
-before_script:
-  - set -e
-  - /install-maven-dependency.sh https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/xtn5250_${XTN5250_VERSION//.}.jar net.sourceforge.xtn5250 xtn5250 $XTN5250_VERSION
 build:
   stage: build
   tags:

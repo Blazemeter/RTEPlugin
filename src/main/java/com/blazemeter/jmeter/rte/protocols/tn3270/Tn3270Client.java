@@ -24,7 +24,10 @@ import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270RequestListene
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
 import com.bytezone.dm3270.TerminalClient;
+import com.bytezone.dm3270.application.KeyboardStatusListener;
 import com.bytezone.dm3270.commands.AIDCommand;
+import com.bytezone.dm3270.display.CursorMoveListener;
+import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenDimensions;
 import java.awt.Dimension;
 import java.util.Arrays;
@@ -135,7 +138,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public RequestListener buildRequestListener(SampleResult result) {
-    return new Tn3270RequestListener(result, this, client);
+    return new Tn3270RequestListener(result, this);
   }
 
   @Override
@@ -160,17 +163,17 @@ public class Tn3270Client extends BaseProtocolClient {
   @Override
   protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
-      return new UnlockListener((SyncWaitCondition) waitCondition, stableTimeoutExecutor,
-          exceptionHandler, client);
+      return new UnlockListener((SyncWaitCondition) waitCondition, this, stableTimeoutExecutor,
+          exceptionHandler);
     } else if (waitCondition instanceof CursorWaitCondition) {
-      return new VisibleCursorListener((CursorWaitCondition) waitCondition, stableTimeoutExecutor,
-          exceptionHandler, client);
+      return new VisibleCursorListener((CursorWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, exceptionHandler);
     } else if (waitCondition instanceof SilentWaitCondition) {
-      return new SilenceListener((SilentWaitCondition) waitCondition, stableTimeoutExecutor,
-          exceptionHandler, client);
+      return new SilenceListener((SilentWaitCondition) waitCondition, this, stableTimeoutExecutor,
+          exceptionHandler);
     } else if (waitCondition instanceof TextWaitCondition) {
-      return new ScreenTextListener((TextWaitCondition) waitCondition, stableTimeoutExecutor,
-          exceptionHandler, client);
+      return new ScreenTextListener((TextWaitCondition) waitCondition, this, stableTimeoutExecutor,
+          exceptionHandler);
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
@@ -202,6 +205,30 @@ public class Tn3270Client extends BaseProtocolClient {
   @Override
   public boolean getSoundAlarm() {
     return client.resetAlarm();
+  }
+
+  public void addScreenChangeListener(ScreenChangeListener listener) {
+    client.addScreenChangeListener(listener);
+  }
+
+  public void removeScreenChangeListener(ScreenChangeListener listener) {
+    client.removeScreenChangeListener(listener);
+  }
+
+  public void addKeyboardStatusListener(KeyboardStatusListener listener) {
+    client.addKeyboardStatusListener(listener);
+  }
+
+  public void removeKeyboardStatusListener(KeyboardStatusListener listener) {
+    client.removeKeyboardStatusListener(listener);
+  }
+
+  public void addCursorMoveListener(CursorMoveListener listener) {
+    client.addCursorMoveListener(listener);
+  }
+
+  public void removeCursorMoveListener(CursorMoveListener listener) {
+    client.removeCursorMoveListener(listener);
   }
 
   @Override

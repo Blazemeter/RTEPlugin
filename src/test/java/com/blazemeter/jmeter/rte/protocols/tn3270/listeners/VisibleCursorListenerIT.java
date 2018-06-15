@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.google.common.base.Stopwatch;
-import java.awt.Point;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -18,13 +17,11 @@ import org.mockito.stubbing.Answer;
 public class VisibleCursorListenerIT extends Tn3270ConditionWaiterIT {
 
   private static final Position EXPECTED_CURSOR_POSITION = new Position(7, 53);
-  private static final Point EXPECTED_CURSOR_POINT = new Point(
-      EXPECTED_CURSOR_POSITION.getColumn(), EXPECTED_CURSOR_POSITION.getRow());
 
   @Before
   @Override
   public void setup() throws Exception {
-    when(client.getCursorPosition()).thenReturn(Optional.of(new Point(1, 1)));
+    when(client.getCursorPosition()).thenReturn(Optional.of(new Position(1, 1)));
     super.setup();
   }
 
@@ -32,14 +29,14 @@ public class VisibleCursorListenerIT extends Tn3270ConditionWaiterIT {
   protected Tn3270ConditionWaiter<?> buildConditionWaiter() {
     return new VisibleCursorListener(
         new CursorWaitCondition(EXPECTED_CURSOR_POSITION, TIMEOUT_MILLIS, STABLE_MILLIS),
+        client,
         stableTimeoutExecutor,
-        exceptionHandler,
-        client);
+        exceptionHandler);
   }
 
   @Test
   public void shouldUnblockAfterReceivingExpectedCursorPosition() throws Exception {
-    when(client.getCursorPosition()).thenReturn(Optional.of(EXPECTED_CURSOR_POINT));
+    when(client.getCursorPosition()).thenReturn(Optional.of(EXPECTED_CURSOR_POSITION));
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
     startSingleEventGenerator(unlockDelayMillis, buildCursorStateChangeGenerator());
@@ -54,7 +51,7 @@ public class VisibleCursorListenerIT extends Tn3270ConditionWaiterIT {
 
   @Test
   public void shouldUnblockWhenAlreadyInExpectedCursorPosition() throws Exception {
-    when(client.getCursorPosition()).thenReturn(Optional.of(EXPECTED_CURSOR_POINT));
+    when(client.getCursorPosition()).thenReturn(Optional.of(EXPECTED_CURSOR_POSITION));
     Tn3270ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }

@@ -16,16 +16,16 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
   @Override
   @Before
   public void setup() throws Exception {
-    when(client.isKeyboardLocked()).thenReturn(true);
+    when(client.isInputInhibited()).thenReturn(true);
     super.setup();
   }
 
   @Override
   protected Tn3270ConditionWaiter<?> buildConditionWaiter() {
     return new UnlockListener(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_MILLIS),
+        client,
         stableTimeoutExecutor,
-        exceptionHandler,
-        client);
+        exceptionHandler);
   }
 
   @Test
@@ -45,7 +45,7 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
 
   @Test
   public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
-    when(client.isKeyboardLocked()).thenReturn(false);
+    when(client.isInputInhibited()).thenReturn(false);
     Tn3270ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }

@@ -2,7 +2,7 @@ package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
-import com.bytezone.dm3270.TerminalClient;
+import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
 import java.util.concurrent.ScheduledExecutorService;
@@ -16,11 +16,11 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
       UnlockListener.class);
   private boolean isInputInhibited;
 
-  public UnlockListener(SyncWaitCondition condition, ScheduledExecutorService stableTimeoutExecutor,
-      ExceptionHandler exceptionHandler, TerminalClient client) {
-    super(condition, stableTimeoutExecutor, exceptionHandler, client);
+  public UnlockListener(SyncWaitCondition condition, Tn3270Client client,
+      ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
+    super(condition, client, stableTimeoutExecutor, exceptionHandler);
     client.addKeyboardStatusListener(this);
-    isInputInhibited = client.isKeyboardLocked();
+    isInputInhibited = client.isInputInhibited();
     if (!isInputInhibited) {
       LOG.debug("Start stable period since input is not inhibited");
       startStablePeriod();
@@ -49,4 +49,5 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
     super.stop();
     client.removeKeyboardStatusListener(this);
   }
+
 }

@@ -31,7 +31,6 @@ public class VisibleCursorListenerIT extends Tn5250ConditionWaiterIT {
         new CursorWaitCondition(EXPECTED_CURSOR_POSITION, TIMEOUT_MILLIS, STABLE_MILLIS),
         client,
         stableTimeoutExecutor,
-        em,
         exceptionHandler);
   }
 
