@@ -129,7 +129,19 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private int getPort() {
-    return getPropertyAsInt(CONFIG_PORT, DEFAULT_PORT);
+    return getIntProperty(CONFIG_PORT, DEFAULT_PORT);
+  }
+
+  /*
+  Jmeter properties method which receive a default (e.g: getPropertyAsInt(String, int)) apply such
+  default only when the property is null, but if the property is invalid or has been specified to
+  an empty string for example it returns 0. Since this is not the expected behavior for property
+  defaults (expected that if the value is not valid in any way then use default one) we use this
+  method and getLongProperty.
+   */
+  private int getIntProperty(String propertyName, int defaultValue) {
+    int prop = getPropertyAsInt(propertyName);
+    return prop == 0 ? defaultValue : prop;
   }
 
   private TerminalType getTerminalType() {
@@ -138,7 +150,16 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private long getConnectionTimeout() {
-    return getPropertyAsLong(CONFIG_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+    return getLongProperty(CONFIG_CONNECTION_TIMEOUT, DEFAULT_CONNECTION_TIMEOUT_MILLIS);
+  }
+
+  /*
+  check at getIntProperty for an explanation why we use this instead of
+  getPropertyAsLong(String, long)
+   */
+  private long getLongProperty(String propertyName, long defaultValue) {
+    long prop = getPropertyAsLong(propertyName);
+    return prop == 0L ? defaultValue : prop;
   }
 
   private long getStableTimeout() {
@@ -173,7 +194,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   public Action getAction() {
-
     if (getPropertyAsString(ACTION_PROPERTY).isEmpty()) {
       return DEFAULT_ACTION;
     }
@@ -216,7 +236,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private long getWaitSyncTimeoutValue() {
-    return getPropertyAsLong(WAIT_SYNC_TIMEOUT_PROPERTY, DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
+    return getLongProperty(WAIT_SYNC_TIMEOUT_PROPERTY, DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS);
   }
 
   public boolean getWaitCursor() {
@@ -227,8 +247,17 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     setProperty(WAIT_CURSOR_PROPERTY, waitCursor);
   }
 
+  public String getWaitCursorTimeout() {
+    return getPropertyAsString(WAIT_CURSOR_TIMEOUT_PROPERTY,
+        String.valueOf(DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS));
+  }
+
+  public void setWaitCursorTimeout(String waitTimeoutCursor) {
+    setProperty(WAIT_CURSOR_TIMEOUT_PROPERTY, waitTimeoutCursor);
+  }
+
   private long getWaitCursorTimeoutValue() {
-    return getPropertyAsLong(WAIT_CURSOR_TIMEOUT_PROPERTY, DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS);
+    return getLongProperty(WAIT_CURSOR_TIMEOUT_PROPERTY, DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS);
   }
 
   public String getWaitCursorRow() {
@@ -240,7 +269,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private int getWaitCursorRowValue() {
-    return getPropertyAsInt(WAIT_CURSOR_ROW_PROPERTY, 1);
+    return getIntProperty(WAIT_CURSOR_ROW_PROPERTY, 1);
   }
 
   public String getWaitCursorColumn() {
@@ -252,16 +281,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private int getWaitCursorColumnValue() {
-    return getPropertyAsInt(WAIT_CURSOR_COLUMN_PROPERTY, 1);
-  }
-
-  public String getWaitCursorTimeout() {
-    return getPropertyAsString(WAIT_CURSOR_TIMEOUT_PROPERTY,
-        String.valueOf(DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS));
-  }
-
-  public void setWaitCursorTimeout(String waitTimeoutCursor) {
-    setProperty(WAIT_CURSOR_TIMEOUT_PROPERTY, waitTimeoutCursor);
+    return getIntProperty(WAIT_CURSOR_COLUMN_PROPERTY, 1);
   }
 
   public boolean getWaitSilent() {
@@ -282,7 +302,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private long getWaitSilentTimeValue() {
-    return getPropertyAsLong(WAIT_SILENT_TIME_PROPERTY, DEFAULT_WAIT_SILENT_TIME_MILLIS);
+    return getLongProperty(WAIT_SILENT_TIME_PROPERTY, DEFAULT_WAIT_SILENT_TIME_MILLIS);
   }
 
   public String getWaitSilentTimeout() {
@@ -295,7 +315,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private long getWaitSilentTimeoutValue() {
-    return getPropertyAsLong(WAIT_SILENT_TIMEOUT_PROPERTY, DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS);
+    return getLongProperty(WAIT_SILENT_TIMEOUT_PROPERTY, DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS);
   }
 
   public boolean getWaitText() {
@@ -323,7 +343,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private int getWaitTextAreaTopValue() {
-    return getPropertyAsInt(WAIT_TEXT_AREA_TOP_PROPERTY, 1);
+    return getIntProperty(WAIT_TEXT_AREA_TOP_PROPERTY, 1);
   }
 
   public String getWaitTextAreaLeft() {
@@ -335,7 +355,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private int getWaitTextAreaLeftValue() {
-    return getPropertyAsInt(WAIT_TEXT_AREA_LEFT_PROPERTY, 1);
+    return getIntProperty(WAIT_TEXT_AREA_LEFT_PROPERTY, 1);
   }
 
   public String getWaitTextAreaBottom() {
@@ -347,7 +367,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private int getWaitTextAreaBottomValue() {
-    return getPropertyAsInt(WAIT_TEXT_AREA_BOTTOM_PROPERTY, Position.UNSPECIFIED_INDEX);
+    return getIntProperty(WAIT_TEXT_AREA_BOTTOM_PROPERTY, Position.UNSPECIFIED_INDEX);
   }
 
   public String getWaitTextAreaRight() {
@@ -359,7 +379,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private int getWaitTextAreaRightValue() {
-    return getPropertyAsInt(WAIT_TEXT_AREA_RIGHT_PROPERTY, Position.UNSPECIFIED_INDEX);
+    return getIntProperty(WAIT_TEXT_AREA_RIGHT_PROPERTY, Position.UNSPECIFIED_INDEX);
   }
 
   public String getWaitTextTimeout() {
@@ -372,7 +392,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private long getWaitTextTimeoutValue() {
-    return getPropertyAsLong(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
+    return getLongProperty(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
   }
 
   @Override
