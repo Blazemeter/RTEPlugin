@@ -1,7 +1,7 @@
 modules:
   jmeter:
-    path: ${JMETER_PATH}/${JMETER_VERSION}
-    version: ${JMETER_VERSION}
+    path: ".jmeter"
+    version: "4.0"
     properties:
       log_level: DEBUG
       user.classpath: lib
