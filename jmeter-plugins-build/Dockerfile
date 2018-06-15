@@ -19,7 +19,7 @@ RUN echo 'deb http://ftp.debian.org/debian stretch-backports main' > /etc/apt/so
 	&& apt-get install -y openjdk-9-jdk-headless="$JAVA_DEBIAN_VERSION"
 
 # install taurus for integration tests with blazemeter and different jmeter versions
-ENV TAURUS_VERSION=1.12.0
+ENV TAURUS_VERSION=1.11.1
 RUN apt-get update \
   && apt-get -y install python default-jre-headless python-tk python-pip python-dev libxml2-dev libxslt-dev zlib1g-dev net-tools \
   && pip install bzt==$TAURUS_VERSION

@@ -8,8 +8,6 @@ modules:
       user.classpath: lib
   console:
     disable: true
-  cloud:
-    token: ${BZ_TOKEN}
 
 execution:
 - concurrency: 1

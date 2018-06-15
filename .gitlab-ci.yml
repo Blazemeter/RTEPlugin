@@ -46,7 +46,7 @@ jmeter_compatibility:
     - JMETER_VERSION=3.2 sh testJmeter.sh
     - JMETER_VERSION=3.1 sh testJmeter.sh
     - JMETER_VERSION=4.0 JVM_VERSION=9 sh testJmeter.sh
-    - bzt testJMeterBZ.yaml
+    - bzt testJMeterBZ.yaml -o modules.cloud.token=${BZ_TOKEN}
   artifacts:
     when: on_failure
     paths:
