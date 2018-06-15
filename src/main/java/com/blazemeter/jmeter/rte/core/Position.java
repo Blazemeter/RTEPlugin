@@ -4,7 +4,7 @@ import java.util.Objects;
 
 public class Position {
 
-  public static final int UNSPECIFIED_INDEX = -1;
+  public static final int UNSPECIFIED_INDEX = 0;
 
   private final int row;
   private final int column;
