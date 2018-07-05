@@ -1,0 +1,24 @@
+ MAIN                           IBM i Main Menu                                 
+                                                             System:   TESTSYS  
+ Select one of the following:                                                   
+                                                                                
+      1. User tasks                                                             
+      2. Office tasks                                                           
+                                                                                
+      4. Files, libraries, and folders                                          
+                                                                                
+      6. Communications                                                         
+                                                                                
+      8. Problem handling                                                       
+      9. Display a menu                                                         
+     10. Information Assistant options                                          
+     11. IBM i Access tasks                                                     
+                                                                                
+     90. Sign off                                                               
+                                                                                
+ Selection or command                                                           
+ ===>                                                                           
+                                                                                
+ F3=Exit   F4=Prompt   F9=Retrieve   F12=Cancel   F13=Information Assistant     
+ F23=Set initial menu                                                           
+ (C) COPYRIGHT IBM CORP. 1980, 2013.                                            
