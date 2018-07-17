@@ -71,12 +71,12 @@ public class RTESamplerPanel extends JPanel {
   public RTESamplerPanel() {
     GroupLayout layout = new GroupLayout(this);
     layout.setAutoCreateGaps(true);
-    layout.setAutoCreateGaps(true);
     this.setLayout(layout);
 
     JPanel modePanel = buildModePanel();
     requestPanel = buildRequestPanel();
     waitPanel = buildWaitsPanel();
+    BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(modePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
@@ -84,6 +84,8 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE)
         .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(modePanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
@@ -91,6 +93,8 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             GroupLayout.DEFAULT_SIZE)
         .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.DEFAULT_SIZE)
+        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             GroupLayout.DEFAULT_SIZE)
     );
   }

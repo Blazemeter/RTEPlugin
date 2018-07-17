@@ -1,5 +1,7 @@
 # JMeter-RTE-plugin
 
+![labs-logo](src/main/resources/blazemeter-labs-logo.png)
+
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing config elements and samplers.
 
 Nowadays the plugin supports **IBM protocol's TN5250 and TN3270** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators with modifications to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
@@ -86,9 +88,6 @@ As explained previously, the RTE Sampler has 4 types of waiters which work as sy
 - *Wait for Cursor*: It's useful to use it, for example, in a step before a sampler that will put some text in a field. By using this waiter the user makes sure that the system has returned the control of the cursor.
 - *Wait for Silent*: The client is considered to be silent when the terminal does not receive any characters from the server so, by setting the proper silent interval, the user could ensure that the server has sent all the information available to the client before continue the execution.    
 - *Wait for Text*: This waiter could be useful to check for a specific message before continue the execution. For example, it could be used to wait for a message with the confirmation that a specific process ended correctly or to check if a search returned any result before continue. 
-
- 
-
 
 ## Compatibility
 

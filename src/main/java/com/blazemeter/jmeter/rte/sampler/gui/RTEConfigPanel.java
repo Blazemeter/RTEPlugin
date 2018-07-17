@@ -43,24 +43,29 @@ public class RTEConfigPanel extends JPanel {
 
   public RTEConfigPanel() {
     GroupLayout layout = new GroupLayout(this);
+    layout.setAutoCreateGaps(true);
     this.setLayout(layout);
 
     JPanel connectionPanel = buildConnectionPanel();
     JPanel timeoutPanel = buildTimeoutPanel();
+    BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo();
 
     layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addComponent(connectionPanel, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        .addComponent(timeoutPanel, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE));
+        .addComponent(connectionPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(timeoutPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
-        .addContainerGap()
-        .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+        .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(timeoutPanel, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-        .addContainerGap());
+        .addComponent(timeoutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE));
   }
 
   private JPanel buildConnectionPanel() {
@@ -82,13 +87,11 @@ public class RTEConfigPanel extends JPanel {
         .addGroup(layout.createSequentialGroup()
             .addComponent(serverLabel)
             .addPreferredGap(ComponentPlacement.RELATED)
-            .addComponent(serverField, GroupLayout.PREFERRED_SIZE, 500,
-                GroupLayout.PREFERRED_SIZE)
+            .addComponent(serverField, GroupLayout.PREFERRED_SIZE, 500, GroupLayout.PREFERRED_SIZE)
             .addPreferredGap(ComponentPlacement.UNRELATED)
             .addComponent(portLabel)
             .addPreferredGap(ComponentPlacement.RELATED)
-            .addComponent(portField, GroupLayout.PREFERRED_SIZE, 150,
-                GroupLayout.PREFERRED_SIZE)
+            .addComponent(portField, GroupLayout.PREFERRED_SIZE, 150, GroupLayout.PREFERRED_SIZE)
             .addPreferredGap(ComponentPlacement.UNRELATED))
         .addGroup(layout.createSequentialGroup()
             .addComponent(protocolLabel)
@@ -107,22 +110,21 @@ public class RTEConfigPanel extends JPanel {
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
             .addComponent(serverLabel)
-            .addComponent(serverField, GroupLayout.PREFERRED_SIZE,
-                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+            .addComponent(serverField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.PREFERRED_SIZE)
             .addComponent(portLabel)
-            .addComponent(portField, GroupLayout.PREFERRED_SIZE,
-                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+            .addComponent(portField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.PREFERRED_SIZE))
         .addPreferredGap(ComponentPlacement.RELATED)
         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
             .addComponent(protocolLabel)
-            .addComponent(protocolComboBox, GroupLayout.PREFERRED_SIZE,
-                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+            .addComponent(protocolComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.PREFERRED_SIZE))
         .addPreferredGap(ComponentPlacement.RELATED)
         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
             .addComponent(terminalTypeLabel)
-            .addComponent(terminalTypeComboBox,
-                GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                GroupLayout.PREFERRED_SIZE))
+            .addComponent(terminalTypeComboBox, GroupLayout.PREFERRED_SIZE,
+                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(sslPanel));
     return panel;
