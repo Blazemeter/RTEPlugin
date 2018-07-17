@@ -26,27 +26,127 @@ public class RTEConfigPanel extends JPanel {
 
   private static final long serialVersionUID = -3671411083800369578L;
 
-  private JPanel connectionPanel = SwingUtils.createComponent("connectionPanel", new JPanel());
-  private JPanel sslPanel = SwingUtils.createComponent("sslPanel", new JPanel());
+  private static final DefaultComboBoxModel<TerminalType> TN5250_TERMINAL_TYPES =
+      buildTerminalTypesComboBoxModel(Protocol.TN5250);
+  private static final DefaultComboBoxModel<TerminalType> TN3270_TERMINAL_TYPES =
+      buildTerminalTypesComboBoxModel(Protocol.TN3270);
+
   private ButtonGroup sslTypeGroup = new ButtonGroup();
   private Map<SSLType, JRadioButton> sslTypeRadios = new EnumMap<>(SSLType.class);
   private JTextField serverField = SwingUtils.createComponent("serverField", new JTextField());
   private JTextField portField = SwingUtils.createComponent("portField", new JTextField());
-  private JComboBox<Protocol> protocolComboBox = SwingUtils
-      .createComponent("protocolComboBox", new JComboBox<>(Protocol.values()));
-
-  private DefaultComboBoxModel<TerminalType> modelTN5250 = buildTerminalTypesComboBoxModel(
-      Protocol.TN5250);
-  private DefaultComboBoxModel<TerminalType> modelTN3270 = buildTerminalTypesComboBoxModel(
-      Protocol.TN3270);
-
+  private JComboBox<Protocol> protocolComboBox;
   private JComboBox<TerminalType> terminalTypeComboBox = SwingUtils
-      .createComponent("terminalTypeComboBox", new JComboBox<>(modelTN5250));
+      .createComponent("terminalTypeComboBox", new JComboBox<>(TN5250_TERMINAL_TYPES));
   private JTextField connectionTimeout = SwingUtils
       .createComponent("connectionTimeout", new JTextField());
 
   public RTEConfigPanel() {
-    initComponents();
+    GroupLayout layout = new GroupLayout(this);
+    layout.setAutoCreateGaps(true);
+    this.setLayout(layout);
+
+    JPanel connectionPanel = buildConnectionPanel();
+    JPanel timeoutPanel = buildTimeoutPanel();
+    BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo();
+
+    layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
+        .addComponent(connectionPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(timeoutPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+            Short.MAX_VALUE));
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(timeoutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+  }
+
+  private JPanel buildConnectionPanel() {
+    JPanel panel = SwingUtils.createComponent("connectionPanel", new JPanel());
+    panel.setBorder(BorderFactory.createTitledBorder("Connection"));
+    GroupLayout layout = new GroupLayout(panel);
+    layout.setAutoCreateContainerGaps(true);
+    panel.setLayout(layout);
+
+    JLabel serverLabel = SwingUtils.createComponent("serverLabel", new JLabel("Server: "));
+    JLabel portLabel = SwingUtils.createComponent("portLabel", new JLabel("Port: "));
+    JLabel protocolLabel = SwingUtils.createComponent("protocolLabel", new JLabel("Protocol: "));
+    protocolComboBox = buildProtocolComboBox();
+    JLabel terminalTypeLabel = SwingUtils
+        .createComponent("terminalTypeLabel", new JLabel("Terminal Type:"));
+    JPanel sslPanel = buildSslPanel();
+
+    layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
+        .addGroup(layout.createSequentialGroup()
+            .addComponent(serverLabel)
+            .addPreferredGap(ComponentPlacement.RELATED)
+            .addComponent(serverField, GroupLayout.PREFERRED_SIZE, 500, GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(ComponentPlacement.UNRELATED)
+            .addComponent(portLabel)
+            .addPreferredGap(ComponentPlacement.RELATED)
+            .addComponent(portField, GroupLayout.PREFERRED_SIZE, 150, GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(ComponentPlacement.UNRELATED))
+        .addGroup(layout.createSequentialGroup()
+            .addComponent(protocolLabel)
+            .addPreferredGap(ComponentPlacement.RELATED)
+            .addComponent(protocolComboBox, 0, 1, Short.MAX_VALUE)
+            .addPreferredGap(ComponentPlacement.UNRELATED))
+        .addGroup(
+            layout.createSequentialGroup()
+                .addComponent(terminalTypeLabel)
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addComponent(terminalTypeComboBox, 0, 1, Short.MAX_VALUE)
+                .addPreferredGap(ComponentPlacement.UNRELATED))
+        .addComponent(sslPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+            .addComponent(serverLabel)
+            .addComponent(serverField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.PREFERRED_SIZE)
+            .addComponent(portLabel)
+            .addComponent(portField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.PREFERRED_SIZE))
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+            .addComponent(protocolLabel)
+            .addComponent(protocolComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                GroupLayout.PREFERRED_SIZE))
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+            .addComponent(terminalTypeLabel)
+            .addComponent(terminalTypeComboBox, GroupLayout.PREFERRED_SIZE,
+                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(sslPanel));
+    return panel;
+  }
+
+  private JComboBox<Protocol> buildProtocolComboBox() {
+    JComboBox<Protocol> comboBox = SwingUtils
+        .createComponent("protocolComboBox", new JComboBox<>(Protocol.values()));
+    comboBox.addItemListener(e -> {
+      if (e.getStateChange() != ItemEvent.SELECTED) {
+        return;
+      }
+      Protocol protocolEnum = (Protocol) e.getItem();
+      if (protocolEnum.equals(Protocol.TN5250)) {
+        terminalTypeComboBox.setModel(TN5250_TERMINAL_TYPES);
+      } else if (protocolEnum.equals(Protocol.TN3270)) {
+        terminalTypeComboBox.setModel(TN3270_TERMINAL_TYPES);
+      }
+      validate();
+      repaint();
+    });
+    return comboBox;
   }
 
   private static DefaultComboBoxModel<TerminalType> buildTerminalTypesComboBoxModel(
@@ -56,148 +156,43 @@ public class RTEConfigPanel extends JPanel {
             .toArray(new TerminalType[0]));
   }
 
-  private void initComponents() {
-
-    connectionPanel.setBorder(BorderFactory.createTitledBorder("Connection"));
-
-    protocolComboBox.addItemListener(e -> {
-      if (e.getStateChange() != ItemEvent.SELECTED) {
-        return;
-      }
-      Protocol protocolEnum = (Protocol) e.getItem();
-      if (protocolEnum.equals(Protocol.TN5250)) {
-        terminalTypeComboBox.setModel(modelTN5250);
-      } else if (protocolEnum.equals(Protocol.TN3270)) {
-        terminalTypeComboBox.setModel(modelTN3270);
-      }
-      validate();
-      repaint();
-    });
-
-    sslPanel.setBorder(BorderFactory.createTitledBorder("SSL Type"));
-    sslPanel.setLayout(new GridLayout(1, 3));
+  private JPanel buildSslPanel() {
+    JPanel panel = SwingUtils.createComponent("sslPanel", new JPanel());
+    panel.setBorder(BorderFactory.createTitledBorder("SSL Type"));
+    panel.setLayout(new GridLayout(1, 3));
 
     Arrays.stream(SSLType.values()).forEach(s -> {
       JRadioButton r = SwingUtils.createComponent(s.toString(), new JRadioButton(s.toString()));
       r.setActionCommand(s.name());
-      sslPanel.add(r);
+      panel.add(r);
       sslTypeRadios.put(s, r);
       sslTypeGroup.add(r);
     });
 
-    JLabel serverLabel = SwingUtils.createComponent("serverLabel", new JLabel("Server: "));
-    JLabel portLabel = SwingUtils.createComponent("portLabel", new JLabel("Port: "));
-    JLabel protocolLabel = SwingUtils.createComponent("protocolLabel", new JLabel("Protocol: "));
-    JLabel terminalTypeLabel = SwingUtils
-        .createComponent("terminalTypeLabel", new JLabel("Terminal Type:"));
+    return panel;
+  }
 
-    GroupLayout connectionPanelLayout = new GroupLayout(connectionPanel);
-    connectionPanelLayout.setAutoCreateContainerGaps(true);
-    connectionPanel.setLayout(connectionPanelLayout);
-    connectionPanelLayout.setHorizontalGroup(connectionPanelLayout
-        .createParallelGroup(Alignment.LEADING)
-        .addGroup(connectionPanelLayout.createSequentialGroup()
-            .addGroup(connectionPanelLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(connectionPanelLayout.createSequentialGroup()
-                    .addComponent(serverLabel)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(serverField, GroupLayout.PREFERRED_SIZE, 500,
-                        GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.UNRELATED)
-                    .addComponent(portLabel)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(portField, GroupLayout.PREFERRED_SIZE, 150,
-                        GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.UNRELATED))
-                .addGroup(connectionPanelLayout.createSequentialGroup()
-                    .addComponent(protocolLabel)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(protocolComboBox, 0, 1, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.UNRELATED))
-                .addGroup(
-                    connectionPanelLayout.createSequentialGroup()
-                        .addComponent(terminalTypeLabel)
-                        .addPreferredGap(ComponentPlacement.RELATED)
-                        .addComponent(terminalTypeComboBox, 0, 1, Short.MAX_VALUE)
-                        .addPreferredGap(ComponentPlacement.UNRELATED))
-                .addComponent(sslPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-                    GroupLayout.PREFERRED_SIZE))));
-
-    connectionPanelLayout.setVerticalGroup(connectionPanelLayout
-        .createParallelGroup(Alignment.LEADING)
-        .addGroup(connectionPanelLayout.createSequentialGroup()
-            .addContainerGap()
-            .addGroup(connectionPanelLayout.createParallelGroup(Alignment.BASELINE)
-                .addComponent(serverLabel)
-                .addComponent(serverField, GroupLayout.PREFERRED_SIZE,
-                    GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                .addComponent(portLabel)
-                .addComponent(portField, GroupLayout.PREFERRED_SIZE,
-                    GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-            .addPreferredGap(ComponentPlacement.RELATED)
-            .addGroup(connectionPanelLayout.createParallelGroup(Alignment.BASELINE)
-                .addComponent(protocolLabel)
-                .addComponent(protocolComboBox, GroupLayout.PREFERRED_SIZE,
-                    GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-            .addPreferredGap(ComponentPlacement.RELATED)
-            .addGroup(connectionPanelLayout.createParallelGroup(Alignment.BASELINE)
-                .addComponent(terminalTypeLabel)
-                .addComponent(terminalTypeComboBox,
-                    GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                    GroupLayout.PREFERRED_SIZE))
-            .addPreferredGap(ComponentPlacement.RELATED)
-            .addComponent(sslPanel)
-            .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
-
-    JPanel timeoutPanel = SwingUtils.createComponent("timeoutPanel", new JPanel());
-    timeoutPanel
+  private JPanel buildTimeoutPanel() {
+    JPanel panel = SwingUtils.createComponent("timeoutPanel", new JPanel());
+    panel
         .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString("timeout_title")));
+    GroupLayout layout = new GroupLayout(panel);
+    layout.setAutoCreateContainerGaps(true);
+    panel.setLayout(layout);
 
     JLabel connectTimeoutLabel = SwingUtils.createComponent("connectTimeoutLabel",
         new JLabel(JMeterUtils.getResString("web_server_timeout_connect")));
 
-    GroupLayout timeoutPanelLayout = new GroupLayout(timeoutPanel);
-    timeoutPanel.setLayout(timeoutPanelLayout);
-    timeoutPanelLayout.setHorizontalGroup(timeoutPanelLayout
-        .createParallelGroup(Alignment.LEADING)
-        .addGroup(timeoutPanelLayout.createSequentialGroup()
-            .addContainerGap()
-            .addComponent(connectTimeoutLabel)
-            .addPreferredGap(ComponentPlacement.RELATED)
-            .addComponent(connectionTimeout, GroupLayout.PREFERRED_SIZE, 150,
-                GroupLayout.PREFERRED_SIZE)
-            .addContainerGap()));
-    timeoutPanelLayout.setVerticalGroup(timeoutPanelLayout
-        .createParallelGroup(Alignment.LEADING)
-        .addGroup(timeoutPanelLayout.createSequentialGroup()
-            .addContainerGap()
-            .addGroup(timeoutPanelLayout.createParallelGroup(Alignment.BASELINE)
-                .addComponent(connectTimeoutLabel)
-                .addComponent(connectionTimeout,
-                    GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-                    GroupLayout.PREFERRED_SIZE))
-            .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)));
-
-    GroupLayout layout = new GroupLayout(this);
-    this.setLayout(layout);
-    layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(layout.createSequentialGroup()
-            .addContainerGap()
-            .addGroup(layout.createParallelGroup(Alignment.LEADING)
-                .addComponent(connectionPanel, GroupLayout.DEFAULT_SIZE,
-                    GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(timeoutPanel, GroupLayout.DEFAULT_SIZE,
-                    GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addContainerGap()));
-    layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
-        .addGroup(layout.createSequentialGroup()
-            .addContainerGap()
-            .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE,
-                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-            .addPreferredGap(ComponentPlacement.RELATED)
-            .addComponent(timeoutPanel, GroupLayout.PREFERRED_SIZE,
-                GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-            .addContainerGap()));
+    layout.setHorizontalGroup(layout.createSequentialGroup()
+        .addComponent(connectTimeoutLabel)
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(connectionTimeout, GroupLayout.PREFERRED_SIZE, 150,
+            GroupLayout.PREFERRED_SIZE));
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+        .addComponent(connectTimeoutLabel)
+        .addComponent(connectionTimeout, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+    return panel;
   }
 
   public String getServer() {
