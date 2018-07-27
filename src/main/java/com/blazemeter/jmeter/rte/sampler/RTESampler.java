@@ -35,6 +35,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
+import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -616,9 +617,21 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   @Override
   public void iterationStart(LoopIterationEvent loopIterationEvent) {
-    if (!isReuseConnections()) {
+    if (!isReuseConnections() && isFirstRteSamplerInLoop()) {
       closeConnections();
     }
+  }
+
+  private boolean isFirstRteSamplerInLoop() {
+    JMeterVariables vars = getThreadContext().getVariables();
+    Integer currentThreadIteration = vars.getIteration();
+    String rteIterationVarName = "RTESampler.iteration";
+    Integer lastRteSamplerIteration = (Integer) vars.getObject(rteIterationVarName);
+    if (!currentThreadIteration.equals(lastRteSamplerIteration)) {
+      vars.putObject(rteIterationVarName, currentThreadIteration);
+      return true;
+    }
+    return false;
   }
 
 }

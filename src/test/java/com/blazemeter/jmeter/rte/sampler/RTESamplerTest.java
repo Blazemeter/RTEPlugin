@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -93,6 +94,7 @@ public class RTESamplerTest {
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
     rteSampler.setPayload(createInputs());
+    rteSampler.getThreadContext().getVariables().incIteration();
   }
 
   private void createDefaultRTEConfig() {
@@ -321,6 +323,17 @@ public class RTESamplerTest {
     sampler.setPayload(createInputs());
     sampler.setAction(Action.CONNECT);
     sampler.sample(null);
+  }
+
+  @Test
+  public void shouldNotDisconnectEmulatorWhenIterationStartAndIterationHasNotChanged()
+      throws Exception {
+    rteSampler.sample(null);
+    rteSampler.iterationStart(null);
+    reset(rteProtocolClientMock);
+    rteSampler.sample(null);
+    rteSampler.iterationStart(null);
+    verify(rteProtocolClientMock, never()).disconnect();
   }
 
   @Test
