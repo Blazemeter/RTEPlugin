@@ -30,7 +30,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
 
   @Override
   public String getStaticLabel() {
-    return "RTE Sampler";
+    return "bzm - RTE Sampler";
   }
 
   @Override
