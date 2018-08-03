@@ -31,7 +31,7 @@ public class RTEConfigGui extends AbstractConfigGui {
 
   @Override
   public String getStaticLabel() {
-    return "RTE Config";
+    return "bzm - RTE Config";
   }
 
   @Override
