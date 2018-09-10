@@ -33,7 +33,7 @@ public class RTESamplerPanel extends JPanel {
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
   private final JPanel requestPanel;
-  private CoordInputPanel payloadPanel;
+  private InputPanel payloadPanel;
   private ButtonGroup attentionKeysGroup = new ButtonGroup();
   private Map<AttentionKey, JRadioButton> attentionKeys = new EnumMap<>(AttentionKey.class);
   private final JPanel waitPanel;
@@ -135,7 +135,7 @@ public class RTESamplerPanel extends JPanel {
     panel.setLayout(layout);
 
     JLabel payloadLabel = SwingUtils.createComponent("payloadLabel", new JLabel("Payload: "));
-    payloadPanel = SwingUtils.createComponent("payloadPanel", new CoordInputPanel());
+    payloadPanel = SwingUtils.createComponent("payloadPanel", new InputPanel());
     JPanel attentionKeysPanel = buildAttentionKeysPanel();
 
     JLabel warningLabel = SwingUtils
@@ -451,7 +451,7 @@ public class RTESamplerPanel extends JPanel {
     }
   }
 
-  public CoordInputPanel getPayload() {
+  public InputPanel getPayload() {
     return this.payloadPanel;
   }
 

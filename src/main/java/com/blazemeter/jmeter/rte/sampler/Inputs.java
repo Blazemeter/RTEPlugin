@@ -2,7 +2,6 @@ package com.blazemeter.jmeter.rte.sampler;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.testelement.property.CollectionProperty;
 import org.apache.jmeter.testelement.property.JMeterProperty;
@@ -28,11 +27,7 @@ public class Inputs extends ConfigTestElement implements Serializable, Iterable<
     setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<CoordInputRowGUI>()));
   }
 
-  public void setCoordInput(List<Inputs> coordInput) {
-    setProperty(new CollectionProperty(INPUTS_PROPERTY, coordInput));
-  }
-
-  public void addCoordInput(CoordInputRowGUI input) {
+  public void addInput(InputRowGUI input) {
     TestElementProperty newInput = new TestElementProperty(input.getName(), input);
     if (isRunningVersion()) {
       this.setTemporary(newInput);

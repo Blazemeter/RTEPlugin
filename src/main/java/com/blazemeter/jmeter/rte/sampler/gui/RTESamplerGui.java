@@ -43,7 +43,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
     super.configure(element);
     if (element instanceof RTESampler) {
       RTESampler sampler = (RTESampler) element;
-      Inputs payload = sampler.getInputs();
+      Inputs payload = sampler.getInputsGUI();
       if (payload != null) {
         rteSamplerPanel.getPayload().configure(payload);
       }
@@ -80,7 +80,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
     configureTestElement(te);
     if (te instanceof RTESampler) {
       RTESampler sampler = (RTESampler) te;
-      CoordInputPanel payload = rteSamplerPanel.getPayload();
+      InputPanel payload = rteSamplerPanel.getPayload();
       if (payload != null) {
         sampler.setPayload((Inputs) payload.createTestElement());
       }

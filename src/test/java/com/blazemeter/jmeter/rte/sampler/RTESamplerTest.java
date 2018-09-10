@@ -115,7 +115,7 @@ public class RTESamplerTest {
 
   private Inputs createInputs() {
     Inputs ret = new Inputs();
-    ret.addCoordInput(new CoordInputRowGUI(1, 1, "input"));
+    ret.addInput(new CoordInputRowGUI("1", "1", "input"));
     return ret;
   }
 
