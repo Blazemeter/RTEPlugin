@@ -34,13 +34,13 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   }
 
   @Override
-  public void send(List<CoordInput> input, AttentionKey attentionKey) throws RteIOException {
+  public void send(List<Input> input, AttentionKey attentionKey) throws RteIOException {
     input.forEach(this::setField);
     sendAttentionKey(attentionKey);
     exceptionHandler.throwAnyPendingError();
   }
 
-  protected abstract void setField(CoordInput coordInput);
+  protected abstract void setField(Input input);
 
   protected abstract void sendAttentionKey(AttentionKey attentionKey);
 
