@@ -11,4 +11,5 @@ public abstract class Input {
   public String getInput() {
     return input;
   }
+
 }

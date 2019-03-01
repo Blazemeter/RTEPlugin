@@ -2,6 +2,8 @@ package com.blazemeter.jmeter.rte.sampler;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
@@ -26,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.AbstractSampler;
@@ -425,7 +428,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         addClientRequestHeaders(client, sampleResult);
         if (getAction() == Action.SEND_INPUT) {
           sampleResult.setSamplerData(buildRequestBody());
-          client.send(getCoordInputs(), getAttentionKey());
+          // TODO fix this client.send(getCoordInputs(), getAttentionKey());
+          client.send(null, getAttentionKey());
         }
         List<WaitCondition> waiters = getWaitersList();
         if (!waiters.isEmpty()) {
@@ -437,15 +441,17 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         sampleResult.setResponseData(client.getScreen(), "utf-8");
       } finally {
         requestListener.stop();
-        getCoordInputs().forEach(i -> {
-          LOG.debug("Input(Row,Column,Value): {},{},{} - {}", i.getPosition().getRow(),
-              i.getPosition().getColumn(), i.getInput(), getThreadName());
-        });
-        LOG.debug("AttentionKey sent: {} - {}", getAttentionKey().name(), getThreadName());
-        LOG.debug("Request Headers: {} - {}", sampleResult.getRequestHeaders(), getThreadName());
-        LOG.debug("Response Headers: {} - {}", sampleResult.getResponseHeaders(), getThreadName());
-        LOG.debug("Response Screen: {} - {}", sampleResult.getResponseDataAsString(),
-            getThreadName());
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("{} - Inputs:\n{}", getThreadName(), getInputs().stream()
+              .map(Object::toString)
+              .collect(Collectors.joining("\n")));
+          LOG.debug("{} - AttentionKey sent: {}", getThreadName(), getAttentionKey().name());
+          LOG.debug("{} - Request Headers: {}", getThreadName(), sampleResult.getRequestHeaders());
+          LOG.debug("{} - Response Headers: {}", getThreadName(),
+              sampleResult.getResponseHeaders());
+          LOG.debug("{} - Response Screen: {}", getThreadName(),
+              sampleResult.getResponseDataAsString());
+        }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -497,29 +503,39 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     ret.append("AttentionKey: ")
         .append(getAttentionKey())
         .append("\n")
-        .append("Inputs (Row,Column,Value):\n");
+        .append("Inputs :\n");
 
-    for (CoordInput c : getCoordInputs()) {
-      ret.append(c.getPosition().getRow())
-          .append(",")
-          .append(c.getPosition().getColumn())
-          .append(",")
-          .append(c.getInput())
-          .append("\n");
+    for (Input i : getInputs()) {
+      if (i instanceof CoordInput) {
+        CoordInput c = (CoordInput) i;
+        ret.append(c.getPosition().getRow())
+            .append(",")
+            .append(c.getPosition().getColumn())
+            .append(",")
+            .append(c.getInput())
+            .append("\n");
+      }
+      if (i instanceof LabelInput) {
+        LabelInput l = (LabelInput) i;
+        ret.append(l.getLabel())
+            .append(": ")
+            .append(l.getInput())
+            .append("\n");
+      }
     }
     return ret.toString();
   }
 
-  private List<CoordInput> getCoordInputs() {
-    List<CoordInput> inputs = new ArrayList<>();
-    for (JMeterProperty p : getInputs()) {
-      CoordInputRowGUI c = (CoordInputRowGUI) p.getObjectValue();
-      inputs.add(c.toCoordInput());
+  private List<Input> getInputs() {
+    List<Input> inputs = new ArrayList<>();
+    for (JMeterProperty p : getInputsGUI()) {
+      InputRowGUI c = (InputRowGUI) p.getObjectValue();
+      inputs.add(c.toInput());
     }
     return inputs;
   }
 
-  public Inputs getInputs() {
+  public Inputs getInputsGUI() {
     return (Inputs) getProperty(Inputs.INPUTS_PROPERTY).getObjectValue();
   }
 

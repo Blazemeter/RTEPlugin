@@ -13,4 +13,8 @@ public class LabelInput extends Input {
     return label;
   }
 
+  @Override
+  public String toString() {
+    return "(" + label + "): " + getInput();
+  }
 }

@@ -13,4 +13,9 @@ public class CoordInput extends Input {
     return position;
   }
 
+  @Override
+  public String toString() {
+    return this.position + ": " + getInput();
+  }
+
 }
