@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
-import com.blazemeter.jmeter.rte.core.Label;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.*;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -112,8 +112,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   private List<Input> buildCredsFieldsByLabel() {
     return Arrays.asList(
-            new LabelInput(new Label("User"), "TESTUSR"),
-            new LabelInput(new Label("Password"), "TESTPSW"));
+            new LabelInput("User", "TESTUSR"),
+            new LabelInput("Password", "TESTPSW"));
   }
 
   @Test(expected = InvalidFieldPositionException.class)
@@ -132,7 +132,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-            new LabelInput(new Label("Usr"), "TESTUSR"));
+            new LabelInput("Usr", "TESTUSR"));
     client.send(input, AttentionKey.ENTER);
   }
 

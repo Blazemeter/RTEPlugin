@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -105,8 +107,29 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
-  private List<CoordInput> buildUsernameField() {
+  private List<Input> buildUsernameField() {
     return Collections.singletonList(new CoordInput(new Position(2, 1), "testusr"));
+  }
+
+  @Test
+  public void shouldGetLoginSuccessScreenWhenSendCredsByLabel() throws Exception {
+    loadFlow("login-immediate-responses.yml");
+    connectToVirtualService();
+    sendUsernameWithSyncWait();
+    sendPasswordByLabelWithSyncWait();
+    assertThat(client.getScreen())
+        .isEqualTo(getFileContent("login-success-screen.txt"));
+  }
+
+  private void sendPasswordByLabelWithSyncWait() throws Exception {
+    client.send(buildPasswordByLabel(), AttentionKey.ENTER);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+  }
+
+  private List<Input> buildPasswordByLabel() {
+    return Collections.singletonList(
+        new LabelInput("Password", "testpsw"));
   }
 
   @Test(expected = InvalidFieldPositionException.class)
@@ -114,8 +137,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    List<CoordInput> input = Collections.singletonList(
-        new CoordInput(new Position(81, 1), "TEST"));
+    List<Input> input = Collections.singletonList(
+        new CoordInput(new Position(8, 8), "TEST"));
     client.send(input, AttentionKey.ENTER);
   }
 
@@ -206,7 +229,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   @Test(expected = UnsupportedOperationException.class)
-  public void shouldThrowUnsupportedOperationExceptionWhenSelectAttentionKeyUnsupported() throws Exception {
+  public void shouldThrowUnsupportedOperationExceptionWhenSelectAttentionKeyUnsupported()
+      throws Exception {
     loadFlow("login.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ROLL_UP);

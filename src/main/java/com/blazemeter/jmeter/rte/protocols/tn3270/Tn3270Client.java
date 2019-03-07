@@ -5,7 +5,10 @@ import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
+import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -29,6 +32,7 @@ import com.bytezone.dm3270.commands.AIDCommand;
 import com.bytezone.dm3270.display.CursorMoveListener;
 import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenDimensions;
+
 import java.awt.Dimension;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -37,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
+
 import org.apache.jmeter.samplers.SampleResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,12 +146,32 @@ public class Tn3270Client extends BaseProtocolClient {
     return new Tn3270RequestListener(result, this);
   }
 
-  @Override
-  protected void setField(CoordInput i) {
+  private void setFieldByCoord(CoordInput i) {
     try {
-      client.setFieldText(i.getPosition().getRow(), i.getPosition().getColumn(), i.getInput());
+      Position pos = i.getPosition();
+      client.setFieldTextByCoord(pos.getRow(), pos.getColumn(), i.getInput());
     } catch (IllegalArgumentException e) {
-      throw new InvalidFieldPositionException(i.getPosition(), e);
+      Position pos = i.getPosition();
+      throw new InvalidFieldPositionException(pos, e);
+    }
+  }
+
+  @Override
+  protected void setField(Input i) {
+    if (i instanceof CoordInput) {
+      setFieldByCoord((CoordInput) i);
+    } else if (i instanceof LabelInput) {
+      setFieldByLabel((LabelInput) i);
+    } else {
+      throw new IllegalArgumentException("Invalid input type: " + i.getClass());
+    }
+  }
+
+  private void setFieldByLabel(LabelInput i) {
+    try {
+      client.setFieldTextByLabel(i.getLabel(), i.getInput());
+    } catch (IllegalArgumentException e) {
+      throw new InvalidFieldLabelException(i.getLabel(), e);
     }
   }
 

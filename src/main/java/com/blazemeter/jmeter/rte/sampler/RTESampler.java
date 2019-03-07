@@ -503,7 +503,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     ret.append("AttentionKey: ")
         .append(getAttentionKey())
         .append("\n")
-        .append("Inputs :\n");
+        .append("Inputs:\n");
 
     for (Input i : getInputs()) {
       if (i instanceof CoordInput) {
