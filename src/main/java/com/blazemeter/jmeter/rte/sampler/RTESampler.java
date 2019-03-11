@@ -428,8 +428,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         addClientRequestHeaders(client, sampleResult);
         if (getAction() == Action.SEND_INPUT) {
           sampleResult.setSamplerData(buildRequestBody());
-          // TODO fix this client.send(getCoordInputs(), getAttentionKey());
-          client.send(null, getAttentionKey());
+          client.send(getInputs(), getAttentionKey());
         }
         List<WaitCondition> waiters = getWaitersList();
         if (!waiters.isEmpty()) {

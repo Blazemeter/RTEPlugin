@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
@@ -19,10 +20,12 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.RteProtocolClientIT;
+
 import java.io.FileNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
@@ -132,13 +135,25 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
         new LabelInput("Password", "testpsw"));
   }
 
+  @Test(expected = InvalidFieldLabelException.class)
+  public void shouldThrowInvalidLabelExceptionWhenShowsIncorrectLabel()
+      throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    List<Input> input = Collections.singletonList(
+        new LabelInput("Direccion", "testpsw"));
+    client.send(input, AttentionKey.ENTER);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+  }
+
   @Test(expected = InvalidFieldPositionException.class)
   public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPosition()
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-        new CoordInput(new Position(8, 8), "TEST"));
+        new CoordInput(new Position(81, 1), "TEST"));
     client.send(input, AttentionKey.ENTER);
   }
 

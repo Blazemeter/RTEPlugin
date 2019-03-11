@@ -59,7 +59,7 @@ public class RTESamplerTest {
   private static final String REQUEST_HEADERS_FORMAT = BASE_REQUEST_HEADERS_FORMAT
       + "Input-inhibited: %b\n";
   private static final String REQUEST_BODY = "AttentionKey: ENTER\n"
-      + "Inputs (Row,Column,Value):\n"
+      + "Inputs:\n"
       + "1,1,input\n";
 
   @Mock

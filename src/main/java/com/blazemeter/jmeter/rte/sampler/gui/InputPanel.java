@@ -32,6 +32,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
 import org.apache.jmeter.testelement.TestElement;
@@ -117,7 +118,7 @@ public class InputPanel extends JPanel implements ActionListener {
 
     addFromClipboardButton = SwingUtils.createComponent("addFromClipboardButton",
         new JButton(JMeterUtils.getResString("add_from_clipboard")));
-    addFromClipboardButton.setActionCommand("addFromClipboardButton");
+    addFromClipboardButton.setActionCommand(ADD_FROM_CLIPBOARD_ACTION);
     addFromClipboardButton.setEnabled(true);
 
     deleteButton = SwingUtils
@@ -249,7 +250,7 @@ public class InputPanel extends JPanel implements ActionListener {
       for (String clipboardLine : clipboardLines) {
         String[] clipboardCols = clipboardLine.split(CLIPBOARD_ARG_DELIMITERS);
         if (clipboardCols.length > 0) {
-          CoordInputRowGUI input = createArgumentFromClipboard(clipboardCols);
+          InputRowGUI input = buildArgumentFromClipboard(clipboardCols);
           tableModel.addRow(input);
         }
       }
@@ -274,17 +275,30 @@ public class InputPanel extends JPanel implements ActionListener {
     }
   }
 
-  private CoordInputRowGUI createArgumentFromClipboard(String[] clipboardCols) {
-    //TODO
-    /*CoordInputRowGUI argument = new CoordInputRowGUI();
-    argument.setInput(clipboardCols[0]);
-    if (clipboardCols.length > 1) {
-      argument.setColumn(parseCoordIndex(clipboardCols[1]));
-      if (clipboardCols.length > 2) {
-        argument.setRow(parseCoordIndex(clipboardCols[2]));
-      }
+  private InputRowGUI buildArgumentFromClipboard(String[] clipboardCols) {
+    
+    if (clipboardCols.length >= 3) {
+      CoordInputRowGUI argument = new CoordInputRowGUI();
+      argument.setRow(clipboardCols[0]);
+      argument.setColumn(clipboardCols[1]);
+      argument.setInput(clipboardCols[2]);
+      return argument;
     }
-    return argument;*/
+    
+    if (clipboardCols.length == 2) {
+      LabelInputRowGUI labelArgument = new LabelInputRowGUI();
+      labelArgument.setLabel(clipboardCols[0]);
+      labelArgument.setInput(clipboardCols[1]);
+      return labelArgument;
+    }
+    
+    if (clipboardCols.length < 1) {
+      CoordInputRowGUI defaultArgument = new CoordInputRowGUI();
+      defaultArgument.setRow("1");
+      defaultArgument.setColumn("2");
+      defaultArgument.setInput(clipboardCols[0]);
+      return defaultArgument;
+    }
     return null;
   }
 
@@ -296,7 +310,7 @@ public class InputPanel extends JPanel implements ActionListener {
       return 1;
     }
   }
-
+  
   private void deleteArgument() {
     GuiUtils.cancelEditing(table);
 
@@ -305,9 +319,8 @@ public class InputPanel extends JPanel implements ActionListener {
     table.clearSelection();
     if (rowsSelected.length > 0) {
       for (int i = rowsSelected.length - 1; i >= 0; i--) {
-        tableModel.removeRow(rowsSelected[i]);
+        tableModel.deleteRow(rowsSelected[i]);
       }
-
       // Table still contains one or more rows, so highlight (select)
       // the appropriate one.
       if (tableModel.getRowCount() > 0) {
@@ -330,7 +343,7 @@ public class InputPanel extends JPanel implements ActionListener {
     if (rowsSelected.length > 0 && rowsSelected[0] > 0) {
       table.clearSelection();
       for (int rowSelected : rowsSelected) {
-        tableModel.moveRow(rowSelected, rowSelected + 1, rowSelected - 1);
+        tableModel.switchRows(rowSelected, rowSelected - 1);
       }
 
       for (int rowSelected : rowsSelected) {
@@ -357,7 +370,7 @@ public class InputPanel extends JPanel implements ActionListener {
       }
     }
   }
-
+  
   private void moveDown() {
     // get the selected rows before stopping editing
     // or the selected rows will be unselected
@@ -369,7 +382,7 @@ public class InputPanel extends JPanel implements ActionListener {
       table.clearSelection();
       for (int i = rowsSelected.length - 1; i >= 0; i--) {
         int rowSelected = rowsSelected[i];
-        tableModel.moveRow(rowSelected, rowSelected + 1, rowSelected + 1);
+        tableModel.switchRows(rowSelected, rowSelected + 1);
       }
       for (int rowSelected : rowsSelected) {
         table.addRowSelectionInterval(rowSelected + 1, rowSelected + 1);
@@ -378,7 +391,7 @@ public class InputPanel extends JPanel implements ActionListener {
       scrollToRowIfNotVisible(rowsSelected[0] + 1);
     }
   }
-
+  
   public void clear() {
     GuiUtils.stopTableEditing(table);
     tableModel.clearData();
@@ -408,13 +421,20 @@ public class InputPanel extends JPanel implements ActionListener {
       this.inputs.clear();
       super.fireTableRowsDeleted(0, size);
     }
-
+    
+    private void deleteRow(int row) {
+      LOG.debug("Removing row value: " + row);
+      this.inputs.remove(row);
+      fireTableRowsDeleted(row, row);
+    }
+    
     private void addRow(InputRowGUI value) {
       LOG.debug("Adding row value: " + value);
-      this.inputs.add(value);
-      super.fireTableRowsInserted(this.inputs.size() - 1, this.inputs.size());
+      inputs.add(value);
+      int insertedRowIndex = inputs.size() - 1;
+      super.fireTableRowsInserted(insertedRowIndex, insertedRowIndex);
     }
-
+    
     public Iterator<InputRowGUI> iterator() {
       return this.inputs.iterator();
     }
@@ -455,15 +475,21 @@ public class InputPanel extends JPanel implements ActionListener {
       }
     }
 
+    public void switchRows(int row1, int row2) {
+      InputRowGUI temp = inputs.get(row1);
+      inputs.set(row1, inputs.get(row2));
+      inputs.set(row2, temp);
+    }
+  
   }
 
   private static class FieldPanel extends JPanel {
 
     private final GroupLayout layout;
     private JLabel label = new JLabel();
-    private JTextField rowField = new JTextField();
-    private JTextField columnField = new JTextField();
-    private JTextField labelField = new JTextField();
+    private JTextField rowField = SwingUtils.createComponent("rowField", new JTextField());
+    private JTextField columnField = SwingUtils.createComponent("columField", new JTextField());
+    private JTextField labelField = SwingUtils.createComponent("labelField", new JTextField());
 
     private FieldPanel() {
       layout = new GroupLayout(this);
