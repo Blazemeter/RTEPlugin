@@ -294,7 +294,7 @@ public class InputPanel extends JPanel implements ActionListener {
     if (clipboardCols.length == 1) {
       CoordInputTestElement defaultArgument = new CoordInputTestElement();
       defaultArgument.setRow("1");
-      defaultArgument.setColumn("2");
+      defaultArgument.setColumn("1");
       defaultArgument.setInput(clipboardCols[0]);
       return defaultArgument;
     }

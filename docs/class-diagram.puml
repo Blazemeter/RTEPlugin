@@ -40,14 +40,16 @@ package com.blazemeter.jmeter.rte {
             SSLv3
         }
 
-        class CoordInput {
-            Position position
+        class Input{
             String input
         }
-
-        class FieldValue {
-            String fieldName
-            String value
+        
+        class CoordInput extends Input{
+        Position position
+        }
+        
+        class LabelInput extends Input{
+        String label
         }
 
         class Position {
