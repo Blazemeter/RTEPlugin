@@ -24,7 +24,6 @@ import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -75,13 +74,12 @@ public class RTESamplerTest {
   }
 
   @AfterClass
-  public static void tearDownClass() throws IOException {
+  public static void tearDownClass() {
     /*RESampler in some cases throw an InterruptedException and set true the interrupted flag when
     this is tested is needed reset this flag otherwise the following I/O operations will fail.*/
     Thread.interrupted();
   }
 
-  @SuppressWarnings("unchecked")
   @Before
   public void setup() {
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
@@ -113,9 +111,9 @@ public class RTESamplerTest {
     configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }
 
-  private Inputs createInputs() {
-    Inputs ret = new Inputs();
-    ret.addInput(new CoordInputRowGUI("1", "1", "input"));
+  private InputsTestElement createInputs() {
+    InputsTestElement ret = new InputsTestElement();
+    ret.addInput(new CoordInputTestElement("1", "1", "input"));
     return ret;
   }
 

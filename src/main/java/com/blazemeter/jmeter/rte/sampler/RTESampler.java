@@ -208,8 +208,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     setProperty(ACTION_PROPERTY, action.name());
   }
 
-  public void setPayload(Inputs payload) {
-    setProperty(new TestElementProperty(Inputs.INPUTS_PROPERTY, payload));
+  public void setPayload(InputsTestElement payload) {
+    setProperty(new TestElementProperty(InputsTestElement.INPUTS_PROPERTY, payload));
   }
 
   public AttentionKey getAttentionKey() {
@@ -527,15 +527,15 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   private List<Input> getInputs() {
     List<Input> inputs = new ArrayList<>();
-    for (JMeterProperty p : getInputsGUI()) {
-      InputRowGUI c = (InputRowGUI) p.getObjectValue();
+    for (JMeterProperty p : getInputsTestElement()) {
+      InputTestElement c = (InputTestElement) p.getObjectValue();
       inputs.add(c.toInput());
     }
     return inputs;
   }
 
-  public Inputs getInputsGUI() {
-    return (Inputs) getProperty(Inputs.INPUTS_PROPERTY).getObjectValue();
+  public InputsTestElement getInputsTestElement() {
+    return (InputsTestElement) getProperty(InputsTestElement.INPUTS_PROPERTY).getObjectValue();
   }
 
   private List<WaitCondition> getWaitersList() {

@@ -8,13 +8,14 @@ import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.PropertyIterator;
 import org.apache.jmeter.testelement.property.TestElementProperty;
 
-public class Inputs extends ConfigTestElement implements Serializable, Iterable<JMeterProperty> {
+public class InputsTestElement extends ConfigTestElement implements Serializable,
+    Iterable<JMeterProperty> {
 
   public static final String INPUTS_PROPERTY = "Inputs.inputs";
   private static final long serialVersionUID = 5810149938611069868L;
 
-  public Inputs() {
-    setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<CoordInputRowGUI>()));
+  public InputsTestElement() {
+    setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<>()));
   }
 
   public CollectionProperty getInputs() {
@@ -24,10 +25,10 @@ public class Inputs extends ConfigTestElement implements Serializable, Iterable<
   @Override
   public void clear() {
     super.clear();
-    setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<CoordInputRowGUI>()));
+    setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<InputTestElement>()));
   }
 
-  public void addInput(InputRowGUI input) {
+  public void addInput(InputTestElement input) {
     TestElementProperty newInput = new TestElementProperty(input.getName(), input);
     if (isRunningVersion()) {
       this.setTemporary(newInput);

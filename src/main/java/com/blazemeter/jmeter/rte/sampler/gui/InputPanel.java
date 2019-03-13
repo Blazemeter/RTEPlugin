@@ -1,9 +1,9 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
-import com.blazemeter.jmeter.rte.sampler.InputRowGUI;
-import com.blazemeter.jmeter.rte.sampler.Inputs;
-import com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI;
+import com.blazemeter.jmeter.rte.sampler.CoordInputTestElement;
+import com.blazemeter.jmeter.rte.sampler.InputTestElement;
+import com.blazemeter.jmeter.rte.sampler.InputsTestElement;
+import com.blazemeter.jmeter.rte.sampler.LabelInputTestElement;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Rectangle;
@@ -57,8 +57,8 @@ public class InputPanel extends JPanel implements ActionListener {
 
   private transient InputTableModel tableModel;
   private transient JTable table;
-  private JButton addButtonLabel;
-  private JButton addButtonPosition;
+  private JButton addLabelInputButton;
+  private JButton addCoordInputButton;
   private JButton addFromClipboardButton;
   private JButton deleteButton;
   private JButton upButton;
@@ -106,15 +106,15 @@ public class InputPanel extends JPanel implements ActionListener {
 
   private JPanel makeButtonPanel() {
 
-    addButtonLabel = SwingUtils
-        .createComponent("addButtonLabel", new JButton("Add Input by Label"));
-    addButtonLabel.setActionCommand(ADD_ACTION_LABEL);
-    addButtonLabel.setEnabled(true);
+    addLabelInputButton = SwingUtils
+        .createComponent("addLabelInputButton", new JButton("Add Input by Label"));
+    addLabelInputButton.setActionCommand(ADD_ACTION_LABEL);
+    addLabelInputButton.setEnabled(true);
 
-    addButtonPosition = SwingUtils
-        .createComponent("addButtonPosition", new JButton("Add Input by Position"));
-    addButtonPosition.setActionCommand(ADD_ACTION_POSITION);
-    addButtonPosition.setEnabled(true);
+    addCoordInputButton = SwingUtils
+        .createComponent("addCoordInputButton", new JButton("Add Input by Position"));
+    addCoordInputButton.setActionCommand(ADD_ACTION_POSITION);
+    addCoordInputButton.setEnabled(true);
 
     addFromClipboardButton = SwingUtils.createComponent("addFromClipboardButton",
         new JButton(JMeterUtils.getResString("add_from_clipboard")));
@@ -137,14 +137,14 @@ public class InputPanel extends JPanel implements ActionListener {
     JPanel buttonPanel = SwingUtils.createComponent("buttonPanel", new JPanel());
     buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
-    addButtonLabel.addActionListener(this);
-    addButtonPosition.addActionListener(this);
+    addLabelInputButton.addActionListener(this);
+    addCoordInputButton.addActionListener(this);
     addFromClipboardButton.addActionListener(this);
     deleteButton.addActionListener(this);
     upButton.addActionListener(this);
     downButton.addActionListener(this);
-    buttonPanel.add(addButtonLabel);
-    buttonPanel.add(addButtonPosition);
+    buttonPanel.add(addLabelInputButton);
+    buttonPanel.add(addCoordInputButton);
     buttonPanel.add(addFromClipboardButton);
     buttonPanel.add(deleteButton);
     buttonPanel.add(upButton);
@@ -160,20 +160,19 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   public TestElement createTestElement() {
-    Inputs inputs = new Inputs();
+    InputsTestElement inputs = new InputsTestElement();
     modifyTestElement(inputs);
     return inputs;
   }
 
   private void modifyTestElement(TestElement element) {
     GuiUtils.stopTableEditing(table);
-    if (element instanceof Inputs) {
-      Inputs inputs = (Inputs) element;
+    if (element instanceof InputsTestElement) {
+      InputsTestElement inputs = (InputsTestElement) element;
       inputs.clear();
-      @SuppressWarnings("unchecked")
-      Iterator<InputRowGUI> modelData = tableModel.iterator();
+      Iterator<InputTestElement> modelData = tableModel.iterator();
       while (modelData.hasNext()) {
-        InputRowGUI input = modelData.next();
+        InputTestElement input = modelData.next();
         if (!StringUtils.isEmpty(input.getInput())) {
           inputs.addInput(input);
         }
@@ -182,10 +181,10 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   public void configure(TestElement el) {
-    if (el instanceof Inputs) {
+    if (el instanceof InputsTestElement) {
       tableModel.clearData();
-      for (JMeterProperty jMeterProperty : (Inputs) el) {
-        InputRowGUI input = (InputRowGUI) jMeterProperty.getObjectValue();
+      for (JMeterProperty jMeterProperty : (InputsTestElement) el) {
+        InputTestElement input = (InputTestElement) jMeterProperty.getObjectValue();
         tableModel.addRow(input);
       }
     }
@@ -225,9 +224,9 @@ public class InputPanel extends JPanel implements ActionListener {
     GuiUtils.stopTableEditing(table);
 
     if (ADD_ACTION_POSITION.equals(type)) {
-      tableModel.addRow(new CoordInputRowGUI());
+      tableModel.addRow(new CoordInputTestElement());
     } else if (ADD_ACTION_LABEL.equals(type)) {
-      tableModel.addRow(new LabelInputRowGUI());
+      tableModel.addRow(new LabelInputTestElement());
     }
 
     updateEnabledButtons();
@@ -250,7 +249,7 @@ public class InputPanel extends JPanel implements ActionListener {
       for (String clipboardLine : clipboardLines) {
         String[] clipboardCols = clipboardLine.split(CLIPBOARD_ARG_DELIMITERS);
         if (clipboardCols.length > 0) {
-          InputRowGUI input = buildArgumentFromClipboard(clipboardCols);
+          InputTestElement input = buildArgumentFromClipboard(clipboardCols);
           tableModel.addRow(input);
         }
       }
@@ -275,10 +274,10 @@ public class InputPanel extends JPanel implements ActionListener {
     }
   }
 
-  private InputRowGUI buildArgumentFromClipboard(String[] clipboardCols) {
+  private InputTestElement buildArgumentFromClipboard(String[] clipboardCols) {
     
     if (clipboardCols.length >= 3) {
-      CoordInputRowGUI argument = new CoordInputRowGUI();
+      CoordInputTestElement argument = new CoordInputTestElement();
       argument.setRow(clipboardCols[0]);
       argument.setColumn(clipboardCols[1]);
       argument.setInput(clipboardCols[2]);
@@ -286,29 +285,20 @@ public class InputPanel extends JPanel implements ActionListener {
     }
     
     if (clipboardCols.length == 2) {
-      LabelInputRowGUI labelArgument = new LabelInputRowGUI();
+      LabelInputTestElement labelArgument = new LabelInputTestElement();
       labelArgument.setLabel(clipboardCols[0]);
       labelArgument.setInput(clipboardCols[1]);
       return labelArgument;
     }
     
-    if (clipboardCols.length < 1) {
-      CoordInputRowGUI defaultArgument = new CoordInputRowGUI();
+    if (clipboardCols.length == 1) {
+      CoordInputTestElement defaultArgument = new CoordInputTestElement();
       defaultArgument.setRow("1");
       defaultArgument.setColumn("2");
       defaultArgument.setInput(clipboardCols[0]);
       return defaultArgument;
     }
     return null;
-  }
-
-  private int parseCoordIndex(String val) {
-    try {
-      return Integer.valueOf(val);
-    } catch (NumberFormatException e) {
-      LOG.warn("Invalid value ({}) for coordinate index.", val);
-      return 1;
-    }
   }
   
   private void deleteArgument() {
@@ -401,15 +391,15 @@ public class InputPanel extends JPanel implements ActionListener {
   public void setEnabled(boolean enabled) {
     super.setEnabled(enabled);
     table.setEnabled(enabled);
-    addButtonLabel.setEnabled(enabled);
-    addButtonPosition.setEnabled(enabled);
+    addLabelInputButton.setEnabled(enabled);
+    addCoordInputButton.setEnabled(enabled);
     addFromClipboardButton.setEnabled(enabled);
     updateEnabledButtons();
   }
 
   private class InputTableModel extends DefaultTableModel {
 
-    private transient ArrayList<InputRowGUI> inputs;
+    private transient ArrayList<InputTestElement> inputs;
 
     private InputTableModel(Object[] header) {
       super(header, 0);
@@ -428,14 +418,14 @@ public class InputPanel extends JPanel implements ActionListener {
       fireTableRowsDeleted(row, row);
     }
     
-    private void addRow(InputRowGUI value) {
+    private void addRow(InputTestElement value) {
       LOG.debug("Adding row value: " + value);
       inputs.add(value);
       int insertedRowIndex = inputs.size() - 1;
       super.fireTableRowsInserted(insertedRowIndex, insertedRowIndex);
     }
     
-    public Iterator<InputRowGUI> iterator() {
+    public Iterator<InputTestElement> iterator() {
       return this.inputs.iterator();
     }
 
@@ -457,101 +447,94 @@ public class InputPanel extends JPanel implements ActionListener {
     public void setValueAt(Object cellValue, int row, int col) {
       if (row < this.inputs.size()) {
         if (col == 0) {
-          if (cellValue instanceof CoordInputRowGUI) {
-            CoordInputRowGUI coordInputRowGUI = (CoordInputRowGUI) cellValue;
-            ((CoordInputRowGUI) this.inputs.get(row)).setColumn(coordInputRowGUI.getColumn());
-            ((CoordInputRowGUI) this.inputs.get(row)).setRow(coordInputRowGUI.getRow());
-            this.inputs.get(row).setInput(coordInputRowGUI.getInput());
-          } else if (cellValue instanceof LabelInputRowGUI) {
-            LabelInputRowGUI labelInputRowGUI = (LabelInputRowGUI) cellValue;
-            ((LabelInputRowGUI) this.inputs.get(row)).setLabel(labelInputRowGUI.getLabel());
-            this.inputs.get(row).setInput(labelInputRowGUI.getInput());
+          if (cellValue instanceof InputTestElement) {
+            inputs.get(row).copyOf((InputTestElement) cellValue);
           }
         } else if (col == 1) {
           if (cellValue instanceof String) {
-            this.inputs.get(row).setInput(((String) cellValue));
+            this.inputs.get(row).setInput((String) cellValue);
           }
         }
       }
     }
 
-    public void switchRows(int row1, int row2) {
-      InputRowGUI temp = inputs.get(row1);
+    private void switchRows(int row1, int row2) {
+      InputTestElement temp = inputs.get(row1);
       inputs.set(row1, inputs.get(row2));
       inputs.set(row2, temp);
     }
   
   }
 
-  private static class FieldPanel extends JPanel {
+  public static class FieldPanel extends JPanel {
 
     private final GroupLayout layout;
     private JLabel label = new JLabel();
-    private JTextField rowField = SwingUtils.createComponent("rowField", new JTextField());
-    private JTextField columnField = SwingUtils.createComponent("columField", new JTextField());
-    private JTextField labelField = SwingUtils.createComponent("labelField", new JTextField());
+    private JTextField fieldRow = SwingUtils.createComponent("fieldRow", new JTextField());
+    private JTextField fieldColumn = SwingUtils.createComponent("fieldColumn", new JTextField());
+    private JTextField fieldLabel = SwingUtils.createComponent("fieldLabel", new JTextField());
 
     private FieldPanel() {
       layout = new GroupLayout(this);
       setLayout(layout);
     }
 
-    private void updateFromField(InputRowGUI value) {
+    private void updateFromField(InputTestElement value) {
       this.removeAll();
-      if (value instanceof CoordInputRowGUI) {
-        buildPanel((CoordInputRowGUI) value);
-      } else if (value instanceof LabelInputRowGUI) {
-        buildPanel((LabelInputRowGUI) value);
+      if (value instanceof CoordInputTestElement) {
+        buildPanel((CoordInputTestElement) value);
+      } else if (value instanceof LabelInputTestElement) {
+        buildPanel((LabelInputTestElement) value);
       }
     }
 
-    private void updateField(InputRowGUI value) {
-      if (value instanceof CoordInputRowGUI) {
-        CoordInputRowGUI input = (CoordInputRowGUI) value;
-        input.setRow(rowField.getText());
-        input.setColumn(columnField.getText());
+    private void updateField(InputTestElement value) {
+      if (value instanceof CoordInputTestElement) {
+        CoordInputTestElement input = (CoordInputTestElement) value;
+        input.setRow(fieldRow.getText());
+        input.setColumn(fieldColumn.getText());
       }
-      if (value instanceof LabelInputRowGUI) {
-        LabelInputRowGUI input = (LabelInputRowGUI) value;
-        input.setLabel(labelField.getText());
+      if (value instanceof LabelInputTestElement) {
+        LabelInputTestElement input = (LabelInputTestElement) value;
+        input.setLabel(fieldLabel.getText());
       }
     }
 
-    private void buildPanel(CoordInputRowGUI coordInputRowGUI) {
+    private void buildPanel(CoordInputTestElement coordInputRowGUI) {
       label.setText("Position (Row Column)");
-      rowField.setText(coordInputRowGUI.getRow());
-      columnField.setText(coordInputRowGUI.getColumn());
+      fieldRow.setText(coordInputRowGUI.getRow());
+      fieldColumn.setText(coordInputRowGUI.getColumn());
       layout.setHorizontalGroup(layout.createSequentialGroup()
           .addComponent(label)
           .addPreferredGap(ComponentPlacement.RELATED)
-          .addComponent(rowField, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+          .addComponent(fieldRow, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE)
           .addPreferredGap(ComponentPlacement.RELATED)
-          .addComponent(columnField, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+          .addComponent(fieldColumn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE));
       layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
           .addComponent(label, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE)
-          .addComponent(rowField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+          .addComponent(fieldRow, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE)
-          .addComponent(columnField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+          .addComponent(fieldColumn, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE));
     }
 
-    private void buildPanel(LabelInputRowGUI labelInputRowGUI) {
+    private void buildPanel(LabelInputTestElement labelInputRowGUI) {
       label.setText("Label");
-      labelField.setText(labelInputRowGUI.getLabel());
+      fieldLabel.setText(labelInputRowGUI.getLabel());
       layout.setHorizontalGroup(layout.createSequentialGroup()
           .addComponent(label, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
               GroupLayout.DEFAULT_SIZE)
           .addPreferredGap(ComponentPlacement.RELATED)
-          .addComponent(labelField, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+          .addComponent(fieldLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE)
           .addPreferredGap(ComponentPlacement.UNRELATED));
       layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
           .addComponent(label, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE)
-          .addComponent(labelField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+          .addComponent(fieldLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
               Short.MAX_VALUE));
     }
 
@@ -564,7 +547,7 @@ public class InputPanel extends JPanel implements ActionListener {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
         boolean hasFocus, int row, int column) {
-      fieldPanel.updateFromField((InputRowGUI) value);
+      fieldPanel.updateFromField((InputTestElement) value);
       return fieldPanel;
     }
 
@@ -573,12 +556,12 @@ public class InputPanel extends JPanel implements ActionListener {
   private static class FieldEditor extends AbstractCellEditor implements TableCellEditor {
 
     private final FieldPanel fieldPanel = new FieldPanel();
-    private InputRowGUI value;
+    private InputTestElement value;
 
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected,
         int row, int column) {
-      this.value = (InputRowGUI) value;
+      this.value = (InputTestElement) value;
       fieldPanel.updateFromField(this.value);
       return fieldPanel;
     }
