@@ -183,16 +183,6 @@ public class InputPanelTest {
   }
 
   @Test
-  public void shouldAddMultipleLabelInputsWhenMultipleClickAddLabel() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddLabel();
-    LabelInput passInput = new LabelInput("Password", "TESTPSW");
-    setInputLabelRow(1, passInput);
-    assertInputs(USER_LABEL_INPUT, passInput);
-  }
-
-  @Test
   public void shouldAddMixedInputs(){
     clickAddLabel();
     setInputLabelRow(0, USER_LABEL_INPUT);
@@ -212,32 +202,43 @@ public class InputPanelTest {
   @Test
   public void shouldMoveUpFirstRow(){
     clickAddLabel();
-    LabelInput userInput = new LabelInput("User","TESTUSR");
-    setInputLabelRow(0,userInput);
+    setInputLabelRow(0,USER_LABEL_INPUT);
     clickAddCoord();
-    CoordInput passInput = new CoordInput(new Position(1,2),"TESTPSW");
-    setInputCoordRow(1,passInput);
-    JTableCellFixture getCell = inputTable
-        .cell(TableCell.row(0).column(0));
-    getCell.select();
+    setInputCoordRow(1,PASS_COORD_INPUT);
+    inputTable.selectCells(TableCell.row(0).column(0));
+    clickUpButton();
+    assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT);
+  }
+  
+  private void clickUpButton(){
     frame.button("upButton").click();
-    assertInputs(userInput, passInput);
   }
   
   @Test
   public void shouldMoveUpLastRow(){
     clickAddLabel();
-    LabelInput userInput = new LabelInput("User","TESTUSR");
-    setInputLabelRow(0,userInput);
+    setInputLabelRow(0,USER_LABEL_INPUT);
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
-    JTableCellFixture getCell = inputTable
-        .cell(TableCell.row(1).column(0));
-    getCell.select();
-    frame.button("upButton").click();
-    assertInputs(PASS_COORD_INPUT, userInput);
+    inputTable.selectCells(TableCell.row(1).column(0));
+    clickUpButton();
+    assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT);
   }
-  
+
+  @Test
+  public void shouldMoveUpTwice(){
+    clickAddLabel();
+    setInputLabelRow(0, USER_LABEL_INPUT);
+    clickAddCoord();
+    setInputCoordRow(1, PASS_COORD_INPUT);
+    clickAddCoord();
+    CoordInput nameInput = new CoordInput(new Position(4,2),"TESTNAME");
+    setInputCoordRow(2,nameInput);
+    inputTable.selectCells(TableCell.row(2).column(0));
+    clickUpButton();
+    clickUpButton();
+    assertInputs(nameInput, USER_LABEL_INPUT, PASS_COORD_INPUT);
+  }
   @Test
   public void shouldMoveDownMultipleIntercalatedRows(){
     clickAddLabel();
@@ -251,23 +252,11 @@ public class InputPanelTest {
     LabelInput emailInput = new LabelInput("eMail","test@example.com");
     setInputLabelRow(3,emailInput);
     inputTable.selectCells(TableCell.row(0).column(0), TableCell.row(2).column(0));
-    frame.button("downButton").click();
+    clickDownButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT,emailInput,nameInput);
   }
-  
-  @Test
-  public void shouldMoveUpTwice(){
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    clickAddCoord();
-    CoordInput nameInput = new CoordInput(new Position(4,2),"TESTNAME");
-    setInputCoordRow(2,nameInput);
-    inputTable.selectCells(TableCell.row(2).column(0));
-    frame.button("upButton").click();
-    frame.button("upButton").click();
-    assertInputs(nameInput, USER_LABEL_INPUT, PASS_COORD_INPUT);
+  private void clickDownButton(){
+    frame.button("downButton").click();
   }
   @Test
   public void shouldMoveDownFirstRow(){
@@ -276,7 +265,7 @@ public class InputPanelTest {
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
     inputTable.selectCells(TableCell.row(0).column(0));
-    frame.button("downButton").click();
+    clickDownButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT);
   }
   @Test
@@ -286,7 +275,7 @@ public class InputPanelTest {
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
     inputTable.selectCells(TableCell.row(1).column(0));
-    frame.button("downButton").click();
+    clickDownButton();    
     assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT);
   }
   @Test
@@ -299,8 +288,8 @@ public class InputPanelTest {
     CoordInput nameInput = new CoordInput(new Position(4,2),"TESTNAME");
     setInputCoordRow(2,nameInput);
     inputTable.selectCells(TableCell.row(0).column(0));
-    frame.button("downButton").click();
-    frame.button("downButton").click();
+    clickDownButton();
+    clickDownButton();
     assertInputs(PASS_COORD_INPUT, nameInput, USER_LABEL_INPUT);
   }
   @Test
@@ -308,10 +297,12 @@ public class InputPanelTest {
     clickAddLabel();
     setInputLabelRow(0, USER_LABEL_INPUT);
     inputTable.selectCell(TableCell.row(0).column(0));
-    frame.button("deleteButton").click();
+    clickDeleteButton();
     assertInputs();
   }
-  
+  private void clickDeleteButton(){
+    frame.button("deleteButton").click();
+  }
   @Test
   public void shouldDeleteFewRow(){
     clickAddLabel();
@@ -319,7 +310,7 @@ public class InputPanelTest {
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
     inputTable.selectCells(TableCell.row(0).column(0), TableCell.row(1).column(0));
-    frame.button("deleteButton").click();
+    clickDeleteButton();    
     assertInputs();
   }
   
@@ -333,7 +324,7 @@ public class InputPanelTest {
     CoordInput nameInput = new CoordInput(new Position(4,2),"TESTNAME");
     setInputCoordRow(2,nameInput);
     inputTable.selectCells(TableCell.row(0).column(0), TableCell.row(2).column(0));
-    frame.button("deleteButton").click();
+    clickDeleteButton();
     assertInputs(PASS_COORD_INPUT);
   }
   @Test
@@ -362,10 +353,9 @@ public class InputPanelTest {
   
   @Test
   public void shouldCopyWithLabelInClipboard(){
-  setTextToClipboard("USERID\ttestusr");
+  setTextToClipboard("User\tTESTUSR");
   clickAddFromClipboard();
-  LabelInput userInput = new LabelInput("USERID","testusr");
-  assertInputs(userInput);
+  assertInputs(USER_LABEL_INPUT);
 
   }
   @Test
@@ -388,10 +378,6 @@ public class InputPanelTest {
   CoordInput userInput = new CoordInput(new Position(1,2),"USERID");
   assertInputs(userInput);
   }
-  @Test
-  public void shouldCopyWithParameterRefInPos(){
-
-  }
   
   @Test
   public void checkDisableButtonsOnEmptyLayout() {
@@ -405,7 +391,7 @@ public class InputPanelTest {
     clickAddLabel();
     setInputLabelRow(0, USER_LABEL_INPUT);
    boolean enable=false;
-   pause(new Condition("Button is delete " + (enable ? "enabled" : "disabled")) {
+   pause(new Condition("Button delete is " + (enable ? "enabled" : "disabled")) {
      @Override
      public boolean test() {
        if (frame.button("deleteButton").isEnabled()){

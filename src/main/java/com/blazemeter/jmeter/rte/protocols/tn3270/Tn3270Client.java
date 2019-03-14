@@ -148,11 +148,9 @@ public class Tn3270Client extends BaseProtocolClient {
 
   private void setFieldByCoord(CoordInput i) {
     try {
-      Position pos = i.getPosition();
-      client.setFieldTextByCoord(pos.getRow(), pos.getColumn(), i.getInput());
+      client.setFieldTextByCoord(i.getPosition().getRow(), i.getPosition().getColumn(), i.getInput());
     } catch (IllegalArgumentException e) {
-      Position pos = i.getPosition();
-      throw new InvalidFieldPositionException(pos, e);
+      throw new InvalidFieldPositionException(i.getPosition(), e);
     }
   }
 
