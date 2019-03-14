@@ -143,7 +143,8 @@ public class Tn5250Client extends BaseProtocolClient {
 
   private void setFieldByCoord(CoordInput i) {
     try {
-      client.setFieldTextByCoord(i.getPosition().getRow(), i.getPosition().getColumn(), i.getInput());
+      client.setFieldTextByCoord(i.getPosition().getRow(),
+          i.getPosition().getColumn(), i.getInput());
     } catch (IllegalArgumentException e) {
       throw new InvalidFieldPositionException(i.getPosition(), e);
     }
