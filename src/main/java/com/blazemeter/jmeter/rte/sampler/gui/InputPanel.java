@@ -1,11 +1,12 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.sampler.CoordInputTestElement;
+import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.InputTestElement;
-import com.blazemeter.jmeter.rte.sampler.InputsTestElement;
-import com.blazemeter.jmeter.rte.sampler.LabelInputTestElement;
+import com.blazemeter.jmeter.rte.sampler.Inputs;
+import com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI;
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -26,13 +27,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JViewport;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.gui.util.HeaderAsPropertyRenderer;
 import org.apache.jmeter.testelement.TestElement;
@@ -91,11 +90,11 @@ public class InputPanel extends JPanel implements ActionListener {
     TableColumn fieldColumn = table.getColumn("Field");
     fieldColumn.setCellRenderer(new FieldRenderer());
     fieldColumn.setCellEditor(new FieldEditor());
-    table.setRowHeight(20);
+    int textFieldPreferredSize = new JTextField().getPreferredSize().height;
+    table.setRowHeight(textFieldPreferredSize);
+    table.setPreferredScrollableViewportSize(new Dimension(-1, textFieldPreferredSize * 5));
     JMeterUtils.applyHiDPI(table);
-    JScrollPane pane = new JScrollPane(table);
-    pane.setPreferredSize(pane.getMinimumSize());
-    return pane;
+    return new JScrollPane(table);
   }
 
   private void initializeTableModel() {
@@ -160,15 +159,15 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   public TestElement createTestElement() {
-    InputsTestElement inputs = new InputsTestElement();
+    Inputs inputs = new Inputs();
     modifyTestElement(inputs);
     return inputs;
   }
 
   private void modifyTestElement(TestElement element) {
     GuiUtils.stopTableEditing(table);
-    if (element instanceof InputsTestElement) {
-      InputsTestElement inputs = (InputsTestElement) element;
+    if (element instanceof Inputs) {
+      Inputs inputs = (Inputs) element;
       inputs.clear();
       Iterator<InputTestElement> modelData = tableModel.iterator();
       while (modelData.hasNext()) {
@@ -181,9 +180,9 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   public void configure(TestElement el) {
-    if (el instanceof InputsTestElement) {
+    if (el instanceof Inputs) {
       tableModel.clearData();
-      for (JMeterProperty jMeterProperty : (InputsTestElement) el) {
+      for (JMeterProperty jMeterProperty : (Inputs) el) {
         InputTestElement input = (InputTestElement) jMeterProperty.getObjectValue();
         tableModel.addRow(input);
       }
@@ -224,9 +223,9 @@ public class InputPanel extends JPanel implements ActionListener {
     GuiUtils.stopTableEditing(table);
 
     if (ADD_ACTION_POSITION.equals(type)) {
-      tableModel.addRow(new CoordInputTestElement());
+      tableModel.addRow(new CoordInputRowGUI());
     } else if (ADD_ACTION_LABEL.equals(type)) {
-      tableModel.addRow(new LabelInputTestElement());
+      tableModel.addRow(new LabelInputRowGUI());
     }
 
     updateEnabledButtons();
@@ -275,24 +274,24 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   private InputTestElement buildArgumentFromClipboard(String[] clipboardCols) {
-    
+
     if (clipboardCols.length >= 3) {
-      CoordInputTestElement argument = new CoordInputTestElement();
+      CoordInputRowGUI argument = new CoordInputRowGUI();
       argument.setRow(clipboardCols[0]);
       argument.setColumn(clipboardCols[1]);
       argument.setInput(clipboardCols[2]);
       return argument;
     }
-    
+
     if (clipboardCols.length == 2) {
-      LabelInputTestElement labelArgument = new LabelInputTestElement();
+      LabelInputRowGUI labelArgument = new LabelInputRowGUI();
       labelArgument.setLabel(clipboardCols[0]);
       labelArgument.setInput(clipboardCols[1]);
       return labelArgument;
     }
-    
+
     if (clipboardCols.length == 1) {
-      CoordInputTestElement defaultArgument = new CoordInputTestElement();
+      CoordInputRowGUI defaultArgument = new CoordInputRowGUI();
       defaultArgument.setRow("1");
       defaultArgument.setColumn("1");
       defaultArgument.setInput(clipboardCols[0]);
@@ -300,7 +299,7 @@ public class InputPanel extends JPanel implements ActionListener {
     }
     return null;
   }
-  
+
   private void deleteArgument() {
     GuiUtils.cancelEditing(table);
 
@@ -360,7 +359,7 @@ public class InputPanel extends JPanel implements ActionListener {
       }
     }
   }
-  
+
   private void moveDown() {
     // get the selected rows before stopping editing
     // or the selected rows will be unselected
@@ -381,7 +380,7 @@ public class InputPanel extends JPanel implements ActionListener {
       scrollToRowIfNotVisible(rowsSelected[0] + 1);
     }
   }
-  
+
   public void clear() {
     GuiUtils.stopTableEditing(table);
     tableModel.clearData();
@@ -411,20 +410,20 @@ public class InputPanel extends JPanel implements ActionListener {
       this.inputs.clear();
       super.fireTableRowsDeleted(0, size);
     }
-    
+
     private void deleteRow(int row) {
       LOG.debug("Removing row value: " + row);
       this.inputs.remove(row);
       fireTableRowsDeleted(row, row);
     }
-    
+
     private void addRow(InputTestElement value) {
       LOG.debug("Adding row value: " + value);
       inputs.add(value);
       int insertedRowIndex = inputs.size() - 1;
       super.fireTableRowsInserted(insertedRowIndex, insertedRowIndex);
     }
-    
+
     public Iterator<InputTestElement> iterator() {
       return this.inputs.iterator();
     }
@@ -463,7 +462,7 @@ public class InputPanel extends JPanel implements ActionListener {
       inputs.set(row1, inputs.get(row2));
       inputs.set(row2, temp);
     }
-  
+
   }
 
   public static class FieldPanel extends JPanel {
@@ -476,66 +475,54 @@ public class InputPanel extends JPanel implements ActionListener {
 
     private FieldPanel() {
       layout = new GroupLayout(this);
+      layout.setAutoCreateGaps(true);
       setLayout(layout);
     }
 
     private void updateFromField(InputTestElement value) {
       this.removeAll();
-      if (value instanceof CoordInputTestElement) {
-        buildPanel((CoordInputTestElement) value);
-      } else if (value instanceof LabelInputTestElement) {
-        buildPanel((LabelInputTestElement) value);
+      if (value instanceof CoordInputRowGUI) {
+        buildPanel((CoordInputRowGUI) value);
+      } else if (value instanceof LabelInputRowGUI) {
+        buildPanel((LabelInputRowGUI) value);
       }
     }
 
     private void updateField(InputTestElement value) {
-      if (value instanceof CoordInputTestElement) {
-        CoordInputTestElement input = (CoordInputTestElement) value;
+      if (value instanceof CoordInputRowGUI) {
+        CoordInputRowGUI input = (CoordInputRowGUI) value;
         input.setRow(fieldRow.getText());
         input.setColumn(fieldColumn.getText());
       }
-      if (value instanceof LabelInputTestElement) {
-        LabelInputTestElement input = (LabelInputTestElement) value;
+      if (value instanceof LabelInputRowGUI) {
+        LabelInputRowGUI input = (LabelInputRowGUI) value;
         input.setLabel(fieldLabel.getText());
       }
     }
 
-    private void buildPanel(CoordInputTestElement coordInputRowGUI) {
+    private void buildPanel(CoordInputRowGUI coordInputRowGUI) {
       label.setText("Position (Row Column)");
       fieldRow.setText(coordInputRowGUI.getRow());
       fieldColumn.setText(coordInputRowGUI.getColumn());
       layout.setHorizontalGroup(layout.createSequentialGroup()
           .addComponent(label)
-          .addPreferredGap(ComponentPlacement.RELATED)
-          .addComponent(fieldRow, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE)
-          .addPreferredGap(ComponentPlacement.RELATED)
-          .addComponent(fieldColumn, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE));
-      layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
-          .addComponent(label, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE)
-          .addComponent(fieldRow, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE)
-          .addComponent(fieldColumn, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE));
+          .addComponent(fieldRow)
+          .addComponent(fieldColumn));
+      layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+          .addComponent(label)
+          .addComponent(fieldRow)
+          .addComponent(fieldColumn));
     }
 
-    private void buildPanel(LabelInputTestElement labelInputRowGUI) {
+    private void buildPanel(LabelInputRowGUI labelInputRowGUI) {
       label.setText("Label");
       fieldLabel.setText(labelInputRowGUI.getLabel());
       layout.setHorizontalGroup(layout.createSequentialGroup()
-          .addComponent(label, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-              GroupLayout.DEFAULT_SIZE)
-          .addPreferredGap(ComponentPlacement.RELATED)
-          .addComponent(fieldLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE)
-          .addPreferredGap(ComponentPlacement.UNRELATED));
-      layout.setVerticalGroup(layout.createParallelGroup(Alignment.LEADING)
-          .addComponent(label, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE)
-          .addComponent(fieldLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
-              Short.MAX_VALUE));
+          .addComponent(label)
+          .addComponent(fieldLabel));
+      layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+          .addComponent(label)
+          .addComponent(fieldLabel));
     }
 
   }

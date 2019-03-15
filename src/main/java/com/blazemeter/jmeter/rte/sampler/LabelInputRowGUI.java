@@ -2,20 +2,13 @@ package com.blazemeter.jmeter.rte.sampler;
 
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
-import com.helger.commons.annotation.VisibleForTesting;
 import org.apache.jmeter.testelement.property.StringProperty;
 
-public class LabelInputTestElement extends InputTestElement {
+public class LabelInputRowGUI extends InputTestElement {
 
-  private static final String LABEL = "LabelInput.column";
+  private static final String LABEL = "LabelInputRowGUI.column";
 
-  public LabelInputTestElement() {
-  }
-
-  @VisibleForTesting
-  public LabelInputTestElement(String label, String input) {
-    super(input);
-    setLabel(label);
+  public LabelInputRowGUI() {
   }
 
   public String getLabel() {
@@ -32,8 +25,8 @@ public class LabelInputTestElement extends InputTestElement {
 
   @Override
   public void copyOf(InputTestElement source) {
-    if (source instanceof LabelInputTestElement) {
-      LabelInputTestElement sourceCoords = (LabelInputTestElement) source;
+    if (source instanceof LabelInputRowGUI) {
+      LabelInputRowGUI sourceCoords = (LabelInputRowGUI) source;
       setLabel(sourceCoords.getLabel());
       setInput(sourceCoords.getInput());
     }

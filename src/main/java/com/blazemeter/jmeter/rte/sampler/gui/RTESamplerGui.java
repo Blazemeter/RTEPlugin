@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
-import com.blazemeter.jmeter.rte.sampler.InputsTestElement;
+import com.blazemeter.jmeter.rte.sampler.Inputs;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
@@ -43,7 +43,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
     super.configure(element);
     if (element instanceof RTESampler) {
       RTESampler sampler = (RTESampler) element;
-      InputsTestElement payload = sampler.getInputsTestElement();
+      Inputs payload = sampler.getInputsTestElement();
       if (payload != null) {
         rteSamplerPanel.getPayload().configure(payload);
       }
@@ -82,7 +82,7 @@ public class RTESamplerGui extends AbstractSamplerGui {
       RTESampler sampler = (RTESampler) te;
       InputPanel payload = rteSamplerPanel.getPayload();
       if (payload != null) {
-        sampler.setPayload((InputsTestElement) payload.createTestElement());
+        sampler.setPayload((Inputs) payload.createTestElement());
       }
       sampler.setAttentionKey(rteSamplerPanel.getAttentionKey());
       sampler.setAction(rteSamplerPanel.getAction());

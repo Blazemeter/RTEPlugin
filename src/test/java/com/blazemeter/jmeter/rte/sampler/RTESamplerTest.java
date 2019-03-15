@@ -111,9 +111,9 @@ public class RTESamplerTest {
     configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }
 
-  private InputsTestElement createInputs() {
-    InputsTestElement ret = new InputsTestElement();
-    ret.addInput(new CoordInputTestElement("1", "1", "input"));
+  private Inputs createInputs() {
+    Inputs ret = new Inputs();
+    ret.addInput(new CoordInputRowGUI("1", "1", "input"));
     return ret;
   }
 

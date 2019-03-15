@@ -146,19 +146,17 @@ public class RTESamplerPanel extends JPanel {
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(payloadLabel)
-        .addComponent(payloadPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            Short.MAX_VALUE)
-        .addComponent(attentionKeysPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            Short.MAX_VALUE)
+        .addComponent(payloadPanel)
+        .addComponent(attentionKeysPanel)
         .addComponent(warningLabel));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addPreferredGap(ComponentPlacement.UNRELATED)
         .addComponent(payloadLabel)
         .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+        .addComponent(payloadPanel)
         .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(attentionKeysPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
+        .addComponent(attentionKeysPanel)
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(warningLabel)
         .addPreferredGap(ComponentPlacement.UNRELATED));

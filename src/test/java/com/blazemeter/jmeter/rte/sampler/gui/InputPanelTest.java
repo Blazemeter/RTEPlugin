@@ -10,7 +10,7 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.sampler.InputTestElement;
-import com.blazemeter.jmeter.rte.sampler.InputsTestElement;
+import com.blazemeter.jmeter.rte.sampler.Inputs;
 import com.blazemeter.jmeter.rte.sampler.gui.InputPanel.FieldPanel;
 
 import java.awt.*;
@@ -150,7 +150,7 @@ public class InputPanelTest {
       }
 
       private List<Input> getInputs() {
-        InputsTestElement testElem = (InputsTestElement) panel.createTestElement();
+        Inputs testElem = (Inputs) panel.createTestElement();
         return StreamSupport.stream(testElem.getInputs().spliterator(), false)
             .map(p -> ((InputTestElement) p.getObjectValue()).toInput())
             .collect(Collectors.toList());

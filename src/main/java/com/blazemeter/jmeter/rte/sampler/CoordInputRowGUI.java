@@ -5,29 +5,24 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import org.apache.jmeter.testelement.property.StringProperty;
 
-public class CoordInputTestElement extends InputTestElement {
+public class CoordInputRowGUI extends InputTestElement {
 
-  private static final String COLUMN = "CoordInput.column";
-  private static final String ROW = "CoordInput.row";
+  private static final String COLUMN = "CoordInputRowGUI.column";
+  private static final String ROW = "CoordInputRowGUI.row";
 
   private static final long serialVersionUID = 4525234536003480135L;
 
-  public CoordInputTestElement() {
+  public CoordInputRowGUI() {
   }
 
-  public CoordInputTestElement(String row, String column, String input) {
+  public CoordInputRowGUI(String row, String column, String input) {
     super(input);
     setRow(row);
     setColumn(column);
   }
 
   public String getRow() {
-    /*
-    We keep support for old property name to be backwards compatible with .jmx of previous plugin
-    versions
-     */
-    String val = getPropertyAsString(ROW, null);
-    return val == null ? getPropertyAsString("CoordInputRowGUI.row", "1") : val;
+    return getPropertyAsString(ROW, "1");
   }
 
   public void setRow(String row) {
@@ -35,12 +30,7 @@ public class CoordInputTestElement extends InputTestElement {
   }
 
   public String getColumn() {
-    /*
-    We keep support for old property name to be backwards compatible with .jmx of previous plugin
-    versions
-     */
-    String val = getPropertyAsString(COLUMN, null);
-    return val == null ? getPropertyAsString("CoordInputRowGUI.column", "1") : val;
+    return getPropertyAsString(COLUMN, "1");
   }
 
   public void setColumn(String column) {
@@ -54,8 +44,8 @@ public class CoordInputTestElement extends InputTestElement {
 
   @Override
   public void copyOf(InputTestElement source) {
-    if (source instanceof CoordInputTestElement) {
-      CoordInputTestElement sourceCoords = (CoordInputTestElement) source;
+    if (source instanceof CoordInputRowGUI) {
+      CoordInputRowGUI sourceCoords = (CoordInputRowGUI) source;
       setRow(sourceCoords.getRow());
       setColumn(sourceCoords.getColumn());
       setInput(sourceCoords.getInput());

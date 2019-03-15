@@ -8,13 +8,13 @@ import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.PropertyIterator;
 import org.apache.jmeter.testelement.property.TestElementProperty;
 
-public class InputsTestElement extends ConfigTestElement implements Serializable,
+public class Inputs extends ConfigTestElement implements Serializable,
     Iterable<JMeterProperty> {
 
   public static final String INPUTS_PROPERTY = "Inputs.inputs";
   private static final long serialVersionUID = 5810149938611069868L;
 
-  public InputsTestElement() {
+  public Inputs() {
     setProperty(new CollectionProperty(INPUTS_PROPERTY, new ArrayList<>()));
   }
 

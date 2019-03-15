@@ -26,12 +26,12 @@
     <dependency>
       <groupId>us.abstracta</groupId>
       <artifactId>xtn5250</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>2.1</version>
     </dependency>
     <dependency>
       <groupId>us.abstracta</groupId>
       <artifactId>dm3270-lib</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>0.7-lib</version>
     </dependency>
 
     <dependency>
