@@ -30,26 +30,25 @@ package com.blazemeter.jmeter.rte {
         RteSampler --> RteProtocolClient
         interface RteProtocolClient {
             void connect(String server, int port, SSLType sslType, TerminalType terminalType, long timeOutMillis, long StableTimeOut)
-            String send(List<CoordInput> input, List<WaitCondition> waiters)
+            String send(List<Input> input, List<WaitCondition> waiters)
             void disconnect()
         }
-
         enum SecurityProtocol {
             TLS
             SSLv2
             SSLv3
         }
 
-        class Input{
+        abstract class Input{
             String input
         }
         
         class CoordInput extends Input{
-        Position position
+            Position position
         }
         
         class LabelInput extends Input{
-        String label
+            String label
         }
 
         class Position {

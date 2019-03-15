@@ -14,7 +14,12 @@ public class LabelInput extends Input {
   public String getLabel() {
     return label;
   }
-
+  
+  @Override
+  public String getCsv() {
+    return label + "," + getInput();
+  }
+  
   @Override
   public String toString() {
     return "(" + label + "): " + getInput();

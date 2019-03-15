@@ -41,11 +41,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class InputPanelTest {
+public class InputPanelIT {
 
   private static final long CHANGE_TIMEOUT_MILLIS = 10000;
   private static final LabelInput USER_LABEL_INPUT = new LabelInput("User", "TESTUSR");
   private static final CoordInput PASS_COORD_INPUT = new CoordInput(new Position(1, 2), "TESTPSW");
+  private static final String DELETE_BUTTON ="deleteButton";
+  private static final String UP_BUTTON ="upButton";
+  private static final String DOWN_BUTTON ="downButton";
   private FrameFixture frame;
   private InputPanel panel;
   private JTableFixture inputTable;
@@ -59,7 +62,6 @@ public class InputPanelTest {
   public void setup() {
     panel = new InputPanel();
     frame = showInFrame(panel);
-    frame.resizeHeightTo(200);
     inputTable = frame.table("table");
     inputTable.replaceCellWriter(new FieldWriter(frame.robot()));
   }
@@ -167,9 +169,8 @@ public class InputPanelTest {
   @Test
   public void shouldAddCoordInputWhenClickAddCoord() {
     clickAddCoord();
-    CoordInput input = new CoordInput(new Position(2, 3), "TESTUSR");
-    setInputCoordRow(0, input);
-    assertInputs(input);
+    setInputCoordRow(0, PASS_COORD_INPUT);
+    assertInputs(PASS_COORD_INPUT);
   }
 
   private void clickAddCoord() {
@@ -189,15 +190,14 @@ public class InputPanelTest {
     clickAddLabel();
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickAddCoord();
-    CoordInput passInput = new CoordInput(new Position(1, 2), "TESTPSW");
-    setInputCoordRow(1, passInput);
+    setInputCoordRow(1, PASS_COORD_INPUT);
     clickAddCoord();
     CoordInput nameInput = new CoordInput(new Position(4, 2), "TESTNAME");
     setInputCoordRow(2, nameInput);
     clickAddLabel();
     LabelInput emailInput = new LabelInput("eMail", "test@example.com");
     setInputLabelRow(3, emailInput);
-    assertInputs(USER_LABEL_INPUT, passInput, nameInput, emailInput);
+    assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT, nameInput, emailInput);
 
   }
 
@@ -207,13 +207,13 @@ public class InputPanelTest {
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
-    inputTable.selectCells(TableCell.row(0).column(0));
+    inputTable.selectRows(0);
     clickUpButton();
     assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT);
   }
 
   private void clickUpButton() {
-    frame.button("upButton").click();
+    frame.button(UP_BUTTON).click();
   }
 
   @Test
@@ -222,7 +222,7 @@ public class InputPanelTest {
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
-    inputTable.selectCells(TableCell.row(1).column(0));
+    inputTable.selectRows(1);
     clickUpButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT);
   }
@@ -239,7 +239,7 @@ public class InputPanelTest {
     clickAddLabel();
     LabelInput emailInput = new LabelInput("eMail", "test@example.com");
     setInputLabelRow(3, emailInput);
-    inputTable.selectCells(TableCell.row(3).column(0), TableCell.row(1).column(0));
+    inputTable.selectRows(3,1);
     clickUpButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT, emailInput, nameInput);
   }
@@ -250,13 +250,13 @@ public class InputPanelTest {
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
-    inputTable.selectCells(TableCell.row(0).column(0));
+    inputTable.selectRows(0);  
     clickDownButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT);
   }
 
   private void clickDownButton() {
-    frame.button("downButton").click();
+    frame.button(DOWN_BUTTON).click();
   }
 
   @Test
@@ -265,7 +265,7 @@ public class InputPanelTest {
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
-    inputTable.selectCells(TableCell.row(1).column(0));
+    inputTable.selectRows(1);
     clickDownButton();
     assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT);
   }
@@ -282,7 +282,7 @@ public class InputPanelTest {
     clickAddLabel();
     LabelInput emailInput = new LabelInput("eMail", "test@example.com");
     setInputLabelRow(3, emailInput);
-    inputTable.selectCells(TableCell.row(0).column(0), TableCell.row(2).column(0));
+    inputTable.selectRows(0,2);
     clickDownButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT, emailInput, nameInput);
   }
@@ -296,13 +296,13 @@ public class InputPanelTest {
     clickAddCoord();
     CoordInput nameInput = new CoordInput(new Position(4, 2), "TESTNAME");
     setInputCoordRow(2, nameInput);
-    inputTable.selectCells(TableCell.row(0).column(0), TableCell.row(2).column(0));
+    inputTable.selectRows(0,2);
     clickDeleteButton();
     assertInputs(PASS_COORD_INPUT);
   }
 
   private void clickDeleteButton() {
-    frame.button("deleteButton").click();
+    frame.button(DELETE_BUTTON).click();
   }
 
   @Test
@@ -337,7 +337,7 @@ public class InputPanelTest {
   public void shouldEnableDeleteButtonWhenAddOneInput() {
     clickAddLabel();
     setInputLabelRow(0, USER_LABEL_INPUT);
-    waitButtonEnabled("deleteButton", true);
+    waitButtonEnabled(DELETE_BUTTON, true);
   }
 
   private void waitButtonEnabled(String buttonName, boolean enable) {
@@ -354,7 +354,7 @@ public class InputPanelTest {
     clickAddLabel();
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickDeleteButton();
-    waitButtonEnabled("deleteButton",false);
+    waitButtonEnabled(DELETE_BUTTON,false);
   }
 
   @Test
@@ -364,7 +364,7 @@ public class InputPanelTest {
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
     clickDeleteButton();
-    waitButtonEnabled("upButton",false);
+    waitButtonEnabled(UP_BUTTON,false);
   }
 
   @Test
@@ -373,7 +373,7 @@ public class InputPanelTest {
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
-    waitButtonEnabled("upButton", true);
+    waitButtonEnabled(UP_BUTTON, true);
   }
 
   @Test
@@ -382,7 +382,7 @@ public class InputPanelTest {
     setInputLabelRow(0, USER_LABEL_INPUT);
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
-    waitButtonEnabled("downButton",true);
+    waitButtonEnabled(DOWN_BUTTON,true);
   }
 
   @Test
@@ -392,7 +392,7 @@ public class InputPanelTest {
     clickAddCoord();
     setInputCoordRow(1, PASS_COORD_INPUT);
     clickDeleteButton();
-    waitButtonEnabled("downButton",false);
+    waitButtonEnabled(DOWN_BUTTON,false);
   }
 
 }

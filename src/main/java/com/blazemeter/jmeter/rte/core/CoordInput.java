@@ -14,7 +14,13 @@ public class CoordInput extends Input {
   public Position getPosition() {
     return position;
   }
-
+  
+  @Override
+  public String getCsv() {
+    return getPosition().getRow() + "," + getPosition().getColumn() + "," +
+        getInput();
+  }
+  
   @Override
   public String toString() {
     return this.position + ": " + getInput();

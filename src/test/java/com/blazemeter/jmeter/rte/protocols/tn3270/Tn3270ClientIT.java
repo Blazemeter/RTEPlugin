@@ -141,7 +141,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-        new LabelInput("Direccion", "testpsw"));
+        new LabelInput("Address", "address_Example_123"));
     client.send(input, AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));

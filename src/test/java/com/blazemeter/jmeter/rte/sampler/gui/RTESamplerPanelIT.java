@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class RTESamplerPanelTest {
+public class RTESamplerPanelIT {
 
   private static final String REQUEST_PANEL = "requestPanel";
   private static final String WAITS_PANEL = "requestPanel";

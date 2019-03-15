@@ -54,8 +54,8 @@ public class InputPanel extends JPanel implements ActionListener {
   private static final String CLIPBOARD_LINE_DELIMITERS = "\n";
   private static final String CLIPBOARD_ARG_DELIMITERS = "\t";
 
-  private transient InputTableModel tableModel;
-  private transient JTable table;
+  private InputTableModel tableModel;
+  private JTable table;
   private JButton addLabelInputButton;
   private JButton addCoordInputButton;
   private JButton addFromClipboardButton;
@@ -70,15 +70,10 @@ public class InputPanel extends JPanel implements ActionListener {
     table.revalidate();
   }
 
-  private static int getNumberOfVisibleRows(JTable table) {
-    Rectangle vr = table.getVisibleRect();
-    int first = table.rowAtPoint(vr.getLocation());
-    vr.translate(0, vr.height);
-    return table.rowAtPoint(vr.getLocation()) - first;
-  }
-
   private Component makeMainPanel() {
-    initializeTableModel();
+    if (tableModel == null) {
+      tableModel = new InputTableModel(new Object[]{"Field", "Value"});
+    }
     table = SwingUtils.createComponent("table", new JTable(tableModel));
     table.getTableHeader().setDefaultRenderer(new HeaderAsPropertyRenderer() {
       @Override
@@ -95,12 +90,6 @@ public class InputPanel extends JPanel implements ActionListener {
     table.setPreferredScrollableViewportSize(new Dimension(-1, textFieldPreferredSize * 5));
     JMeterUtils.applyHiDPI(table);
     return new JScrollPane(table);
-  }
-
-  private void initializeTableModel() {
-    if (tableModel == null) {
-      tableModel = new InputTableModel(new Object[]{"Field", "Value"});
-    }
   }
 
   private JPanel makeButtonPanel() {
@@ -160,29 +149,19 @@ public class InputPanel extends JPanel implements ActionListener {
 
   public TestElement createTestElement() {
     Inputs inputs = new Inputs();
-    modifyTestElement(inputs);
+    inputs.clear();
+    for (InputTestElement input : tableModel) {
+      if (!StringUtils.isEmpty(input.getInput())) {
+        inputs.addInput(input);
+      }
+    }
     return inputs;
   }
 
-  private void modifyTestElement(TestElement element) {
-    GuiUtils.stopTableEditing(table);
-    if (element instanceof Inputs) {
-      Inputs inputs = (Inputs) element;
-      inputs.clear();
-      Iterator<InputTestElement> modelData = tableModel.iterator();
-      while (modelData.hasNext()) {
-        InputTestElement input = modelData.next();
-        if (!StringUtils.isEmpty(input.getInput())) {
-          inputs.addInput(input);
-        }
-      }
-    }
-  }
-
-  public void configure(TestElement el) {
-    if (el instanceof Inputs) {
+  public void configure(Inputs i) {
+    if (i != null) {
       tableModel.clearData();
-      for (JMeterProperty jMeterProperty : (Inputs) el) {
+      for (JMeterProperty jMeterProperty : i) {
         InputTestElement input = (InputTestElement) jMeterProperty.getObjectValue();
         tableModel.addRow(input);
       }
@@ -241,7 +220,7 @@ public class InputPanel extends JPanel implements ActionListener {
     int rowCount = table.getRowCount();
     try {
       String clipboardContent = GuiUtils.getPastedText();
-      if (clipboardContent == null) {
+      if (StringUtils.isEmpty(clipboardContent)) {
         return;
       }
       String[] clipboardLines = clipboardContent.split(CLIPBOARD_LINE_DELIMITERS);
@@ -274,7 +253,7 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   private InputTestElement buildArgumentFromClipboard(String[] clipboardCols) {
-
+    
     if (clipboardCols.length >= 3) {
       CoordInputRowGUI argument = new CoordInputRowGUI();
       argument.setRow(clipboardCols[0]);
@@ -289,15 +268,13 @@ public class InputPanel extends JPanel implements ActionListener {
       labelArgument.setInput(clipboardCols[1]);
       return labelArgument;
     }
-
-    if (clipboardCols.length == 1) {
-      CoordInputRowGUI defaultArgument = new CoordInputRowGUI();
-      defaultArgument.setRow("1");
-      defaultArgument.setColumn("1");
-      defaultArgument.setInput(clipboardCols[0]);
-      return defaultArgument;
-    }
-    return null;
+    
+    CoordInputRowGUI defaultArgument = new CoordInputRowGUI();
+    defaultArgument.setRow("1");
+    defaultArgument.setColumn("1");
+    defaultArgument.setInput(clipboardCols[0]);
+    return defaultArgument;
+    
   }
 
   private void deleteArgument() {
@@ -320,6 +297,78 @@ public class InputPanel extends JPanel implements ActionListener {
       }
 
       updateEnabledButtons();
+    }
+  }
+
+  private class InputTableModel extends DefaultTableModel implements Iterable<InputTestElement> {
+
+    private transient ArrayList<InputTestElement> inputs;
+
+    private InputTableModel(Object[] header) {
+      super(header, 0);
+      inputs = new ArrayList<>();
+    }
+
+    private void clearData() {
+      int size = this.getRowCount();
+      this.inputs.clear();
+      super.fireTableRowsDeleted(0, size);
+    }
+
+    private void deleteRow(int row) {
+      LOG.debug("Removing row: " + row);
+      this.inputs.remove(row);
+      fireTableRowsDeleted(row, row);
+    }
+
+    private void addRow(InputTestElement value) {
+      LOG.debug("Adding row value: " + value);
+      inputs.add(value);
+      int insertedRowIndex = inputs.size() - 1;
+      super.fireTableRowsInserted(insertedRowIndex, insertedRowIndex);
+    }
+
+    @SuppressWarnings("NullableProblems")
+    @Override
+    public Iterator<InputTestElement> iterator() {
+      return this.inputs.iterator();
+    }
+
+    @Override
+    public int getRowCount() {
+      return this.inputs == null ? 0 : this.inputs.size();
+    }
+
+    @Override
+    public Object getValueAt(int row, int col) {
+      if (col == 0) {
+        return this.inputs.get(row);
+      } else if (col == 1) {
+        return this.inputs.get(row).getInput();
+      } else {
+        return "";
+      }
+    }
+
+    @Override
+    public void setValueAt(Object cellValue, int row, int col) {
+      if (row < this.inputs.size()) {
+        if (col == 0) {
+          if (cellValue instanceof InputTestElement) {
+            inputs.get(row).copyOf((InputTestElement) cellValue);
+          }
+        } else if (col == 1) {
+          if (cellValue instanceof String) {
+            this.inputs.get(row).setInput((String) cellValue);
+          }
+        }
+      }
+    }
+    
+    private void switchRows(int row1, int row2) {
+      InputTestElement temp = inputs.get(row1);
+      inputs.set(row1, inputs.get(row2));
+      inputs.set(row2, temp);
     }
   }
 
@@ -360,6 +409,13 @@ public class InputPanel extends JPanel implements ActionListener {
     }
   }
 
+  private static int getNumberOfVisibleRows(JTable table) {
+    Rectangle vr = table.getVisibleRect();
+    int first = table.rowAtPoint(vr.getLocation());
+    vr.translate(0, vr.height);
+    return table.rowAtPoint(vr.getLocation()) - first;
+  }
+
   private void moveDown() {
     // get the selected rows before stopping editing
     // or the selected rows will be unselected
@@ -396,76 +452,7 @@ public class InputPanel extends JPanel implements ActionListener {
     updateEnabledButtons();
   }
 
-  private class InputTableModel extends DefaultTableModel {
-
-    private transient ArrayList<InputTestElement> inputs;
-
-    private InputTableModel(Object[] header) {
-      super(header, 0);
-      inputs = new ArrayList<>();
-    }
-
-    public void clearData() {
-      int size = this.getRowCount();
-      this.inputs.clear();
-      super.fireTableRowsDeleted(0, size);
-    }
-
-    private void deleteRow(int row) {
-      LOG.debug("Removing row value: " + row);
-      this.inputs.remove(row);
-      fireTableRowsDeleted(row, row);
-    }
-
-    private void addRow(InputTestElement value) {
-      LOG.debug("Adding row value: " + value);
-      inputs.add(value);
-      int insertedRowIndex = inputs.size() - 1;
-      super.fireTableRowsInserted(insertedRowIndex, insertedRowIndex);
-    }
-
-    public Iterator<InputTestElement> iterator() {
-      return this.inputs.iterator();
-    }
-
-    public int getRowCount() {
-      return this.inputs == null ? 0 : this.inputs.size();
-    }
-
-    public Object getValueAt(int row, int col) {
-      LOG.debug("Getting row value");
-      if (col == 0) {
-        return this.inputs.get(row);
-      } else if (col == 1) {
-        return this.inputs.get(row).getInput();
-      } else {
-        return "";
-      }
-    }
-
-    public void setValueAt(Object cellValue, int row, int col) {
-      if (row < this.inputs.size()) {
-        if (col == 0) {
-          if (cellValue instanceof InputTestElement) {
-            inputs.get(row).copyOf((InputTestElement) cellValue);
-          }
-        } else if (col == 1) {
-          if (cellValue instanceof String) {
-            this.inputs.get(row).setInput((String) cellValue);
-          }
-        }
-      }
-    }
-
-    private void switchRows(int row1, int row2) {
-      InputTestElement temp = inputs.get(row1);
-      inputs.set(row1, inputs.get(row2));
-      inputs.set(row2, temp);
-    }
-
-  }
-
-  public static class FieldPanel extends JPanel {
+  protected static class FieldPanel extends JPanel {
 
     private final GroupLayout layout;
     private JLabel label = new JLabel();

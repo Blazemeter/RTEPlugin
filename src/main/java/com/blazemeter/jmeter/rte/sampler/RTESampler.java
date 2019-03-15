@@ -1,9 +1,7 @@
 package com.blazemeter.jmeter.rte.sampler;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
-import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
@@ -18,6 +16,7 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.helger.commons.annotation.VisibleForTesting;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -29,6 +28,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.AbstractSampler;
@@ -498,31 +498,16 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private String buildRequestBody() {
-    StringBuilder ret = new StringBuilder();
-    ret.append("AttentionKey: ")
+    return new StringBuilder()
+        .append("AttentionKey: ")
         .append(getAttentionKey())
         .append("\n")
-        .append("Inputs:\n");
-
-    for (Input i : getInputs()) {
-      if (i instanceof CoordInput) {
-        CoordInput c = (CoordInput) i;
-        ret.append(c.getPosition().getRow())
-            .append(",")
-            .append(c.getPosition().getColumn())
-            .append(",")
-            .append(c.getInput())
-            .append("\n");
-      }
-      if (i instanceof LabelInput) {
-        LabelInput l = (LabelInput) i;
-        ret.append(l.getLabel())
-            .append(": ")
-            .append(l.getInput())
-            .append("\n");
-      }
-    }
-    return ret.toString();
+        .append("Inputs:\n")
+        .append(getInputs().stream()
+            .map(Input::getCsv)
+            .collect(Collectors.joining("\n")))
+        .append("\n")
+        .toString();
   }
 
   private List<Input> getInputs() {
@@ -599,7 +584,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private SampleResult timeoutErrorResult(String message, Throwable e, SampleResult sampleResult,
-      String screen) {
+                                          String screen) {
     sampleResult.setSuccessful(false);
     sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
