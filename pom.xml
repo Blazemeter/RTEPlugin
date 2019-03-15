@@ -31,7 +31,7 @@
     <dependency>
       <groupId>us.abstracta</groupId>
       <artifactId>dm3270-lib</artifactId>
-      <version>0.7-lib</version>
+      <version>0.7</version>
     </dependency>
 
     <dependency>
