@@ -148,6 +148,7 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   public TestElement createTestElement() {
+    GuiUtils.stopTableEditing(table);
     Inputs inputs = new Inputs();
     inputs.clear();
     for (InputTestElement input : tableModel) {
@@ -316,7 +317,7 @@ public class InputPanel extends JPanel implements ActionListener {
     }
 
     private void deleteRow(int row) {
-      LOG.debug("Removing row: " + row);
+      LOG.debug("Removing row: {}", row);
       this.inputs.remove(row);
       fireTableRowsDeleted(row, row);
     }

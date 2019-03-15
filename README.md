@@ -61,7 +61,7 @@ All the "waiters" use a stable timeout value (in milliseconds) which specifies t
 
 Suppose the user wants to automate the following workflow with an AS400 server (TN5250 system):
 1. Connect to the system *myAS400.net* and validate that the screens shows the "Welcome" message.
-2. Fill the *user field* (which is in row 7 and column 53 of the screen) and the *password field* (which is in row 9, column 53 of the screen) and press *Enter* key. Validate that the screen shows the message "Login Successful".
+2. Fill the *user field* (which is in row 7 and column 53 of the screen) and the *password field* (which is label 'Password' of the screen) and press *Enter* key. Validate that the screen shows the message "Login Successful".
 
 To do this, first of all it's required an RTE Config element specifying the server url and the protocol (TN5250). Additionally, two RTE sampler's are required: one to establish the connection and validate the Welcome screen, and the other to do the login.
 
@@ -77,7 +77,7 @@ The RTE Config element should specify the server url in *Server* field, and the 
 
 ![alt text](docs/connect.png "RTE Sampler 1")
 
-Finally, the second sampler should use "Send keys" action (the default option) and specify in the Payload grid the position on the screen and the value to put on both *user* and *password* fields. Besides, the attention key *ENTER* (the default one) should be selected to simulate the user pressing that key after filling the fields. Finally, an assert post processor should be added to check for the "Login Successful" message.
+Finally, the second sampler should use "Send keys" action (the default option) and specify in Payload grid the position of the username on the screen, the label (in this case Password) and the values for both *user* and *password* fields. Besides, the attention key *ENTER* (the default one) should be selected to simulate the user pressing that key after filling the fields. Finally, an assert post processor should be added to check for the "Login Successful" message.
 
 ![alt text](docs/send-keys.png "RTE Sampler 2") 
 
