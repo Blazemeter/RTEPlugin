@@ -79,23 +79,22 @@ public class RTESamplerPanel extends JPanel {
     BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
-        .addComponent(modePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(modePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(modePanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE)
-        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE)
-        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE)
+        .addComponent(requestPanel)
+        .addComponent(waitPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
     );
   }
 
@@ -151,15 +150,14 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(warningLabel));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(payloadLabel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(payloadPanel)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(attentionKeysPanel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(warningLabel)
-        .addPreferredGap(ComponentPlacement.UNRELATED));
+        .addComponent(payloadLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(attentionKeysPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(warningLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE));
 
     return panel;
   }
