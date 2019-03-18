@@ -33,7 +33,7 @@ public class RTESamplerPanel extends JPanel {
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
   private final JPanel requestPanel;
-  private CoordInputPanel payloadPanel;
+  private InputPanel payloadPanel;
   private ButtonGroup attentionKeysGroup = new ButtonGroup();
   private Map<AttentionKey, JRadioButton> attentionKeys = new EnumMap<>(AttentionKey.class);
   private final JPanel waitPanel;
@@ -79,23 +79,22 @@ public class RTESamplerPanel extends JPanel {
     BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
-        .addComponent(modePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(modePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(modePanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE)
-        .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE)
-        .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            GroupLayout.DEFAULT_SIZE)
+        .addComponent(requestPanel)
+        .addComponent(waitPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
     );
   }
 
@@ -135,7 +134,7 @@ public class RTESamplerPanel extends JPanel {
     panel.setLayout(layout);
 
     JLabel payloadLabel = SwingUtils.createComponent("payloadLabel", new JLabel("Payload: "));
-    payloadPanel = SwingUtils.createComponent("payloadPanel", new CoordInputPanel());
+    payloadPanel = SwingUtils.createComponent("payloadPanel", new InputPanel());
     JPanel attentionKeysPanel = buildAttentionKeysPanel();
 
     JLabel warningLabel = SwingUtils
@@ -146,22 +145,19 @@ public class RTESamplerPanel extends JPanel {
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(payloadLabel)
-        .addComponent(payloadPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            Short.MAX_VALUE)
-        .addComponent(attentionKeysPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            Short.MAX_VALUE)
+        .addComponent(payloadPanel)
+        .addComponent(attentionKeysPanel)
         .addComponent(warningLabel));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(payloadLabel)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(attentionKeysPanel, GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(warningLabel)
-        .addPreferredGap(ComponentPlacement.UNRELATED));
+        .addComponent(payloadLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(payloadPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(attentionKeysPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(warningLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE));
 
     return panel;
   }
@@ -451,7 +447,7 @@ public class RTESamplerPanel extends JPanel {
     }
   }
 
-  public CoordInputPanel getPayload() {
+  public InputPanel getPayload() {
     return this.payloadPanel;
   }
 

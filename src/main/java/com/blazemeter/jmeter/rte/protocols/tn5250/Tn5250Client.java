@@ -5,7 +5,10 @@ import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.ExceptionHandler;
+import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -128,11 +131,30 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  protected void setField(CoordInput i) {
+  protected void setField(Input i) {
+    if (i instanceof CoordInput) {
+      setFieldByCoord((CoordInput) i);
+    } else if (i instanceof LabelInput) {
+      setFieldByLabel((LabelInput) i);
+    } else {
+      throw new IllegalArgumentException("Invalid input type: " + i.getClass());
+    }
+  }
+
+  private void setFieldByCoord(CoordInput i) {
     try {
-      client.setFieldText(i.getPosition().getRow(), i.getPosition().getColumn(), i.getInput());
+      client.setFieldTextByCoord(i.getPosition().getRow(),
+          i.getPosition().getColumn(), i.getInput());
     } catch (IllegalArgumentException e) {
       throw new InvalidFieldPositionException(i.getPosition(), e);
+    }
+  }
+
+  private void setFieldByLabel(LabelInput i) {
+    try {
+      client.setFieldTextByLabel(i.getLabel(), i.getInput());
+    } catch (IllegalArgumentException e) {
+      throw new InvalidFieldLabelException(i.getLabel(), e);
     }
   }
 
