@@ -6,7 +6,11 @@ import static org.assertj.swing.timing.Timeout.timeout;
 
 import com.blazemeter.jmeter.rte.sampler.Action;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.driver.WaitForComponentToShowCondition;
 import org.assertj.swing.fixture.AbstractJComponentFixture;
@@ -20,7 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class RTESamplerPanelTest {
+public class RTESamplerPanelIT {
 
   private static final String REQUEST_PANEL = "requestPanel";
   private static final String WAITS_PANEL = "requestPanel";
@@ -99,11 +103,8 @@ public class RTESamplerPanelTest {
 
   @Test
   public void shouldDisableSyncWaitFieldsWhenIsNotChecked() {
-    JCheckBoxFixture check = frame.checkBox(WAIT_SYNC);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
-    switchCheckboxTo(false, check);
-    expected.add(frame.textBox(WAIT_SYNC_TIMEOUT));
-    validateEnabled(false, expected);
+    switchCheckboxTo(false, frame.checkBox(WAIT_SYNC));
+    validateEnabled(false, Collections.singletonList(frame.textBox(WAIT_SYNC_TIMEOUT)));
   }
 
   @Test
@@ -200,15 +201,8 @@ public class RTESamplerPanelTest {
     pause(new Condition("Components are " + (enable ? "enabled" : "disabled")) {
       @Override
       public boolean test() {
-        List<String> result = new ArrayList<>();
-        List<String> expected = new ArrayList<>();
-        for (AbstractJComponentFixture c : components) {
-          if (c.isEnabled() == enable) {
-            result.add(c.target().getName());
-          }
-          expected.add(c.target().getName());
-        }
-        return result.containsAll(expected) && expected.containsAll(result);
+        return components.stream()
+            .allMatch( c -> c.isEnabled() == enable);
       }
     }, timeout(CHANGE_TIMEOUT_MILLIS));
   }

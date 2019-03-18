@@ -24,7 +24,6 @@ import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -59,7 +58,7 @@ public class RTESamplerTest {
   private static final String REQUEST_HEADERS_FORMAT = BASE_REQUEST_HEADERS_FORMAT
       + "Input-inhibited: %b\n";
   private static final String REQUEST_BODY = "AttentionKey: ENTER\n"
-      + "Inputs (Row,Column,Value):\n"
+      + "Inputs:\n"
       + "1,1,input\n";
 
   @Mock
@@ -75,13 +74,12 @@ public class RTESamplerTest {
   }
 
   @AfterClass
-  public static void tearDownClass() throws IOException {
+  public static void tearDownClass() {
     /*RESampler in some cases throw an InterruptedException and set true the interrupted flag when
     this is tested is needed reset this flag otherwise the following I/O operations will fail.*/
     Thread.interrupted();
   }
 
-  @SuppressWarnings("unchecked")
   @Before
   public void setup() {
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
@@ -115,7 +113,7 @@ public class RTESamplerTest {
 
   private Inputs createInputs() {
     Inputs ret = new Inputs();
-    ret.addCoordInput(new CoordInputRowGUI(1, 1, "input"));
+    ret.addInput(new CoordInputRowGUI("1", "1", "input"));
     return ret;
   }
 

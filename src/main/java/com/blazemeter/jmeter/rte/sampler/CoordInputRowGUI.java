@@ -1,15 +1,12 @@
 package com.blazemeter.jmeter.rte.sampler;
 
 import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
-import java.io.Serializable;
-import org.apache.jmeter.testelement.AbstractTestElement;
-import org.apache.jmeter.testelement.property.IntegerProperty;
 import org.apache.jmeter.testelement.property.StringProperty;
 
-public class CoordInputRowGUI extends AbstractTestElement implements Serializable {
+public class CoordInputRowGUI extends InputTestElement {
 
-  private static final String INPUT = "CoordInputRowGUI.input";
   private static final String COLUMN = "CoordInputRowGUI.column";
   private static final String ROW = "CoordInputRowGUI.row";
 
@@ -18,38 +15,41 @@ public class CoordInputRowGUI extends AbstractTestElement implements Serializabl
   public CoordInputRowGUI() {
   }
 
-  public CoordInputRowGUI(int row, int column, String input) {
+  public CoordInputRowGUI(String row, String column, String input) {
+    super(input);
     setRow(row);
     setColumn(column);
-    setInput(input);
   }
 
-  public String getInput() {
-    return getPropertyAsString(INPUT);
+  public String getRow() {
+    return getPropertyAsString(ROW, "1");
   }
 
-  public void setInput(String input) {
-    setProperty(new StringProperty(INPUT, input));
+  public void setRow(String row) {
+    setProperty(new StringProperty(ROW, row));
   }
 
-  public int getRow() {
-    return getPropertyAsInt(ROW, 1);
+  public String getColumn() {
+    return getPropertyAsString(COLUMN, "1");
   }
 
-  public void setRow(int row) {
-    setProperty(new IntegerProperty(ROW, row));
+  public void setColumn(String column) {
+    setProperty(new StringProperty(COLUMN, column));
   }
 
-  public int getColumn() {
-    return getPropertyAsInt(COLUMN, 1);
+  public Input toInput() {
+    return new CoordInput(new Position(Integer.parseInt(getRow()), Integer.parseInt(getColumn())),
+        getInput());
   }
 
-  public void setColumn(int column) {
-    setProperty(new IntegerProperty(COLUMN, column));
-  }
-
-  public CoordInput toCoordInput() {
-    return new CoordInput(new Position(getRow(), getColumn()), getInput());
+  @Override
+  public void copyOf(InputTestElement source) {
+    if (source instanceof CoordInputRowGUI) {
+      CoordInputRowGUI sourceCoords = (CoordInputRowGUI) source;
+      setRow(sourceCoords.getRow());
+      setColumn(sourceCoords.getColumn());
+      setInput(sourceCoords.getInput());
+    }
   }
 
 }

@@ -2,12 +2,10 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.blazemeter.jmeter.rte.core.AttentionKey;
-import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
-import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
+import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.*;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -77,33 +75,64 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   @Test
-  public void shouldGetUserMenuScreenWhenSendCreds() throws Exception {
+  public void shouldGetUserMenuScreenWhenSendCredsByCoord() throws Exception {
     loadFlow("login.yml");
     connectToVirtualService();
-    sendCredsWithSyncWait();
+    sendCredsByCoordWithSyncWait();
     assertThat(client.getScreen())
         .isEqualTo(getFileContent("user-menu-screen.txt"));
   }
 
-  private void sendCredsWithSyncWait() throws Exception {
-    client.send(buildCredsFields(), AttentionKey.ENTER);
+  private void sendCredsByCoordWithSyncWait() throws Exception {
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
-  private List<CoordInput> buildCredsFields() {
+  private List<Input> buildCredsFieldsByCoord() {
     return Arrays.asList(
         new CoordInput(new Position(6, 53), "TESTUSR"),
         new CoordInput(new Position(7, 53), "TESTPSW"));
   }
 
+  @Test
+  public void shouldGetUserMenuScreenWhenSendCredsByLabel() throws Exception {
+    loadFlow("login.yml");
+    connectToVirtualService();
+    sendCredsByLabelWithSyncWait();
+    assertThat(client.getScreen())
+            .isEqualTo(getFileContent("user-menu-screen.txt"));
+  }
+
+  private void sendCredsByLabelWithSyncWait() throws Exception {
+    client.send(buildCredsFieldsByLabel(), AttentionKey.ENTER);
+    client.await(
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+  }
+
+  private List<Input> buildCredsFieldsByLabel() {
+    return Arrays.asList(
+            new LabelInput("User", "TESTUSR"),
+            new LabelInput("Password", "TESTPSW"));
+  }
+
   @Test(expected = InvalidFieldPositionException.class)
-  public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPosition()
+  public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPositionByCoord()
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    List<CoordInput> input = Collections.singletonList(
+    List<Input> input = Collections.singletonList(
         new CoordInput(new Position(7, 1), "TESTUSR"));
+    client.send(input, AttentionKey.ENTER);
+  }
+
+  @Test(expected = InvalidFieldLabelException.class)
+  public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPositionByLabel()
+          throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    List<Input> input = Collections.singletonList(
+            new LabelInput("Usr", "TESTUSR"));
     client.send(input, AttentionKey.ENTER);
   }
 
@@ -111,7 +140,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldGetTrueSoundAlarmWhenServerSendTheSignal() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    sendCredsWithSyncWait();
+    sendCredsByCoordWithSyncWait();
     assertThat(client.getSoundAlarm()).isTrue();
   }
 
@@ -127,7 +156,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadLoginFlow();
     connectToVirtualService();
     server.stop(SERVER_STOP_TIMEOUT);
-    sendCredsWithSyncWait();
+    sendCredsByCoordWithSyncWait();
   }
 
   @Test(expected = UnsupportedOperationException.class)
@@ -149,7 +178,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    client.send(buildCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -159,7 +188,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
     client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1, 1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -168,7 +197,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    client.send(buildCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
     client.await(
         Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -178,7 +207,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildCredsFields(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
     client.await(Collections
         .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
             new Perl5Matcher(),
@@ -192,7 +221,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldGetWelcomeScreenWhenConnectAfterDisconnect() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    sendCredsWithSyncWait();
+    sendCredsByCoordWithSyncWait();
     client.disconnect();
     connectToVirtualService();
     assertThat(client.getScreen())
@@ -212,7 +241,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildCredsFields(), AttentionKey.PA1);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.PA1);
   }
 
 }

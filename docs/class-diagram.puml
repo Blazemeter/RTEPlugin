@@ -1,0 +1,116 @@
+@startuml
+
+skinparam monochrome true
+hide empty members
+
+package org.apache.jmeter.* {
+    abstract class AbstractConfigGui
+
+    abstract class AbstractSamplerGui
+
+    abstract class AbstractSampler
+}
+
+package com.blazemeter.jmeter.rte {
+
+    class RteConfigGui extends AbstractConfigGui {
+    }
+    RteSamplerGui ..> RteSampler
+
+    class RteSamplerGui extends AbstractSamplerGui {
+    }
+    RteConfigGui ..> RteSampler
+
+    class RteSampler extends AbstractSampler {
+        long delayMs
+        boolean disconnect
+    }
+
+    package core {
+        RteSampler --> RteProtocolClient
+        interface RteProtocolClient {
+            void connect(String server, int port, SSLType sslType, TerminalType terminalType, long timeOutMillis, long StableTimeOut)
+            String send(List<Input> input, List<WaitCondition> waiters)
+            void disconnect()
+        }
+        enum SecurityProtocol {
+            TLS
+            SSLv2
+            SSLv3
+        }
+
+        abstract class Input{
+            String input
+        }
+        
+        class CoordInput extends Input{
+            Position position
+        }
+        
+        class LabelInput extends Input{
+            String label
+        }
+
+        class Position {
+            int row
+            int column
+        }
+
+        class Area {
+            Position topLeft
+            Position bottomRight
+        }
+
+        class WaitCondition {
+            long timeoutMs
+            long stableForMs
+        }
+
+        class SyncWaitCondition extends WaitCondition
+
+        class CursorWaitCondition extends WaitCondition {
+            Position position
+        }
+
+        class SilentWaitCondition extends WaitCondition
+
+        class TextWaitCondition extends WaitCondition {
+            Area searchArea
+            String regex
+        }
+
+        package listener {
+            abstract class ConditionWaiter{
+            }
+            abstract class RequestListener{
+            }
+        }
+
+    }
+
+    package protocols {
+        package tn5250 {
+            package tn5250.listeners {
+                class Tn5250RequestListener extends RequestListener
+                abstract class Tn5250ConditionWaiter extends ConditionWaiter
+            }
+            class Tn5250Client implements RteProtocolClient {
+            }
+        }
+
+        package tn3270 {
+            package tn3270.listeners {
+                class Tn3270RequestListener extends RequestListener
+                abstract class Tn3270ConditionWaiter extends ConditionWaiter
+            }
+
+            class Tn3270Client implements RteProtocolClient {
+            }
+        }
+
+    }
+
+}
+RteProtocolClient ..> RequestListener
+
+@enduml

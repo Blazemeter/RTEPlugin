@@ -16,7 +16,7 @@ import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class RTEConfigPanelTest {
+public class RTEConfigPanelIT {
 
   private FrameFixture frame;
 
