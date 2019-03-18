@@ -46,7 +46,7 @@ The RTE Sampler fields are:
   - *Disconnect*. This option allows to explicitly close the connection to the terminal server. This allows to restart the emulator status by re connecting to the server en following samplers.
     > As previously stated, connections are (by default) automatically closed at the end of each thread iteration, so is not required to add a sampler with disconnect action at the end of each thread loop iteration.
 - *RTE Message*. When "Send keys" action is selected it is possible to specify fields to send and attention key to use:
-  - *Payload*. Contains a grid in which user can specify Coordinates (row and column) or Label of a field in the screen, and the value (string) to send in both cases. Rows and columns start from Row 1, Column 1 (are 1 indexed).
+  - *Payload*. Contains a grid in which user can specify Coordinates (row and column) or Label (which precedes from a terminal screen label) of a field in the screen, and the value (string) to send in both cases. Rows and columns start from Row 1, Column 1 (are 1 indexed).
   - *Attention Keys*. These buttons trigger the attention keys to be sent to the server on each sample. They all represent a key from a terminal's keyboard.
 - *Wait for*. When using "Connect" or "Send keys" action it is possible to wait for a specific condition. If this condition is not reached after a specific time (defined in *Timeout* value), the sampler returns timeout error. There are four defined waiters:
   - *Sync*. Waits for the system to return from X SYSTEM or Input Inhibited mode. Default value is checked, as it's recommended to always check that the system is not in Input Inhibited Mode after a sample (and before the next one) in order to get the correct screen in the sample result (and to ensure that the next sampler is executed from the desired screen). On the other hand, the sampler does an implicit "Wait for sync" each time it connects to a server, which means that if *Connect* mode is used, then it's not needed to check the *Wait for sync* function, unless you want to change the default timeout. 
@@ -61,7 +61,7 @@ All the "waiters" use a stable timeout value (in milliseconds) which specifies t
 
 Suppose the user wants to automate the following workflow with an AS400 server (TN5250 system):
 1. Connect to the system *myAS400.net* and validate that the screens shows the "Welcome" message.
-2. Fill the *user field* (which is in row 7 and column 53 of the screen) and the *password field* (which is identified label 'Password' of the screen) and press *Enter* key. Validate that the screen shows the message "Login Successful".
+2. Fill the *user field* (which is in row 7 and column 53 of the screen) and the *password field* (which is identified by the label 'Password' of the screen) and press *Enter* key. Validate that the screen shows the message "Login Successful".
 
 To do this, first of all it's required an RTE Config element specifying the server url and the protocol (TN5250). Additionally, two RTE sampler's are required: one to establish the connection and validate the Welcome screen, and the other to do the login.
 
