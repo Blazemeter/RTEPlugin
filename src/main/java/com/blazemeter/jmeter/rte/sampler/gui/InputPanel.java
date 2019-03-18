@@ -323,7 +323,7 @@ public class InputPanel extends JPanel implements ActionListener {
     }
 
     private void addRow(InputTestElement value) {
-      LOG.debug("Adding row value: " + value);
+      LOG.debug("Adding row value: {}", value);
       inputs.add(value);
       int insertedRowIndex = inputs.size() - 1;
       super.fireTableRowsInserted(insertedRowIndex, insertedRowIndex);
