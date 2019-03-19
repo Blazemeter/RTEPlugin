@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jmeterTestPlan version="1.2" properties="4.0" jmeter="4.0 r1823414">
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.0 r1840935">
   <hashTree>
     <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Test Plan" enabled="true">
       <stringProp name="TestPlan.comments"></stringProp>
@@ -72,14 +72,14 @@ println(&quot;server started...&quot;)</stringProp>
           <elementProp name="Inputs.inputs" elementType="com.blazemeter.jmeter.rte.sampler.Inputs">
             <collectionProp name="Inputs.inputs">
               <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI">
-                <intProp name="CoordInputRowGUI.row">6</intProp>
-                <intProp name="CoordInputRowGUI.column">53</intProp>
+                <stringProp name="CoordInputRowGUI.row">${row}</stringProp>
+                <stringProp name="CoordInputRowGUI.column">53</stringProp>
                 <stringProp name="CoordInputRowGUI.input">TESTUSR</stringProp>
+                <stringProp name="Input.input">${coordInput}</stringProp>
               </elementProp>
-              <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI">
-                <intProp name="CoordInputRowGUI.row">7</intProp>
-                <intProp name="CoordInputRowGUI.column">53</intProp>
-                <stringProp name="CoordInputRowGUI.input">TESTPSW</stringProp>
+              <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI">
+                <stringProp name="Input.input">TESTPSW</stringProp>
+                <stringProp name="LabelInputRowGUI.column">${label}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -105,7 +105,7 @@ println(&quot;server started...&quot;)</stringProp>
         <hashTree>
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Response Assertion" enabled="true">
             <collectionProp name="Asserion.test_strings">
-              <stringProp name="-1918681433">IBM i Main Menu</stringProp>
+              <stringProp name="-1907712861">IBM i Main Menu</stringProp>
             </collectionProp>
             <stringProp name="Assertion.custom_message"></stringProp>
             <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
@@ -137,6 +137,36 @@ println(&quot;server started...&quot;)</stringProp>
           <stringProp name="RTESampler.waitTextAreaBottom"></stringProp>
           <stringProp name="RTESampler.waitTextAreaRight"></stringProp>
         </com.blazemeter.jmeter.rte.sampler.RTESampler>
+        <hashTree/>
+        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="row" elementType="Argument">
+              <stringProp name="Argument.name">row</stringProp>
+              <stringProp name="Argument.value">6</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="column" elementType="Argument">
+              <stringProp name="Argument.name">column</stringProp>
+              <stringProp name="Argument.value">53</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="coordInput" elementType="Argument">
+              <stringProp name="Argument.name">coordInput</stringProp>
+              <stringProp name="Argument.value">TESTUSR</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="label" elementType="Argument">
+              <stringProp name="Argument.name">label</stringProp>
+              <stringProp name="Argument.value">Password</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+            <elementProp name="labelInput" elementType="Argument">
+              <stringProp name="Argument.name">labelInput</stringProp>
+              <stringProp name="Argument.value">TESTPSW</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+          </collectionProp>
+        </Arguments>
         <hashTree/>
       </hashTree>
       <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="true">
