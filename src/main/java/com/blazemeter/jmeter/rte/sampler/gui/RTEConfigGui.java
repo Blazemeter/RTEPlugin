@@ -28,7 +28,6 @@ public class RTEConfigGui extends AbstractConfigGui {
   protected RTEConfigGui(RTEConfigPanel panel) {
     rteConfigPanelConfigPanel = panel;
   }
-
   @Override
   public String getStaticLabel() {
     return "bzm - RTE Config";
