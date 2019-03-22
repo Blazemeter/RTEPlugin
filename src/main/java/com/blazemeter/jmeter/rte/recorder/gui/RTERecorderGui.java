@@ -85,5 +85,4 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
                   String.valueOf(RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS)));
     }
   }
-  
 }

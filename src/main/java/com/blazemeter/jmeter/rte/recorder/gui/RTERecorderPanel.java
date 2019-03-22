@@ -11,11 +11,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.prefs.Preferences;
+
+import static org.apache.tika.parser.ner.NamedEntityParser.LOG;
 
 
 public class RTERecorderPanel extends JPanel implements ActionListener {
-
   
   private static final String ADD_ACTION_START = "addActionStart";
   private static final String ADD_ACTION_STOP = "addActionStop";
@@ -27,16 +27,12 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
 
   public RTERecorderPanel(){
     
-    
-    
     GroupLayout layout= new GroupLayout(this);
     layout.setAutoCreateGaps(true);
     this.setLayout(layout);
     
     JPanel statePanel = buildStatePanel();
     configPanel = new RTEConfigPanel();
-
-  
     
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(statePanel)
@@ -90,7 +86,20 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
 
   @Override
   public void actionPerformed(ActionEvent e) {
-    
+    String action = e.getActionCommand();
+    switch (action) {
+      case ADD_ACTION_START:
+        LOG.debug("WhenStartIsPressed");
+        break;
+      case ADD_ACTION_STOP:
+        LOG.debug("WhenStopIsPressed");
+        break;
+      case ADD_ACTION_RESTART:
+        LOG.debug("WhenRestartIsPressed");
+        break;
+      default:
+        throw new UnsupportedOperationException(action);
+    }
   }
   public void buttonCheck(){
     while(!start.isEnabled()){
@@ -148,5 +157,3 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     configPanel.setConnectionTimeout(timeOut);
   }
 }
-
-

@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static com.mongodb.util.MyAsserts.assertTrue;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 
 
@@ -29,8 +30,15 @@ public class RecorderPanelTest {
     RecPanelGui = new RTERecorderGui();
     frame = showInFrame(RecPanelGui);
     inputTable = frame.table("table");
-  wait(60000);
+  }
+ @Test
+ public void shouldEnableStopAndRestartButtons(){
+    clickStart();
+    assertTrue(frame.button("stop").isEnabled() && frame.button("stop").isEnabled());
+    
+  }
+  private void clickStart() {
+    frame.button("startButton").click();
   }
 
-  
 }
