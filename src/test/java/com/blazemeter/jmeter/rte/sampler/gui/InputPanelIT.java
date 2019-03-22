@@ -26,6 +26,7 @@ import javax.swing.JTable;
 import javax.swing.text.JTextComponent;
 
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.jmeter.modifiers.UserParameters;
 import org.assertj.swing.core.Robot;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.driver.AbstractJTableCellWriter;
@@ -394,5 +395,5 @@ public class InputPanelIT {
     clickDeleteButton();
     waitButtonEnabled(DOWN_BUTTON,false);
   }
-
+  
 }
