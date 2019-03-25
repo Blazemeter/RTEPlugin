@@ -90,23 +90,25 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     switch (action) {
       case ADD_ACTION_START:
         LOG.debug("WhenStartIsPressed");
+        restart.setEnabled(true);
+        stop.setEnabled(true);
+        start.setEnabled(false);
         break;
       case ADD_ACTION_STOP:
         LOG.debug("WhenStopIsPressed");
+        start.setEnabled(true);
+        restart.setEnabled(true);
+        stop.setEnabled(false);
         break;
       case ADD_ACTION_RESTART:
         LOG.debug("WhenRestartIsPressed");
+        stop.setEnabled(true);
+        start.setEnabled(false);
+        restart.setEnabled(false);
         break;
       default:
         throw new UnsupportedOperationException(action);
     }
-  }
-  public void buttonCheck(){
-    while(!start.isEnabled()){
-    stop.setEnabled(true);
-    restart.setEnabled(true);
-    }
-    
   }
   
   public String getPort() {
