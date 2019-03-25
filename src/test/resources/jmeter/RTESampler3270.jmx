@@ -134,7 +134,7 @@ println(&quot;server started...&quot;)</stringProp>
           <elementProp name="Inputs.inputs" elementType="com.blazemeter.jmeter.rte.sampler.Inputs">
             <collectionProp name="Inputs.inputs">
               <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI">
-                <stringProp name="LabelInputRowGUI.column">${label}</stringProp>
+                <stringProp name="LabelInputRowGUI.label">${label}</stringProp>
                 <stringProp name="Input.input">${labelInput}</stringProp>
               </elementProp>
             </collectionProp>

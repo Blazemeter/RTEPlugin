@@ -79,7 +79,7 @@ println(&quot;server started...&quot;)</stringProp>
               </elementProp>
               <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI">
                 <stringProp name="Input.input">TESTPSW</stringProp>
-                <stringProp name="LabelInputRowGUI.column">${label}</stringProp>
+                <stringProp name="LabelInputRowGUI.label">${label}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
