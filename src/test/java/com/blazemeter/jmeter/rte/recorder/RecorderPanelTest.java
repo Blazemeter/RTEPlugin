@@ -25,20 +25,9 @@ public class RecorderPanelTest {
   }
 
   @Before
-  @Test
-  public void setup() throws InterruptedException {
+  public void setup(){
     RecPanelGui = new RTERecorderGui();
     frame = showInFrame(RecPanelGui);
     inputTable = frame.table("table");
   }
- @Test
- public void shouldEnableStopAndRestartButtons(){
-    clickStart();
-    assertTrue(frame.button("stop").isEnabled() && frame.button("stop").isEnabled());
-    
-  }
-  private void clickStart() {
-    frame.button("startButton").click();
-  }
-
 }

@@ -1,19 +1,26 @@
 package com.blazemeter.jmeter.rte.recorder.gui;
+
+import static org.apache.tika.parser.ner.NamedEntityParser.LOG;
+
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
-import org.apache.jmeter.gui.util.JMeterToolBar;
-import org.apache.jmeter.util.JMeterUtils;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import static org.apache.tika.parser.ner.NamedEntityParser.LOG;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.GroupLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JPanel;
 
+import org.apache.jmeter.gui.util.JMeterToolBar;
+import org.apache.jmeter.util.JMeterUtils;
 
 public class RTERecorderPanel extends JPanel implements ActionListener {
   
@@ -25,9 +32,9 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   private JButton restart;
   private final RTEConfigPanel configPanel;
 
-  public RTERecorderPanel(){
+  public RTERecorderPanel() {
     
-    GroupLayout layout= new GroupLayout(this);
+    GroupLayout layout = new GroupLayout(this);
     layout.setAutoCreateGaps(true);
     this.setLayout(layout);
     
@@ -53,7 +60,8 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     panel.setLayout(layout);
     panel.setLayout(new FlowLayout(FlowLayout.CENTER));
 
-    String iconSize = JMeterUtils.getPropDefault(JMeterToolBar.TOOLBAR_ICON_SIZE, JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
+    String iconSize = JMeterUtils.getPropDefault(JMeterToolBar.TOOLBAR_ICON_SIZE,
+        JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
 
     start = new JButton(JMeterUtils.getResString("start")); // $NON-NLS-1$
     ImageIcon startImage = JMeterUtils.getImage("toolbar/" + iconSize + "/arrow-right-3.png");
@@ -72,7 +80,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     ImageIcon restartImage = JMeterUtils.getImage("toolbar/" + iconSize + "/edit-redo-7.png");
     restart = new JButton(JMeterUtils.getResString("restart")); // $NON-NLS-1$
     restart.setIcon(restartImage);
-    restart.addActionListener( this);
+    restart.addActionListener(this);
     restart.setActionCommand(ADD_ACTION_RESTART);
     restart.setEnabled(false);
     
@@ -152,7 +160,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   }
 
   public void setSSLType(SSLType sslValue) {
-  configPanel.setSSLType(sslValue);
+    configPanel.setSSLType(sslValue);
   }
 
   public void setConnectionTimeout(String timeOut) {
