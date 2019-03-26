@@ -13,10 +13,10 @@ RUN apt-get update \
   && chmod 0600 /root/.vnc/passwd
 
 # install jdk9
-ENV JAVA_DEBIAN_VERSION="9~b181-4~bpo9+1"
+ENV JAVA_DEBIAN_VERSION="11.0.2+9-3~bpo9+1"
 RUN echo 'deb http://ftp.debian.org/debian stretch-backports main' > /etc/apt/sources.list.d/backports.list \
   && apt-get update \
-	&& apt-get install -y openjdk-9-jdk-headless="$JAVA_DEBIAN_VERSION"
+	&& apt-get install -y openjdk-11-jdk-headless="$JAVA_DEBIAN_VERSION"
 
 # install taurus for integration tests with blazemeter and different jmeter versions
 ENV TAURUS_VERSION=1.11.1
