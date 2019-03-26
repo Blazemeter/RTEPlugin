@@ -1,4 +1,4 @@
-image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:3.1
+image: 836525813842.dkr.ecr.us-east-1.amazonaws.com/jmeter-plugins-build:3.1.1
 
 variables:
   MAVEN_OPTS: -Dmaven.repo.local=.m2/repository
@@ -45,7 +45,7 @@ jmeter_compatibility:
     - JMETER_VERSION=3.3 sh testJmeter.sh
     - JMETER_VERSION=3.2 sh testJmeter.sh
     - JMETER_VERSION=3.1 sh testJmeter.sh
-    - JMETER_VERSION=4.0 JVM_VERSION=9 sh testJmeter.sh
+    - JMETER_VERSION=4.0 JVM_VERSION=11 sh testJmeter.sh
     - bzt testJMeterBZ.yaml -o modules.cloud.token=${BZ_TOKEN}
   artifacts:
     when: on_failure
