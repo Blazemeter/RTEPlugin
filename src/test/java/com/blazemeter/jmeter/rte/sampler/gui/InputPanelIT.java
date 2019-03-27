@@ -3,7 +3,6 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
-import static org.junit.Assert.assertFalse;
 
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
@@ -46,9 +45,12 @@ public class InputPanelIT {
   private static final long CHANGE_TIMEOUT_MILLIS = 10000;
   private static final LabelInput USER_LABEL_INPUT = new LabelInput("User", "TESTUSR");
   private static final CoordInput PASS_COORD_INPUT = new CoordInput(new Position(1, 2), "TESTPSW");
-  private static final String DELETE_BUTTON ="deleteButton";
-  private static final String UP_BUTTON ="upButton";
-  private static final String DOWN_BUTTON ="downButton";
+  private static final CoordInput NAME_INPUT = new CoordInput(new Position(4, 2), "TESTNAME");
+  private static final LabelInput EMAIL_INPUT = new LabelInput("eMail", "test@example.com");
+  private static final String DELETE_BUTTON = "deleteButton";
+  private static final String UP_BUTTON = "upButton";
+  private static final String DOWN_BUTTON = "downButton";
+
   private FrameFixture frame;
   private InputPanel panel;
   private JTableFixture inputTable;
@@ -100,21 +102,29 @@ public class InputPanelIT {
 
   @Test
   public void shouldAddLabelInputWhenClickAddLabel() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
+    addFieldByLabel(0, USER_LABEL_INPUT);
     assertInputs(USER_LABEL_INPUT);
   }
 
-  private void clickAddLabel() {
+  private void addFieldByLabel(int row, LabelInput input) {
     frame.button("addLabelInputButton").click();
-  }
-
-  private void setInputLabelRow(int row, LabelInput input) {
+    awaitAddedRow(row);
     setInputRow(row, input, (panel, i) -> setTextField(panel, "fieldLabel", i.getLabel()));
   }
 
+  private void awaitAddedRow(int row) {
+    pause(new Condition("row " + row + " added") {
+
+      @Override
+      public boolean test() {
+        return inputTable.rowCount() > row;
+      }
+
+    }, CHANGE_TIMEOUT_MILLIS);
+  }
+
   private <T extends Input> void setInputRow(int row, T input,
-                                             BiConsumer<JPanelFixture, T> fieldSetter) {
+      BiConsumer<JPanelFixture, T> fieldSetter) {
     JTableCellFixture fieldCell = inputTable
         .cell(TableCell.row(row).column(0));
     fieldCell.startEditing();
@@ -168,16 +178,13 @@ public class InputPanelIT {
 
   @Test
   public void shouldAddCoordInputWhenClickAddCoord() {
-    clickAddCoord();
-    setInputCoordRow(0, PASS_COORD_INPUT);
+    addFieldByCoord(0, PASS_COORD_INPUT);
     assertInputs(PASS_COORD_INPUT);
   }
 
-  private void clickAddCoord() {
+  private void addFieldByCoord(int row, CoordInput input) {
     frame.button("addCoordInputButton").click();
-  }
-
-  private void setInputCoordRow(int row, CoordInput input) {
+    awaitAddedRow(row);
     setInputRow(row, input, (panel, i) -> {
       Position position = i.getPosition();
       setTextField(panel, "fieldRow", String.valueOf(position.getRow()));
@@ -187,26 +194,20 @@ public class InputPanelIT {
 
   @Test
   public void shouldGetCoordAndLabelInputsWhenClickAddCoordAndAddLabel() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    clickAddCoord();
-    CoordInput nameInput = new CoordInput(new Position(4, 2), "TESTNAME");
-    setInputCoordRow(2, nameInput);
-    clickAddLabel();
-    LabelInput emailInput = new LabelInput("eMail", "test@example.com");
-    setInputLabelRow(3, emailInput);
-    assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT, nameInput, emailInput);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row++, PASS_COORD_INPUT);
+    addFieldByCoord(row++, NAME_INPUT);
+    addFieldByLabel(row, EMAIL_INPUT);
+    assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT, NAME_INPUT, EMAIL_INPUT);
 
   }
 
   @Test
   public void shouldNotMoveFirstRowWhenClickUp() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
     inputTable.selectRows(0);
     clickUpButton();
     assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT);
@@ -218,39 +219,32 @@ public class InputPanelIT {
 
   @Test
   public void shouldMoveUpLastRowWhenClickUp() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    inputTable.selectRows(1);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
+    inputTable.selectRows(row);
     clickUpButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT);
   }
 
   @Test
   public void shouldMoveUpSelectedRowsWhenClickUp() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    clickAddCoord();
-    CoordInput nameInput = new CoordInput(new Position(4, 2), "TESTNAME");
-    setInputCoordRow(2, nameInput);
-    clickAddLabel();
-    LabelInput emailInput = new LabelInput("eMail", "test@example.com");
-    setInputLabelRow(3, emailInput);
-    inputTable.selectRows(3,1);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row++, PASS_COORD_INPUT);
+    addFieldByCoord(row++, NAME_INPUT);
+    addFieldByLabel(row, EMAIL_INPUT);
+    inputTable.selectRows(3, 1);
     clickUpButton();
-    assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT, emailInput, nameInput);
+    assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT, EMAIL_INPUT, NAME_INPUT);
   }
 
   @Test
   public void shouldMoveDownFirstRowWhenClickDown() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    inputTable.selectRows(0);  
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
+    inputTable.selectRows(0);
     clickDownButton();
     assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT);
   }
@@ -261,42 +255,33 @@ public class InputPanelIT {
 
   @Test
   public void shouldNotMoveLastRowWhenClickDown() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    inputTable.selectRows(1);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
+    inputTable.selectRows(row);
     clickDownButton();
     assertInputs(USER_LABEL_INPUT, PASS_COORD_INPUT);
   }
 
   @Test
   public void shouldMoveDownSelectedRowsWhenClickDown() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    clickAddCoord();
-    CoordInput nameInput = new CoordInput(new Position(4, 2), "TESTNAME");
-    setInputCoordRow(2, nameInput);
-    clickAddLabel();
-    LabelInput emailInput = new LabelInput("eMail", "test@example.com");
-    setInputLabelRow(3, emailInput);
-    inputTable.selectRows(0,2);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row++, PASS_COORD_INPUT);
+    addFieldByCoord(row++, NAME_INPUT);
+    addFieldByLabel(row, EMAIL_INPUT);
+    inputTable.selectRows(0, 2);
     clickDownButton();
-    assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT, emailInput, nameInput);
+    assertInputs(PASS_COORD_INPUT, USER_LABEL_INPUT, EMAIL_INPUT, NAME_INPUT);
   }
 
   @Test
   public void shouldDeleteSelectedRowsWhenClickDelete() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    clickAddCoord();
-    CoordInput nameInput = new CoordInput(new Position(4, 2), "TESTNAME");
-    setInputCoordRow(2, nameInput);
-    inputTable.selectRows(0,2);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row++, PASS_COORD_INPUT);
+    addFieldByCoord(row, NAME_INPUT);
+    inputTable.selectRows(0, 2);
     clickDeleteButton();
     assertInputs(PASS_COORD_INPUT);
   }
@@ -307,8 +292,7 @@ public class InputPanelIT {
 
   @Test
   public void shouldNotChangeInputsWhenCopyFromEmptyClipboard() {
-    clickAddLabel();
-    setInputLabelRow(0,USER_LABEL_INPUT);
+    addFieldByLabel(0, USER_LABEL_INPUT);
     setTextToClipboard(null);
     clickAddFromClipboard();
     assertInputs(USER_LABEL_INPUT);
@@ -335,8 +319,7 @@ public class InputPanelIT {
 
   @Test
   public void shouldEnableDeleteButtonWhenAddOneInput() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
+    addFieldByLabel(0, USER_LABEL_INPUT);
     waitButtonEnabled(DELETE_BUTTON, true);
   }
 
@@ -351,48 +334,43 @@ public class InputPanelIT {
 
   @Test
   public void shouldDisableDeleteButtonWhenDeleteUniqueInput() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
+    addFieldByLabel(0, USER_LABEL_INPUT);
     clickDeleteButton();
-    waitButtonEnabled(DELETE_BUTTON,false);
+    waitButtonEnabled(DELETE_BUTTON, false);
   }
 
   @Test
   public void shouldDisableUpButtonWhenOneInputIsLeft() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
     clickDeleteButton();
-    waitButtonEnabled(UP_BUTTON,false);
+    waitButtonEnabled(UP_BUTTON, false);
   }
 
   @Test
   public void checkEnableUpButtonWithTwoInputs() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
     waitButtonEnabled(UP_BUTTON, true);
   }
 
   @Test
   public void shouldEnableDownButtonWhenAddTwoInputs() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
-    waitButtonEnabled(DOWN_BUTTON,true);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
+    waitButtonEnabled(DOWN_BUTTON, true);
   }
 
   @Test
   public void shouldDisableDownButtonWhenOneInputIsLeft() {
-    clickAddLabel();
-    setInputLabelRow(0, USER_LABEL_INPUT);
-    clickAddCoord();
-    setInputCoordRow(1, PASS_COORD_INPUT);
+    int row = 0;
+    addFieldByLabel(row++, USER_LABEL_INPUT);
+    addFieldByCoord(row, PASS_COORD_INPUT);
     clickDeleteButton();
-    waitButtonEnabled(DOWN_BUTTON,false);
+    waitButtonEnabled(DOWN_BUTTON, false);
   }
 
 }
