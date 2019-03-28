@@ -6,13 +6,19 @@ import org.apache.jmeter.testelement.property.StringProperty;
 
 public class LabelInputRowGUI extends InputTestElement {
 
-  private static final String LABEL = "LabelInputRowGUI.column";
+  private static final String LABEL = "LabelInputRowGUI.label";
 
   public LabelInputRowGUI() {
   }
 
   public String getLabel() {
-    return getPropertyAsString(LABEL, "");
+    /*
+    We keep support for initial incorrect property name to avoid compatibility issues. We should
+    remove this once the new version gets used by all users (and the probability of someone using
+    the incorrect property is low)
+     */
+    String val = getPropertyAsString(LABEL, null);
+    return val == null ? getPropertyAsString("LabelInputRowGUI.column") : val;
   }
 
   public void setLabel(String label) {
