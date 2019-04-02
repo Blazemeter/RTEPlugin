@@ -14,6 +14,7 @@ import org.apache.jmeter.testelement.TestElement;
 
 public class RTERecorderGui extends AbstractConfigGui implements UnsharedComponent {
   private RTERecorderPanel recordingPanel;
+  private int testElementLength;
   
   public RTERecorderGui() {
     recordingPanel = new RTERecorderPanel();
@@ -31,7 +32,7 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
   
   @Override
   public String getStaticLabel() {
-    return "bzm - Recorder";
+    return "bzm - RTE Recorder";
   }
   
   @Override
@@ -42,6 +43,7 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
   public TestElement createTestElement() {
     ConfigTestElement config = new ConfigTestElement();
     configureTestElement(config);
+    testElementLength++;
     return config;
   }
   
@@ -89,5 +91,5 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
                   String.valueOf(RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS)));
     }
   }
-
+  
 }
