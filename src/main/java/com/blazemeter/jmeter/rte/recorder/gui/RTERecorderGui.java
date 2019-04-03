@@ -14,7 +14,6 @@ import org.apache.jmeter.testelement.TestElement;
 
 public class RTERecorderGui extends AbstractConfigGui implements UnsharedComponent {
   private RTERecorderPanel recordingPanel;
-  private int testElementLength;
   
   public RTERecorderGui() {
     recordingPanel = new RTERecorderPanel();
@@ -43,7 +42,6 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
   public TestElement createTestElement() {
     ConfigTestElement config = new ConfigTestElement();
     configureTestElement(config);
-    testElementLength++;
     return config;
   }
   

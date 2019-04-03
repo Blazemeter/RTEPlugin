@@ -5,8 +5,6 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 
 import java.util.List;
 
-import org.apache.jmeter.assertions.ResponseAssertion;
-import org.apache.jmeter.assertions.gui.AssertionGui;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.GuiPackage;
@@ -14,7 +12,6 @@ import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.protocol.http.control.RecordingController;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
@@ -23,30 +20,55 @@ import org.slf4j.LoggerFactory;
 public class RTERecorder extends GenericController {
 
   private static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
-  private static final String ASSERTION_GUI = AssertionGui.class.getName();
-  private JMeterTreeModel nonGuiTreeModel;
   private JMeterTreeNode myTarget = findTargetControllerNode();
+
+  private JMeterTreeNode findTargetControllerNode() {
+    JMeterTreeNode myTarget = findFirstNodeOfType(RecordingController.class);
+    if (myTarget == null) {
+      myTarget = findFirstNodeOfType(AbstractThreadGroup.class);
+    }
+
+    if (myTarget != null) {
+      int i = myTarget.getChildCount() - 1;
+      JMeterTreeNode c = null;
+      while ((i >= 0) && (myTarget !=  c)) {
+        c = (JMeterTreeNode) myTarget.getChildAt(i);
+        if (c.getTestElement() instanceof GenericController) {
+          myTarget = c;
+        }
+        i--;
+      }
+    }
+    return myTarget;
+  }
+
+  private JMeterTreeNode findFirstNodeOfType(Class<?> type) {
+    JMeterTreeModel treeModel = getJmeterTreeModel();
+    List<JMeterTreeNode> nodes = treeModel.getNodesOfType(type);
+    for (JMeterTreeNode node : nodes) {
+      if (node.isEnabled()) {
+        return node;
+      }
+    }
+    return null;
+  }
+
+  private JMeterTreeModel getJmeterTreeModel() {
+    return GuiPackage.getInstance().getTreeModel();
+  }
   
   public void placeSampler(RTESampler sampler) {
-    //TODO
-    samplerConfig(sampler); 
     try {
-      JMeterTreeModel treeModel = this.getJmeterTreeModel();
-      assert myTarget != null;
-      for (int i = myTarget.getChildCount() - 1; i >= 0; --i) { 
-        JMeterTreeNode c = (JMeterTreeNode) myTarget.getChildAt(i);
-          
-        if (c.getTestElement() instanceof GenericController) { 
-          myTarget = c;
-          break;
-        }
-      }   
       
-      JMeterUtils.runSafe(true, () -> {
+      if (myTarget == null) {
+        LOG.error("Program error: test script recording target not found.");
+        JMeterUtils.reportErrorToUser(new Exception().getMessage());
+      }
+
+      JMeterTreeModel treeModel = getJmeterTreeModel();
+      JMeterUtils.runSafe(true, () -> { 
         try {
-          JMeterTreeNode newNode = treeModel.addComponent(sampler, myTarget);
-          this.addAssertion(treeModel, newNode);
-              
+          treeModel.addComponent(sampler, myTarget);
         } catch (IllegalUserActionException illegalUserAction) {
           LOG.error("Error placing sampler", illegalUserAction);
           JMeterUtils.reportErrorToUser(illegalUserAction.getMessage());
@@ -60,54 +82,10 @@ public class RTERecorder extends GenericController {
 
   }
 
-  private JMeterTreeModel getJmeterTreeModel() {
-    if (this.nonGuiTreeModel == null) {
-      return GuiPackage.getInstance().getTreeModel();
-    }
-    return this.nonGuiTreeModel;
-  }
-
-  private void addAssertion(JMeterTreeModel model, JMeterTreeNode node)
-      throws IllegalUserActionException {
-    ResponseAssertion ra = new ResponseAssertion();
-    ra.setProperty("TestElement.gui_class", ASSERTION_GUI);
-    ra.setName(JMeterUtils.getResString("assertion_title"));
-    ra.setTestFieldResponseData();
-    model.addComponent(ra, node);
-  }
-
-  private JMeterTreeNode findTargetControllerNode() {
-
-    JMeterTreeNode myTarget = findFirstNodeOfType(RecordingController.class);
-    if (myTarget != null) {
-      return myTarget;
-    }
-    myTarget = findFirstNodeOfType(AbstractThreadGroup.class);
-    if (myTarget != null) {
-      return myTarget;
-    }
-    LOG.error("Program error: test script recording target not found.");
-    return null;
-  }
-  
-  private JMeterTreeNode findFirstNodeOfType(Class<?> type) {
-    JMeterTreeModel treeModel = getJmeterTreeModel();
-    List<JMeterTreeNode> nodes = treeModel.getNodesOfType(type);
-    for (JMeterTreeNode node : nodes) {
-      if (node.isEnabled()) {
-        return node;
-      }
-    }
-    return null;
-  }
-
-  private void samplerConfig(RTESampler rteSampler) {
-    RTERecorderGui recorderGui = new RTERecorderGui();
+  public void configureSampler(RTESampler rteSampler) {
     rteSampler.setName(getName());
-
-    rteSampler.setProperty(new StringProperty(TestElement.GUI_CLASS,
-        recorderGui.getClass().getName()));
-    rteSampler.setProperty(new StringProperty(TestElement.TEST_CLASS,
-        rteSampler.getClass().getName()));
+    rteSampler.setProperty(TestElement.GUI_CLASS, RTERecorderGui.class.getName());
+    rteSampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
   }
+
 }
