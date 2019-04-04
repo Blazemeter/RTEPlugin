@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class test {
+public class Test {
 
   public static void main(String[] args) {
     GUITerminal guiTerminal = new Xtn5250TerminalGUI();
@@ -15,8 +15,9 @@ public class test {
       try {
         Random rand = new Random();
         List<Segment> segments = new ArrayList<>();
-        if(listener.isClosed())
+        if (listener.isClosed()) {
           System.exit(0);
+        }
         for (int i = 0; i < 15; i++) {
           int col = rand.nextInt(40);
           int row = rand.nextInt(15);

@@ -1,7 +1,5 @@
 package com.blazemeter.jmeter.rte.terminal;
 
-import java.awt.Color;
-
 public class Field extends Segment {
 
   private int length;

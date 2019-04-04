@@ -19,20 +19,6 @@ import net.infordata.em.crt5250.XI5250Field;
 
 public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
 
-  private static final int ST_NULL = -2;
-  private static final int ST_NORMAL_UNLOCKED = 2;
-
-
-  private int state = ST_NULL;
-
-  private static String TITLE = "Recorder";
-  private static int COLUMN = 60;
-  private static int ROWS = 30;
-  private static int WIDTH = 728;
-  private static int HEIGHT = 512;
-  private static Color BACKGROUND = Color.black;
-  private List<GUITerminalListener> guiTerminalListeners = new ArrayList<>();
-
   private static final Map<KeyEventMap, AttentionKey> KEY_EVENTS =
       new HashMap<KeyEventMap, AttentionKey>() {
         {
@@ -69,6 +55,17 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
           put(new KeyEventMap(0, KeyEvent.VK_PAGE_UP), AttentionKey.ROLL_DN);
         }
       };
+
+  private static final int ST_NULL = -2;
+  private static final int ST_NORMAL_UNLOCKED = 2;
+  private static final String TITLE = "Recorder";
+  private static final int COLUMN = 60;
+  private static final int ROWS = 30;
+  private static final int WIDTH = 728;
+  private static final int HEIGHT = 512;
+  private static final Color BACKGROUND = Color.black;
+
+  private List<GUITerminalListener> guiTerminalListeners = new ArrayList<>();
 
   @Override
   public void start() {
@@ -184,6 +181,4 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
       return Objects.hash(modifier, specialKey);
     }
   }
-
-
 }

@@ -7,7 +7,6 @@ import java.util.List;
 
 public class TestListener implements GUITerminalListener {
 
-
   private boolean closed = false;
 
   @Override
