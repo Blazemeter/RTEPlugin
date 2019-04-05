@@ -1,9 +1,14 @@
 package com.blazemeter.jmeter.rte.recorder;
 
-import com.blazemeter.jmeter.rte.recorder.gui.RTERecorderGui;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
+import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 
+import java.util.Enumeration;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
@@ -11,6 +16,9 @@ import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.protocol.http.control.RecordingController;
+import org.apache.jmeter.samplers.SampleEvent;
+import org.apache.jmeter.samplers.SampleListener;
+import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.util.JMeterUtils;
@@ -84,8 +92,56 @@ public class RTERecorder extends GenericController {
 
   public void configureSampler(RTESampler rteSampler) {
     rteSampler.setName(getName());
-    rteSampler.setProperty(TestElement.GUI_CLASS, RTERecorderGui.class.getName());
+    rteSampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
     rteSampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
+    //Next lines are just tests
+    rteSampler.setAttentionKey(AttentionKey.F1);
+    rteSampler.setName("TestName in configureSampler");
   }
 
+  public SampleResult sampleResult(RTESampler rteSampler, RTEConfigPanel rteConfigPanel) {
+    SampleResult res = new SampleResult();
+    res.setRequestHeaders(buildRequestHeaders(rteConfigPanel));
+    res.setSamplerData(buildRequestBody(rteSampler));
+    return res;
+
+  }
+
+  private String buildRequestHeaders(RTEConfigPanel c) {
+    return "Server: " + c.getServer() + "\n" +
+            "Port: " + c.getPort() + "\n" +
+            "Protocol: " + c.getProtocol().toString() + "\n" +
+            "Terminal-type: " + c.getTerminalType() + "\n" +
+            "Security: " + c.getSSLType() + "\n";
+  }
+
+  private String buildRequestBody(RTESampler sampler) {
+    return new StringBuilder()
+            .append("AttentionKey: ")
+            .append(sampler.getAttentionKey())
+            .append("\n")
+            .append("Inputs:\n")
+            .append(sampler.getInputs().stream()
+                    .map(Input::getCsv)
+                    .collect(Collectors.joining("\n")))
+            .append("\n")
+            .toString();
+  }
+
+  public void notifySampleListeners(SampleEvent event) {
+    JMeterTreeModel treeModel = getJmeterTreeModel();
+    JMeterTreeNode myNode = treeModel.getNodeOf(this);
+    if (myNode != null) {
+      Enumeration<?> kids = myNode.children();
+      while (kids.hasMoreElements()) {
+        JMeterTreeNode subNode = (JMeterTreeNode) kids.nextElement();
+        if (subNode.isEnabled()) {
+          TestElement testElement = subNode.getTestElement();
+          if (testElement instanceof SampleListener) {
+            ((SampleListener) testElement).sampleOccurred(event);
+          }
+        }
+      }
+    }
+  }
 }

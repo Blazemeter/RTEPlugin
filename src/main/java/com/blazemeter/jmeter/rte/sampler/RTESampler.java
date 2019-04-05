@@ -510,7 +510,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         .toString();
   }
 
-  private List<Input> getInputs() {
+  public List<Input> getInputs() {
     List<Input> inputs = new ArrayList<>();
     for (JMeterProperty p : getInputsTestElement()) {
       InputTestElement c = (InputTestElement) p.getObjectValue();

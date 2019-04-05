@@ -5,6 +5,8 @@ import static org.apache.tika.parser.ner.NamedEntityParser.LOG;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.recorder.RTERecorder;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 
@@ -20,6 +22,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import org.apache.jmeter.gui.util.JMeterToolBar;
+import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.util.JMeterUtils;
 
 public class RTERecorderPanel extends JPanel implements ActionListener {
@@ -78,6 +81,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
       case ADD_ACTION_START:
         LOG.debug("WhenStartIsPressed");
         updateButtonsIfRunning(true);
+        startActionButton();
         break;
       case ADD_ACTION_STOP:
         LOG.debug("WhenStopIsPressed");
@@ -91,15 +95,15 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
         throw new UnsupportedOperationException(action);
     }
   }
-  
+
   public String getPort() {
     return configPanel.getPort();
   }
-  
+
   public Protocol getProtocol() {
     return configPanel.getProtocol();
   }
-  
+
   public SSLType getSSLType() {
     return configPanel.getSSLType();
   }
@@ -111,13 +115,13 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   public String getConnectionTimeout() {
     return configPanel.getConnectionTimeout();
   }
-  
+
   public String getServer() {
     return configPanel.getServer();
   }
 
   public void setServer(String serParam) {
-    configPanel.setServer(serParam);    
+    configPanel.setServer(serParam);
   }
 
   public void setPort(String portParam) {
@@ -127,7 +131,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   public void setProtocol(Protocol protocol) {
     configPanel.setProtocol(protocol);
   }
-  
+
   public void setTerminalType(TerminalType terminalTypeById) {
     configPanel.setTerminalType(terminalTypeById);
   }
@@ -152,11 +156,21 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     button.setEnabled(enabled);
     return button;
   }
-  
+
   private void updateButtonsIfRunning(boolean running) {
     startButton.setEnabled(!running);
     stopButton.setEnabled(running);
     restartButton.setEnabled(running);
   }
-  
+
+  private void startActionButton() {
+    RTESampler rteSampler = new RTESampler();
+    RTERecorder rteRecorder = new RTERecorder();
+    rteRecorder.configureSampler(rteSampler);
+    rteRecorder.placeSampler(rteSampler);
+    rteRecorder.notifySampleListeners(new SampleEvent(
+            rteRecorder.sampleResult(rteSampler, configPanel),
+            "WorkBench"));
+  }
+
 }
