@@ -8,7 +8,6 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
-import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -31,7 +30,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   private static final String ADD_ACTION_STOP = "addActionStop";
   private static final String ADD_ACTION_RESTART = "addActionRestart";
   private final RTEConfigPanel configPanel;
-  private JPanel panel = SwingUtils.createComponent("statePanel", new JPanel());
+  private JPanel panel = new JPanel();
   private JButton startButton;
   private JButton stopButton;
   private JButton restartButton;
@@ -167,8 +166,8 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   private void start() {
     RTESampler rteSampler = new RTESampler();
 
-    new RTERecorder().configureSampler(rteSampler)
-   new RTERecorder().placeSampler(rteSampler);
+    new RTERecorder().configureSampler(rteSampler);
+    new RTERecorder().placeSampler(rteSampler);
     new RTERecorder().notifySampleListeners(new SampleEvent(new
             RTERecorder().sampleResult(rteSampler, configPanel),
             "WorkBench"));
