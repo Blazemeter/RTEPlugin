@@ -62,14 +62,15 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     GroupLayout layout = new GroupLayout(panel);
     panel.setLayout(layout);
     panel.setLayout(new FlowLayout(FlowLayout.CENTER));
-    
-    startButton = buildButton("start", "/arrow-right-3.png", ADD_ACTION_START, true);
+
+    updateButtonsIfRunning(false);
+    startButton = buildButton("start", "/arrow-right-3.png", ADD_ACTION_START);
     panel.add(startButton);
     panel.add(Box.createHorizontalStrut(10));
-    stopButton = buildButton("stop", "/process-stop-4.png", ADD_ACTION_STOP, false);
+    stopButton = buildButton("stop", "/process-stop-4.png", ADD_ACTION_STOP);
     panel.add(stopButton);
     panel.add(Box.createHorizontalStrut(10));
-    restartButton = buildButton("restart", "/edit-redo-7.png", ADD_ACTION_RESTART, false);
+    restartButton = buildButton("restart", "/edit-redo-7.png", ADD_ACTION_RESTART);
     panel.add(restartButton);
     return panel;
   }
@@ -81,7 +82,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
       case ADD_ACTION_START:
         LOG.debug("WhenStartIsPressed");
         updateButtonsIfRunning(true);
-        startActionButton();
+        start();
         break;
       case ADD_ACTION_STOP:
         LOG.debug("WhenStopIsPressed");
@@ -145,7 +146,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   }
 
   private JButton buildButton(String resourceString, String imageName,
-                              String actionCommand, boolean enabled) {
+                              String actionCommand) {
     String iconSize = JMeterUtils.getPropDefault(JMeterToolBar.TOOLBAR_ICON_SIZE,
         JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
     JButton button = new JButton(JMeterUtils.getResString(resourceString));
@@ -153,7 +154,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     button.setIcon(image);
     button.addActionListener(this);
     button.setActionCommand(actionCommand);
-    button.setEnabled(enabled);
+    button.setEnabled(true);
     return button;
   }
 
@@ -163,13 +164,13 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     restartButton.setEnabled(running);
   }
 
-  private void startActionButton() {
+  private void start() {
     RTESampler rteSampler = new RTESampler();
-    RTERecorder rteRecorder = new RTERecorder();
-    rteRecorder.configureSampler(rteSampler);
-    rteRecorder.placeSampler(rteSampler);
-    rteRecorder.notifySampleListeners(new SampleEvent(
-            rteRecorder.sampleResult(rteSampler, configPanel),
+
+    new RTERecorder().configureSampler(rteSampler)
+   new RTERecorder().placeSampler(rteSampler);
+    new RTERecorder().notifySampleListeners(new SampleEvent(new
+            RTERecorder().sampleResult(rteSampler, configPanel),
             "WorkBench"));
   }
 
