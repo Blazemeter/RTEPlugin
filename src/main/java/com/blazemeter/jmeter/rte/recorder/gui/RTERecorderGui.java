@@ -31,7 +31,7 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
   
   @Override
   public String getStaticLabel() {
-    return "bzm - Recorder";
+    return "bzm - RTE Recorder";
   }
   
   @Override
@@ -89,5 +89,5 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
                   String.valueOf(RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS)));
     }
   }
-
+  
 }

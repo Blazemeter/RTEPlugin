@@ -27,10 +27,11 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   private static final String ADD_ACTION_START = "addActionStart";
   private static final String ADD_ACTION_STOP = "addActionStop";
   private static final String ADD_ACTION_RESTART = "addActionRestart";
-  private JButton start;
-  private JButton stop;
-  private JButton restart;
   private final RTEConfigPanel configPanel;
+  private JPanel panel = SwingUtils.createComponent("statePanel", new JPanel());
+  private JButton startButton;
+  private JButton stopButton;
+  private JButton restartButton;
 
   public RTERecorderPanel() {
     
@@ -54,41 +55,19 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
 
   private JPanel buildStatePanel() {
 
-    JPanel panel = SwingUtils.createComponent("statePanel", new JPanel());
     panel.setBorder(BorderFactory.createTitledBorder("State"));
     GroupLayout layout = new GroupLayout(panel);
     panel.setLayout(layout);
     panel.setLayout(new FlowLayout(FlowLayout.CENTER));
-
-    String iconSize = JMeterUtils.getPropDefault(JMeterToolBar.TOOLBAR_ICON_SIZE,
-        JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
-
-    start = new JButton(JMeterUtils.getResString("start")); // $NON-NLS-1$
-    ImageIcon startImage = JMeterUtils.getImage("toolbar/" + iconSize + "/arrow-right-3.png");
-    start.setIcon(startImage);
-    start.addActionListener(this);
-    start.setActionCommand(ADD_ACTION_START);
-    start.setEnabled(true);
-
-    stop = new JButton(JMeterUtils.getResString("stop")); // $NON-NLS-1$
-    ImageIcon stopImage = JMeterUtils.getImage("toolbar/" + iconSize + "/process-stop-4.png");
-    stop.setIcon(stopImage);
-    stop.addActionListener(this);
-    stop.setActionCommand(ADD_ACTION_STOP);
-    stop.setEnabled(false);
-
-    ImageIcon restartImage = JMeterUtils.getImage("toolbar/" + iconSize + "/edit-redo-7.png");
-    restart = new JButton(JMeterUtils.getResString("restart")); // $NON-NLS-1$
-    restart.setIcon(restartImage);
-    restart.addActionListener(this);
-    restart.setActionCommand(ADD_ACTION_RESTART);
-    restart.setEnabled(false);
     
-    panel.add(start);
+    startButton = buildButton("start", "/arrow-right-3.png", ADD_ACTION_START, true);
+    panel.add(startButton);
     panel.add(Box.createHorizontalStrut(10));
-    panel.add(stop);
+    stopButton = buildButton("stop", "/process-stop-4.png", ADD_ACTION_STOP, false);
+    panel.add(stopButton);
     panel.add(Box.createHorizontalStrut(10));
-    panel.add(restart);
+    restartButton = buildButton("restart", "/edit-redo-7.png", ADD_ACTION_RESTART, false);
+    panel.add(restartButton);
     return panel;
   }
 
@@ -98,21 +77,15 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     switch (action) {
       case ADD_ACTION_START:
         LOG.debug("WhenStartIsPressed");
-        restart.setEnabled(true);
-        stop.setEnabled(true);
-        start.setEnabled(false);
+        updateButtonsIfRunning(true);
         break;
       case ADD_ACTION_STOP:
         LOG.debug("WhenStopIsPressed");
-        start.setEnabled(true);
-        restart.setEnabled(true);
-        stop.setEnabled(false);
+        updateButtonsIfRunning(false);
         break;
       case ADD_ACTION_RESTART:
         LOG.debug("WhenRestartIsPressed");
-        stop.setEnabled(true);
-        start.setEnabled(false);
-        restart.setEnabled(false);
+        updateButtonsIfRunning(true);
         break;
       default:
         throw new UnsupportedOperationException(action);
@@ -166,4 +139,24 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   public void setConnectionTimeout(String timeOut) {
     configPanel.setConnectionTimeout(timeOut);
   }
+
+  private JButton buildButton(String resourceString, String imageName,
+                              String actionCommand, boolean enabled) {
+    String iconSize = JMeterUtils.getPropDefault(JMeterToolBar.TOOLBAR_ICON_SIZE,
+        JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
+    JButton button = new JButton(JMeterUtils.getResString(resourceString));
+    ImageIcon image = JMeterUtils.getImage("toolbar/" + iconSize + imageName);
+    button.setIcon(image);
+    button.addActionListener(this);
+    button.setActionCommand(actionCommand);
+    button.setEnabled(enabled);
+    return button;
+  }
+  
+  private void updateButtonsIfRunning(boolean running) {
+    startButton.setEnabled(!running);
+    stopButton.setEnabled(running);
+    restartButton.setEnabled(running);
+  }
+  
 }

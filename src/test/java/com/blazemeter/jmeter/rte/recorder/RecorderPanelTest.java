@@ -15,7 +15,6 @@ import static org.assertj.swing.fixture.Containers.showInFrame;
 
 public class RecorderPanelTest {
   private FrameFixture frame;
-  private RTERecorderPanel panel;
   private JTableFixture inputTable;
   private RTERecorderGui RecPanelGui;
 
@@ -25,9 +24,10 @@ public class RecorderPanelTest {
   }
 
   @Before
-  public void setup(){
+  public void setup() {
     RecPanelGui = new RTERecorderGui();
     frame = showInFrame(RecPanelGui);
     inputTable = frame.table("table");
   }
+  
 }

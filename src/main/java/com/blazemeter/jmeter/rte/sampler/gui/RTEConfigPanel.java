@@ -33,6 +33,7 @@ public class RTEConfigPanel extends JPanel {
 
   private ButtonGroup sslTypeGroup = new ButtonGroup();
   private Map<SSLType, JRadioButton> sslTypeRadios = new EnumMap<>(SSLType.class);
+  
   private JTextField serverField = SwingUtils.createComponent("serverField", new JTextField());
   private JTextField portField = SwingUtils.createComponent("portField", new JTextField());
   private JComboBox<Protocol> protocolComboBox;
@@ -53,18 +54,18 @@ public class RTEConfigPanel extends JPanel {
     layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
         .addComponent(connectionPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
             Short.MAX_VALUE)
-        .addComponent(timeoutPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(timeoutPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, 
             Short.MAX_VALUE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, 
             Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
-        .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, 
             GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(timeoutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(timeoutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, 
             GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, 
             GroupLayout.PREFERRED_SIZE));
   }
 
