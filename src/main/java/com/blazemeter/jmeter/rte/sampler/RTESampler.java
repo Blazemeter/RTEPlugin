@@ -401,6 +401,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   @Override
   public SampleResult sample(Entry entry) {
+    //TODO create a sample result
     SampleResult sampleResult = new SampleResult();
     sampleResult.setSampleLabel(getName());
     sampleResult.sampleStart();
