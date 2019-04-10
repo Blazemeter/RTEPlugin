@@ -63,7 +63,7 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
     //TODO change with RteRecorder
     if (element instanceof RTERecorder) {
       RTERecorder configTestElement = (RTERecorder) element;
-      recordingPanel.setRecorder(configTestElement);
+      recordingPanel.setRteRecorder(configTestElement);
     }
   }
   

@@ -1,16 +1,23 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
+import com.blazemeter.jmeter.rte.sampler.InputTestElement;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
+import com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -23,6 +30,7 @@ import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.protocol.http.control.RecordingController;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleListener;
+import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.util.JMeterUtils;
@@ -32,7 +40,86 @@ import org.slf4j.LoggerFactory;
 public class RTERecorder extends GenericController {
 
   private static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
+
+  public String getPort() {
+    return getPropertyAsString(RTESampler.CONFIG_PORT,
+        String.valueOf(RTESampler.DEFAULT_PORT));
+  }
+
+  public String getServer() {
+    return  getPropertyAsString(RTESampler.CONFIG_SERVER);
+  }
+
+  public void setServer(String server) {
+    setProperty(RTESampler.CONFIG_SERVER, server);
+  }
+
+  public SSLType getSSLType() {
+    return SSLType.valueOf((
+        getPropertyAsString(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name())));
+  }
+
+  public String getConnectionTimeout() {
+    return
+        getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT,
+            String.valueOf(RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS));
+  }
+
+  public Protocol getProtocol() {
+    return Protocol
+        .valueOf(getPropertyAsString(RTESampler.CONFIG_PROTOCOL,
+            RTESampler.DEFAULT_PROTOCOL.name()));
+  }
+
+  public TerminalType getTerminalType() {
+    return getProtocol().createProtocolClient().getTerminalTypeById(
+        getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE,
+            RTESampler.DEFAULT_TERMINAL_TYPE.getId()));
+  }
+
+  public void setPort(String port) {
+    setProperty(RTESampler.CONFIG_PORT, port);
+  }
+
+  public void setProtocol(Protocol protocol) {
+    setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
+  }
+
+  public void setSSLType(SSLType sslType) {
+    setProperty(RTESampler.CONFIG_SSL_TYPE, sslType.name());
+  }
+
+  public void setTerminalType(TerminalType terminalType) {
+    setProperty(RTESampler.CONFIG_TERMINAL_TYPE,
+        terminalType.getId());
+  }
+
+  public void setConnectionTimeout(String connectionTimeout) {
+    setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT,
+        connectionTimeout);
+  }
   
+  public void startActionButton() {
+
+    JMeterTreeNode myTarget = findTargetControllerNode();                              
+    addTestElementToTestPlan(buildRteConfigElement(), myTarget);
+
+    AttentionKey attentionKey = AttentionKey.F1;
+    Position position = new Position(1, 5);
+    List<Input> inputs = Arrays.asList(new CoordInput(new Position(2, 3), "testusr"),
+        new LabelInput("PASSWORD", "testpsw"));
+    String screen = "screen";
+    boolean requestInputInhibited = true;
+    boolean responseInputInhibited = true;
+    boolean alarm = true; 
+    addTestElementToTestPlan(buildRteSampler(attentionKey, inputs), myTarget);
+    
+    //TODO setScreen, cursor, requestInhibitedInput, responseInhibitedInput, etc
+    notifySampleListeners(buildSampleResult(attentionKey, inputs, position, screen, alarm,
+        requestInputInhibited, responseInputInhibited));
+    
+  }
+
   private JMeterTreeNode findTargetControllerNode() {
     JMeterTreeNode myTarget = findFirstNodeOfType(RecordingController.class);
     if (myTarget == null) {
@@ -67,19 +154,32 @@ public class RTERecorder extends GenericController {
   private JMeterTreeModel getJmeterTreeModel() {
     return GuiPackage.getInstance().getTreeModel();
   }
+
+  private ConfigTestElement buildRteConfigElement() {
+    ConfigTestElement configTestElement = new ConfigTestElement();
+    configTestElement.setName(RTEConfigGui.class.getSimpleName());
+    configTestElement.setProperty(TestElement.GUI_CLASS, RTEConfigGui.class.getName());
+    configTestElement.setProperty(RTESampler.CONFIG_PORT, getPort());
+    configTestElement.setProperty(RTESampler.CONFIG_SERVER, getServer());
+    configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL,
+        getProtocol().name());
+    configTestElement.setProperty(RTESampler.CONFIG_TERMINAL_TYPE,
+        getTerminalType().getId());
+    configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE,
+        getSSLType().name());
+    return configTestElement;
+  }
   
-  // TODO rename to something more generic like addTestElementToTestPlan 
-  //  to be able to also add ConfigTestElement
   private void addTestElementToTestPlan(TestElement testElement, JMeterTreeNode myTarget) {
     try {
-      
+
       if (myTarget == null) {
         LOG.error("Program error: test script recording target not found.");
         JMeterUtils.reportErrorToUser(new Exception().getMessage());
       }
 
       JMeterTreeModel treeModel = getJmeterTreeModel();
-      JMeterUtils.runSafe(true, () -> { 
+      JMeterUtils.runSafe(true, () -> {
         try {
           treeModel.addComponent(testElement, myTarget);
 
@@ -101,8 +201,9 @@ public class RTERecorder extends GenericController {
     rteSampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
     rteSampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
   }
-  
-  private void notifySampleListeners(SampleEvent event) {
+
+  private void notifySampleListeners(SampleResult result) {
+    SampleEvent event = new SampleEvent(result, "Thread Group", "Recorded");
     JMeterTreeModel treeModel = getJmeterTreeModel();
     JMeterTreeNode myNode = treeModel.getNodeOf(this);
     if (myNode != null) {
@@ -118,107 +219,66 @@ public class RTERecorder extends GenericController {
       }
     }
   }
-  
-  public void startActionButton() {
-    
-    //TODO create ConfigTestElement with RteConfigGui as gui class 
-    // and all properties properly set and place Sample
-    ConfigTestElement configTestElement = new ConfigTestElement();
-    RTESampler rteSampler = new RTESampler();
-    configTestElement.setName(RTEConfigGui.class.getSimpleName());
-    configTestElement.setProperty(TestElement.GUI_CLASS, RTEConfigGui.class.getName());
-    configTestElement.setProperty(RTESampler.CONFIG_PORT, getPort());
-    configTestElement.setProperty(RTESampler.CONFIG_SERVER, getServer());
-    configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, 
-        getProtocol().toString());
-    configTestElement.setProperty(RTESampler.CONFIG_TERMINAL_TYPE, 
-        getTerminalType().getId());
-    configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, 
-        getSSLType().toString());
-    JMeterTreeNode myTarget = findTargetControllerNode();                              
-    addTestElementToTestPlan(configTestElement, myTarget);
 
-    //TODO set in sampler only attention keys, inputs and waits (with dummy values)
+  private RTESampler buildRteSampler(AttentionKey attentionKey, List<Input> inputs) {
+    RTESampler rteSampler = new RTESampler();
     configureSampler(rteSampler);
-    Inputs payload = new Inputs();
-    CoordInputRowGUI input = new CoordInputRowGUI();
-    input.setRow("1");
-    input.setColumn("1");
-    input.setInput("TestUser");
-    payload.addInput(input);
-    rteSampler.setPayload(payload);
-    rteSampler.setAttentionKey(AttentionKey.F1);
+    rteSampler.setPayload(buildInputsTestElement(inputs));
+    rteSampler.setAttentionKey(attentionKey);
     rteSampler.setWaitSilentTimeout("234");
-    addTestElementToTestPlan(rteSampler, myTarget);
-    //TODO use same values (variables) from sampler and from connection properties to create result
-    RteSampleResult.Builder sampleResult = new RteSampleResult.Builder()
+    return rteSampler;
+  }
+
+  private Inputs buildInputsTestElement(List<Input> inputs) {
+    Inputs ret = new Inputs();
+    for (Input input : inputs) {
+      ret.addInput(buildInputTestElement(input));
+    }
+    return ret;
+  }
+
+  private InputTestElement buildInputTestElement(Input input) {
+    if (input instanceof CoordInput) {
+      CoordInput coordInput = (CoordInput) input;
+      CoordInputRowGUI ret = new CoordInputRowGUI();
+      Position position = coordInput.getPosition();
+      ret.setColumn(String.valueOf(position.getColumn()));
+      ret.setRow(String.valueOf(position.getRow()));
+      ret.setInput(coordInput.getInput());
+      return ret;
+    } else if (input instanceof LabelInput) {
+      LabelInput labelInput = (LabelInput) input;
+      LabelInputRowGUI ret = new LabelInputRowGUI();
+      ret.setLabel(labelInput.getLabel());
+      ret.setInput(labelInput.getInput());
+      return ret;
+    } else {
+      throw new IllegalArgumentException("Unsupported input type " + input.getClass());
+    }
+  }
+
+  private RteSampleResult buildSampleResult(AttentionKey attentionKey, List<Input> inputs,
+                                            Position position, String screen,
+                                            boolean resposeInputInhibited,
+                                            boolean alarm, boolean inputInhibitedRequest) {
+    
+    RteSampleResult sampleResult = new RteSampleResult.Builder()
         .withPort(Integer.parseInt(getPort()))
         .withServer(getServer())
         .withProtocol(getProtocol())
         .withTerminalType(getTerminalType())
-        .withSslType(getSSLType());
-    sampleResult.build().setRequestHeaders(sampleResult.build().getRequestHeaders());
-    sampleResult.build().setSamplerData(sampleResult.build().getRequestBody());
-    notifySampleListeners((new SampleEvent((sampleResult.build()), "Thread Group")));
+        .withSslType(getSSLType())
+        .withLabel("test")
+        .build();
+    sampleResult.setInputs(inputs);
+    sampleResult.setAttentionKey(attentionKey);
+    sampleResult.setCursorPosition(position);
+    sampleResult.setScreen(screen);
+    sampleResult.setSoundedAlarm(alarm);
+    sampleResult.setInputInhibitedRequest(inputInhibitedRequest);
+    sampleResult.setInputInhibitedResponse(resposeInputInhibited);
     
-  }
-
-  public String getPort() {
-    return getPropertyAsString(RTESampler.CONFIG_PORT,
-        String.valueOf(RTESampler.DEFAULT_PORT));
-  }
-
-  public String getServer() {
-    
-    return  getPropertyAsString(RTESampler.CONFIG_SERVER);
+    return sampleResult;
   }
   
-  public SSLType getSSLType() {
-    return SSLType.valueOf((
-        getPropertyAsString(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name())));
-  }
-  
-  public String getConnectionTimeout() {
-    return
-      getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT,
-          String.valueOf(RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS));
-  }
-  
-  public Protocol getProtocol() {
-    return Protocol
-        .valueOf(getPropertyAsString(RTESampler.CONFIG_PROTOCOL,
-            RTESampler.DEFAULT_PROTOCOL.name()));
-  }
-
-  public TerminalType getTerminalType() {
-    return getProtocol().createProtocolClient().getTerminalTypeById(
-        getPropertyAsString(RTESampler.CONFIG_TERMINAL_TYPE,
-            RTESampler.DEFAULT_TERMINAL_TYPE.getId()));
-  }
-
-  public void setServer(String server) {
-    setProperty(RTESampler.CONFIG_SERVER, server);
-  }
-
-  public void setPort(String port) {
-    setProperty(RTESampler.CONFIG_PORT, port);
-  }
-
-  public void setProtocol(Protocol protocol) {
-    setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
-  }
-
-  public void setSSLType(SSLType sslType) {
-    setProperty(RTESampler.CONFIG_SSL_TYPE, sslType.name());
-  }
-
-  public void setTerminalType(TerminalType terminalType) {
-    setProperty(RTESampler.CONFIG_TERMINAL_TYPE,
-        terminalType.getId());
-  }
-
-  public void setConnectionTimeout(String connectionTimeout) {
-    setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT,
-        connectionTimeout);
-  }
 }

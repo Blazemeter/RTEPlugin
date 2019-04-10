@@ -2,6 +2,10 @@ package com.blazemeter.jmeter.rte.core;
 
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.apache.jmeter.samplers.SampleResult;
 
 public class RteSampleResult extends SampleResult {
@@ -11,7 +15,13 @@ public class RteSampleResult extends SampleResult {
   private final Protocol protocol;
   private final TerminalType terminalType;
   private final SSLType sslType;
-  private String label;
+  private List<Input> inputs;
+  private AttentionKey attentionKey;
+  private String screen;
+  private boolean inputInhibitedRequest;
+  private boolean inputInhibitedResponse;
+  private Position cursorPosition;
+  private boolean soundedAlarm;
   
   private RteSampleResult(Builder builder) {
     server = builder.server;
@@ -19,54 +29,72 @@ public class RteSampleResult extends SampleResult {
     protocol = builder.protocol;
     terminalType = builder.terminalType;
     sslType = builder.sslType;
-    label = builder.label;
   }
   
-  public String getServer() {
-    return server;
+  public void setInputs(List<Input> inputs) {
+    this.inputs = inputs;
   }
 
-  public int getPort() {
-    return port;
+  public void setAttentionKey(AttentionKey attentionKey) {
+    this.attentionKey = attentionKey;
   }
 
-  public Protocol getProtocol() {
-    return protocol;
+  public void setScreen(String screen) {
+    this.screen = screen;
   }
 
-  public TerminalType getTerminalType() {
-    return terminalType;
+  public void setInputInhibitedRequest(boolean inputInhibitedRequest) {
+    this.inputInhibitedRequest = inputInhibitedRequest;
   }
 
-  public SSLType getSslType() {
-    return sslType;
+  public void setInputInhibitedResponse(boolean inputInhibitedResponse) {
+    this.inputInhibitedResponse = inputInhibitedResponse;
   }
-  
-  public String getLabel() {
-    return label;
+
+  public void setCursorPosition(Position cursorPosition) {
+    this.cursorPosition = cursorPosition;
   }
-  
+
+  public void setSoundedAlarm(boolean soundedAlarm) {
+    this.soundedAlarm = soundedAlarm;
+  }
+
+  @Override
   public String getRequestHeaders() {
-    return "Server: " + getServer() + "\n" +
-        "Port: " + getPort() + "\n" +
-        "Protocol: " + getProtocol().toString() + "\n" +
-        "Terminal-type: " + getTerminalType() + "\n" +
-        "Security: " + getSslType() + "\n";
+    return "Server: " + server + "\n" +
+        "Port: " + port + "\n" +
+        "Protocol: " + protocol + "\n" +
+        "Terminal-type: " + terminalType + "\n" +
+        "Security: " + sslType + "\n";
   }
-  
-  //TODO Must finish getRequestBody ASAP
-  
-  public String getRequestBody() {
+
+  @Override
+  public String getSamplerData() {
     return "AttentionKey: " +
-        //getAttentionKey() +
+        attentionKey +
         "\n" +
         "Inputs:\n" +
-        /* getInputs().stream()
+        inputs.stream()
             .map(Input::getCsv)
-            .collect(Collectors.joining("\n")) + */ 
+            .collect(Collectors.joining("\n")) +
         "\n";
   }
-  
+
+  @Override
+  public String getResponseHeaders() {
+    //TODO must finish this ASAP
+    Optional<Position> cursorPosition = Optional.ofNullable(this.cursorPosition);
+    return "Input-inhibited: " + inputInhibitedResponse + "\n" +
+        "Cursor-position: " + cursorPosition.map(c -> c.getRow() + "," + c.getColumn()).orElse("") +
+        (soundedAlarm ? "\nSound-Alarm: true" : "");
+  }
+
+  @Override
+  public String getResponseDataAsString() {
+    //TODO take logic from RTESampler
+    return null;
+  }
+
   public static final class Builder {
     private String server;
     private int port;
@@ -110,13 +138,10 @@ public class RteSampleResult extends SampleResult {
 
     public RteSampleResult build() {
       RteSampleResult ret  = new RteSampleResult(this);
-      ret.setLabel("name");
+      ret.setSampleLabel(label);
       ret.sampleStart();
       return ret;
     }
   }
-
-  public void setLabel(String label) {
-    this.label = label;
-  }
+  
 }

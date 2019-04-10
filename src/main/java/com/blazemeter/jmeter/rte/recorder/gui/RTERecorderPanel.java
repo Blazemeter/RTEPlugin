@@ -6,7 +6,6 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
-import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 
 import java.awt.FlowLayout;
@@ -21,7 +20,6 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import org.apache.jmeter.gui.util.JMeterToolBar;
-import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.util.JMeterUtils;
 
 public class RTERecorderPanel extends JPanel implements ActionListener {
@@ -34,6 +32,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
   private JButton startButton;
   private JButton stopButton;
   private JButton restartButton;
+  private RTERecorder rteRecorder;
 
   public RTERecorderPanel() {
     
@@ -62,7 +61,6 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     panel.setLayout(layout);
     panel.setLayout(new FlowLayout(FlowLayout.CENTER));
 
-    updateButtonsIfRunning(false);
     startButton = buildButton("start", "/arrow-right-3.png", ADD_ACTION_START);
     panel.add(startButton);
     panel.add(Box.createHorizontalStrut(10));
@@ -71,6 +69,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     panel.add(Box.createHorizontalStrut(10));
     restartButton = buildButton("restart", "/edit-redo-7.png", ADD_ACTION_RESTART);
     panel.add(restartButton);
+    updateButtonsIfRunning(false);
     return panel;
   }
 
@@ -81,7 +80,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
       case ADD_ACTION_START:
         LOG.debug("WhenStartIsPressed");
         updateButtonsIfRunning(true);
-        start();
+        rteRecorder.startActionButton();
         break;
       case ADD_ACTION_STOP:
         LOG.debug("WhenStopIsPressed");
@@ -153,7 +152,6 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     button.setIcon(image);
     button.addActionListener(this);
     button.setActionCommand(actionCommand);
-    button.setEnabled(true);
     return button;
   }
 
@@ -163,14 +161,13 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
     restartButton.setEnabled(running);
   }
 
-  private void start() {
-    RTESampler rteSampler = new RTESampler();
-
-    new RTERecorder().configureSampler(rteSampler);
-    new RTERecorder().placeSampler(rteSampler);
-    new RTERecorder().notifySampleListeners(new SampleEvent(new
-            RTERecorder().sampleResult(rteSampler, configPanel),
-            "WorkBench"));
+  public void setRteRecorder(RTERecorder rteRecorder) {
+    this.rteRecorder = rteRecorder;
+    setTerminalType(rteRecorder.getTerminalType());
+    setServer(rteRecorder.getServer());
+    setProtocol(rteRecorder.getProtocol());
+    setConnectionTimeout(rteRecorder.getConnectionTimeout());
+    setSSLType(rteRecorder.getSSLType());
+    setPort(rteRecorder.getPort());
   }
-
 }
