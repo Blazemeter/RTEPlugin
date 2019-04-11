@@ -14,8 +14,10 @@ public interface TerminalEmulator {
 
   void soundAlarm();
 
+  void setStatusMessage(String message);
+
   void setKeyboardLock(boolean lock);
 
-  void addGUITerminalListener(TerminalEmulatorListener terminalEmulatorListener);
+  void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener);
 
 }
