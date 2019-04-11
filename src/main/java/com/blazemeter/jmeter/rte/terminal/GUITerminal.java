@@ -14,7 +14,7 @@ public interface GUITerminal {
 
   void soundAlarm();
 
-  void setStatusMessage (String message);
+  void setStatusMessage(String message);
 
   void setKeyboardLock(boolean lock);
 

@@ -180,10 +180,6 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
           }
           g.onAttentionKey(attentionKey, fields);
         }
-      } else if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN
-          || e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT
-          || e.getKeyCode() == KeyEvent.VK_TAB) {
-
       }
     }
     if (!locked || attentionKey != null) {
@@ -219,7 +215,5 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
     public int hashCode() {
       return Objects.hash(modifier, specialKey);
     }
-
-
   }
 }

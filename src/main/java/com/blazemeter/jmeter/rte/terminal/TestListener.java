@@ -1,13 +1,15 @@
 package com.blazemeter.jmeter.rte.terminal;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
-import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import java.util.List;
 
 public class TestListener implements GUITerminalListener {
 
   private boolean closed = false;
+  private AttentionKey attentionKey;
+  private List<Input> inputs;
+  private boolean event = false;
 
   public AttentionKey getAttentionKey() {
     return attentionKey;
@@ -23,10 +25,6 @@ public class TestListener implements GUITerminalListener {
     return ret;
   }
 
-  private AttentionKey attentionKey;
-  private List<Input> inputs;
-  private boolean event = false;
-
   @Override
   public void onCloseTerminal() {
     closed = true;
@@ -39,8 +37,6 @@ public class TestListener implements GUITerminalListener {
     this.inputs = inputs;
     event = true;
   }
-
-
 
   public boolean isClosed() {
     return closed;

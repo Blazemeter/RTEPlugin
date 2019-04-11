@@ -52,7 +52,8 @@ public class Test {
                 .setScreen(printHome("ALARM ALARM !!!"));
             guiTerminal.soundAlarm();
           } else {
-            guiTerminal.setScreen(printHome("ATTENTION KEY: " + listener.getAttentionKey().toString()));
+            guiTerminal
+                .setScreen(printHome("ATTENTION KEY: " + listener.getAttentionKey().toString()));
           }
         }
       } catch (InterruptedException ex) {
@@ -89,7 +90,6 @@ public class Test {
 
     return segments;
   }
-
 
   public static List<Segment> printFields(
       List<Input> inputs) {
