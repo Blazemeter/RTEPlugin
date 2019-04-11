@@ -9,44 +9,55 @@ import java.util.stream.Collectors;
 import org.apache.jmeter.samplers.SampleResult;
 
 public class RteSampleResult extends SampleResult {
-  
-  private final String server;
-  private final int port;
-  private final Protocol protocol;
-  private final TerminalType terminalType;
-  private final SSLType sslType;
+
+  private String server;
+  private int port;
+  private Protocol protocol;
+  private TerminalType terminalType;
+  private SSLType sslType;
+  private Action action;
+  private Boolean inputInhibitedRequest;
   private List<Input> inputs;
   private AttentionKey attentionKey;
-  private String screen;
-  private boolean inputInhibitedRequest;
   private boolean inputInhibitedResponse;
   private Position cursorPosition;
   private boolean soundedAlarm;
-  private Action action;
-  
-  private RteSampleResult(Builder builder) {
-    server = builder.server;
-    port = builder.port;
-    protocol = builder.protocol;
-    terminalType = builder.terminalType;
-    sslType = builder.sslType;
-    action = builder.action;
+  private String screen;
+
+  public void setServer(String server) {
+    this.server = server;
   }
-  
+
+  public void setPort(int port) {
+    this.port = port;
+  }
+
+  public void setProtocol(Protocol protocol) {
+    this.protocol = protocol;
+  }
+
+  public void setTerminalType(TerminalType terminalType) {
+    this.terminalType = terminalType;
+  }
+
+  public void setSslType(SSLType sslType) {
+    this.sslType = sslType;
+  }
+
+  public void setAction(Action action) {
+    this.action = action;
+  }
+
+  public void setInputInhibitedRequest(boolean inputInhibitedRequest) {
+    this.inputInhibitedRequest = inputInhibitedRequest;
+  }
+
   public void setInputs(List<Input> inputs) {
     this.inputs = inputs;
   }
 
   public void setAttentionKey(AttentionKey attentionKey) {
     this.attentionKey = attentionKey;
-  }
-
-  public void setScreen(String screen) {
-    this.screen = screen;
-  }
-
-  public void setInputInhibitedRequest(boolean inputInhibitedRequest) {
-    this.inputInhibitedRequest = inputInhibitedRequest;
   }
 
   public void setInputInhibitedResponse(boolean inputInhibitedResponse) {
@@ -60,7 +71,13 @@ public class RteSampleResult extends SampleResult {
   public void setSoundedAlarm(boolean soundedAlarm) {
     this.soundedAlarm = soundedAlarm;
   }
-  
+
+  public void setScreen(String screen) {
+    this.screen = screen;
+    setDataType(SampleResult.TEXT);
+    setResponseData(screen, "utf-8");
+  }
+
   @Override
   public String getRequestHeaders() {
     return "Server: " + server + "\n" +
@@ -68,89 +85,31 @@ public class RteSampleResult extends SampleResult {
         "Protocol: " + protocol + "\n" +
         "Terminal-type: " + terminalType + "\n" +
         "Security: " + sslType + "\n" +
-        "Action: " + action + "\n" + 
-        "Input-inhibited: " + inputInhibitedRequest;
+        "Action: " + action + "\n" +
+        (inputInhibitedRequest != null ? "Input-inhibited: " + inputInhibitedRequest + "\n" : "");
   }
 
   @Override
   public String getSamplerData() {
-    return new StringBuilder()
-        .append("AttentionKey: ")
-        .append(attentionKey)
-        .append("\n")
-        .append("Inputs:\n")
-        .append(inputs.stream()
-            .map(Input::getCsv)
-            .collect(Collectors.joining("\n")))
-        .append("\n")
-        .toString();
+    return "AttentionKey: " + attentionKey + "\n"
+        + "Inputs:\n"
+        + inputs.stream()
+        .map(Input::getCsv)
+        .collect(Collectors.joining("\n"))
+        + "\n";
   }
- 
+
   @Override
   public String getResponseHeaders() {
     return "Input-inhibited: " + inputInhibitedResponse + "\n" +
-        "Cursor-position: " + cursorPosition +
+        "Cursor-position: " + (cursorPosition != null ? cursorPosition.getRow() + ","
+        + cursorPosition.getColumn() : "") +
         (soundedAlarm ? "\nSound-Alarm: true" : "");
   }
 
   @Override
   public String getResponseDataAsString() {
-    return "Screen: " + screen + "\n";
-    
+    return screen;
   }
 
-  public static final class Builder {
-    private String server;
-    private int port;
-    private Protocol protocol;
-    private TerminalType terminalType;
-    private SSLType sslType;
-    private String label;
-    private Action action;
-    
-    public Builder() {
-    }
-
-    public Builder withServer(String val) {
-      server = val;
-      return this;
-    }
-
-    public Builder withPort(int val) {
-      port = val;
-      return this;
-    }
-
-    public Builder withProtocol(Protocol val) {
-      protocol = val;
-      return this;
-    }
-
-    public Builder withTerminalType(TerminalType val) {
-      terminalType = val;
-      return this;
-    }
-
-    public Builder withSslType(SSLType val) {
-      sslType = val;
-      return this;
-    }
-    
-    public Builder withLabel(String name) {
-      label = name;
-      return this;
-    }
-
-    public Builder withAction(Action val) {
-      action = val;
-      return this;
-    }
-
-    public RteSampleResult build() {
-      RteSampleResult ret  = new RteSampleResult(this);
-      ret.setSampleLabel(label);
-      return ret;
-    }
-  }
-  
 }

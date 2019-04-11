@@ -6,8 +6,12 @@ public class Position {
 
   public static final int UNSPECIFIED_INDEX = 0;
 
-  private final int row;
-  private final int column;
+  private int row;
+  private int column;
+
+  // Provided for proper deserialization of sample results
+  public Position() {
+  }
 
   public Position(int row, int column) {
     this.row = row;

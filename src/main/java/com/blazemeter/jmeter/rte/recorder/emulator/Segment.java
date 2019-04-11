@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.emulator;
+package com.blazemeter.jmeter.rte.recorder.emulator;
 
 public class Segment {
 
@@ -24,4 +24,5 @@ public class Segment {
   public int getRow() {
     return row;
   }
+
 }

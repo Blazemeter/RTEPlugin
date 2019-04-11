@@ -1,13 +1,10 @@
 package com.blazemeter.jmeter.rte.recorder;
 
-import com.blazemeter.jmeter.rte.recorder.gui.RTERecorderGui;
-import com.blazemeter.jmeter.rte.recorder.gui.RTERecorderPanel;
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JTableFixture;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 import static com.mongodb.util.MyAsserts.assertTrue;
 import static org.assertj.swing.fixture.Containers.showInFrame;

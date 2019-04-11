@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.emulator;
+package com.blazemeter.jmeter.rte.recorder.emulator;
 
 public class Field extends Segment {
 

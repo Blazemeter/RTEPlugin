@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.emulator;
+package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
