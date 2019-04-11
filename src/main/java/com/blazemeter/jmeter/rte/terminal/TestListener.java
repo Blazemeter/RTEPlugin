@@ -9,6 +9,24 @@ public class TestListener implements GUITerminalListener {
 
   private boolean closed = false;
 
+  public AttentionKey getAttentionKey() {
+    return attentionKey;
+  }
+
+  public List<Input> getInputs() {
+    return inputs;
+  }
+
+  public boolean isEvent() {
+    boolean ret = event;
+    event = false;
+    return ret;
+  }
+
+  private AttentionKey attentionKey;
+  private List<Input> inputs;
+  private boolean event = false;
+
   @Override
   public void onCloseTerminal() {
     closed = true;
@@ -17,14 +35,12 @@ public class TestListener implements GUITerminalListener {
 
   @Override
   public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
-    System.out.println("Attention Key = " + attentionKey);
-    for (Input i : inputs) {
-      CoordInput c = (CoordInput) i;
-      System.out.println(
-          "Row: " + c.getPosition().getRow() + "Column: " + c.getPosition().getColumn() + "Value: "
-              + c.getInput());
-    }
+    this.attentionKey = attentionKey;
+    this.inputs = inputs;
+    event = true;
   }
+
+
 
   public boolean isClosed() {
     return closed;
