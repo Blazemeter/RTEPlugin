@@ -2,6 +2,7 @@ modules:
   jmeter:
     path: ".jmeter"
     version: "4.0"
+    detect-plugins: false
     properties:
       log_level: DEBUG
       user.classpath: lib

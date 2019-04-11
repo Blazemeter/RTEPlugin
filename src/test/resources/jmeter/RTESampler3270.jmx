@@ -12,6 +12,31 @@
       <stringProp name="TestPlan.user_define_classpath"></stringProp>
     </TestPlan>
     <hashTree>
+      <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="userColumn" elementType="Argument">
+            <stringProp name="Argument.name">userColumn</stringProp>
+            <stringProp name="Argument.value">1</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="username" elementType="Argument">
+            <stringProp name="Argument.name">username</stringProp>
+            <stringProp name="Argument.value">testusr</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="passwordLabel" elementType="Argument">
+            <stringProp name="Argument.name">passwordLabel</stringProp>
+            <stringProp name="Argument.value">Password</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="password" elementType="Argument">
+            <stringProp name="Argument.name">password</stringProp>
+            <stringProp name="Argument.value">testpsw</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </Arguments>
+      <hashTree/>
       <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp Thread Group" enabled="true">
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
@@ -92,10 +117,10 @@ println(&quot;server started...&quot;)</stringProp>
           <elementProp name="Inputs.inputs" elementType="com.blazemeter.jmeter.rte.sampler.Inputs">
             <collectionProp name="Inputs.inputs">
               <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI">
-                <stringProp name="CoordInputRowGUI.row">${row}</stringProp>
-                <stringProp name="CoordInputRowGUI.column">${column}</stringProp>
+                <stringProp name="CoordInputRowGUI.row">2</stringProp>
+                <stringProp name="CoordInputRowGUI.column">${userColumn}</stringProp>
                 <stringProp name="CoordInputRowGUI.input">testusr</stringProp>
-                <stringProp name="Input.input">${coordInput}</stringProp>
+                <stringProp name="Input.input">${username}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -134,8 +159,8 @@ println(&quot;server started...&quot;)</stringProp>
           <elementProp name="Inputs.inputs" elementType="com.blazemeter.jmeter.rte.sampler.Inputs">
             <collectionProp name="Inputs.inputs">
               <elementProp name="" elementType="com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI">
-                <stringProp name="LabelInputRowGUI.column">${label}</stringProp>
-                <stringProp name="Input.input">${labelInput}</stringProp>
+                <stringProp name="LabelInputRowGUI.label">${passwordLabel}</stringProp>
+                <stringProp name="Input.input">${password}</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -193,36 +218,6 @@ println(&quot;server started...&quot;)</stringProp>
           <stringProp name="RTESampler.waitTextAreaBottom"></stringProp>
           <stringProp name="RTESampler.waitTextAreaRight"></stringProp>
         </com.blazemeter.jmeter.rte.sampler.RTESampler>
-        <hashTree/>
-        <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
-          <collectionProp name="Arguments.arguments">
-            <elementProp name="row" elementType="Argument">
-              <stringProp name="Argument.name">row</stringProp>
-              <stringProp name="Argument.value">2</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-            <elementProp name="column" elementType="Argument">
-              <stringProp name="Argument.name">column</stringProp>
-              <stringProp name="Argument.value">1</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-            <elementProp name="coordInput" elementType="Argument">
-              <stringProp name="Argument.name">coordInput</stringProp>
-              <stringProp name="Argument.value">testusr</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-            <elementProp name="label" elementType="Argument">
-              <stringProp name="Argument.name">label</stringProp>
-              <stringProp name="Argument.value">Password</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-            <elementProp name="labelInput" elementType="Argument">
-              <stringProp name="Argument.name">labelInput</stringProp>
-              <stringProp name="Argument.value">testpsw</stringProp>
-              <stringProp name="Argument.metadata">=</stringProp>
-            </elementProp>
-          </collectionProp>
-        </Arguments>
         <hashTree/>
       </hashTree>
       <PostThreadGroup guiclass="PostThreadGroupGui" testclass="PostThreadGroup" testname="tearDown Thread Group" enabled="true">

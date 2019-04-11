@@ -17,8 +17,9 @@ public abstract class RequestListenerIT<T extends RequestListener<?>> {
   protected T listener;
 
   @Before
-  public void setup() throws Exception {
+  public void setup() {
     result = new SampleResult();
+    result.sampleStart();
     listener = buildRequestListener(result);
   }
 
