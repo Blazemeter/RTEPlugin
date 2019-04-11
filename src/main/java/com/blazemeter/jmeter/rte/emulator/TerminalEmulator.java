@@ -1,8 +1,8 @@
-package com.blazemeter.jmeter.rte.terminal;
+package com.blazemeter.jmeter.rte.emulator;
 
 import java.util.List;
 
-public interface GUITerminal {
+public interface TerminalEmulator {
 
   void start();
 
@@ -16,6 +16,6 @@ public interface GUITerminal {
 
   void setKeyboardLock(boolean lock);
 
-  void addGUITerminalListener(GUITerminalListener guiTerminalListener);
+  void addGUITerminalListener(TerminalEmulatorListener terminalEmulatorListener);
 
 }

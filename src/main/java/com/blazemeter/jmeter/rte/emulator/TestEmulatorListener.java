@@ -1,11 +1,11 @@
-package com.blazemeter.jmeter.rte.terminal;
+package com.blazemeter.jmeter.rte.emulator;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import java.util.List;
 
-public class TestListener implements GUITerminalListener {
+public class TestEmulatorListener implements TerminalEmulatorListener {
 
   private boolean closed = false;
 

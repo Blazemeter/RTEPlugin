@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.terminal;
+package com.blazemeter.jmeter.rte.emulator;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
@@ -17,7 +17,7 @@ import javax.swing.JFrame;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 
-public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
+public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulator {
 
   private static final Map<KeyEventMap, AttentionKey> KEY_EVENTS =
       new HashMap<KeyEventMap, AttentionKey>() {
@@ -65,7 +65,7 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
   private static final int HEIGHT = 512;
   private static final Color BACKGROUND = Color.black;
 
-  private List<GUITerminalListener> guiTerminalListeners = new ArrayList<>();
+  private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
 
   @Override
   public void start() {
@@ -79,7 +79,7 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
     frm.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosed(WindowEvent e) {
-        for (GUITerminalListener g : guiTerminalListeners) {
+        for (TerminalEmulatorListener g : terminalEmulatorListeners) {
           g.onCloseTerminal();
         }
         System.exit(0);
@@ -93,12 +93,17 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
 
   @Override
   public void stop() {
-
+    throw new UnsupportedOperationException();
   }
 
   @Override
   public void setCursor(int col, int row) {
+    throw new UnsupportedOperationException();
+  }
 
+  @Override
+  public void setKeyboardLock(boolean locked) {
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -121,18 +126,12 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
 
   @Override
   public void soundAlarm() {
-
+    throw new UnsupportedOperationException();
   }
 
   @Override
-  public void setKeyboardLock(boolean lock) {
-    this.setKeyboardLock(lock);
-  }
-
-  @Override
-  public void addGUITerminalListener(GUITerminalListener guiTerminalListener) {
-    guiTerminalListeners.add(guiTerminalListener);
-
+  public void addGUITerminalListener(TerminalEmulatorListener terminalEmulatorListener) {
+    terminalEmulatorListeners.add(terminalEmulatorListener);
   }
 
   @Override
@@ -141,7 +140,7 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
       AttentionKey attentionKey = KEY_EVENTS
           .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
       if (attentionKey != null) {
-        for (GUITerminalListener g : guiTerminalListeners) {
+        for (TerminalEmulatorListener g : terminalEmulatorListeners) {
           List<Input> fields = new ArrayList<>();
           for (XI5250Field f : getFields()) {
             fields.add(new CoordInput(new Position(f.getRow(), f.getCol()), f.getString()));
@@ -180,5 +179,7 @@ public class Xtn5250TerminalGUI extends XI5250Crt implements GUITerminal {
     public int hashCode() {
       return Objects.hash(modifier, specialKey);
     }
+
   }
+
 }

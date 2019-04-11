@@ -1,10 +1,10 @@
-package com.blazemeter.jmeter.rte.terminal;
+package com.blazemeter.jmeter.rte.emulator;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Input;
 import java.util.List;
 
-public interface GUITerminalListener {
+public interface TerminalEmulatorListener {
 
   void onCloseTerminal();
 
