@@ -37,7 +37,6 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
   }
   
   public TestElement createTestElement() {
-    //TODO Create RteRecorder
     RTERecorder config = new RTERecorder();
     configureTestElement(config);
     return config;
@@ -45,7 +44,6 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
   
   public void modifyTestElement(TestElement te) {
     configureTestElement(te);
-    //TODO change with RteRecorder
     if (te instanceof RTERecorder) {
       RTERecorder recorder = (RTERecorder) te;
       recorder.setServer(recordingPanel.getServer());
@@ -60,7 +58,6 @@ public class RTERecorderGui extends AbstractConfigGui implements UnsharedCompone
   @Override
   public void configure(TestElement element) {
     super.configure(element);
-    //TODO change with RteRecorder
     if (element instanceof RTERecorder) {
       RTERecorder configTestElement = (RTERecorder) element;
       recordingPanel.setRteRecorder(configTestElement);

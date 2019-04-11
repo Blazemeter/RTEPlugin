@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -401,44 +402,48 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   @Override
   public SampleResult sample(Entry entry) {
-    //TODO create a sample result
-    SampleResult sampleResult = new SampleResult();
-    sampleResult.setSampleLabel(getName());
-    sampleResult.sampleStart();
-    sampleResult.setRequestHeaders(buildRequestHeaders());
+    //TODO Connect action do not show response properly.
+    RteSampleResult rteSampleResult = buildSampleResult();
+    rteSampleResult.sampleStart();
+    rteSampleResult.setRequestHeaders(rteSampleResult.getRequestHeaders());
 
     RteProtocolClient client = null;
-
+    
     try {
       client = getClient();
       if (getAction() == Action.DISCONNECT) {
         if (client != null) {
           disconnect(client);
         }
-        sampleResult.setSuccessful(true);
-        sampleResult.sampleEnd();
-        return sampleResult;
+        
+        rteSampleResult.setSuccessful(true);
+        rteSampleResult.sampleEnd();
+        return rteSampleResult;
       }
-
       if (client == null) {
         client = buildClient();
       }
-      sampleResult.connectEnd();
-      RequestListener requestListener = client.buildRequestListener(sampleResult);
+      rteSampleResult.connectEnd();
+      RequestListener requestListener = client.buildRequestListener(rteSampleResult);
+      
       try {
-        addClientRequestHeaders(client, sampleResult);
+        addClientRequestHeaders(client, rteSampleResult);
         if (getAction() == Action.SEND_INPUT) {
-          sampleResult.setSamplerData(buildRequestBody());
+          rteSampleResult.setAttentionKey(getAttentionKey());
+          rteSampleResult.setInputs(getInputs());
+          rteSampleResult.setResponseHeaders(rteSampleResult.getResponseHeaders());
+          rteSampleResult.setSamplerData(rteSampleResult.getSamplerData());
           client.send(getInputs(), getAttentionKey());
         }
         List<WaitCondition> waiters = getWaitersList();
         if (!waiters.isEmpty()) {
           client.await(waiters);
         }
-        sampleResult.setSuccessful(true);
-        sampleResult.setResponseHeaders(buildResponseHeaders(client));
-        sampleResult.setDataType(SampleResult.TEXT);
-        sampleResult.setResponseData(client.getScreen(), "utf-8");
+        rteSampleResult.setSuccessful(true);
+        rteSampleResult.setScreen(client.getScreen());
+        rteSampleResult.setDataType(SampleResult.TEXT);
+        rteSampleResult.setResponseHeaders(buildResponseHeaders(client));
+        rteSampleResult.setResponseData(client.getScreen(), "utf-8");
       } finally {
         requestListener.stop();
         if (LOG.isDebugEnabled()) {
@@ -446,34 +451,39 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
               .map(Object::toString)
               .collect(Collectors.joining("\n")));
           LOG.debug("{} - AttentionKey sent: {}", getThreadName(), getAttentionKey().name());
-          LOG.debug("{} - Request Headers: {}", getThreadName(), sampleResult.getRequestHeaders());
+          LOG.debug("{} - Request Headers: {}", getThreadName(), 
+              rteSampleResult.getRequestHeaders());
           LOG.debug("{} - Response Headers: {}", getThreadName(),
-              sampleResult.getResponseHeaders());
+              rteSampleResult.getResponseHeaders());
           LOG.debug("{} - Response Screen: {}", getThreadName(),
-              sampleResult.getResponseDataAsString());
+              rteSampleResult.getResponseDataAsString());
         }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return errorResult("The sampling has been interrupted", e, sampleResult);
+      return errorResult("The sampling has been interrupted", e, rteSampleResult);
     } catch (TimeoutException e) {
-      return timeoutErrorResult("Timeout error", e, sampleResult,
+      return timeoutErrorResult("Timeout error", e, rteSampleResult,
           client != null ? client.getScreen() : "");
     } catch (Exception e) {
-      return errorResult("Error while sampling the remote terminal", e, sampleResult);
+      return errorResult("Error while sampling the remote terminal", e, rteSampleResult);
     }
-    return sampleResult;
+    return rteSampleResult;
   }
 
-  private String buildRequestHeaders() {
-    return "Server: " + getServer() + "\n" +
-        "Port: " + getPort() + "\n" +
-        "Protocol: " + getProtocol().toString() + "\n" +
-        "Terminal-type: " + getTerminalType() + "\n" +
-        "Security: " + getSSLType() + "\n" +
-        "Action: " + getAction() + "\n";
-  }
+  private RteSampleResult buildSampleResult() {
 
+    return new RteSampleResult.Builder()
+        .withPort(getPort())
+        .withServer(getServer())
+        .withProtocol(getProtocol())
+        .withTerminalType(getTerminalType())
+        .withSslType(getSSLType())
+        .withLabel(getName())
+        .withAction(getAction())
+        .build();
+  }
+ 
   private RteProtocolClient getClient() {
     String clientId = buildConnectionId();
     Map<String, RteProtocolClient> clients = connections.get();
@@ -496,19 +506,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   private void addClientRequestHeaders(RteProtocolClient client, SampleResult result) {
     result.setRequestHeaders(
         result.getRequestHeaders() + "Input-inhibited: " + client.isInputInhibited() + "\n");
-  }
-
-  private String buildRequestBody() {
-    return new StringBuilder()
-        .append("AttentionKey: ")
-        .append(getAttentionKey())
-        .append("\n")
-        .append("Inputs:\n")
-        .append(getInputs().stream()
-            .map(Input::getCsv)
-            .collect(Collectors.joining("\n")))
-        .append("\n")
-        .toString();
   }
 
   public List<Input> getInputs() {

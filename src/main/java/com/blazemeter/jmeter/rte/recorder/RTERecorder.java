@@ -41,6 +41,11 @@ public class RTERecorder extends GenericController {
 
   private static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
 
+  @Override
+  public String getName() {
+    return getPropertyAsString(TestElement.NAME);
+  }
+  
   public String getPort() {
     return getPropertyAsString(RTESampler.CONFIG_PORT,
         String.valueOf(RTESampler.DEFAULT_PORT));
@@ -104,6 +109,7 @@ public class RTERecorder extends GenericController {
     JMeterTreeNode myTarget = findTargetControllerNode();                              
     addTestElementToTestPlan(buildRteConfigElement(), myTarget);
 
+    //Dummy values for test
     AttentionKey attentionKey = AttentionKey.F1;
     Position position = new Position(1, 5);
     List<Input> inputs = Arrays.asList(new CoordInput(new Position(2, 3), "testusr"),
@@ -113,8 +119,6 @@ public class RTERecorder extends GenericController {
     boolean responseInputInhibited = true;
     boolean alarm = true; 
     addTestElementToTestPlan(buildRteSampler(attentionKey, inputs), myTarget);
-    
-    //TODO setScreen, cursor, requestInhibitedInput, responseInhibitedInput, etc
     notifySampleListeners(buildSampleResult(attentionKey, inputs, position, screen, alarm,
         requestInputInhibited, responseInputInhibited));
     
@@ -259,7 +263,7 @@ public class RTERecorder extends GenericController {
 
   private RteSampleResult buildSampleResult(AttentionKey attentionKey, List<Input> inputs,
                                             Position position, String screen,
-                                            boolean resposeInputInhibited,
+                                            boolean responseInputInhibited,
                                             boolean alarm, boolean inputInhibitedRequest) {
     
     RteSampleResult sampleResult = new RteSampleResult.Builder()
@@ -268,16 +272,18 @@ public class RTERecorder extends GenericController {
         .withProtocol(getProtocol())
         .withTerminalType(getTerminalType())
         .withSslType(getSSLType())
-        .withLabel("test")
+        .withLabel(getName())
         .build();
+    
     sampleResult.setInputs(inputs);
     sampleResult.setAttentionKey(attentionKey);
     sampleResult.setCursorPosition(position);
     sampleResult.setScreen(screen);
     sampleResult.setSoundedAlarm(alarm);
     sampleResult.setInputInhibitedRequest(inputInhibitedRequest);
-    sampleResult.setInputInhibitedResponse(resposeInputInhibited);
-    
+    sampleResult.setInputInhibitedResponse(responseInputInhibited);
+    sampleResult.sampleStart();
+    sampleResult.setSuccessful(true);
     return sampleResult;
   }
   

@@ -1,9 +1,9 @@
 package com.blazemeter.jmeter.rte.core;
 
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.sampler.Action;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.jmeter.samplers.SampleResult;
@@ -22,6 +22,7 @@ public class RteSampleResult extends SampleResult {
   private boolean inputInhibitedResponse;
   private Position cursorPosition;
   private boolean soundedAlarm;
+  private Action action;
   
   private RteSampleResult(Builder builder) {
     server = builder.server;
@@ -29,6 +30,7 @@ public class RteSampleResult extends SampleResult {
     protocol = builder.protocol;
     terminalType = builder.terminalType;
     sslType = builder.sslType;
+    action = builder.action;
   }
   
   public void setInputs(List<Input> inputs) {
@@ -58,41 +60,43 @@ public class RteSampleResult extends SampleResult {
   public void setSoundedAlarm(boolean soundedAlarm) {
     this.soundedAlarm = soundedAlarm;
   }
-
+  
   @Override
   public String getRequestHeaders() {
     return "Server: " + server + "\n" +
         "Port: " + port + "\n" +
         "Protocol: " + protocol + "\n" +
         "Terminal-type: " + terminalType + "\n" +
-        "Security: " + sslType + "\n";
+        "Security: " + sslType + "\n" +
+        "Action: " + action + "\n" + 
+        "Input-inhibited: " + inputInhibitedRequest;
   }
 
   @Override
   public String getSamplerData() {
-    return "AttentionKey: " +
-        attentionKey +
-        "\n" +
-        "Inputs:\n" +
-        inputs.stream()
+    return new StringBuilder()
+        .append("AttentionKey: ")
+        .append(attentionKey)
+        .append("\n")
+        .append("Inputs:\n")
+        .append(inputs.stream()
             .map(Input::getCsv)
-            .collect(Collectors.joining("\n")) +
-        "\n";
+            .collect(Collectors.joining("\n")))
+        .append("\n")
+        .toString();
   }
-
+ 
   @Override
   public String getResponseHeaders() {
-    //TODO must finish this ASAP
-    Optional<Position> cursorPosition = Optional.ofNullable(this.cursorPosition);
     return "Input-inhibited: " + inputInhibitedResponse + "\n" +
-        "Cursor-position: " + cursorPosition.map(c -> c.getRow() + "," + c.getColumn()).orElse("") +
+        "Cursor-position: " + cursorPosition +
         (soundedAlarm ? "\nSound-Alarm: true" : "");
   }
 
   @Override
   public String getResponseDataAsString() {
-    //TODO take logic from RTESampler
-    return null;
+    return "Screen: " + screen + "\n";
+    
   }
 
   public static final class Builder {
@@ -102,7 +106,8 @@ public class RteSampleResult extends SampleResult {
     private TerminalType terminalType;
     private SSLType sslType;
     private String label;
-
+    private Action action;
+    
     public Builder() {
     }
 
@@ -136,10 +141,14 @@ public class RteSampleResult extends SampleResult {
       return this;
     }
 
+    public Builder withAction(Action val) {
+      action = val;
+      return this;
+    }
+
     public RteSampleResult build() {
       RteSampleResult ret  = new RteSampleResult(this);
       ret.setSampleLabel(label);
-      ret.sampleStart();
       return ret;
     }
   }
