@@ -112,7 +112,7 @@ public class RteSampleResult extends SampleResult {
 
   @Override
   public String getResponseDataAsString() {
-    return screen.toString();
+    return screen != null ? screen.toString() : "";
   }
 
 }

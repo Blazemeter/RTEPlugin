@@ -135,23 +135,19 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   public void onRecordingStart() throws Exception {
     samplersTargetNode = findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
-    terminalClient = getProtocol().createProtocolClient();
     // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
     // them to terminalEmulator
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
-    terminalEmulator.setKeyboardLock(true);
-    terminalEmulator.start();
-    sampleResult = buildSampleResult();
-    sampleResult.setAction(Action.CONNECT);
+    initTerminalEmulator();
+    sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
+    terminalClient = getProtocol().createProtocolClient();
     try {
       terminalClient
           .connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
               RTESampler.getStableTimeout());
       sampleResult.connectEnd();
-      terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
-      terminalClient.addTerminalStateListener(terminalEmulatorUpdater);
-      terminalEmulatorUpdater.onTerminalStateChange();
+      initTerminalUpdater();
       registerRequestListenerFor(sampleResult);
     } catch (Exception e) {
       terminalEmulator.stop();
@@ -165,11 +161,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     if (targetNode == null) {
       targetNode = findFirstNodeOfType(AbstractThreadGroup.class);
     }
-
     if (targetNode != null) {
       int i = targetNode.getChildCount() - 1;
       JMeterTreeNode c = null;
-      while ((i >= 0) && (targetNode != c)) {
+      while (i >= 0 && targetNode != c) {
         c = (JMeterTreeNode) targetNode.getChildAt(i);
         if (c.getTestElement() instanceof GenericController) {
           targetNode = c;
@@ -197,23 +192,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private JMeterTreeModel getJmeterTreeModel() {
     return GuiPackage.getInstance().getTreeModel();
-  }
-
-  private <T> void notifyChildren(Class<T> classFilter, Consumer<T> notificationMethod) {
-    JMeterTreeModel treeModel = getJmeterTreeModel();
-    JMeterTreeNode treeNode = treeModel.getNodeOf(this);
-    if (treeNode != null) {
-      Enumeration<?> kids = treeNode.children();
-      while (kids.hasMoreElements()) {
-        JMeterTreeNode subNode = (JMeterTreeNode) kids.nextElement();
-        if (subNode.isEnabled()) {
-          TestElement testElement = subNode.getTestElement();
-          if (classFilter.isInstance(testElement)) {
-            notificationMethod.accept(classFilter.cast(testElement));
-          }
-        }
-      }
-    }
   }
 
   private ConfigTestElement buildRteConfigElement() {
@@ -247,10 +225,26 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       LOG.error("Error placing sampler", exception);
       JMeterUtils.reportErrorToUser(exception.getMessage());
     }
-
   }
 
-  private RteSampleResult buildSampleResult() {
+  private <T> void notifyChildren(Class<T> classFilter, Consumer<T> notificationMethod) {
+    JMeterTreeModel treeModel = getJmeterTreeModel();
+    JMeterTreeNode treeNode = treeModel.getNodeOf(this);
+    if (treeNode != null) {
+      Enumeration<?> kids = treeNode.children();
+      while (kids.hasMoreElements()) {
+        JMeterTreeNode subNode = (JMeterTreeNode) kids.nextElement();
+        if (subNode.isEnabled()) {
+          TestElement testElement = subNode.getTestElement();
+          if (classFilter.isInstance(testElement)) {
+            notificationMethod.accept(classFilter.cast(testElement));
+          }
+        }
+      }
+    }
+  }
+
+  private RteSampleResult buildSampleResult(Action action) {
     RteSampleResult sampleResult = new RteSampleResult();
     sampleResult.setSampleLabel(getName());
     sampleResult.setServer(getServer());
@@ -258,8 +252,35 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult.setProtocol(getProtocol());
     sampleResult.setTerminalType(getTerminalType());
     sampleResult.setSslType(getSSLType());
+    sampleResult.setAction(action);
     sampleResult.sampleStart();
     return sampleResult;
+  }
+
+  private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
+    RTESampler sampler = new RTESampler();
+    sampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
+    sampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
+    sampler.setName(RTESampler.class.getSimpleName());
+    sampler.setAction(action);
+    if (inputs != null) {
+      sampler.setInputs(inputs);
+    }
+    if (attentionKey != null) {
+      sampler.setAttentionKey(attentionKey);
+    }
+    return sampler;
+  }
+
+  private void initTerminalEmulator() {
+    terminalEmulator.setKeyboardLock(true);
+    terminalEmulator.start();
+  }
+
+  private void initTerminalUpdater() {
+    terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
+    terminalClient.addTerminalStateListener(terminalEmulatorUpdater);
+    terminalEmulatorUpdater.onTerminalStateChange();
   }
 
   private void registerRequestListenerFor(SampleResult sampleResult) {
@@ -269,7 +290,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onRecordingStop() {
-    notifyTestEndedChildren();
+    notifyChildren(TestStateListener.class, TestStateListener::testEnded);
     terminalClient.removeTerminalStateListener(terminalEmulatorUpdater);
     terminalEmulator.stop();
     requestListener.stop();
@@ -278,10 +299,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     } catch (RteIOException e) {
       LOG.error("Problem while disconnecting from server", e);
     }
-  }
-
-  private void notifyTestEndedChildren() {
-    notifyChildren(TestStateListener.class, TestStateListener::testEnded);
   }
 
   @Override
@@ -317,26 +334,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private RteSampleResult buildSendInputSampleResult(AttentionKey attentionKey,
       List<Input> inputs) {
-    RteSampleResult ret = buildSampleResult();
-    ret.setAction(Action.SEND_INPUT);
+    RteSampleResult ret = buildSampleResult(Action.SEND_INPUT);
     ret.setInputs(inputs);
     ret.setAttentionKey(attentionKey);
     return ret;
-  }
-
-  private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
-    RTESampler sampler = new RTESampler();
-    sampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
-    sampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
-    sampler.setName(RTESampler.class.getSimpleName());
-    sampler.setAction(action);
-    if (inputs != null) {
-      sampler.setInputs(inputs);
-    }
-    if (attentionKey != null) {
-      sampler.setAttentionKey(attentionKey);
-    }
-    return sampler;
   }
 
 }

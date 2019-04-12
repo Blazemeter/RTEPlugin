@@ -467,7 +467,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   public SampleResult sample(Entry entry) {
     //TODO Connect action do not show response properly.
     RteSampleResult rteSampleResult = buildSampleResult();
-    rteSampleResult.sampleStart();
 
     RteProtocolClient client = null;
 

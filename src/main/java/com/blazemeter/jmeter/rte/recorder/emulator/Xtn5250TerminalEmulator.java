@@ -164,7 +164,6 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
   @Override
   public void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener) {
     terminalEmulatorListeners.add(terminalEmulatorListener);
-
   }
 
   @Override
@@ -174,15 +173,9 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
       attentionKey = KEY_EVENTS
           .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
       if (attentionKey != null) {
-        for (TerminalEmulatorListener g : terminalEmulatorListeners) {
-          List<Input> fields = new ArrayList<>();
-          for (XI5250Field f : getFields()) {
-            if (f.isMDTOn()) {
-              fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
-                  f.getTrimmedString()));
-            }
-          }
-          g.onAttentionKey(attentionKey, fields);
+        List<Input> fields = getInputFields();
+        for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+          listener.onAttentionKey(attentionKey, fields);
         }
       }
     }
@@ -190,6 +183,17 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
       super.processKeyEvent(e);
       updateStatusBarCursorPosition(this.getCursorCol(), this.getCursorRow());
     }
+  }
+
+  private List<Input> getInputFields() {
+    List<Input> fields = new ArrayList<>();
+    for (XI5250Field f : getFields()) {
+      if (f.isMDTOn()) {
+        fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
+            f.getTrimmedString()));
+      }
+    }
+    return fields;
   }
 
   private static class KeyEventMap {
