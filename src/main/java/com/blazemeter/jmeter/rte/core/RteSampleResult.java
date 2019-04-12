@@ -22,7 +22,7 @@ public class RteSampleResult extends SampleResult {
   private boolean inputInhibitedResponse;
   private Position cursorPosition;
   private boolean soundedAlarm;
-  private String screen;
+  private Screen screen;
 
   public void setServer(String server) {
     this.server = server;
@@ -72,10 +72,10 @@ public class RteSampleResult extends SampleResult {
     this.soundedAlarm = soundedAlarm;
   }
 
-  public void setScreen(String screen) {
+  public void setScreen(Screen screen) {
     this.screen = screen;
     setDataType(SampleResult.TEXT);
-    setResponseData(screen, "utf-8");
+    setResponseData(screen.toString(), "utf-8");
   }
 
   @Override
@@ -109,7 +109,7 @@ public class RteSampleResult extends SampleResult {
 
   @Override
   public String getResponseDataAsString() {
-    return screen;
+    return screen.toString();
   }
 
 }

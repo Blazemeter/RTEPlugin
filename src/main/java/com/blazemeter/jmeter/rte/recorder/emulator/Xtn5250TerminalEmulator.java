@@ -4,6 +4,7 @@ import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.Screen;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -115,25 +116,25 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
   }
 
   @Override
-  public void setCursor(int col, int row) {
+  public void setCursor(int row, int col) {
     this.setCursorPos(col, row);
-    updateStatusBarCursorPosition(col, row);
+    updateStatusBarCursorPosition(row, col);
   }
 
-  private void updateStatusBarCursorPosition(int col, int row) {
-    this.column.setText(Integer.toString(col));
+  private void updateStatusBarCursorPosition(int row, int col) {
     this.row.setText(Integer.toString(row));
+    this.column.setText(Integer.toString(col));
     this.status.repaint();
   }
 
   @Override
-  public void setScreen(List<Segment> segments) {
+  public void setScreen(Screen screen) {
     clear();
-    for (Segment s : segments) {
-      if (s instanceof Field) {
-        Field f = (Field) s;
+    for (Screen.Segment s : screen.getSegments()) {
+      if (s instanceof Screen.Field) {
+        Screen.Field f = (Screen.Field) s;
         XI5250Field xi5250Field = new XI5250Field(this, f.getColumn(), f.getRow(),
-            f.getLength(), 32);
+            f.getText().length(), 32);
         xi5250Field.setString(f.getText());
         addField(xi5250Field);
       } else {

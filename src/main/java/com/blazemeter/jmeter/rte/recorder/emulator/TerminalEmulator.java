@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
-import java.util.List;
+import com.blazemeter.jmeter.rte.core.Screen;
 
 public interface TerminalEmulator {
 
@@ -8,9 +8,9 @@ public interface TerminalEmulator {
 
   void stop();
 
-  void setCursor(int col, int row);
+  void setCursor(int row, int col);
 
-  void setScreen(List<Segment> segments);
+  void setScreen(Screen screen);
 
   void soundAlarm();
 

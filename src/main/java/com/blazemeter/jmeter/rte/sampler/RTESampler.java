@@ -398,6 +398,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return getLongProperty(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
   }
 
+  //TODO: This method is going to be used whenever waits are added to recorder
   public void setWaitConditions(List<WaitCondition> waitConditions) {
     for (WaitCondition waitCondition : waitConditions) {
       addWaitCondition(waitCondition);
@@ -469,14 +470,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     rteSampleResult.sampleStart();
 
     RteProtocolClient client = null;
-    
+
     try {
       client = getClient();
       if (getAction() == Action.DISCONNECT) {
         if (client != null) {
           disconnect(client);
         }
-        
+
         rteSampleResult.setSuccessful(true);
         rteSampleResult.sampleEnd();
         return rteSampleResult;
@@ -485,8 +486,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         client = buildClient();
       }
       rteSampleResult.connectEnd();
-      RequestListener requestListener = client.buildRequestListener(rteSampleResult);
-      
+      RequestListener<RteProtocolClient> requestListener = new RequestListener<>(rteSampleResult,
+          client);
+      client.addTerminalStateListener(requestListener);
+
       try {
         if (getAction() == Action.SEND_INPUT) {
           rteSampleResult.setInputInhibitedRequest(client.isInputInhibited());
@@ -500,6 +503,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         }
         updateSampleResultResponse(rteSampleResult, client);
       } finally {
+        client.resetAlarm();
         requestListener.stop();
       }
     } catch (InterruptedException e) {
@@ -507,7 +511,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       LOG.error("The sampling has been interrupted", e);
       return errorResult(e, rteSampleResult);
     } catch (TimeoutException e) {
-      return timeoutErrorResult(e, rteSampleResult, client != null ? client.getScreen() : "");
+      return timeoutErrorResult(e, rteSampleResult,
+          client != null ? client.getScreen().toString() : "");
     } catch (Exception e) {
       LOG.error("Error while sampling the remote terminal", e);
       return errorResult(e, rteSampleResult);
@@ -527,7 +532,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     ret.sampleStart();
     return ret;
   }
- 
+
   private RteProtocolClient getClient() {
     String clientId = buildConnectionId();
     Map<String, RteProtocolClient> clients = connections.get();
@@ -603,7 +608,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       RteProtocolClient client) {
     rteSampleResult.setSuccessful(true);
     rteSampleResult.setCursorPosition(client.getCursorPosition().orElse(null));
-    rteSampleResult.setSoundedAlarm(client.getSoundAlarm());
+    rteSampleResult.setSoundedAlarm(client.isAlarmOn());
     rteSampleResult.setInputInhibitedResponse(client.isInputInhibited());
     rteSampleResult.setScreen(client.getScreen());
   }

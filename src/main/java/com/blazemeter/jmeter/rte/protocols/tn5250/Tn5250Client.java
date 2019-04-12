@@ -11,9 +11,10 @@ import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
@@ -23,7 +24,7 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250TerminalStateListenerProxy;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import java.awt.Dimension;
@@ -33,11 +34,12 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.TerminalClient;
+import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
-import org.apache.jmeter.samplers.SampleResult;
 
 public class Tn5250Client extends BaseProtocolClient {
 
@@ -85,6 +87,8 @@ public class Tn5250Client extends BaseProtocolClient {
       };
 
   private TerminalClient client;
+  private Map<TerminalStateListener, Tn5250TerminalStateListenerProxy> listenersProxies =
+      new ConcurrentHashMap<>();
 
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
@@ -197,13 +201,25 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public RequestListener buildRequestListener(SampleResult result) {
-    return new Tn5250RequestListener(result, this);
+  public void addTerminalStateListener(TerminalStateListener listener) {
+    Tn5250TerminalStateListenerProxy proxy = new Tn5250TerminalStateListenerProxy(listener);
+    client.addEmulatorListener(proxy);
+    listenersProxies.put(listener, proxy);
+  }
+
+  public void removeTerminalStateListener(TerminalStateListener listener) {
+    Tn5250TerminalStateListenerProxy proxy = listenersProxies.remove(listener);
+    client.removeEmulatorListener(proxy);
   }
 
   @Override
-  public String getScreen() {
-    return client.getScreenText();
+  public Screen getScreen() {
+    Screen ret = new Screen(getScreenSize());
+    for (XI5250Field f : client.getFields()) {
+      // TODO fix!
+      ret.addField(1, 1, null);
+    }
+    return ret;
   }
 
   @Override
@@ -223,7 +239,12 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public boolean getSoundAlarm() {
+  public boolean isAlarmOn() {
+    return client.isAlarmOn();
+  }
+
+  @Override
+  public boolean resetAlarm() {
     return client.resetAlarm();
   }
 

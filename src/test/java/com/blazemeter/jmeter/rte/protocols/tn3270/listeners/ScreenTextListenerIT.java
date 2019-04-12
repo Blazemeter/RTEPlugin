@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.bytezone.dm3270.display.ScreenWatcher;
@@ -32,7 +33,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
   }
 
   private void setupScreenWithText(String screen) {
-    when(client.getScreen()).thenReturn(screen);
+    when(client.getScreen()).thenReturn(Screen.valueOf(screen));
     when(client.getScreenSize()).thenReturn(new Dimension(screen.length(), 1));
   }
 

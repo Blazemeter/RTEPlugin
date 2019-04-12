@@ -1,17 +1,15 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
-import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
-import org.apache.jmeter.samplers.SampleResult;
 
-public class Tn5250RequestListener extends RequestListener<Tn5250Client> implements
-    XI5250EmulatorListener {
+public class Tn5250TerminalStateListenerProxy implements XI5250EmulatorListener {
 
-  public Tn5250RequestListener(SampleResult result, Tn5250Client client) {
-    super(result, client);
-    client.addEmulatorListener(this);
+  private final TerminalStateListener listener;
+
+  public Tn5250TerminalStateListenerProxy(TerminalStateListener listener) {
+    this.listener = listener;
   }
 
   @Override
@@ -32,7 +30,7 @@ public class Tn5250RequestListener extends RequestListener<Tn5250Client> impleme
 
   @Override
   public void newPanelReceived(XI5250EmulatorEvent e) {
-    newScreenReceived();
+    listener.onTerminalStateChange();
   }
 
   @Override
@@ -41,12 +39,6 @@ public class Tn5250RequestListener extends RequestListener<Tn5250Client> impleme
 
   @Override
   public void dataSended(XI5250EmulatorEvent e) {
-  }
-
-  @Override
-  public void stop() {
-    super.stop();
-    client.removeEmulatorListener(this);
   }
 
 }

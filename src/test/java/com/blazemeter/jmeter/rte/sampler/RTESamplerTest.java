@@ -16,8 +16,8 @@ import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -63,8 +63,6 @@ public class RTESamplerTest {
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
-  @Mock
-  private RequestListener requestListenerMock;
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
 
@@ -84,10 +82,9 @@ public class RTESamplerTest {
   public void setup() {
     rteSampler = new RTESampler(p -> rteProtocolClientMock);
     when(rteProtocolClientMock.isInputInhibited()).thenReturn(true, false);
-    when(rteProtocolClientMock.getScreen()).thenReturn(TEST_SCREEN);
+    when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
 
-    when(rteProtocolClientMock.buildRequestListener(any())).thenReturn(requestListenerMock);
-    when(rteProtocolClientMock.getSoundAlarm()).thenReturn(false);
+    when(rteProtocolClientMock.resetAlarm()).thenReturn(false);
     when(rteProtocolClientMock.getCursorPosition()).thenReturn(Optional.of(new Position(1, 1)));
     createDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
@@ -204,7 +201,7 @@ public class RTESamplerTest {
     TimeoutException e = new TimeoutException();
     doThrow(e).
         when(rteProtocolClientMock).await(any());
-    when(rteProtocolClientMock.getScreen()).thenReturn(TEST_SCREEN);
+    when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
     assertSampleResult(rteSampler.sample(null),
         createExpectedTimeoutErrorResult(e, REQUEST_HEADERS_FORMAT, REQUEST_BODY));
   }
@@ -232,7 +229,7 @@ public class RTESamplerTest {
 
   @Test
   public void shouldGetSuccessfulSamplerWithResultAlarmHeaderResultWhenClientGetAlarmSignal() {
-    when(rteProtocolClientMock.getSoundAlarm()).thenReturn(true);
+    when(rteProtocolClientMock.resetAlarm()).thenReturn(true);
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = createExpectedSuccessfulResultWithAlarmHeader(
         String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE, Action.SEND_INPUT, true), REQUEST_BODY);

@@ -29,6 +29,7 @@ import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.protocol.http.control.RecordingController;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleListener;
+import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.threads.AbstractThreadGroup;
@@ -48,6 +49,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient RteSampleResult sampleResult;
   private transient RTESampler sampler;
   private transient RequestListener requestListener;
+  private transient TerminalEmulatorUpdater terminalEmulatorUpdater;
 
   public RTERecorder() {
     terminalEmulator = new Xtn5250TerminalEmulator();
@@ -138,19 +140,23 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
     // them to terminalEmulator
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
+    terminalEmulator.setKeyboardLock(true);
     terminalEmulator.start();
     sampleResult = buildSampleResult();
     sampleResult.setAction(Action.CONNECT);
-    sampleResult.sampleStart();
     sampler = buildSampler(Action.CONNECT, null, null);
     try {
       terminalClient
           .connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
               RTESampler.getStableTimeout());
       sampleResult.connectEnd();
-      requestListener = terminalClient.buildRequestListener(sampleResult);
+      terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
+      terminalClient.addTerminalStateListener(terminalEmulatorUpdater);
+      terminalEmulatorUpdater.onTerminalStateChange();
+      registerRequestListenerFor(sampleResult);
     } catch (Exception e) {
-      requestListener.stop();
+      terminalEmulator.stop();
+      terminalClient.disconnect();
       throw e;
     }
   }
@@ -253,12 +259,19 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult.setProtocol(getProtocol());
     sampleResult.setTerminalType(getTerminalType());
     sampleResult.setSslType(getSSLType());
+    sampleResult.sampleStart();
     return sampleResult;
+  }
+
+  private void registerRequestListenerFor(SampleResult sampleResult) {
+    requestListener = new RequestListener<>(sampleResult, terminalClient);
+    terminalClient.addTerminalStateListener(requestListener);
   }
 
   @Override
   public void onRecordingStop() {
     notifyTestEndedChildren();
+    terminalClient.removeTerminalStateListener(terminalEmulatorUpdater);
     terminalEmulator.stop();
     requestListener.stop();
     try {
@@ -280,17 +293,16 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
+    terminalEmulator.setKeyboardLock(true);
     requestListener.stop();
     RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
+    terminalClient.resetAlarm();
     notifyChildren(SampleListener.class,
         t -> t.sampleOccurred(new SampleEvent(sampleResult, "Thread Group", "Recorded")));
     //TODO set proper waits for sampler
     addTestElementToTestPlan(sampler, samplersTargetNode);
-    sampleResult = buildSampleResult();
-    sampleResult.setAction(Action.SEND_INPUT);
-    sampleResult.setInputs(inputs);
-    sampleResult.setAttentionKey(attentionKey);
-    requestListener = terminalClient.buildRequestListener(sampleResult);
+    sampleResult = buildSendInputSampleResult(attentionKey, inputs);
+    registerRequestListenerFor(sampleResult);
     sampler = buildSampler(Action.SEND_INPUT, inputs, attentionKey);
     try {
       terminalClient.send(inputs, attentionKey);
@@ -300,6 +312,15 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       RTESampler.errorResult(e, sampleResult);
       terminalEmulator.setStatusMessage(e.getMessage());
     }
+  }
+
+  private RteSampleResult buildSendInputSampleResult(AttentionKey attentionKey,
+      List<Input> inputs) {
+    RteSampleResult ret = buildSampleResult();
+    ret.setAction(Action.SEND_INPUT);
+    ret.setInputs(inputs);
+    ret.setAttentionKey(attentionKey);
+    return ret;
   }
 
   private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
