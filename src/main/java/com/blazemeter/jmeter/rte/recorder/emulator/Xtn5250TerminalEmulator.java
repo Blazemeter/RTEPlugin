@@ -75,17 +75,17 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
+  private JFrame frame;
 
   @Override
   public void start() {
     setCrtSize(COLUMN, ROWS);
     setDefBackground(BACKGROUND);
-    setReferenceCursor(true);
     setBlinkingCursor(true);
     setEnabled(true);
-    JFrame frm = new JFrame(TITLE);
-    frm.setLayout(new BorderLayout());
-    frm.add(this, BorderLayout.CENTER);
+    frame = new JFrame(TITLE);
+    frame.setLayout(new BorderLayout());
+    frame.add(this, BorderLayout.CENTER);
     status = new JPanel();
     status.setLayout(new FlowLayout());
     column.setText("0");
@@ -94,25 +94,24 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
     status.add(column);
     status.add(row);
     status.add(message);
-    frm.add(status, BorderLayout.SOUTH);
-    frm.addWindowListener(new WindowAdapter() {
+    frame.add(status, BorderLayout.SOUTH);
+    frame.addWindowListener(new WindowAdapter() {
       @Override
       public void windowClosed(WindowEvent e) {
         for (TerminalEmulatorListener g : terminalEmulatorListeners) {
           g.onCloseTerminal();
         }
-        System.exit(0);
       }
     });
-
-    frm.setBounds(0, 0, WIDTH, HEIGHT);
-    frm.setVisible(true);
+    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    frame.setBounds(0, 0, WIDTH, HEIGHT);
+    frame.setVisible(true);
 
   }
 
   @Override
   public void stop() {
-    //TODO
+    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
   }
 
   @Override

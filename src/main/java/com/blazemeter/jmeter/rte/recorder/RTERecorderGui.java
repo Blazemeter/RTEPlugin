@@ -10,13 +10,15 @@ import org.apache.jmeter.gui.util.MenuFactory;
 import org.apache.jmeter.testelement.TestElement;
 
 public class RTERecorderGui extends LogicControllerGui implements JMeterGUIComponent,
-    UnsharedComponent {
+    UnsharedComponent, RecordingStateListener {
 
   private RTERecorderPanel recordingPanel;
   private RTERecorder rteRecorder;
 
   public RTERecorderGui() {
     recordingPanel = new RTERecorderPanel(this);
+    rteRecorder = new RTERecorder();
+    rteRecorder.addRecordingStateListener(recordingPanel);
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
     add(makeTitlePanel(), BorderLayout.NORTH);
@@ -40,7 +42,6 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
 
   @Override
   public TestElement createTestElement() {
-    rteRecorder = new RTERecorder();
     configureTestElement(rteRecorder);
     return rteRecorder;
   }
@@ -73,14 +74,15 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     }
   }
 
-  public void startRecording() {
+  @Override
+  public void onRecordingStart() throws Exception {
     modifyTestElement(rteRecorder);
-    rteRecorder.start();
+    rteRecorder.onRecordingStart();
   }
 
-  public void stopRecording() {
-    modifyTestElement(rteRecorder);
-    rteRecorder.stop();
+  @Override
+  public void onRecordingStop() {
+    rteRecorder.onRecordingStop();
   }
 
 }

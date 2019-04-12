@@ -34,6 +34,7 @@ public class Test {
     public void onCloseTerminal() {
       closed = true;
       System.out.println("Terminal Closed");
+      System.exit(0);
     }
 
     @Override

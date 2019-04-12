@@ -165,7 +165,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return prop == 0L ? defaultValue : prop;
   }
 
-  private long getStableTimeout() {
+  public static long getStableTimeout() {
     return JMeterUtils.getPropDefault(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
   }
 
@@ -504,11 +504,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return errorResult("The sampling has been interrupted", e, rteSampleResult);
+      LOG.error("The sampling has been interrupted", e);
+      return errorResult(e, rteSampleResult);
     } catch (TimeoutException e) {
       return timeoutErrorResult(e, rteSampleResult, client != null ? client.getScreen() : "");
     } catch (Exception e) {
-      return errorResult("Error while sampling the remote terminal", e, rteSampleResult);
+      LOG.error("Error while sampling the remote terminal", e);
+      return errorResult(e, rteSampleResult);
     }
     return rteSampleResult;
   }
@@ -597,7 +599,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         getStableTimeout());
   }
 
-  private void updateSampleResultResponse(RteSampleResult rteSampleResult,
+  public static void updateSampleResultResponse(RteSampleResult rteSampleResult,
       RteProtocolClient client) {
     rteSampleResult.setSuccessful(true);
     rteSampleResult.setCursorPosition(client.getCursorPosition().orElse(null));
@@ -606,7 +608,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     rteSampleResult.setScreen(client.getScreen());
   }
 
-  private SampleResult errorResult(String message, Throwable e, SampleResult sampleResult) {
+  public static SampleResult errorResult(Throwable e, SampleResult sampleResult) {
     sampleResult.setSuccessful(false);
     sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
@@ -615,7 +617,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));
     sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    LOG.error(message, e);
     return sampleResult;
   }
 

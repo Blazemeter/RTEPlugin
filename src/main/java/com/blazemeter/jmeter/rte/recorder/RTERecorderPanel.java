@@ -18,19 +18,19 @@ import javax.swing.JPanel;
 import org.apache.jmeter.gui.util.JMeterToolBar;
 import org.apache.jmeter.util.JMeterUtils;
 
-public class RTERecorderPanel extends JPanel implements ActionListener {
+public class RTERecorderPanel extends JPanel implements ActionListener, RecordingStateListener {
 
   private static final String ADD_ACTION_START = "addActionStart";
   private static final String ADD_ACTION_STOP = "addActionStop";
   private static final String ADD_ACTION_RESTART = "addActionRestart";
-  private final RTERecorderGui rteRecorderGui;
+  private final RecordingStateListener recordingStateListener;
   private final RTEConfigPanel configPanel;
   private JButton startButton;
   private JButton stopButton;
   private JButton restartButton;
 
-  public RTERecorderPanel(RTERecorderGui rteRecorderGui) {
-    this.rteRecorderGui = rteRecorderGui;
+  public RTERecorderPanel(RecordingStateListener recordingStateListener) {
+    this.recordingStateListener = recordingStateListener;
 
     GroupLayout layout = new GroupLayout(this);
     layout.setAutoCreateGaps(true);
@@ -143,18 +143,18 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
       switch (action) {
         case ADD_ACTION_START:
           LOG.debug("WhenStartIsPressed");
-          rteRecorderGui.startRecording();
+          recordingStateListener.onRecordingStart();
           updateButtonsIfRunning(true);
           break;
         case ADD_ACTION_STOP:
           LOG.debug("WhenStopIsPressed");
-          rteRecorderGui.stopRecording();
+          recordingStateListener.onRecordingStop();
           updateButtonsIfRunning(false);
           break;
         case ADD_ACTION_RESTART:
           LOG.debug("WhenRestartIsPressed");
-          rteRecorderGui.stopRecording();
-          rteRecorderGui.startRecording();
+          recordingStateListener.onRecordingStop();
+          recordingStateListener.onRecordingStart();
           updateButtonsIfRunning(true);
           break;
         default:
@@ -164,6 +164,16 @@ public class RTERecorderPanel extends JPanel implements ActionListener {
       LOG.error("Problem performing requested action {}", action, ex);
       JMeterUtils.reportErrorToUser(ex.getMessage());
     }
+  }
+
+  @Override
+  public void onRecordingStart() {
+    updateButtonsIfRunning(true);
+  }
+
+  @Override
+  public void onRecordingStop() {
+    updateButtonsIfRunning(false);
   }
 
 }

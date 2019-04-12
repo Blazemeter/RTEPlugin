@@ -1,22 +1,22 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
-import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.LabelInput;
-import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
-import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
-import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
+import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulatorListener;
+import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulator;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.function.Consumer;
@@ -36,9 +36,23 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RTERecorder extends GenericController {
+public class RTERecorder extends GenericController implements TerminalEmulatorListener,
+    RecordingStateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
+
+  private transient TerminalEmulator terminalEmulator;
+  private transient JMeterTreeNode samplersTargetNode;
+  private transient List<RecordingStateListener> recordingListeners = new ArrayList<>();
+  private transient RteProtocolClient terminalClient;
+  private transient RteSampleResult sampleResult;
+  private transient RTESampler sampler;
+  private transient RequestListener requestListener;
+
+  public RTERecorder() {
+    terminalEmulator = new Xtn5250TerminalEmulator();
+    terminalEmulator.addTerminalEmulatorListener(this);
+  }
 
   @Override
   public String getName() {
@@ -113,11 +127,32 @@ public class RTERecorder extends GenericController {
     setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }
 
-  public void start() {
-    JMeterTreeNode samplersTargetNode = findTargetControllerNode();
-    notifyChildren(TestStateListener.class, TestStateListener::testStarted);
+  public void addRecordingStateListener(RecordingStateListener listener) {
+    recordingListeners.add(listener);
+  }
+
+  public void onRecordingStart() throws Exception {
+    samplersTargetNode = findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
-    addDummyInteraction(samplersTargetNode);
+    terminalClient = getProtocol().createProtocolClient();
+    // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
+    // them to terminalEmulator
+    notifyChildren(TestStateListener.class, TestStateListener::testStarted);
+    terminalEmulator.start();
+    sampleResult = buildSampleResult();
+    sampleResult.setAction(Action.CONNECT);
+    sampleResult.sampleStart();
+    sampler = buildSampler(Action.CONNECT, null, null);
+    try {
+      terminalClient
+          .connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
+              RTESampler.getStableTimeout());
+      sampleResult.connectEnd();
+      requestListener = terminalClient.buildRequestListener(sampleResult);
+    } catch (Exception e) {
+      requestListener.stop();
+      throw e;
+    }
   }
 
   private JMeterTreeNode findTargetControllerNode() {
@@ -210,45 +245,7 @@ public class RTERecorder extends GenericController {
 
   }
 
-  private void addDummyInteraction(JMeterTreeNode samplersTarget) {
-    //Dummy values for test
-    Action action = Action.SEND_INPUT;
-    AttentionKey attentionKey = AttentionKey.F1;
-    Position position = new Position(1, 5);
-    List<Input> inputs = Arrays.asList(new CoordInput(new Position(2, 3), "testusr"),
-        new LabelInput("PASSWORD", "testpsw"));
-    String screen = "screen";
-    boolean requestInputInhibited = false;
-    boolean responseInputInhibited = false;
-    boolean alarm = true;
-    List<WaitCondition> waitConditions = Collections
-        .singletonList(new SilentWaitCondition(5000, 1000));
-
-    addTestElementToTestPlan(buildRteSampler(action, attentionKey, inputs, waitConditions),
-        samplersTarget);
-    SampleEvent sampleEvent = new SampleEvent(
-        buildSampleResult(action, requestInputInhibited, inputs, attentionKey,
-            responseInputInhibited, position, alarm, screen), "Thread Group", "Recorded");
-    notifyChildren(SampleListener.class, t -> t.sampleOccurred(sampleEvent));
-  }
-
-  private RTESampler buildRteSampler(Action action, AttentionKey attentionKey, List<Input> inputs,
-      List<WaitCondition> waitConditions) {
-    RTESampler rteSampler = new RTESampler();
-    rteSampler.setWaitSync(false);
-    rteSampler.setAction(action);
-    rteSampler.setName(RTESampler.class.getSimpleName());
-    rteSampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
-    rteSampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
-    rteSampler.setInputs(inputs);
-    rteSampler.setAttentionKey(attentionKey);
-    rteSampler.setWaitConditions(waitConditions);
-    return rteSampler;
-  }
-
-  private RteSampleResult buildSampleResult(Action action, boolean inputInhibitedRequest,
-      List<Input> inputs, AttentionKey attentionKey, boolean responseInputInhibited,
-      Position position, boolean alarm, String screen) {
+  private RteSampleResult buildSampleResult() {
     RteSampleResult sampleResult = new RteSampleResult();
     sampleResult.setSampleLabel(getName());
     sampleResult.setServer(getServer());
@@ -256,24 +253,68 @@ public class RTERecorder extends GenericController {
     sampleResult.setProtocol(getProtocol());
     sampleResult.setTerminalType(getTerminalType());
     sampleResult.setSslType(getSSLType());
-
-    sampleResult.setAction(action);
-    sampleResult.setInputInhibitedRequest(inputInhibitedRequest);
-    sampleResult.setInputs(inputs);
-    sampleResult.setAttentionKey(attentionKey);
-    sampleResult.sampleStart();
-
-    sampleResult.setSuccessful(true);
-    sampleResult.setInputInhibitedResponse(responseInputInhibited);
-    sampleResult.setCursorPosition(position);
-    sampleResult.setSoundedAlarm(alarm);
-    sampleResult.setScreen(screen);
-    sampleResult.sampleEnd();
     return sampleResult;
   }
 
-  public void stop() {
+  @Override
+  public void onRecordingStop() {
+    notifyTestEndedChildren();
+    terminalEmulator.stop();
+    requestListener.stop();
+    try {
+      terminalClient.disconnect();
+    } catch (RteIOException e) {
+      LOG.error("Problem while disconnecting from server", e);
+    }
+  }
+
+  private void notifyTestEndedChildren() {
     notifyChildren(TestStateListener.class, TestStateListener::testEnded);
+  }
+
+  @Override
+  public void onCloseTerminal() {
+    onRecordingStop();
+    recordingListeners.forEach(RecordingStateListener::onRecordingStop);
+  }
+
+  @Override
+  public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
+    requestListener.stop();
+    RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
+    notifyChildren(SampleListener.class,
+        t -> t.sampleOccurred(new SampleEvent(sampleResult, "Thread Group", "Recorded")));
+    //TODO set proper waits for sampler
+    addTestElementToTestPlan(sampler, samplersTargetNode);
+    sampleResult = buildSampleResult();
+    sampleResult.setAction(Action.SEND_INPUT);
+    sampleResult.setInputs(inputs);
+    sampleResult.setAttentionKey(attentionKey);
+    requestListener = terminalClient.buildRequestListener(sampleResult);
+    sampler = buildSampler(Action.SEND_INPUT, inputs, attentionKey);
+    try {
+      terminalClient.send(inputs, attentionKey);
+    } catch (RteIOException e) {
+      //TODO properly handle disconnection
+      LOG.error("Problem sending input to server", e);
+      RTESampler.errorResult(e, sampleResult);
+      terminalEmulator.setStatusMessage(e.getMessage());
+    }
+  }
+
+  private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
+    RTESampler sampler = new RTESampler();
+    sampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
+    sampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
+    sampler.setName(RTESampler.class.getSimpleName());
+    sampler.setAction(action);
+    if (inputs != null) {
+      sampler.setInputs(inputs);
+    }
+    if (attentionKey != null) {
+      sampler.setAttentionKey(attentionKey);
+    }
+    return sampler;
   }
 
 }
