@@ -16,7 +16,6 @@ import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.function.Consumer;
@@ -44,7 +43,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private transient TerminalEmulator terminalEmulator;
   private transient JMeterTreeNode samplersTargetNode;
-  private transient List<RecordingStateListener> recordingListeners = new ArrayList<>();
+  private transient RecordingStateListener recordingListener;
   private transient RteProtocolClient terminalClient;
   private transient RteSampleResult sampleResult;
   private transient RTESampler sampler;
@@ -129,8 +128,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }
 
-  public void addRecordingStateListener(RecordingStateListener listener) {
-    recordingListeners.add(listener);
+  public void setRecordingStateListener(RecordingStateListener listener) {
+    recordingListener = listener;
   }
 
   public void onRecordingStart() throws Exception {
@@ -288,7 +287,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   @Override
   public void onCloseTerminal() {
     onRecordingStop();
-    recordingListeners.forEach(RecordingStateListener::onRecordingStop);
+    if (recordingListener != null) {
+      recordingListener.onRecordingStop();
+    }
   }
 
   @Override

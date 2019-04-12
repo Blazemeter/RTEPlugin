@@ -91,6 +91,9 @@ public class RteSampleResult extends SampleResult {
 
   @Override
   public String getSamplerData() {
+    if (attentionKey == null) {
+      return "";
+    }
     return "AttentionKey: " + attentionKey + "\n"
         + "Inputs:\n"
         + inputs.stream()

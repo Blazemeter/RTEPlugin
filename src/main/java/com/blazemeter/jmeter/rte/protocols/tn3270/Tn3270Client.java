@@ -220,14 +220,16 @@ public class Tn3270Client extends BaseProtocolClient {
     Screen ret = new Screen(size);
     for (Field f : client.getFields()) {
       int linealPosition = f.getFirstLocation() - 1;
-      int row = (linealPosition / size.width);
-      int column = (linealPosition % size.width);
-      String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
-      //TODO change segments in emulator to be one indexed
-      if (f.isProtected()) {
-        ret.addSegment(row, column, text);
-      } else {
-        ret.addField(row, column, text);
+      // linealPosition might be less than 1 in some screens with some weird screens
+      if (linealPosition >= 0) {
+        int row = (linealPosition / size.width) + 1;
+        int column = (linealPosition % size.width) + 1;
+        String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
+        if (f.isProtected()) {
+          ret.addSegment(row, column, text);
+        } else {
+          ret.addField(row, column, text);
+        }
       }
     }
     return ret;

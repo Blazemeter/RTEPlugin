@@ -63,8 +63,8 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
       };
 
   private static final String TITLE = "Recorder";
-  private static final int COLUMN = 81;
-  private static final int ROWS = 25;
+  private static final int COLUMNS = 80;
+  private static final int ROWS = 24;
   private static final int WIDTH = 728;
   private static final int HEIGHT = 512;
   private static final Color BACKGROUND = Color.black;
@@ -80,7 +80,7 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
 
   @Override
   public void start() {
-    setCrtSize(COLUMN, ROWS);
+    setCrtSize(COLUMNS, ROWS);
     setDefBackground(BACKGROUND);
     setBlinkingCursor(true);
     setEnabled(true);
@@ -117,7 +117,7 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
 
   @Override
   public void setCursor(int row, int col) {
-    this.setCursorPos(col, row);
+    this.setCursorPos(col - 1, row - 1);
     updateStatusBarCursorPosition(row, col);
   }
 
@@ -133,12 +133,13 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
     for (Screen.Segment s : screen.getSegments()) {
       if (s instanceof Screen.Field) {
         Screen.Field f = (Screen.Field) s;
-        XI5250Field xi5250Field = new XI5250Field(this, f.getColumn(), f.getRow(),
+        XI5250Field xi5250Field = new XI5250Field(this, f.getColumn() - 1, f.getRow() - 1,
             f.getText().length(), 32);
         xi5250Field.setString(f.getText());
+        xi5250Field.resetMDT();
         addField(xi5250Field);
       } else {
-        drawString(s.getText(), s.getColumn(), s.getRow());
+        drawString(s.getText(), s.getColumn() - 1, s.getRow() - 1);
       }
     }
     initAllFields();
@@ -176,7 +177,10 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
         for (TerminalEmulatorListener g : terminalEmulatorListeners) {
           List<Input> fields = new ArrayList<>();
           for (XI5250Field f : getFields()) {
-            fields.add(new CoordInput(new Position(f.getRow(), f.getCol()), f.getString()));
+            if (f.isMDTOn()) {
+              fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
+                  f.getTrimmedString()));
+            }
           }
           g.onAttentionKey(attentionKey, fields);
         }

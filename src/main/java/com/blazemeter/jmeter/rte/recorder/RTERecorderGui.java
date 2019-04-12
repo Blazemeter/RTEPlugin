@@ -13,12 +13,10 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     UnsharedComponent, RecordingStateListener {
 
   private RTERecorderPanel recordingPanel;
-  private RTERecorder rteRecorder;
+  private RTERecorder recorder;
 
   public RTERecorderGui() {
     recordingPanel = new RTERecorderPanel(this);
-    rteRecorder = new RTERecorder();
-    rteRecorder.addRecordingStateListener(recordingPanel);
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
     add(makeTitlePanel(), BorderLayout.NORTH);
@@ -42,6 +40,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
 
   @Override
   public TestElement createTestElement() {
+    RTERecorder rteRecorder = new RTERecorder();
     configureTestElement(rteRecorder);
     return rteRecorder;
   }
@@ -50,7 +49,8 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
   public void modifyTestElement(TestElement te) {
     configureTestElement(te);
     if (te instanceof RTERecorder) {
-      RTERecorder recorder = (RTERecorder) te;
+      recorder = (RTERecorder) te;
+      recorder.setRecordingStateListener(recordingPanel);
       recorder.setServer(recordingPanel.getServer());
       recorder.setPort(recordingPanel.getPort());
       recorder.setProtocol(recordingPanel.getProtocol());
@@ -76,13 +76,13 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
 
   @Override
   public void onRecordingStart() throws Exception {
-    modifyTestElement(rteRecorder);
-    rteRecorder.onRecordingStart();
+    modifyTestElement(recorder);
+    recorder.onRecordingStart();
   }
 
   @Override
   public void onRecordingStop() {
-    rteRecorder.onRecordingStop();
+    recorder.onRecordingStop();
   }
 
 }

@@ -18,9 +18,8 @@ public class TerminalEmulatorUpdater implements TerminalStateListener {
   @Override
   public void onTerminalStateChange() {
     terminalEmulator.setScreen(terminalClient.getScreen());
-    //TODO change terminalEmulator to use 1 indexed row and column
     terminalClient.getCursorPosition().ifPresent(cursorPosition -> terminalEmulator
-        .setCursor(cursorPosition.getRow() - 1, cursorPosition.getColumn() - 1));
+        .setCursor(cursorPosition.getRow(), cursorPosition.getColumn()));
     terminalEmulator.setKeyboardLock(terminalClient.isInputInhibited());
     if (terminalClient.isAlarmOn()) {
       terminalEmulator.soundAlarm();
