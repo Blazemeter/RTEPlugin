@@ -89,11 +89,13 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
     frame.add(this, BorderLayout.CENTER);
     status = new JPanel();
     status.setLayout(new FlowLayout());
-    column.setText("0");
     row.setText("0");
+    column.setText("0");
     message.setText("");
-    status.add(column);
+    status.add(new JLabel("row: "));
     status.add(row);
+    status.add(new JLabel(" / column: "));
+    status.add(column);
     status.add(message);
     frame.add(status, BorderLayout.SOUTH);
     frame.addWindowListener(new WindowAdapter() {
@@ -128,8 +130,9 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
   }
 
   @Override
-  public void setScreen(Screen screen) {
+  public synchronized void setScreen(Screen screen) {
     clear();
+    removeFields();
     for (Screen.Segment s : screen.getSegments()) {
       if (s instanceof Screen.Field) {
         Screen.Field f = (Screen.Field) s;
@@ -181,7 +184,7 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
     }
     if (!locked || attentionKey != null) {
       super.processKeyEvent(e);
-      updateStatusBarCursorPosition(this.getCursorCol(), this.getCursorRow());
+      updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
     }
   }
 
