@@ -7,7 +7,6 @@ import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -17,13 +16,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 
-public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulator {
+public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
   private static final Map<KeyEventMap, AttentionKey> KEY_EVENTS =
       new HashMap<KeyEventMap, AttentionKey>() {
@@ -69,36 +72,33 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
   private static final int HEIGHT = 512;
   private static final Color BACKGROUND = Color.black;
 
-  private JLabel column = new JLabel();
-  private JLabel row = new JLabel();
-  private JLabel message = new JLabel();
-  private JPanel status;
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private JFrame frame;
+  private XI5250Crt xi5250Crt;
+  private StatusPanel statusPanel;
 
   @Override
   public void start() {
-    setCrtSize(COLUMNS, ROWS);
-    setDefBackground(BACKGROUND);
-    setBlinkingCursor(true);
-    setEnabled(true);
+    xi5250Crt = new customXI5250Crt();
+    xi5250Crt.setCrtSize(COLUMNS, ROWS);
+    xi5250Crt.setDefBackground(BACKGROUND);
+    xi5250Crt.setBlinkingCursor(true);
+    xi5250Crt.setEnabled(true);
+
     frame = new JFrame(TITLE);
     frame.setLayout(new BorderLayout());
-    frame.add(this, BorderLayout.CENTER);
-    status = new JPanel();
-    status.setLayout(new FlowLayout());
-    row.setText("0");
-    column.setText("0");
-    message.setText("");
-    status.add(new JLabel("row: "));
-    status.add(row);
-    status.add(new JLabel(" / column: "));
-    status.add(column);
-    status.add(message);
-    frame.add(status, BorderLayout.SOUTH);
+    frame.add(xi5250Crt, BorderLayout.CENTER);
+    statusPanel = new StatusPanel();
+    frame.add(statusPanel, BorderLayout.SOUTH);
     frame.addWindowListener(new WindowAdapter() {
+
+      @Override
+      public void windowOpened(WindowEvent e) {
+        xi5250Crt.requestFocus();
+      }
+
       @Override
       public void windowClosed(WindowEvent e) {
         for (TerminalEmulatorListener g : terminalEmulatorListeners) {
@@ -110,6 +110,7 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
     frame.setBounds(0, 0, WIDTH, HEIGHT);
     frame.setVisible(true);
 
+
   }
 
   @Override
@@ -119,33 +120,27 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
 
   @Override
   public void setCursor(int row, int col) {
-    this.setCursorPos(col - 1, row - 1);
-    updateStatusBarCursorPosition(row, col);
-  }
-
-  private void updateStatusBarCursorPosition(int row, int col) {
-    this.row.setText(Integer.toString(row));
-    this.column.setText(Integer.toString(col));
-    this.status.repaint();
+    xi5250Crt.setCursorPos(col - 1, row - 1);
+    this.statusPanel.updateStatusBarCursorPosition(row, col);
   }
 
   @Override
   public synchronized void setScreen(Screen screen) {
-    clear();
-    removeFields();
+    xi5250Crt.clear();
+    xi5250Crt.removeFields();
     for (Screen.Segment s : screen.getSegments()) {
       if (s instanceof Screen.Field) {
         Screen.Field f = (Screen.Field) s;
-        XI5250Field xi5250Field = new XI5250Field(this, f.getColumn() - 1, f.getRow() - 1,
+        XI5250Field xi5250Field = new XI5250Field(xi5250Crt, f.getColumn() - 1, f.getRow() - 1,
             f.getText().length(), 32);
         xi5250Field.setString(f.getText());
         xi5250Field.resetMDT();
-        addField(xi5250Field);
+        xi5250Crt.addField(xi5250Field);
       } else {
-        drawString(s.getText(), s.getColumn() - 1, s.getRow() - 1);
+        xi5250Crt.drawString(s.getText(), s.getColumn() - 1, s.getRow() - 1);
       }
     }
-    initAllFields();
+    xi5250Crt.initAllFields();
   }
 
   @Override
@@ -155,13 +150,13 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
 
   @Override
   public void setStatusMessage(String message) {
-    this.message.setText(message);
-    this.status.repaint();
+    this.statusPanel.setStatusMessage(message);
   }
 
   @Override
   public void setKeyboardLock(boolean lock) {
     this.locked = lock;
+    this.statusPanel.setKeyboardStatus(lock);
   }
 
   @Override
@@ -169,28 +164,9 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
     terminalEmulatorListeners.add(terminalEmulatorListener);
   }
 
-  @Override
-  protected synchronized void processKeyEvent(KeyEvent e) {
-    AttentionKey attentionKey = null;
-    if (e.getID() == KeyEvent.KEY_PRESSED) {
-      attentionKey = KEY_EVENTS
-          .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-      if (attentionKey != null) {
-        List<Input> fields = getInputFields();
-        for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-          listener.onAttentionKey(attentionKey, fields);
-        }
-      }
-    }
-    if (!locked || attentionKey != null) {
-      super.processKeyEvent(e);
-      updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
-    }
-  }
-
   private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
-    for (XI5250Field f : getFields()) {
+    for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
         fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
             f.getTrimmedString()));
@@ -229,4 +205,108 @@ public class Xtn5250TerminalEmulator extends XI5250Crt implements TerminalEmulat
 
   }
 
+  private class customXI5250Crt extends XI5250Crt {
+
+    @Override
+    protected synchronized void processKeyEvent(KeyEvent e) {
+      AttentionKey attentionKey = null;
+      if (e.getID() == KeyEvent.KEY_PRESSED) {
+        attentionKey = KEY_EVENTS
+            .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
+        if (attentionKey != null) {
+          List<Input> fields = getInputFields();
+          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+            listener.onAttentionKey(attentionKey, fields);
+          }
+        }
+      }
+      if (!locked || attentionKey != null) {
+        super.processKeyEvent(e);
+        statusPanel
+            .updateStatusBarCursorPosition(this.getCursorCol() + 1, this.getCursorRow() + 1);
+      }
+    }
+  }
+
+  private static class StatusPanel extends JPanel {
+
+    private static final ImageIcon ALARM_ICON = new ImageIcon(
+        StatusPanel.class.getResource("/alarm.png"));
+    private static final ImageIcon KEYBOARD_LOCKED_ICON = new ImageIcon(
+        StatusPanel.class.getResource("/keyboard-locked.png"));
+    private static final ImageIcon KEYBOARD_UNLOCKED_ICON = new ImageIcon(
+        StatusPanel.class.getResource("/keyboard-unlocked.png"));
+    private static final ImageIcon HELP_ICON = new ImageIcon(
+        StatusPanel.class.getResource("/help.png"));
+
+    private JLabel positionLabel = new JLabel("Row Column - 0 0");
+    private JLabel messageLabel = new JLabel("");
+    private JLabel alarmLabel = new JLabel(ALARM_ICON);
+    private JLabel keyboardLabel = new JLabel(KEYBOARD_UNLOCKED_ICON);
+    private JLabel helpLabel = new JLabel(HELP_ICON);
+
+    StatusPanel() {
+      super();
+
+      JPanel iconsPanel = new JPanel();
+      GroupLayout iconsLayout = new GroupLayout(iconsPanel);
+      iconsLayout.setAutoCreateGaps(true);
+      iconsPanel.setLayout(iconsLayout);
+
+      iconsLayout.setHorizontalGroup(iconsLayout.createSequentialGroup()
+          .addComponent(keyboardLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+              KEYBOARD_LOCKED_ICON.getIconWidth())
+          .addComponent(alarmLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+              ALARM_ICON.getIconWidth())
+          .addComponent(helpLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
+              HELP_ICON.getIconWidth()));
+      iconsLayout.setVerticalGroup(iconsLayout.createParallelGroup(Alignment.BASELINE)
+          .addComponent(keyboardLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE)
+          .addComponent(alarmLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE)
+          .addComponent(helpLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE));
+
+      GroupLayout layout = new GroupLayout(this);
+      layout.setAutoCreateGaps(true);
+      setLayout(layout);
+
+      layout.setHorizontalGroup(layout.createSequentialGroup()
+          .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+              positionLabel.getText().length())
+          .addPreferredGap(ComponentPlacement.UNRELATED)
+          .addComponent(messageLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+              Short.MAX_VALUE)
+          .addPreferredGap(ComponentPlacement.UNRELATED)
+          .addComponent(iconsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+              HELP_ICON.getIconWidth() * 3));
+      layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+          .addComponent(positionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE)
+          .addComponent(messageLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE)
+          .addComponent(iconsPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE));
+    }
+
+    private void updateStatusBarCursorPosition(int row, int col) {
+      this.positionLabel.setText("row: " + row + " / column: " + col);
+      repaint();
+    }
+
+    public void setStatusMessage(String message) {
+      this.messageLabel.setText(message);
+      repaint();
+    }
+
+    public void setKeyboardStatus(boolean locked) {
+      if (locked) {
+        this.keyboardLabel.setIcon(KEYBOARD_LOCKED_ICON);
+      } else {
+        this.keyboardLabel.setIcon(KEYBOARD_UNLOCKED_ICON);
+      }
+    }
+
+  }
 }
