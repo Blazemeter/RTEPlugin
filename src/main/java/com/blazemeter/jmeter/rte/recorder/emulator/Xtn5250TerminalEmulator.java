@@ -6,9 +6,12 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -16,6 +19,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
@@ -72,7 +79,6 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   private static final int HEIGHT = 512;
   private static final Color BACKGROUND = Color.black;
 
-
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private JFrame frame;
@@ -81,7 +87,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
   @Override
   public void start() {
-    xi5250Crt = new customXI5250Crt();
+    xi5250Crt = new CustomXI5250Crt();
     xi5250Crt.setCrtSize(COLUMNS, ROWS);
     xi5250Crt.setDefBackground(BACKGROUND);
     xi5250Crt.setBlinkingCursor(true);
@@ -104,13 +110,12 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         for (TerminalEmulatorListener g : terminalEmulatorListeners) {
           g.onCloseTerminal();
         }
+        statusPanel.dispose();
       }
     });
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     frame.setBounds(0, 0, WIDTH, HEIGHT);
     frame.setVisible(true);
-
-
   }
 
   @Override
@@ -146,6 +151,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   @Override
   public void soundAlarm() {
     Toolkit.getDefaultToolkit().beep();
+    statusPanel.soundAlarm();
   }
 
   @Override
@@ -205,7 +211,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
   }
 
-  private class customXI5250Crt extends XI5250Crt {
+  private class CustomXI5250Crt extends XI5250Crt {
 
     @Override
     protected synchronized void processKeyEvent(KeyEvent e) {
@@ -239,60 +245,100 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
     private static final ImageIcon HELP_ICON = new ImageIcon(
         StatusPanel.class.getResource("/help.png"));
 
-    private JLabel positionLabel = new JLabel("Row Column - 0 0");
+    private JLabel positionLabel = new JLabel("row: 00 / column: 00");
     private JLabel messageLabel = new JLabel("");
     private JLabel alarmLabel = new JLabel(ALARM_ICON);
     private JLabel keyboardLabel = new JLabel(KEYBOARD_UNLOCKED_ICON);
     private JLabel helpLabel = new JLabel(HELP_ICON);
 
-    StatusPanel() {
-      super();
+    private ScheduledExecutorService alarmExecutor = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledFuture futureBlink;
+    private ScheduledFuture futureAlarm;
 
-      JPanel iconsPanel = new JPanel();
-      GroupLayout iconsLayout = new GroupLayout(iconsPanel);
-      iconsLayout.setAutoCreateGaps(true);
-      iconsPanel.setLayout(iconsLayout);
+    private HelpFrame helpFrame;
 
-      iconsLayout.setHorizontalGroup(iconsLayout.createSequentialGroup()
-          .addComponent(keyboardLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-              KEYBOARD_LOCKED_ICON.getIconWidth())
-          .addComponent(alarmLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-              ALARM_ICON.getIconWidth())
-          .addComponent(helpLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-              HELP_ICON.getIconWidth()));
-      iconsLayout.setVerticalGroup(iconsLayout.createParallelGroup(Alignment.BASELINE)
-          .addComponent(keyboardLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE)
-          .addComponent(alarmLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE)
-          .addComponent(helpLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE));
+    private StatusPanel() {
+      alarmLabel.setVisible(false);
+      helpLabel.addMouseListener(new MouseListener() {
+        @Override
+        public void mouseClicked(MouseEvent mouseEvent) {
+          if (helpFrame == null) {
+            helpFrame = new HelpFrame();
+          } else {
+            helpFrame.requestFocus();
+            helpFrame.setVisible(true);
+          }
+        }
+
+        @Override
+        public void mousePressed(MouseEvent mouseEvent) {
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent mouseEvent) {
+        }
+
+        @Override
+        public void mouseEntered(MouseEvent mouseEvent) {
+        }
+
+        @Override
+        public void mouseExited(MouseEvent mouseEvent) {
+        }
+
+      });
 
       GroupLayout layout = new GroupLayout(this);
       layout.setAutoCreateGaps(true);
       setLayout(layout);
 
       layout.setHorizontalGroup(layout.createSequentialGroup()
-          .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
-              positionLabel.getText().length())
+          .addGap(5)
+          .addComponent(positionLabel, 133, 133,
+              133)
           .addPreferredGap(ComponentPlacement.UNRELATED)
           .addComponent(messageLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
               Short.MAX_VALUE)
           .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(iconsPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
-              HELP_ICON.getIconWidth() * 3));
+          .addComponent(alarmLabel, 16, 16, 16)
+          .addPreferredGap(ComponentPlacement.UNRELATED)
+          .addComponent(keyboardLabel, 22, 22, 22)
+          .addPreferredGap(ComponentPlacement.UNRELATED)
+          .addComponent(helpLabel, 19, 19, 19)
+          .addGap(5));
       layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
           .addComponent(positionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
               GroupLayout.PREFERRED_SIZE)
           .addComponent(messageLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
               GroupLayout.PREFERRED_SIZE)
-          .addComponent(iconsPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+          .addComponent(alarmLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE)
+          .addComponent(keyboardLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+              GroupLayout.PREFERRED_SIZE)
+          .addComponent(helpLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
               GroupLayout.PREFERRED_SIZE));
     }
 
     private void updateStatusBarCursorPosition(int row, int col) {
       this.positionLabel.setText("row: " + row + " / column: " + col);
       repaint();
+    }
+
+    public synchronized void soundAlarm() {
+      if (futureAlarm != null) {
+        futureAlarm.cancel(true);
+        futureBlink.cancel(true);
+        alarmLabel.setVisible(false);
+      }
+      alarmLabel.setVisible(true);
+      futureBlink = alarmExecutor
+          .scheduleAtFixedRate(() -> alarmLabel.setVisible(!alarmLabel.isVisible()), 0, 500,
+              TimeUnit.MILLISECONDS);
+      futureAlarm = alarmExecutor
+          .schedule(() -> {
+            futureBlink.cancel(true);
+            alarmLabel.setVisible(false);
+          }, 5, TimeUnit.SECONDS);
     }
 
     public void setStatusMessage(String message) {
@@ -306,6 +352,44 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       } else {
         this.keyboardLabel.setIcon(KEYBOARD_UNLOCKED_ICON);
       }
+    }
+
+    public void dispose() {
+      alarmExecutor.shutdown();
+    }
+  }
+
+  private static class HelpFrame extends JFrame {
+
+    private static final String HELP_FRAME_TITLE = "Help";
+
+    private HelpFrame() {
+      setTitle(HELP_FRAME_TITLE);
+      setLayout(new CardLayout());
+      JLabel helpLabel = new JLabel(
+          "<html>"
+              + "<h1><span style=\"color: #008000;\">Attenion Key List</span></h1>"
+              + "<p style=\"padding-left: 30px;\">"
+              + "<span style=\"color: #008000;\">"
+              + "<strong>F1 -</strong> F1</span>"
+              + "<br /><span style=\"color: #008000;\">"
+              + "<strong>F2 -</strong> F1</span><br />"
+              + "<span style=\"color: #008000;\"><strong>F3 -</strong>F1</span><br />"
+              + "<span style=\"color: #008000;\">...</span><br /><span style=\"color: #008000;\">"
+              + "<strong>F13 -</strong> Shift + F1</span><br />"
+              + "<span style=\"color: #008000;\">...</span><br />"
+              + "<span style=\"color: #008000;\"><strong>SysReq -</strong> Shift + ESC</span></p>"
+              + "</html>");
+      add(helpLabel);
+      addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowOpened(WindowEvent e) {
+          requestFocus();
+        }
+      });
+      setVisible(true);
+      setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+      setBounds(0, 0, 600, 300);
     }
 
   }
