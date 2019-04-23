@@ -8,12 +8,16 @@ import com.blazemeter.jmeter.rte.core.Screen;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +36,9 @@ import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
@@ -72,12 +79,10 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         }
       };
 
+  //private static final Logger LOG = LoggerFactory.getLogger(Xtn5250TerminalEmulator.class);
   private static final String TITLE = "Recorder";
-  private static final int COLUMNS = 80;
-  private static final int ROWS = 24;
-  private static final int WIDTH = 728;
-  private static final int HEIGHT = 512;
   private static final Color BACKGROUND = Color.black;
+  private static final int DEFAULT_FONT_SIZE = 14;
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
@@ -86,9 +91,29 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   private StatusPanel statusPanel;
 
   @Override
-  public void start() {
-    xi5250Crt = new CustomXI5250Crt();
-    xi5250Crt.setCrtSize(COLUMNS, ROWS);
+  public void start(int columns, int rows) {
+    xi5250Crt = new XI5250Crt() {
+      @Override
+      protected synchronized void processKeyEvent(KeyEvent e) {
+        AttentionKey attentionKey = null;
+        if (e.getID() == KeyEvent.KEY_PRESSED) {
+          attentionKey = KEY_EVENTS
+              .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
+          if (attentionKey != null) {
+            List<Input> fields = getInputFields();
+            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+              listener.onAttentionKey(attentionKey, fields);
+            }
+          }
+        }
+        if (!locked || attentionKey != null) {
+          super.processKeyEvent(e);
+          statusPanel
+              .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+        }
+      }
+    };
+    xi5250Crt.setCrtSize(columns, rows);
     xi5250Crt.setDefBackground(BACKGROUND);
     xi5250Crt.setBlinkingCursor(true);
     xi5250Crt.setEnabled(true);
@@ -102,6 +127,13 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
       @Override
       public void windowOpened(WindowEvent e) {
+        FontMetrics fm = xi5250Crt.getFontMetrics(
+            new Font(xi5250Crt.getFont().getName(), xi5250Crt.getFont().getStyle(),
+                DEFAULT_FONT_SIZE));
+        Dimension testSize = new Dimension(fm.charWidth('W') * xi5250Crt.getCrtSize().width,
+            fm.getHeight() * xi5250Crt.getCrtSize().height);
+        xi5250Crt.setSize(testSize.width, testSize.height);
+        frame.pack();
         xi5250Crt.requestFocus();
       }
 
@@ -113,8 +145,8 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         statusPanel.dispose();
       }
     });
+
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    frame.setBounds(0, 0, WIDTH, HEIGHT);
     frame.setVisible(true);
   }
 
@@ -211,29 +243,6 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
   }
 
-  private class CustomXI5250Crt extends XI5250Crt {
-
-    @Override
-    protected synchronized void processKeyEvent(KeyEvent e) {
-      AttentionKey attentionKey = null;
-      if (e.getID() == KeyEvent.KEY_PRESSED) {
-        attentionKey = KEY_EVENTS
-            .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-        if (attentionKey != null) {
-          List<Input> fields = getInputFields();
-          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-            listener.onAttentionKey(attentionKey, fields);
-          }
-        }
-      }
-      if (!locked || attentionKey != null) {
-        super.processKeyEvent(e);
-        statusPanel
-            .updateStatusBarCursorPosition(this.getCursorCol() + 1, this.getCursorRow() + 1);
-      }
-    }
-  }
-
   private static class StatusPanel extends JPanel {
 
     private static final ImageIcon ALARM_ICON = new ImageIcon(
@@ -247,13 +256,9 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
     private JLabel positionLabel = new JLabel("row: 00 / column: 00");
     private JLabel messageLabel = new JLabel("");
-    private JLabel alarmLabel = new JLabel(ALARM_ICON);
+    private AlarmLabel alarmLabel = new AlarmLabel(ALARM_ICON);
     private JLabel keyboardLabel = new JLabel(KEYBOARD_UNLOCKED_ICON);
     private JLabel helpLabel = new JLabel(HELP_ICON);
-
-    private ScheduledExecutorService alarmExecutor = Executors.newSingleThreadScheduledExecutor();
-    private ScheduledFuture futureBlink;
-    private ScheduledFuture futureAlarm;
 
     private HelpFrame helpFrame;
 
@@ -324,26 +329,13 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       repaint();
     }
 
-    public synchronized void soundAlarm() {
-      if (futureAlarm != null) {
-        futureAlarm.cancel(true);
-        futureBlink.cancel(true);
-        alarmLabel.setVisible(false);
-      }
-      alarmLabel.setVisible(true);
-      futureBlink = alarmExecutor
-          .scheduleAtFixedRate(() -> alarmLabel.setVisible(!alarmLabel.isVisible()), 0, 500,
-              TimeUnit.MILLISECONDS);
-      futureAlarm = alarmExecutor
-          .schedule(() -> {
-            futureBlink.cancel(true);
-            alarmLabel.setVisible(false);
-          }, 5, TimeUnit.SECONDS);
-    }
-
     public void setStatusMessage(String message) {
       this.messageLabel.setText(message);
       repaint();
+    }
+
+    public void soundAlarm() {
+      alarmLabel.soundAlarm();
     }
 
     public void setKeyboardStatus(boolean locked) {
@@ -355,42 +347,68 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
     }
 
     public void dispose() {
-      alarmExecutor.shutdown();
+      alarmLabel.shutdown();
     }
-  }
 
-  private static class HelpFrame extends JFrame {
+    private static class AlarmLabel extends JLabel {
 
-    private static final String HELP_FRAME_TITLE = "Help";
+      private ScheduledExecutorService alarmExecutor = Executors.newSingleThreadScheduledExecutor();
+      private ScheduledFuture future;
+      private int contador;
 
-    private HelpFrame() {
-      setTitle(HELP_FRAME_TITLE);
-      setLayout(new CardLayout());
-      JLabel helpLabel = new JLabel(
-          "<html>"
-              + "<h1><span style=\"color: #008000;\">Attenion Key List</span></h1>"
-              + "<p style=\"padding-left: 30px;\">"
-              + "<span style=\"color: #008000;\">"
-              + "<strong>F1 -</strong> F1</span>"
-              + "<br /><span style=\"color: #008000;\">"
-              + "<strong>F2 -</strong> F1</span><br />"
-              + "<span style=\"color: #008000;\"><strong>F3 -</strong>F1</span><br />"
-              + "<span style=\"color: #008000;\">...</span><br /><span style=\"color: #008000;\">"
-              + "<strong>F13 -</strong> Shift + F1</span><br />"
-              + "<span style=\"color: #008000;\">...</span><br />"
-              + "<span style=\"color: #008000;\"><strong>SysReq -</strong> Shift + ESC</span></p>"
-              + "</html>");
-      add(helpLabel);
-      addWindowListener(new WindowAdapter() {
-        @Override
-        public void windowOpened(WindowEvent e) {
-          requestFocus();
+      private AlarmLabel(ImageIcon icon) {
+        super(icon);
+      }
+
+      private synchronized void soundAlarm() {
+        if (future != null) {
+          future.cancel(true);
+          setVisible(false);
         }
-      });
-      setVisible(true);
-      setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-      setBounds(0, 0, 600, 300);
+        contador = 0;
+        setVisible(true);
+        future = alarmExecutor.scheduleAtFixedRate(() -> {
+          setVisible(!isVisible());
+          if (contador < 10) {
+            contador++;
+          } else {
+            future.cancel(true);
+            setVisible(false);
+          }
+        }, 0, 500, TimeUnit.MILLISECONDS);
+      }
+
+      private void shutdown() {
+        shutdown();
+      }
     }
 
+    private static class HelpFrame extends JFrame {
+
+      private static final String HELP_FRAME_TITLE = "Help";
+
+      private HelpFrame() {
+        setTitle(HELP_FRAME_TITLE);
+        setLayout(new CardLayout());
+        JLabel helpLabel = null;
+        try {
+          helpLabel = new JLabel(
+              IOUtils.toString(HelpFrame.class.getResourceAsStream("/recorder-help.html")));
+        } catch (IOException e) {
+          //LOG.error("Error when loading help panel", e);
+        }
+        add(helpLabel);
+        addWindowListener(new WindowAdapter() {
+          @Override
+          public void windowOpened(WindowEvent e) {
+            requestFocus();
+          }
+        });
+        setVisible(true);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setBounds(0, 0, 600, 300);
+      }
+
+    }
   }
 }

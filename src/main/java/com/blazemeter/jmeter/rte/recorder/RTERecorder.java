@@ -274,7 +274,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private void initTerminalEmulator() {
     terminalEmulator.setKeyboardLock(true);
-    terminalEmulator.start();
+    terminalEmulator.start(80, 24);
   }
 
   private void initTerminalUpdater() {

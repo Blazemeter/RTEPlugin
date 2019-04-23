@@ -18,7 +18,8 @@
 
   <scm>
     <connection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git</connection>
-    <developerConnection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git</developerConnection>
+    <developerConnection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git
+    </developerConnection>
     <url>http://gitlab.abstracta.us/BZ/jmeter-rte-plugin</url>
   </scm>
 
@@ -44,6 +45,13 @@
       <groupId>org.apache.jmeter</groupId>
       <artifactId>ApacheJMeter_http</artifactId>
       <version>${jmeter.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.25</version>
       <scope>provided</scope>
     </dependency>
 

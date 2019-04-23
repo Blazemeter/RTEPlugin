@@ -4,7 +4,7 @@ import com.blazemeter.jmeter.rte.core.Screen;
 
 public interface TerminalEmulator {
 
-  void start();
+  void start(int columns, int rows);
 
   void stop();
 
