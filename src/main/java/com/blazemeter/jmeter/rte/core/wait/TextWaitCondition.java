@@ -28,6 +28,14 @@ public class TextWaitCondition extends WaitCondition {
     this.searchArea = searchArea;
   }
 
+  public String getRegex() {
+    return regex.toString();
+  }
+
+  public Area getSearchArea() {
+    return searchArea;
+  }
+
   @Override
   public String getDescription() {
     return "emulator screen area " + searchArea + " to contain " + regex.getPattern();

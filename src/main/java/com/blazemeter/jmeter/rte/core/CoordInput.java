@@ -4,7 +4,11 @@ import java.util.Objects;
 
 public class CoordInput extends Input {
 
-  private final Position position;
+  private Position position;
+
+  // Provided for proper deserialization of sample results
+  public CoordInput() {
+  }
 
   public CoordInput(Position pos, String input) {
     super(input);
@@ -14,13 +18,13 @@ public class CoordInput extends Input {
   public Position getPosition() {
     return position;
   }
-  
+
   @Override
   public String getCsv() {
     return getPosition().getRow() + "," + getPosition().getColumn() + "," +
         getInput();
   }
-  
+
   @Override
   public String toString() {
     return this.position + ": " + getInput();
@@ -42,5 +46,5 @@ public class CoordInput extends Input {
   public int hashCode() {
     return Objects.hash(position, input);
   }
-  
+
 }

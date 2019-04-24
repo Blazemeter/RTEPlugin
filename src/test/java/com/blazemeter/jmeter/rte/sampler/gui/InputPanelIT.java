@@ -372,5 +372,5 @@ public class InputPanelIT {
     clickDeleteButton();
     waitButtonEnabled(DOWN_BUTTON, false);
   }
-
+  
 }

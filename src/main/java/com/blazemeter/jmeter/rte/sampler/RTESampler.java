@@ -1,11 +1,14 @@
 package com.blazemeter.jmeter.rte.sampler;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -16,7 +19,6 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.helger.commons.annotation.VisibleForTesting;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -24,11 +26,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.AbstractSampler;
@@ -166,7 +165,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return prop == 0L ? defaultValue : prop;
   }
 
-  private long getStableTimeout() {
+  public static long getStableTimeout() {
     return JMeterUtils.getPropDefault(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
   }
 
@@ -399,12 +398,75 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return getLongProperty(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
   }
 
+  //TODO: This method is going to be used whenever waits are added to recorder
+  public void setWaitConditions(List<WaitCondition> waitConditions) {
+    for (WaitCondition waitCondition : waitConditions) {
+      addWaitCondition(waitCondition);
+    }
+  }
+
+  private void addWaitCondition(WaitCondition condition) {
+    if (condition instanceof SyncWaitCondition) {
+      setWaitSync(true);
+      setWaitSyncTimeout(String.valueOf(condition.getTimeoutMillis()));
+    } else if (condition instanceof TextWaitCondition) {
+      TextWaitCondition textWait = (TextWaitCondition) condition;
+      setWaitText(true);
+      setWaitTextRegex(textWait.getRegex());
+      Area searchArea = textWait.getSearchArea();
+      setWaitTextAreaTop(String.valueOf(searchArea.getTop()));
+      setWaitTextAreaLeft(String.valueOf(searchArea.getLeft()));
+      setWaitTextAreaBottom(String.valueOf(searchArea.getBottom()));
+      setWaitTextAreaRight(String.valueOf(searchArea.getRight()));
+      setWaitTextTimeout(String.valueOf(condition.getTimeoutMillis()));
+    } else if (condition instanceof CursorWaitCondition) {
+      CursorWaitCondition cursorWait = (CursorWaitCondition) condition;
+      setWaitCursor(true);
+      Position cursorPosition = cursorWait.getPosition();
+      setWaitCursorRow(String.valueOf(cursorPosition.getRow()));
+      setWaitCursorColumn(String.valueOf(cursorPosition.getRow()));
+      setWaitCursorTimeout(String.valueOf(condition.getTimeoutMillis()));
+    } else if (condition instanceof SilentWaitCondition) {
+      setWaitSilent(true);
+      setWaitSilentTime(String.valueOf(condition.getStableTimeoutMillis()));
+      setWaitSilentTimeout(String.valueOf(condition.getTimeoutMillis()));
+    } else {
+      throw new IllegalArgumentException("Unsupported condition type " + condition.getClass());
+    }
+  }
+
+  public void setInputs(List<Input> inputs) {
+    Inputs testElement = new Inputs();
+    for (Input input : inputs) {
+      testElement.addInput(buildInputTestElement(input));
+    }
+    setPayload(testElement);
+  }
+
+  private InputTestElement buildInputTestElement(Input input) {
+    if (input instanceof CoordInput) {
+      CoordInput coordInput = (CoordInput) input;
+      CoordInputRowGUI ret = new CoordInputRowGUI();
+      Position position = coordInput.getPosition();
+      ret.setColumn(String.valueOf(position.getColumn()));
+      ret.setRow(String.valueOf(position.getRow()));
+      ret.setInput(coordInput.getInput());
+      return ret;
+    } else if (input instanceof LabelInput) {
+      LabelInput labelInput = (LabelInput) input;
+      LabelInputRowGUI ret = new LabelInputRowGUI();
+      ret.setLabel(labelInput.getLabel());
+      ret.setInput(labelInput.getInput());
+      return ret;
+    } else {
+      throw new IllegalArgumentException("Unsupported input type " + input.getClass());
+    }
+  }
+
   @Override
   public SampleResult sample(Entry entry) {
-    SampleResult sampleResult = new SampleResult();
-    sampleResult.setSampleLabel(getName());
-    sampleResult.sampleStart();
-    sampleResult.setRequestHeaders(buildRequestHeaders());
+    //TODO Connect action do not show response properly.
+    RteSampleResult rteSampleResult = buildSampleResult();
 
     RteProtocolClient client = null;
 
@@ -414,63 +476,60 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         if (client != null) {
           disconnect(client);
         }
-        sampleResult.setSuccessful(true);
-        sampleResult.sampleEnd();
-        return sampleResult;
-      }
 
+        rteSampleResult.setSuccessful(true);
+        rteSampleResult.sampleEnd();
+        return rteSampleResult;
+      }
       if (client == null) {
         client = buildClient();
       }
-      sampleResult.connectEnd();
-      RequestListener requestListener = client.buildRequestListener(sampleResult);
+      rteSampleResult.connectEnd();
+      RequestListener<RteProtocolClient> requestListener = new RequestListener<>(rteSampleResult,
+          client);
+      client.addTerminalStateListener(requestListener);
+
       try {
-        addClientRequestHeaders(client, sampleResult);
         if (getAction() == Action.SEND_INPUT) {
-          sampleResult.setSamplerData(buildRequestBody());
+          rteSampleResult.setInputInhibitedRequest(client.isInputInhibited());
+          rteSampleResult.setAttentionKey(getAttentionKey());
+          rteSampleResult.setInputs(getInputs());
           client.send(getInputs(), getAttentionKey());
         }
         List<WaitCondition> waiters = getWaitersList();
         if (!waiters.isEmpty()) {
           client.await(waiters);
         }
-        sampleResult.setSuccessful(true);
-        sampleResult.setResponseHeaders(buildResponseHeaders(client));
-        sampleResult.setDataType(SampleResult.TEXT);
-        sampleResult.setResponseData(client.getScreen(), "utf-8");
+        updateSampleResultResponse(rteSampleResult, client);
       } finally {
+        client.resetAlarm();
         requestListener.stop();
-        if (LOG.isDebugEnabled()) {
-          LOG.debug("{} - Inputs:\n{}", getThreadName(), getInputs().stream()
-              .map(Object::toString)
-              .collect(Collectors.joining("\n")));
-          LOG.debug("{} - AttentionKey sent: {}", getThreadName(), getAttentionKey().name());
-          LOG.debug("{} - Request Headers: {}", getThreadName(), sampleResult.getRequestHeaders());
-          LOG.debug("{} - Response Headers: {}", getThreadName(),
-              sampleResult.getResponseHeaders());
-          LOG.debug("{} - Response Screen: {}", getThreadName(),
-              sampleResult.getResponseDataAsString());
-        }
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      return errorResult("The sampling has been interrupted", e, sampleResult);
+      LOG.error("The sampling has been interrupted", e);
+      return errorResult(e, rteSampleResult);
     } catch (TimeoutException e) {
-      return timeoutErrorResult("Timeout error", e, sampleResult,
-          client != null ? client.getScreen() : "");
+      return timeoutErrorResult(e, rteSampleResult,
+          client != null ? client.getScreen().toString() : "");
     } catch (Exception e) {
-      return errorResult("Error while sampling the remote terminal", e, sampleResult);
+      LOG.error("Error while sampling the remote terminal", e);
+      return errorResult(e, rteSampleResult);
     }
-    return sampleResult;
+    return rteSampleResult;
   }
 
-  private String buildRequestHeaders() {
-    return "Server: " + getServer() + "\n" +
-        "Port: " + getPort() + "\n" +
-        "Protocol: " + getProtocol().toString() + "\n" +
-        "Terminal-type: " + getTerminalType() + "\n" +
-        "Security: " + getSSLType() + "\n" +
-        "Action: " + getAction() + "\n";
+  private RteSampleResult buildSampleResult() {
+    RteSampleResult ret = new RteSampleResult();
+    ret.setSampleLabel(getName());
+    ret.setServer(getServer());
+    ret.setPort(getPort());
+    ret.setProtocol(getProtocol());
+    ret.setTerminalType(getTerminalType());
+    ret.setSslType(getSSLType());
+    ret.setAction(getAction());
+    ret.sampleStart();
+    return ret;
   }
 
   private RteProtocolClient getClient() {
@@ -483,6 +542,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return getServer() + ":" + getPort();
   }
 
+  private void disconnect(RteProtocolClient client) throws RteIOException {
+    connections.get().remove(buildConnectionId());
+    client.disconnect();
+  }
+
   private RteProtocolClient buildClient()
       throws RteIOException, InterruptedException, TimeoutException {
     RteProtocolClient client = protocolFactory.apply(getProtocol());
@@ -492,25 +556,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return client;
   }
 
-  private void addClientRequestHeaders(RteProtocolClient client, SampleResult result) {
-    result.setRequestHeaders(
-        result.getRequestHeaders() + "Input-inhibited: " + client.isInputInhibited() + "\n");
-  }
-
-  private String buildRequestBody() {
-    return new StringBuilder()
-        .append("AttentionKey: ")
-        .append(getAttentionKey())
-        .append("\n")
-        .append("Inputs:\n")
-        .append(getInputs().stream()
-            .map(Input::getCsv)
-            .collect(Collectors.joining("\n")))
-        .append("\n")
-        .toString();
-  }
-
-  private List<Input> getInputs() {
+  public List<Input> getInputs() {
     List<Input> inputs = new ArrayList<>();
     for (JMeterProperty p : getInputsTestElement()) {
       InputTestElement c = (InputTestElement) p.getObjectValue();
@@ -557,20 +603,16 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         getStableTimeout());
   }
 
-  private String buildResponseHeaders(RteProtocolClient client) {
-    Optional<Position> cursorPosition = client.getCursorPosition();
-    boolean soundAlarm = client.getSoundAlarm();
-    return "Input-inhibited: " + client.isInputInhibited() + "\n" +
-        "Cursor-position: " + cursorPosition.map(c -> c.getRow() + "," + c.getColumn()).orElse("") +
-        (soundAlarm ? "\nSound-Alarm: true" : "");
+  public static void updateSampleResultResponse(RteSampleResult rteSampleResult,
+      RteProtocolClient client) {
+    rteSampleResult.setSuccessful(true);
+    rteSampleResult.setCursorPosition(client.getCursorPosition().orElse(null));
+    rteSampleResult.setSoundedAlarm(client.isAlarmOn());
+    rteSampleResult.setInputInhibitedResponse(client.isInputInhibited());
+    rteSampleResult.setScreen(client.getScreen());
   }
 
-  private void disconnect(RteProtocolClient client) throws RteIOException {
-    connections.get().remove(buildConnectionId());
-    client.disconnect();
-  }
-
-  private SampleResult errorResult(String message, Throwable e, SampleResult sampleResult) {
+  public static SampleResult errorResult(Throwable e, SampleResult sampleResult) {
     sampleResult.setSuccessful(false);
     sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
@@ -579,19 +621,17 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));
     sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    LOG.error(message, e);
     return sampleResult;
   }
 
-  private SampleResult timeoutErrorResult(String message, Throwable e, SampleResult sampleResult,
-                                          String screen) {
+  private SampleResult timeoutErrorResult(Throwable e, SampleResult sampleResult, String screen) {
     sampleResult.setSuccessful(false);
     sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
     sampleResult.setResponseMessage(e.getMessage());
     sampleResult.setDataType(SampleResult.TEXT);
     sampleResult.setResponseData(screen, SampleResult.DEFAULT_HTTP_ENCODING);
-    LOG.warn(message, e);
+    LOG.warn("Timeout error", e);
     return sampleResult;
   }
 

@@ -73,14 +73,14 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadLoginFlow();
     connectToVirtualService();
     sendUsernameWithSyncWait();
-    assertThat(client.getSoundAlarm()).isTrue();
+    assertThat(client.resetAlarm()).isTrue();
   }
 
   @Test
   public void shouldGetFalseSoundAlarmWhenServerDoNotSendTheSignal() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    assertThat(client.getSoundAlarm()).isFalse();
+    assertThat(client.resetAlarm()).isFalse();
   }
 
   @Test(expected = RteIOException.class)

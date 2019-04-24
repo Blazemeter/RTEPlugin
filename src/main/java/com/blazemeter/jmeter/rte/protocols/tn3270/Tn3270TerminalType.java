@@ -8,9 +8,13 @@ public class Tn3270TerminalType extends TerminalType {
 
   private static final String ID_PREFIX = "IBM-3278-";
 
-  private final int model;
-  private final boolean extended;
-  private final ScreenDimensions screenDimensions;
+  private int model;
+  private boolean extended;
+  private transient ScreenDimensions screenDimensions;
+
+  // Provided for proper deserialization of sample results
+  public Tn3270TerminalType() {
+  }
 
   public Tn3270TerminalType(DeviceModel model, boolean extended) {
     super(ID_PREFIX + model + (extended ? "-E" : ""), model.screenSize);

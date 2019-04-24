@@ -11,9 +11,10 @@ import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
@@ -23,26 +24,25 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
-import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270RequestListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
 import com.bytezone.dm3270.TerminalClient;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
 import com.bytezone.dm3270.commands.AIDCommand;
 import com.bytezone.dm3270.display.CursorMoveListener;
+import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenDimensions;
-
 import java.awt.Dimension;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
-
-import org.apache.jmeter.samplers.SampleResult;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,6 +98,8 @@ public class Tn3270Client extends BaseProtocolClient {
   };
 
   private TerminalClient client;
+  private Map<TerminalStateListener, ScreenChangeListener> listenersProxies =
+      new ConcurrentHashMap<>();
 
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
@@ -142,8 +144,16 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public RequestListener buildRequestListener(SampleResult result) {
-    return new Tn3270RequestListener(result, this);
+  public void addTerminalStateListener(TerminalStateListener listener) {
+    ScreenChangeListener listenerProxy = screenWatcher -> listener.onTerminalStateChange();
+    client.addScreenChangeListener(listenerProxy);
+    listenersProxies.put(listener, listenerProxy);
+  }
+
+  @Override
+  public void removeTerminalStateListener(TerminalStateListener listener) {
+    ScreenChangeListener listenerProxy = listenersProxies.remove(listener);
+    client.removeScreenChangeListener(listenerProxy);
   }
 
   private void setFieldByCoord(CoordInput i) {
@@ -205,8 +215,21 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public String getScreen() {
-    return client.getScreenText();
+  public Screen getScreen() {
+    Dimension size = getScreenSize();
+    Screen ret = new Screen(size);
+    for (Field f : client.getFields()) {
+      int linealPosition = f.getFirstLocation();
+      int row = (linealPosition / size.width) + 1;
+      int column = (linealPosition % size.width) + 1;
+      String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
+      if (f.isProtected()) {
+        ret.addSegment(row, column, text);
+      } else {
+        ret.addField(row, column, text);
+      }
+    }
+    return ret;
   }
 
   @Override
@@ -227,8 +250,13 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public boolean getSoundAlarm() {
+  public boolean resetAlarm() {
     return client.resetAlarm();
+  }
+
+  @Override
+  public boolean isAlarmOn() {
+    return client.isAlarmOn();
   }
 
   public void addScreenChangeListener(ScreenChangeListener listener) {

@@ -2,7 +2,11 @@ package com.blazemeter.jmeter.rte.core;
 
 public abstract class Input {
 
-  protected final String input;
+  protected String input;
+
+  // Provided for proper deserialization of sample results
+  public Input(){
+  }
 
   public Input(String input) {
     this.input = input;

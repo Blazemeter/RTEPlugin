@@ -4,8 +4,13 @@ import java.awt.Dimension;
 
 public class TerminalType {
 
-  private final String id;
-  private final Dimension screenSize;
+  private String id;
+
+  private Dimension screenSize;
+
+  // Provided for proper deserialization of sample results
+  public TerminalType() {
+  }
 
   public TerminalType(String id, Dimension screenSize) {
     this.id = id;
@@ -19,6 +24,10 @@ public class TerminalType {
   @Override
   public String toString() {
     return id + ": " + screenSize.height + "x" + screenSize.width;
+  }
+
+  public Dimension getScreenSize() {
+    return screenSize;
   }
 
 }
