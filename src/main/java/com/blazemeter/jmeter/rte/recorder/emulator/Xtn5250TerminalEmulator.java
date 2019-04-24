@@ -107,6 +107,11 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
           }
         }
         if (!locked || attentionKey != null) {
+          //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
+          // when shift mask is enabled, in this way allways delete
+          if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+            e.setModifiers(KeyEvent.SHIFT_MASK);
+          }
           super.processKeyEvent(e);
           statusPanel
               .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
