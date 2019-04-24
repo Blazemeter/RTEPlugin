@@ -79,7 +79,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         }
       };
 
-  //private static final Logger LOG = LoggerFactory.getLogger(Xtn5250TerminalEmulator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Xtn5250TerminalEmulator.class);
   private static final String TITLE = "Recorder";
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
@@ -127,11 +127,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
       @Override
       public void windowOpened(WindowEvent e) {
-        FontMetrics fm = xi5250Crt.getFontMetrics(
-            new Font(xi5250Crt.getFont().getName(), xi5250Crt.getFont().getStyle(),
-                DEFAULT_FONT_SIZE));
-        Dimension testSize = new Dimension(fm.charWidth('W') * xi5250Crt.getCrtSize().width,
-            fm.getHeight() * xi5250Crt.getCrtSize().height);
+        Dimension testSize = calculateCrtDefaultSize();
         xi5250Crt.setSize(testSize.width, testSize.height);
         frame.pack();
         xi5250Crt.requestFocus();
@@ -148,6 +144,14 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
     frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     frame.setVisible(true);
+  }
+
+  private Dimension calculateCrtDefaultSize() {
+    FontMetrics fm = xi5250Crt.getFontMetrics(
+        new Font(xi5250Crt.getFont().getName(), xi5250Crt.getFont().getStyle(),
+            DEFAULT_FONT_SIZE));
+    return new Dimension(fm.charWidth('W') * xi5250Crt.getCrtSize().width,
+        fm.getHeight() * xi5250Crt.getCrtSize().height);
   }
 
   @Override
@@ -297,19 +301,24 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       layout.setAutoCreateGaps(true);
       setLayout(layout);
 
+      int messageLabelWidth = 133;
+      int alarmLabelWidth = 16;
+      int keyboardLabelWidth = 22;
+      int helpLabelWidth = 19;
+
       layout.setHorizontalGroup(layout.createSequentialGroup()
           .addGap(5)
-          .addComponent(positionLabel, 133, 133,
-              133)
+          .addComponent(positionLabel, messageLabelWidth, messageLabelWidth,
+              messageLabelWidth)
           .addPreferredGap(ComponentPlacement.UNRELATED)
           .addComponent(messageLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
               Short.MAX_VALUE)
           .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(alarmLabel, 16, 16, 16)
+          .addComponent(alarmLabel, alarmLabelWidth, alarmLabelWidth, alarmLabelWidth)
           .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(keyboardLabel, 22, 22, 22)
+          .addComponent(keyboardLabel, keyboardLabelWidth, keyboardLabelWidth, keyboardLabelWidth)
           .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(helpLabel, 19, 19, 19)
+          .addComponent(helpLabel, helpLabelWidth, helpLabelWidth, helpLabelWidth)
           .addGap(5));
       layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
           .addComponent(positionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
@@ -354,7 +363,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
       private ScheduledExecutorService alarmExecutor = Executors.newSingleThreadScheduledExecutor();
       private ScheduledFuture future;
-      private int contador;
+      private int counter;
 
       private AlarmLabel(ImageIcon icon) {
         super(icon);
@@ -365,12 +374,12 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
           future.cancel(true);
           setVisible(false);
         }
-        contador = 0;
+        counter = 0;
         setVisible(true);
         future = alarmExecutor.scheduleAtFixedRate(() -> {
           setVisible(!isVisible());
-          if (contador < 10) {
-            contador++;
+          if (counter < 10) {
+            counter++;
           } else {
             future.cancel(true);
             setVisible(false);
@@ -379,7 +388,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       }
 
       private void shutdown() {
-        shutdown();
+        alarmExecutor.shutdown();
       }
     }
 
@@ -395,7 +404,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
           helpLabel = new JLabel(
               IOUtils.toString(HelpFrame.class.getResourceAsStream("/recorder-help.html")));
         } catch (IOException e) {
-          //LOG.error("Error when loading help panel", e);
+          LOG.error("Error when loading help panel", e);
         }
         add(helpLabel);
         addWindowListener(new WindowAdapter() {

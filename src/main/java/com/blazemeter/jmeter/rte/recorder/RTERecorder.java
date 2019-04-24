@@ -138,13 +138,14 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
     // them to terminalEmulator
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
-    initTerminalEmulator();
+    TerminalType terminalType = getTerminalType();
+    initTerminalEmulator(terminalType);
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
     terminalClient = getProtocol().createProtocolClient();
     try {
       terminalClient
-          .connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
+          .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout(),
               RTESampler.getStableTimeout());
       sampleResult.connectEnd();
       initTerminalUpdater();
@@ -272,9 +273,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     return sampler;
   }
 
-  private void initTerminalEmulator() {
+  private void initTerminalEmulator(TerminalType terminalType) {
     terminalEmulator.setKeyboardLock(true);
-    terminalEmulator.start(80, 24);
+    terminalEmulator.start(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
   }
 
   private void initTerminalUpdater() {
