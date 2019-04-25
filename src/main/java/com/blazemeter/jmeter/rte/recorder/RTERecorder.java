@@ -49,6 +49,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient RTESampler sampler;
   private transient RequestListener requestListener;
   private transient TerminalEmulatorUpdater terminalEmulatorUpdater;
+  private transient int sampleCount;
 
   public RTERecorder() {
   }
@@ -131,6 +132,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   public void onRecordingStart() throws Exception {
+    sampleCount = 0;
     terminalEmulator = new Xtn5250TerminalEmulator();
     terminalEmulator.addTerminalEmulatorListener(this);
     samplersTargetNode = findTargetControllerNode();
@@ -197,7 +199,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private ConfigTestElement buildRteConfigElement() {
     ConfigTestElement configTestElement = new ConfigTestElement();
-    configTestElement.setName(RTEConfigGui.class.getSimpleName());
+    configTestElement.setName("bzm-RTE-config");
     configTestElement.setProperty(TestElement.GUI_CLASS, RTEConfigGui.class.getName());
     configTestElement.setProperty(RTESampler.CONFIG_PORT, String.valueOf(getPort()));
     configTestElement.setProperty(RTESampler.CONFIG_SERVER, getServer());
@@ -247,7 +249,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private RteSampleResult buildSampleResult(Action action) {
     RteSampleResult sampleResult = new RteSampleResult();
-    sampleResult.setSampleLabel(getName());
+    sampleResult.setSampleLabel(buildSampleName(action));
     sampleResult.setServer(getServer());
     sampleResult.setPort(getPort());
     sampleResult.setProtocol(getProtocol());
@@ -258,11 +260,15 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     return sampleResult;
   }
 
+  private String buildSampleName(Action action) {
+    return " bzm-RTE-" + action + (action == Action.SEND_INPUT ? "-" + sampleCount : "");
+  }
+
   private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
     RTESampler sampler = new RTESampler();
     sampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
     sampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
-    sampler.setName(RTESampler.class.getSimpleName());
+    sampler.setName(buildSampleName(action));
     sampler.setAction(action);
     if (inputs != null) {
       sampler.setInputs(inputs);
@@ -290,36 +296,12 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   @Override
-  public void onRecordingStop() {
-    notifyChildren(TestStateListener.class, TestStateListener::testEnded);
-    terminalClient.removeTerminalStateListener(terminalEmulatorUpdater);
-    terminalEmulator.stop();
-    requestListener.stop();
-    try {
-      terminalClient.disconnect();
-    } catch (RteIOException e) {
-      LOG.error("Problem while disconnecting from server", e);
-    }
-  }
-
-  @Override
-  public void onCloseTerminal() {
-    onRecordingStop();
-    if (recordingListener != null) {
-      recordingListener.onRecordingStop();
-    }
-  }
-
-  @Override
   public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
+    sampleCount++;
     terminalEmulator.setKeyboardLock(true);
     requestListener.stop();
-    RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
+    recordPendingSample();
     terminalClient.resetAlarm();
-    notifyChildren(SampleListener.class,
-        t -> t.sampleOccurred(new SampleEvent(sampleResult, "Thread Group", "Recorded")));
-    //TODO set proper waits for sampler
-    addTestElementToTestPlan(sampler, samplersTargetNode);
     sampleResult = buildSendInputSampleResult(attentionKey, inputs);
     registerRequestListenerFor(sampleResult);
     sampler = buildSampler(Action.SEND_INPUT, inputs, attentionKey);
@@ -328,9 +310,19 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     } catch (RteIOException e) {
       //TODO properly handle disconnection
       LOG.error("Problem sending input to server", e);
-      RTESampler.errorResult(e, sampleResult);
+      RTESampler.updateErrorResult(e, sampleResult);
       terminalEmulator.setStatusMessage(e.getMessage());
     }
+  }
+
+  private void recordPendingSample() {
+    if (sampleResult.getResponseCode().isEmpty()) {
+      RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
+    }
+    notifyChildren(SampleListener.class,
+        t -> t.sampleOccurred(new SampleEvent(sampleResult, "Thread Group", "Recorded")));
+    //TODO set proper waits for sampler
+    addTestElementToTestPlan(sampler, samplersTargetNode);
   }
 
   private RteSampleResult buildSendInputSampleResult(AttentionKey attentionKey,
@@ -339,6 +331,33 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     ret.setInputs(inputs);
     ret.setAttentionKey(attentionKey);
     return ret;
+  }
+
+  @Override
+  public void onRecordingStop() {
+    recordPendingSample();
+    sampleResult = buildSampleResult(Action.DISCONNECT);
+    sampler = buildSampler(Action.DISCONNECT, null, null);
+    terminalEmulator.stop();
+    requestListener.stop();
+    try {
+      terminalClient.disconnect();
+    } catch (RteIOException e) {
+      LOG.error("Problem while disconnecting from server", e);
+      RTESampler.updateErrorResult(e, sampleResult);
+    } finally {
+      recordPendingSample();
+    }
+    terminalClient.removeTerminalStateListener(terminalEmulatorUpdater);
+    notifyChildren(TestStateListener.class, TestStateListener::testEnded);
+  }
+
+  @Override
+  public void onCloseTerminal() {
+    onRecordingStop();
+    if (recordingListener != null) {
+      recordingListener.onRecordingStop();
+    }
   }
 
 }

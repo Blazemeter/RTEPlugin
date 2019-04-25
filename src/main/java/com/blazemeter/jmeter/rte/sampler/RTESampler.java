@@ -509,12 +509,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOG.error("The sampling has been interrupted", e);
-      return errorResult(e, rteSampleResult);
+      return updateErrorResult(e, rteSampleResult);
     } catch (TimeoutException e) {
       return timeoutErrorResult(e, rteSampleResult, client != null ? client.getScreen() : null);
     } catch (Exception e) {
       LOG.error("Error while sampling the remote terminal", e);
-      return errorResult(e, rteSampleResult);
+      return updateErrorResult(e, rteSampleResult);
     }
     return rteSampleResult;
   }
@@ -612,7 +612,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     rteSampleResult.setScreen(client.getScreen());
   }
 
-  public static RteSampleResult errorResult(Throwable e, RteSampleResult sampleResult) {
+  public static RteSampleResult updateErrorResult(Throwable e, RteSampleResult sampleResult) {
     sampleResult.setSuccessful(false);
     sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
