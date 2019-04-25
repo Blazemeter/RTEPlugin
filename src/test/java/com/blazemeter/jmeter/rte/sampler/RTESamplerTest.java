@@ -12,10 +12,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -24,10 +27,12 @@ import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
+import java.awt.Dimension;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import kg.apc.emulators.TestJMeterUtils;
@@ -48,18 +53,10 @@ public class RTESamplerTest {
 
   private static final long CUSTOM_TIMEOUT_MILLIS = 3000;
   private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
-  private static final String TEST_SCREEN = "Test screen";
-  private static final String BASE_REQUEST_HEADERS_FORMAT = "Server: server\n"
-      + "Port: 23\n"
-      + "Protocol: TN5250\n"
-      + "Terminal-type: IBM-3179-2: 24x80\n"
-      + "Security: %s\n"
-      + "Action: %s\n";
-  private static final String REQUEST_HEADERS_FORMAT = BASE_REQUEST_HEADERS_FORMAT
-      + "Input-inhibited: %b\n";
-  private static final String REQUEST_BODY = "AttentionKey: ENTER\n"
-      + "Inputs:\n"
-      + "1,1,input\n";
+  private static final String TEST_SCREEN = "Test screen\n";
+  private static final List<Input> INPUTS = Collections
+      .singletonList(new CoordInput(new Position(1, 1), "input"));
+  private static final Position CURSOR_POSITION = new Position(1, 1);
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
@@ -85,30 +82,24 @@ public class RTESamplerTest {
     when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
 
     when(rteProtocolClientMock.resetAlarm()).thenReturn(false);
-    when(rteProtocolClientMock.getCursorPosition()).thenReturn(Optional.of(new Position(1, 1)));
-    createDefaultRTEConfig();
+    when(rteProtocolClientMock.getCursorPosition()).thenReturn(Optional.of(CURSOR_POSITION));
+    buildDefaultRTEConfig();
     rteSampler.addTestElement(configTestElement);
-    rteSampler.setPayload(createInputs());
+    rteSampler.setPayload(buildInputs());
     rteSampler.getThreadContext().getVariables().incIteration();
   }
 
-  private void createDefaultRTEConfig() {
-    createRTEConfig("server", 23, RTESampler.DEFAULT_TERMINAL_TYPE, RTESampler.DEFAULT_PROTOCOL,
-        RTESampler.DEFAULT_SSLTYPE, "0");
-  }
-
-  private void createRTEConfig(String server, int port, TerminalType terminalType,
-      Protocol protocol, SSLType sslType, String connectionTimeout) {
-    configTestElement.setProperty(RTESampler.CONFIG_SERVER, server);
-    configTestElement.setProperty(RTESampler.CONFIG_PORT, port);
+  private void buildDefaultRTEConfig() {
+    configTestElement.setProperty(RTESampler.CONFIG_SERVER, "server");
+    configTestElement.setProperty(RTESampler.CONFIG_PORT, 23);
     configTestElement
-        .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, terminalType.getId());
-    configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
-    configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, sslType.name());
-    configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
+        .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, RTESampler.DEFAULT_TERMINAL_TYPE.getId());
+    configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, RTESampler.DEFAULT_PROTOCOL.name());
+    configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name());
+    configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, "0");
   }
 
-  private Inputs createInputs() {
+  private Inputs buildInputs() {
     Inputs ret = new Inputs();
     ret.addInput(new CoordInputRowGUI("1", "1", "input"));
     return ret;
@@ -125,46 +116,13 @@ public class RTESamplerTest {
     TimeoutException e = new TimeoutException();
     doThrow(e).when(rteProtocolClientMock)
         .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
-    assertSampleResult(rteSampler.sample(null), createExpectedConnectTimeoutErrorResult(e,
-        BASE_REQUEST_HEADERS_FORMAT, null));
+    assertSampleResult(rteSampler.sample(null), buildExpectedConnectTimeoutErrorResult(e));
   }
 
-  @Test
-  public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
-    InterruptedException e = new InterruptedException();
-    doThrow(e).when(rteProtocolClientMock)
-        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
-    assertSampleResult(rteSampler.sample(null), createExpectedErrorResult(e,
-        BASE_REQUEST_HEADERS_FORMAT, null));
-  }
-
-  private SampleResult createExpectedErrorResult(Exception e, String requestHeadersFormat,
-      String requestBody) {
-    SampleResult expected = new SampleResult();
-    expected.setSampleLabel(rteSampler.getName());
-    StringWriter sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
-    expected.setRequestHeaders(
-        String.format(requestHeadersFormat, SSLType.NONE, Action.SEND_INPUT, true));
-    expected.setSamplerData(requestBody);
-    expected.setSuccessful(false);
-    expected.setResponseCode(e.getClass().getName());
-    expected.setResponseMessage(e.getMessage());
-    expected.setDataType(SampleResult.TEXT);
-    expected.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    return expected;
-  }
-
-  private SampleResult createExpectedConnectTimeoutErrorResult(Exception e,
-      String requestHeadersFormat,
-      String requestBody) {
-    SampleResult expected = new SampleResult();
-    expected.setSampleLabel(rteSampler.getName());
-    StringWriter sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
-    expected.setRequestHeaders(
-        String.format(requestHeadersFormat, SSLType.NONE, Action.SEND_INPUT, true));
-    expected.setSamplerData(requestBody);
+  private RteSampleResult buildExpectedConnectTimeoutErrorResult(Exception e) {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSslType(SSLType.NONE);
+    expected.setAction(Action.SEND_INPUT);
     expected.setSuccessful(false);
     expected.setResponseCode(e.getClass().getName());
     expected.setResponseMessage(e.getMessage());
@@ -172,11 +130,13 @@ public class RTESamplerTest {
     return expected;
   }
 
-  private SampleResult createExpectedTimeoutErrorResult(Exception e, String requestHeadersFormat,
-      String requestBody) {
-    SampleResult expected = createExpectedConnectTimeoutErrorResult(e, requestHeadersFormat,
-        requestBody);
-    expected.setResponseData(TEST_SCREEN, SampleResult.DEFAULT_HTTP_ENCODING);
+  private RteSampleResult buildBaseSampleResult() {
+    RteSampleResult expected = new RteSampleResult();
+    expected.setSampleLabel(rteSampler.getName());
+    expected.setServer("server");
+    expected.setPort(23);
+    expected.setProtocol(Protocol.TN5250);
+    expected.setTerminalType(new TerminalType("IBM-3179-2", new Dimension(80, 24)));
     return expected;
   }
 
@@ -184,7 +144,29 @@ public class RTESamplerTest {
     assertThat(result)
         .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "requestHeaders", "samplerData",
             "successful", "responseCode", "responseMessage", "responseHeaders", "dataType",
-            "responseData");
+            "responseDataAsString");
+  }
+
+  @Test
+  public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
+    InterruptedException e = new InterruptedException();
+    doThrow(e).when(rteProtocolClientMock)
+        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+    assertSampleResult(rteSampler.sample(null), buildExpectedErrorResult(e));
+  }
+
+  private RteSampleResult buildExpectedErrorResult(Exception e) {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSslType(SSLType.NONE);
+    expected.setAction(Action.SEND_INPUT);
+    expected.setSuccessful(false);
+    expected.setResponseCode(e.getClass().getName());
+    expected.setResponseMessage(e.getMessage());
+    expected.setDataType(SampleResult.TEXT);
+    StringWriter sw = new StringWriter();
+    e.printStackTrace(new PrintWriter(sw));
+    expected.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
+    return expected;
   }
 
   @Test
@@ -192,8 +174,20 @@ public class RTESamplerTest {
     IllegalArgumentException e = new IllegalArgumentException();
     doThrow(e).when(rteProtocolClientMock)
         .send(any(), any());
-    assertSampleResult(rteSampler.sample(null),
-        createExpectedErrorResult(e, REQUEST_HEADERS_FORMAT, REQUEST_BODY));
+    RteSampleResult expected = buildExpectedErrorResult(e);
+    expected.setInputInhibitedRequest(true);
+    expected.setInputs(INPUTS);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    SampleResult result = rteSampler.sample(null);
+    // stack traces won't match since they are obtained from different parts of code, so we just truncate them
+    truncateExceptionStacktrace(result);
+    truncateExceptionStacktrace(expected);
+    assertSampleResult(result, expected);
+  }
+
+  private void truncateExceptionStacktrace(SampleResult result) {
+    String response = result.getResponseDataAsString();
+    result.setResponseData(response.substring(0, response.indexOf('\n')), "UTF-8");
   }
 
   @Test
@@ -202,53 +196,45 @@ public class RTESamplerTest {
     doThrow(e).
         when(rteProtocolClientMock).await(any());
     when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
-    assertSampleResult(rteSampler.sample(null),
-        createExpectedTimeoutErrorResult(e, REQUEST_HEADERS_FORMAT, REQUEST_BODY));
+    assertSampleResult(rteSampler.sample(null), buildExpectedTimeoutErrorResult(e));
+  }
+
+  private RteSampleResult buildExpectedTimeoutErrorResult(Exception e) {
+    RteSampleResult expected = buildExpectedConnectTimeoutErrorResult(e);
+    expected.setInputInhibitedRequest(true);
+    expected.setInputs(INPUTS);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    expected.setScreen(Screen.valueOf(TEST_SCREEN));
+    return expected;
   }
 
   @Test
   public void shouldGetSuccessfulSamplerResultWhenSend() {
     SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedSuccessfulResult(
-        String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE, Action.SEND_INPUT, true), REQUEST_BODY);
+    SampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
     assertSampleResult(result, expected);
   }
 
-  private SampleResult createExpectedSuccessfulResult(String requestHeaders, String samplerData) {
-    SampleResult expected = new SampleResult();
-    expected.setSampleLabel(rteSampler.getName());
-    expected.setRequestHeaders(requestHeaders);
-    expected.setSamplerData(samplerData);
+  private RteSampleResult buildExpectedSuccessfulSendInputResult(SSLType sslType) {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSslType(sslType);
+    expected.setAction(Action.SEND_INPUT);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    expected.setInputs(INPUTS);
+    expected.setInputInhibitedRequest(true);
     expected.setSuccessful(true);
-    expected.setResponseHeaders("Input-inhibited: false\n"
-        + "Cursor-position: 1,1");
-    expected.setDataType(SampleResult.TEXT);
-    expected.setResponseData(TEST_SCREEN, "utf-8");
+    expected.setCursorPosition(CURSOR_POSITION);
+    expected.setScreen(Screen.valueOf(TEST_SCREEN));
+    expected.setInputInhibitedResponse(false);
     return expected;
   }
 
   @Test
   public void shouldGetSuccessfulSamplerWithResultAlarmHeaderResultWhenClientGetAlarmSignal() {
-    when(rteProtocolClientMock.resetAlarm()).thenReturn(true);
-    SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedSuccessfulResultWithAlarmHeader(
-        String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE, Action.SEND_INPUT, true), REQUEST_BODY);
-    assertSampleResult(result, expected);
-  }
-
-  private SampleResult createExpectedSuccessfulResultWithAlarmHeader(String requestHeaders,
-      String samplerData) {
-    SampleResult expected = new SampleResult();
-    expected.setSampleLabel(rteSampler.getName());
-    expected.setRequestHeaders(requestHeaders);
-    expected.setSamplerData(samplerData);
-    expected.setSuccessful(true);
-    expected.setResponseHeaders("Input-inhibited: false\n"
-        + "Cursor-position: 1,1\n" +
-        "Sound-Alarm: true");
-    expected.setDataType(SampleResult.TEXT);
-    expected.setResponseData(TEST_SCREEN, "utf-8");
-    return expected;
+    when(rteProtocolClientMock.isAlarmOn()).thenReturn(true);
+    RteSampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
+    expected.setSoundedAlarm(true);
+    assertSampleResult(rteSampler.sample(null), expected);
   }
 
   @Test
@@ -279,9 +265,18 @@ public class RTESamplerTest {
   @Test
   public void shouldGetConnectActionResultWhenSampleWithConnectAction() {
     rteSampler.setAction(Action.CONNECT);
-    assertSampleResult(rteSampler.sample(null),
-        createExpectedSuccessfulResult(
-            String.format(REQUEST_HEADERS_FORMAT, SSLType.NONE, Action.CONNECT, true), null));
+    assertSampleResult(rteSampler.sample(null), buildExpectedSuccessfulConnectResult());
+  }
+
+  private RteSampleResult buildExpectedSuccessfulConnectResult() {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSslType(SSLType.NONE);
+    expected.setAction(Action.CONNECT);
+    expected.setSuccessful(true);
+    expected.setCursorPosition(CURSOR_POSITION);
+    expected.setScreen(Screen.valueOf(TEST_SCREEN));
+    expected.setInputInhibitedResponse(true);
+    return expected;
   }
 
   @Test
@@ -315,7 +310,7 @@ public class RTESamplerTest {
   private void connectClient() {
     RTESampler sampler = new RTESampler(p -> rteProtocolClientMock);
     sampler.addTestElement(configTestElement);
-    sampler.setPayload(createInputs());
+    sampler.setPayload(buildInputs());
     sampler.setAction(Action.CONNECT);
     sampler.sample(null);
   }
@@ -335,14 +330,13 @@ public class RTESamplerTest {
   public void shouldGetDisconnectActionResultWhenSampleWithDisconnectAction() {
     connectClient();
     rteSampler.setAction(Action.DISCONNECT);
-    assertSampleResult(rteSampler.sample(null), createExpectedDisconnectSuccessfulResult());
+    assertSampleResult(rteSampler.sample(null), buildExpectedDisconnectSuccessfulResult());
   }
 
-  private SampleResult createExpectedDisconnectSuccessfulResult() {
-    SampleResult expected = new SampleResult();
-    expected.setSampleLabel(rteSampler.getName());
-    expected.setRequestHeaders(
-        String.format(BASE_REQUEST_HEADERS_FORMAT, SSLType.NONE, Action.DISCONNECT));
+  private RteSampleResult buildExpectedDisconnectSuccessfulResult() {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSslType(SSLType.NONE);
+    expected.setAction(Action.DISCONNECT);
     expected.setSuccessful(true);
     return expected;
   }
@@ -350,7 +344,7 @@ public class RTESamplerTest {
   @Test
   public void shouldGetDisconnectActionResultWhenSampleWithDisconnectActionAndNoExistingConnection() {
     rteSampler.setAction(Action.DISCONNECT);
-    assertSampleResult(rteSampler.sample(null), createExpectedDisconnectSuccessfulResult());
+    assertSampleResult(rteSampler.sample(null), buildExpectedDisconnectSuccessfulResult());
   }
 
   @Test
@@ -361,15 +355,14 @@ public class RTESamplerTest {
     doThrow(e)
         .when(rteProtocolClientMock).disconnect();
     SampleResult result = rteSampler.sample(null);
-    SampleResult expected = createExpectedErrorResultDisconnect(e);
+    SampleResult expected = buildExpectedErrorResultDisconnect(e);
     assertSampleResult(result, expected);
   }
 
-  private SampleResult createExpectedErrorResultDisconnect(Exception e) {
-    SampleResult expected = new SampleResult();
-    expected.setSampleLabel(rteSampler.getName());
-    expected.setRequestHeaders(
-        String.format(BASE_REQUEST_HEADERS_FORMAT, SSLType.NONE, Action.DISCONNECT));
+  private RteSampleResult buildExpectedErrorResultDisconnect(Exception e) {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSslType(SSLType.NONE);
+    expected.setAction(Action.DISCONNECT);
     expected.setSuccessful(false);
     expected.setResponseCode(e.getClass().getName());
     expected.setResponseMessage(e.getMessage());
@@ -417,7 +410,7 @@ public class RTESamplerTest {
     verify(rteProtocolClientMock)
         .await(Arrays.asList(
             new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
-            new CursorWaitCondition(new Position(1, 1), CUSTOM_TIMEOUT_MILLIS,
+            new CursorWaitCondition(CURSOR_POSITION, CUSTOM_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
@@ -430,7 +423,7 @@ public class RTESamplerTest {
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
         .await(Arrays.asList(
-            new CursorWaitCondition(new Position(1, 1), CUSTOM_TIMEOUT_MILLIS - 1,
+            new CursorWaitCondition(CURSOR_POSITION, CUSTOM_TIMEOUT_MILLIS - 1,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
             new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
@@ -465,7 +458,7 @@ public class RTESamplerTest {
     rteSampler.setWaitCursor(true);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(new CursorWaitCondition(new Position(1, 1),
+        .await(Collections.singletonList(new CursorWaitCondition(CURSOR_POSITION,
             RTESampler.DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS,
             RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
@@ -543,8 +536,8 @@ public class RTESamplerTest {
   @Test
   public void shouldGetCustomSslHeaderWhenUsingCustomSsl() {
     rteSampler.setSslType(SSLType.TLS);
-    assertSampleResult(rteSampler.sample(null), createExpectedSuccessfulResult(
-        String.format(REQUEST_HEADERS_FORMAT, SSLType.TLS, Action.SEND_INPUT, true), REQUEST_BODY));
+    assertSampleResult(rteSampler.sample(null),
+        buildExpectedSuccessfulSendInputResult(SSLType.TLS));
   }
 
 }

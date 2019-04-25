@@ -9,7 +9,6 @@ import com.google.common.base.Stopwatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +47,7 @@ public abstract class ConditionWaiterIT<T extends ConditionWaiter<?>> {
     assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
   }
 
-  protected Runnable buildOnExceptionEventGenerator() {
+  private Runnable buildOnExceptionEventGenerator() {
     return () -> listener
         .onException();
   }

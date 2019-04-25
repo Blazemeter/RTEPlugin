@@ -22,7 +22,6 @@ public class RteSampleResult extends SampleResult {
   private boolean inputInhibitedResponse;
   private Position cursorPosition;
   private boolean soundedAlarm;
-  private Screen screen;
 
   public void setServer(String server) {
     this.server = server;
@@ -73,9 +72,8 @@ public class RteSampleResult extends SampleResult {
   }
 
   public void setScreen(Screen screen) {
-    this.screen = screen;
     setDataType(SampleResult.TEXT);
-    setResponseData(screen.toString(), "utf-8");
+    setResponseData(screen != null ? screen.toString() : "", "utf-8");
   }
 
   @Override
@@ -104,15 +102,13 @@ public class RteSampleResult extends SampleResult {
 
   @Override
   public String getResponseHeaders() {
+    if (action == Action.DISCONNECT) {
+      return "";
+    }
     return "Input-inhibited: " + inputInhibitedResponse + "\n" +
         "Cursor-position: " + (cursorPosition != null ? cursorPosition.getRow() + ","
         + cursorPosition.getColumn() : "") +
         (soundedAlarm ? "\nSound-Alarm: true" : "");
-  }
-
-  @Override
-  public String getResponseDataAsString() {
-    return screen != null ? screen.toString() : "";
   }
 
 }

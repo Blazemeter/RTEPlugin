@@ -214,12 +214,39 @@ public class Tn5250Client extends BaseProtocolClient {
 
   @Override
   public Screen getScreen() {
-    Screen ret = new Screen(getScreenSize());
+    Dimension screenSize = getScreenSize();
+    Screen ret = new Screen(screenSize);
+    String screenText = client.getScreenText().replace("\n", "");
+    int textStartPos = 0;
     for (XI5250Field f : client.getFields()) {
-      // TODO fix!
-      ret.addField(1, 1, null);
+      int fieldLinealPosition = getLinealPositionFromRowAndColumn(f.getRow() + 1, f.getCol() + 1,
+          screenSize);
+      if (fieldLinealPosition > textStartPos) {
+        ret.addSegment(getRowFromLinealPosition(textStartPos, screenSize),
+            getColumnFromLinealPosition(textStartPos, screenSize),
+            screenText.substring(textStartPos, fieldLinealPosition));
+      }
+      ret.addField(f.getRow() + 1, f.getCol() + 1, f.getString());
+      textStartPos = fieldLinealPosition + f.getString().length() + 1;
+    }
+    if (textStartPos < screenText.length()) {
+      ret.addSegment(getRowFromLinealPosition(textStartPos, screenSize),
+          getColumnFromLinealPosition(textStartPos, screenSize),
+          screenText.substring(textStartPos));
     }
     return ret;
+  }
+
+  private int getLinealPositionFromRowAndColumn(int row, int column, Dimension screenSize) {
+    return (row - 1) * screenSize.width + column - 1;
+  }
+
+  private int getRowFromLinealPosition(int linealPosition, Dimension screenSize) {
+    return linealPosition / screenSize.width + 1;
+  }
+
+  private int getColumnFromLinealPosition(int linealPosition, Dimension screenSize) {
+    return linealPosition % screenSize.width + 1;
   }
 
   @Override

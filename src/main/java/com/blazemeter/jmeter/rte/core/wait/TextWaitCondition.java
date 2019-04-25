@@ -60,7 +60,7 @@ public class TextWaitCondition extends WaitCondition {
     for (int i = top; i <= bottom; i++) {
       // we increase one due to new line at end of row
       int rowStart = (i - 1) * (screenSize.width + 1);
-      builder.append(screen.substring(rowStart + left - 1, rowStart + right));
+      builder.append(screen, rowStart + left - 1, rowStart + right);
       builder.append("\n");
     }
     return builder.toString();
