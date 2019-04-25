@@ -256,6 +256,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult.setTerminalType(getTerminalType());
     sampleResult.setSslType(getSSLType());
     sampleResult.setAction(action);
+    if (action != Action.CONNECT) {
+      sampleResult.setInputInhibitedRequest(terminalClient.isInputInhibited());
+    }
     sampleResult.sampleStart();
     return sampleResult;
   }
@@ -319,10 +322,14 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     if (sampleResult.getResponseCode().isEmpty()) {
       RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
     }
-    notifyChildren(SampleListener.class,
-        t -> t.sampleOccurred(new SampleEvent(sampleResult, "Thread Group", "Recorded")));
+    notifySampleOccurred();
     //TODO set proper waits for sampler
     addTestElementToTestPlan(sampler, samplersTargetNode);
+  }
+
+  private void notifySampleOccurred() {
+    notifyChildren(SampleListener.class,
+        t -> t.sampleOccurred(new SampleEvent(sampleResult, "Thread Group", "Recorded")));
   }
 
   private RteSampleResult buildSendInputSampleResult(AttentionKey attentionKey,
@@ -346,7 +353,11 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       LOG.error("Problem while disconnecting from server", e);
       RTESampler.updateErrorResult(e, sampleResult);
     } finally {
-      recordPendingSample();
+      if (sampleResult.getResponseCode().isEmpty()) {
+        sampleResult.setSuccessful(true);
+      }
+      notifySampleOccurred();
+      addTestElementToTestPlan(sampler, samplersTargetNode);
     }
     terminalClient.removeTerminalStateListener(terminalEmulatorUpdater);
     notifyChildren(TestStateListener.class, TestStateListener::testEnded);
