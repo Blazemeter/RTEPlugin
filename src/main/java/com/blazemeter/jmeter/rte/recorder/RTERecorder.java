@@ -51,8 +51,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient TerminalEmulatorUpdater terminalEmulatorUpdater;
 
   public RTERecorder() {
-    terminalEmulator = new Xtn5250TerminalEmulator();
-    terminalEmulator.addTerminalEmulatorListener(this);
   }
 
   @Override
@@ -133,6 +131,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   public void onRecordingStart() throws Exception {
+    terminalEmulator = new Xtn5250TerminalEmulator();
+    terminalEmulator.addTerminalEmulatorListener(this);
     samplersTargetNode = findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
     // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send

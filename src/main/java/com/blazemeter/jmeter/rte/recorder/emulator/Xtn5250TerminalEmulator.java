@@ -6,39 +6,23 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
@@ -79,7 +63,6 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         }
       };
 
-  private static final Logger LOG = LoggerFactory.getLogger(Xtn5250TerminalEmulator.class);
   private static final String TITLE = "Recorder";
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
@@ -88,33 +71,43 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   private boolean locked = false;
   private JFrame frame;
   private XI5250Crt xi5250Crt;
-  private StatusPanel statusPanel;
+  private StatusPanel statusPanel = new StatusPanel();
 
   @Override
   public void start(int columns, int rows) {
     xi5250Crt = new XI5250Crt() {
       @Override
-      protected synchronized void processKeyEvent(KeyEvent e) {
-        AttentionKey attentionKey = null;
-        if (e.getID() == KeyEvent.KEY_PRESSED) {
-          attentionKey = KEY_EVENTS
-              .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-          if (attentionKey != null) {
-            List<Input> fields = getInputFields();
-            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-              listener.onAttentionKey(attentionKey, fields);
+      protected void processKeyEvent(KeyEvent e) {
+        synchronized (Xtn5250TerminalEmulator.this) {
+          AttentionKey attentionKey = null;
+          if (e.getID() == KeyEvent.KEY_PRESSED) {
+            attentionKey = KEY_EVENTS
+                .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
+            if (attentionKey != null) {
+
+              List<Input> fields = getInputFields();
+              for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+                listener.onAttentionKey(attentionKey, fields);
+              }
             }
           }
-        }
-        if (!locked || attentionKey != null) {
-          //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
-          // when shift mask is enabled, in this way allways delete
-          if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-            e.setModifiers(KeyEvent.SHIFT_MASK);
+          if (!locked || attentionKey != null) {
+            //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
+            // when shift mask is enabled, in this way allways delete
+            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+              e.setModifiers(KeyEvent.SHIFT_MASK);
+            }
+            super.processKeyEvent(e);
+            statusPanel
+                .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
           }
-          super.processKeyEvent(e);
-          statusPanel
-              .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+        }
+      }
+
+      @Override
+      public void paintComponent(Graphics g) {
+        synchronized (Xtn5250TerminalEmulator.this) {
+          super.paintComponent(g);
         }
       }
     };
@@ -126,7 +119,6 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
     frame = new JFrame(TITLE);
     frame.setLayout(new BorderLayout());
     frame.add(xi5250Crt, BorderLayout.CENTER);
-    statusPanel = new StatusPanel();
     frame.add(statusPanel, BorderLayout.SOUTH);
     frame.addWindowListener(new WindowAdapter() {
 
@@ -252,177 +244,4 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
   }
 
-  private static class StatusPanel extends JPanel {
-
-    private static final ImageIcon ALARM_ICON = new ImageIcon(
-        StatusPanel.class.getResource("/alarm.png"));
-    private static final ImageIcon KEYBOARD_LOCKED_ICON = new ImageIcon(
-        StatusPanel.class.getResource("/keyboard-locked.png"));
-    private static final ImageIcon KEYBOARD_UNLOCKED_ICON = new ImageIcon(
-        StatusPanel.class.getResource("/keyboard-unlocked.png"));
-    private static final ImageIcon HELP_ICON = new ImageIcon(
-        StatusPanel.class.getResource("/help.png"));
-
-    private JLabel positionLabel = new JLabel("row: 00 / column: 00");
-    private JLabel messageLabel = new JLabel("");
-    private AlarmLabel alarmLabel = new AlarmLabel(ALARM_ICON);
-    private JLabel keyboardLabel = new JLabel(KEYBOARD_UNLOCKED_ICON);
-    private JLabel helpLabel = new JLabel(HELP_ICON);
-
-    private HelpFrame helpFrame;
-
-    private StatusPanel() {
-      alarmLabel.setVisible(false);
-      helpLabel.addMouseListener(new MouseListener() {
-        @Override
-        public void mouseClicked(MouseEvent mouseEvent) {
-          if (helpFrame == null) {
-            helpFrame = new HelpFrame();
-          } else {
-            helpFrame.requestFocus();
-            helpFrame.setVisible(true);
-          }
-        }
-
-        @Override
-        public void mousePressed(MouseEvent mouseEvent) {
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent mouseEvent) {
-        }
-
-        @Override
-        public void mouseEntered(MouseEvent mouseEvent) {
-        }
-
-        @Override
-        public void mouseExited(MouseEvent mouseEvent) {
-        }
-
-      });
-
-      GroupLayout layout = new GroupLayout(this);
-      layout.setAutoCreateGaps(true);
-      setLayout(layout);
-
-      int messageLabelWidth = 133;
-      int alarmLabelWidth = 16;
-      int keyboardLabelWidth = 22;
-      int helpLabelWidth = 19;
-
-      layout.setHorizontalGroup(layout.createSequentialGroup()
-          .addGap(5)
-          .addComponent(positionLabel, messageLabelWidth, messageLabelWidth,
-              messageLabelWidth)
-          .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(messageLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
-              Short.MAX_VALUE)
-          .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(alarmLabel, alarmLabelWidth, alarmLabelWidth, alarmLabelWidth)
-          .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(keyboardLabel, keyboardLabelWidth, keyboardLabelWidth, keyboardLabelWidth)
-          .addPreferredGap(ComponentPlacement.UNRELATED)
-          .addComponent(helpLabel, helpLabelWidth, helpLabelWidth, helpLabelWidth)
-          .addGap(5));
-      layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
-          .addComponent(positionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE)
-          .addComponent(messageLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE)
-          .addComponent(alarmLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE)
-          .addComponent(keyboardLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE)
-          .addComponent(helpLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-              GroupLayout.PREFERRED_SIZE));
-    }
-
-    private void updateStatusBarCursorPosition(int row, int col) {
-      this.positionLabel.setText("row: " + row + " / column: " + col);
-      repaint();
-    }
-
-    public void setStatusMessage(String message) {
-      this.messageLabel.setText(message);
-      repaint();
-    }
-
-    public void soundAlarm() {
-      alarmLabel.soundAlarm();
-    }
-
-    public void setKeyboardStatus(boolean locked) {
-      if (locked) {
-        this.keyboardLabel.setIcon(KEYBOARD_LOCKED_ICON);
-      } else {
-        this.keyboardLabel.setIcon(KEYBOARD_UNLOCKED_ICON);
-      }
-    }
-
-    public void dispose() {
-      alarmLabel.shutdown();
-    }
-
-    private static class AlarmLabel extends JLabel {
-
-      private ScheduledExecutorService alarmExecutor = Executors.newSingleThreadScheduledExecutor();
-      private ScheduledFuture future;
-      private int counter;
-
-      private AlarmLabel(ImageIcon icon) {
-        super(icon);
-      }
-
-      private synchronized void soundAlarm() {
-        if (future != null) {
-          future.cancel(true);
-          setVisible(false);
-        }
-        counter = 0;
-        setVisible(true);
-        future = alarmExecutor.scheduleAtFixedRate(() -> {
-          setVisible(!isVisible());
-          if (counter < 10) {
-            counter++;
-          } else {
-            future.cancel(true);
-            setVisible(false);
-          }
-        }, 0, 500, TimeUnit.MILLISECONDS);
-      }
-
-      private void shutdown() {
-        alarmExecutor.shutdown();
-      }
-    }
-
-    private static class HelpFrame extends JFrame {
-
-      private static final String HELP_FRAME_TITLE = "Help";
-
-      private HelpFrame() {
-        setTitle(HELP_FRAME_TITLE);
-        setLayout(new CardLayout());
-        JLabel helpLabel = null;
-        try {
-          helpLabel = new JLabel(
-              IOUtils.toString(HelpFrame.class.getResourceAsStream("/recorder-help.html")));
-        } catch (IOException e) {
-          LOG.error("Error when loading help panel", e);
-        }
-        add(helpLabel);
-        addWindowListener(new WindowAdapter() {
-          @Override
-          public void windowOpened(WindowEvent e) {
-            requestFocus();
-          }
-        });
-        setVisible(true);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setBounds(0, 0, 600, 300);
-      }
-
-    }
-  }
 }

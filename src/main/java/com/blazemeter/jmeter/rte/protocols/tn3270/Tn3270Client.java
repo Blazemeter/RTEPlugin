@@ -24,6 +24,7 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270TerminalStateListenerProxy;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
 import com.bytezone.dm3270.TerminalClient;
@@ -145,8 +146,10 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public void addTerminalStateListener(TerminalStateListener listener) {
-    ScreenChangeListener listenerProxy = screenWatcher -> listener.onTerminalStateChange();
+    Tn3270TerminalStateListenerProxy listenerProxy = new Tn3270TerminalStateListenerProxy(listener);
     client.addScreenChangeListener(listenerProxy);
+    client.addKeyboardStatusListener(listenerProxy);
+    client.addCursorMoveListener(listenerProxy);
     listenersProxies.put(listener, listenerProxy);
   }
 
