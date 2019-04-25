@@ -19,13 +19,18 @@ import org.junit.Test;
 
 public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
 
-  private static final String EXPECTED_SCREEN = "hello";
+  private static final String EXPECTED_SCREEN = "hello\n";
 
   @Before
   @Override
   public void setup() throws Exception {
-    setupScreenWithText("Welcome");
+    setupScreenWithText("Welcome\n");
     super.setup();
+  }
+
+  private void setupScreenWithText(String screen) {
+    when(client.getScreen()).thenReturn(Screen.valueOf(screen));
+    when(client.getScreenSize()).thenReturn(new Dimension(screen.length(), 1));
   }
 
   @Override
@@ -40,11 +45,6 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
         client,
         stableTimeoutExecutor,
         exceptionHandler);
-  }
-
-  private void setupScreenWithText(String screen) {
-    when(client.getScreen()).thenReturn(Screen.valueOf(screen));
-    when(client.getScreenSize()).thenReturn(new Dimension(screen.length(), 1));
   }
 
   @Test
@@ -82,7 +82,7 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedScreenNotMatchingRegexInArea()
       throws Exception {
-    setupScreenWithText("Welcome");
+    setupScreenWithText("Welcome\n");
     buildNewPanelGenerator().run();
     listener.await();
   }

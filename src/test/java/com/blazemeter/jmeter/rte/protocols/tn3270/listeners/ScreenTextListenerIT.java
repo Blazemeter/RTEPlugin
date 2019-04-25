@@ -20,7 +20,7 @@ import org.mockito.Mock;
 
 public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
 
-  private static final String EXPECTED_SCREEN = "hello";
+  private static final String EXPECTED_SCREEN = "hello\n";
 
   @Mock
   private ScreenWatcher screenWatcher;
@@ -28,7 +28,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
   @Before
   @Override
   public void setup() throws Exception {
-    setupScreenWithText("Welcome");
+    setupScreenWithText("Welcome\n");
     super.setup();
   }
 
@@ -83,7 +83,7 @@ public class ScreenTextListenerIT extends Tn3270ConditionWaiterIT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedScreenNotMatchingRegexInArea()
       throws Exception {
-    setupScreenWithText("Welcome");
+    setupScreenWithText("Welcome\n");
     buildScreenStateChangeGenerator().run();
     listener.await();
   }

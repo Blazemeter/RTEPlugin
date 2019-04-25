@@ -7,10 +7,7 @@ import static org.assertj.swing.timing.Timeout.timeout;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.driver.WaitForComponentToShowCondition;
 import org.assertj.swing.fixture.AbstractJComponentFixture;

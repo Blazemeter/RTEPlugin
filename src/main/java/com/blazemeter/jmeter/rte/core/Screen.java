@@ -49,7 +49,7 @@ public class Screen {
     StringBuilder line = new StringBuilder();
     for (Segment segment : segments) {
       if (segment.row > currentLine) {
-        if (line.length() < size.width) {
+        if (line.length() > 0 && line.length() < size.width) {
           completeLine(line, screen);
           currentLine++;
           line = new StringBuilder();
@@ -64,7 +64,7 @@ public class Screen {
         line.append(StringUtils.repeat(' ', segment.column - (line.length() + 1)));
       }
       String segmentText = segment.text;
-      while (segmentText.length() > (size.width - line.length())) {
+      while (segmentText.length() >= (size.width - line.length())) {
         String lineSegmentText = segmentText.substring(0, size.width - line.length());
         line.append(lineSegmentText);
         line.append('\n');
@@ -73,9 +73,11 @@ public class Screen {
         line = new StringBuilder();
         segmentText = segmentText.substring(lineSegmentText.length());
       }
-      line.append(segmentText);
+      if (!segmentText.isEmpty()) {
+        line.append(segmentText);
+      }
     }
-    if (line.length() < size.width) {
+    if (line.length() > 0 && line.length() < size.width) {
       completeLine(line, screen);
       currentLine++;
     }
@@ -84,7 +86,10 @@ public class Screen {
       screen.append('\n');
       currentLine++;
     }
-    return screen.toString();
+    // in tn5250 and potentially other protocols, the screen contains non visible characters which
+    // are used as markers of no data or additional info. We replace them with spaces for better
+    // visualization in text representation.
+    return screen.toString().replace('\u0000', ' ');
   }
 
   private void completeLine(StringBuilder line, StringBuilder screen) {

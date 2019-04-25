@@ -46,7 +46,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    assertThat(client.getScreen())
+    assertThat(client.getScreen().toString())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
@@ -64,7 +64,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
-    assertThat(client.getScreen())
+    assertThat(client.getScreen().toString())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
@@ -100,7 +100,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     sendUsernameWithSyncWait();
-    assertThat(client.getScreen())
+    assertThat(client.getScreen().toString())
         .isEqualTo(getFileContent("user-menu-screen.txt"));
   }
 
@@ -120,7 +120,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     sendUsernameWithSyncWait();
     sendPasswordByLabelWithSyncWait();
-    assertThat(client.getScreen())
+    assertThat(client.getScreen().toString())
         .isEqualTo(getFileContent("login-success-screen.txt"));
   }
 
@@ -231,7 +231,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     sendUsernameWithSyncWait();
     client.disconnect();
     connectToVirtualService();
-    assertThat(client.getScreen())
+    assertThat(client.getScreen().toString())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 

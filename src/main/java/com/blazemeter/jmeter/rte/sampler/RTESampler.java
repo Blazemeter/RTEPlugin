@@ -9,6 +9,7 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -510,8 +511,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       LOG.error("The sampling has been interrupted", e);
       return errorResult(e, rteSampleResult);
     } catch (TimeoutException e) {
-      return timeoutErrorResult(e, rteSampleResult,
-          client != null ? client.getScreen().toString() : "");
+      return timeoutErrorResult(e, rteSampleResult, client != null ? client.getScreen() : null);
     } catch (Exception e) {
       LOG.error("Error while sampling the remote terminal", e);
       return errorResult(e, rteSampleResult);
@@ -612,7 +612,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     rteSampleResult.setScreen(client.getScreen());
   }
 
-  public static SampleResult errorResult(Throwable e, SampleResult sampleResult) {
+  public static RteSampleResult errorResult(Throwable e, RteSampleResult sampleResult) {
     sampleResult.setSuccessful(false);
     sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
@@ -624,13 +624,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return sampleResult;
   }
 
-  private SampleResult timeoutErrorResult(Throwable e, SampleResult sampleResult, String screen) {
+  private RteSampleResult timeoutErrorResult(Throwable e, RteSampleResult sampleResult,
+      Screen screen) {
     sampleResult.setSuccessful(false);
     sampleResult.setResponseHeaders("");
     sampleResult.setResponseCode(e.getClass().getName());
     sampleResult.setResponseMessage(e.getMessage());
-    sampleResult.setDataType(SampleResult.TEXT);
-    sampleResult.setResponseData(screen, SampleResult.DEFAULT_HTTP_ENCODING);
+    sampleResult.setScreen(screen);
     LOG.warn("Timeout error", e);
     return sampleResult;
   }
