@@ -603,36 +603,35 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         getStableTimeout());
   }
 
-  public static void updateSampleResultResponse(RteSampleResult rteSampleResult,
+  public static void updateSampleResultResponse(RteSampleResult result,
       RteProtocolClient client) {
-    rteSampleResult.setSuccessful(true);
-    rteSampleResult.setCursorPosition(client.getCursorPosition().orElse(null));
-    rteSampleResult.setSoundedAlarm(client.isAlarmOn());
-    rteSampleResult.setInputInhibitedResponse(client.isInputInhibited());
-    rteSampleResult.setScreen(client.getScreen());
+    result.setSuccessful(true);
+    result.setCursorPosition(client.getCursorPosition().orElse(null));
+    result.setSoundedAlarm(client.isAlarmOn());
+    result.setInputInhibitedResponse(client.isInputInhibited());
+    result.setScreen(client.getScreen());
   }
 
-  public static RteSampleResult updateErrorResult(Throwable e, RteSampleResult sampleResult) {
-    sampleResult.setSuccessful(false);
-    sampleResult.setResponseHeaders("");
-    sampleResult.setResponseCode(e.getClass().getName());
-    sampleResult.setResponseMessage(e.getMessage());
-    sampleResult.setDataType(SampleResult.TEXT);
+  public static RteSampleResult updateErrorResult(Throwable e, RteSampleResult result) {
+    result.setSuccessful(false);
+    result.setResponseHeaders("");
+    result.setResponseCode(e.getClass().getName());
+    result.setResponseMessage(e.getMessage());
+    result.setDataType(SampleResult.TEXT);
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));
-    sampleResult.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    return sampleResult;
+    result.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
+    return result;
   }
 
-  private RteSampleResult timeoutErrorResult(Throwable e, RteSampleResult sampleResult,
-      Screen screen) {
-    sampleResult.setSuccessful(false);
-    sampleResult.setResponseHeaders("");
-    sampleResult.setResponseCode(e.getClass().getName());
-    sampleResult.setResponseMessage(e.getMessage());
-    sampleResult.setScreen(screen);
+  private RteSampleResult timeoutErrorResult(Throwable e, RteSampleResult result, Screen screen) {
+    result.setSuccessful(false);
+    result.setResponseHeaders("");
+    result.setResponseCode(e.getClass().getName());
+    result.setResponseMessage(e.getMessage());
+    result.setScreen(screen);
     LOG.warn("Timeout error", e);
-    return sampleResult;
+    return result;
   }
 
   @Override

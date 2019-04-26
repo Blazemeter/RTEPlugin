@@ -1,8 +1,71 @@
-<html><h1><span style="color: #008000;">Attenion Key List</span></h1>
-<p style="padding-left: 30px;"><span
-    style="color: #008000;"><strong>F1 -</strong> F1</span><br/><span
-    style="color: #008000;"><strong>F2 -</strong> F1</span><br/><span
-    style="color: #008000;"><strong>F3 -</strong>F1</span><br/><span
-    style="color: #008000;">...</span><br/><span style="color: #008000;"><strong>F13 -</strong> Shift + F1</span><br/><span
-    style="color: #008000;">...</span><br/><span style="color: #008000;"><strong>SysReq -</strong> Shift + ESC</span>
-</p></html>
+<html>
+<head>
+  <style type="text/css">
+      th { text-align: left }
+
+  </style>
+</head>
+<body>
+<h1>BZM RTE emulator help</h1>
+<h2>Keyboard mapping</h2>
+<table>
+  <tr>
+    <th style="border: none">Keys</th>
+    <th style="border: none">Action</th>
+  </tr>
+  <tr>
+    <td>Arrows</td>
+    <td>move cursor position</td>
+  </tr>
+  <tr>
+    <td>Backspace</td>
+    <td>Remove previous character and move cursor one position back</td>
+  </tr>
+  <tr>
+    <td>Delete</td>
+    <td>Remove character at cursor position</td>
+  </tr>
+  <tr>
+    <td>Enter</td>
+    <td>Send Enter attention key</td>
+  </tr>
+  <tr>
+    <td>F[1..12]</td>
+    <td>Trigger associated F[1..12] attention key</td>
+  </tr>
+  <tr>
+    <td>SHIFT + F[1..12]</td>
+    <td>Trigger associated F[13..24] attention key</td>
+  </tr>
+  <tr>
+    <td>SHIFT + ESC</td>
+    <td>Send SysReq attention key</td>
+  </tr>
+</table>
+<h2>Status bar</h2>
+<table>
+  <tr>
+    <th style="border: none">Indicator</th>
+    <th style="border: none">Description</th>
+  </tr>
+  <tr>
+    <td>row: X / column: Y</td>
+    <td>Row and column where the cursor is positioned<br/>First row and column is 1</td>
+  </tr>
+  <tr>
+    <td><img src="{{resourcesPath}}/keyboard-unlocked.png"/> / <img
+        src="{{resourcesPath}}/keyboard-locked.png"/></td>
+    <td>Shows whether keyboard input is enabled or not</td>
+  </tr>
+  <tr>
+    <td><img src="{{resourcesPath}}/alarm.png"/></td>
+    <td>Displayed when mainframe application triggers an alarm<br/>This will blink for 5 seconds
+      and is accompanied by an audio alert
+    </td>
+  </tr>
+</table>
+<h2>Credits</h2>
+This emulator is and adapted version of the great open source <a
+    href="https://sourceforge.net/projects/xtn5250/">XTN5250</a> emulator.
+</body>
+</html>

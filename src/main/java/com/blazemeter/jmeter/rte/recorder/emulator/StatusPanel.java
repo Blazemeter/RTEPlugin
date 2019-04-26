@@ -1,11 +1,11 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import java.awt.CardLayout;
+import java.awt.Desktop;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -16,12 +16,15 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class StatusPanel extends JPanel {
+public class StatusPanel extends JPanel {
 
   private static final Logger LOG = LoggerFactory.getLogger(StatusPanel.class);
 
@@ -41,18 +44,55 @@ class StatusPanel extends JPanel {
 
   private HelpFrame helpFrame;
 
-  StatusPanel() {
+  public StatusPanel() {
     alarmLabel.setVisible(false);
     JLabel helpLabel = new JLabel(HELP_ICON);
-    helpLabel.addMouseListener(new MouseListener() {
+    helpLabel.addMouseListener(buildShowHelpOnMouseClickListener());
+
+    GroupLayout layout = new GroupLayout(this);
+    layout.setAutoCreateContainerGaps(true);
+    layout.setAutoCreateGaps(true);
+    setLayout(layout);
+
+    int messageLabelWidth = 133;
+    int alarmLabelWidth = 16;
+    int keyboardLabelWidth = 22;
+    int helpLabelWidth = 19;
+
+    layout.setHorizontalGroup(layout.createSequentialGroup()
+        .addComponent(positionLabel, messageLabelWidth, messageLabelWidth,
+            messageLabelWidth)
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addComponent(messageLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+            Short.MAX_VALUE)
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addComponent(alarmLabel, alarmLabelWidth, alarmLabelWidth, alarmLabelWidth)
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addComponent(keyboardLabel, keyboardLabelWidth, keyboardLabelWidth, keyboardLabelWidth)
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addComponent(helpLabel, helpLabelWidth, helpLabelWidth, helpLabelWidth));
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+        .addComponent(positionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(messageLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(alarmLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(keyboardLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(helpLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+  }
+
+  private MouseListener buildShowHelpOnMouseClickListener() {
+    return new MouseListener() {
       @Override
       public void mouseClicked(MouseEvent mouseEvent) {
         if (helpFrame == null) {
           helpFrame = new HelpFrame();
-        } else {
-          helpFrame.requestFocus();
-          helpFrame.setVisible(true);
         }
+        helpFrame.setVisible(true);
+        helpFrame.requestFocus();
       }
 
       @Override
@@ -71,42 +111,7 @@ class StatusPanel extends JPanel {
       public void mouseExited(MouseEvent mouseEvent) {
       }
 
-    });
-
-    GroupLayout layout = new GroupLayout(this);
-    layout.setAutoCreateGaps(true);
-    setLayout(layout);
-
-    int messageLabelWidth = 133;
-    int alarmLabelWidth = 16;
-    int keyboardLabelWidth = 22;
-    int helpLabelWidth = 19;
-
-    layout.setHorizontalGroup(layout.createSequentialGroup()
-        .addGap(5)
-        .addComponent(positionLabel, messageLabelWidth, messageLabelWidth,
-            messageLabelWidth)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(messageLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
-            Short.MAX_VALUE)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(alarmLabel, alarmLabelWidth, alarmLabelWidth, alarmLabelWidth)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(keyboardLabel, keyboardLabelWidth, keyboardLabelWidth, keyboardLabelWidth)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(helpLabel, helpLabelWidth, helpLabelWidth, helpLabelWidth)
-        .addGap(5));
-    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
-        .addComponent(positionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(messageLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(alarmLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(keyboardLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(helpLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE));
+    };
   }
 
   public void updateStatusBarCursorPosition(int row, int col) {
@@ -175,25 +180,49 @@ class StatusPanel extends JPanel {
 
     private HelpFrame() {
       setTitle(HELP_FRAME_TITLE);
-      setLayout(new CardLayout());
-      JLabel helpLabel = null;
+      setLayout(new CardLayout(10, 10));
+      JTextPane textPane = new JTextPane();
+      textPane.setContentType("text/html");
+      textPane.setText(buildHelpHtml());
+      textPane.setEditable(false);
+      textPane.setOpaque(false);
+      textPane.addHyperlinkListener(buildOpenBrowserLinkListener());
+      add(textPane);
+      setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+      pack();
+    }
+
+    private String buildHelpHtml() {
       try {
-        helpLabel = new JLabel(
-            IOUtils.toString(HelpFrame.class.getResourceAsStream("/recorder-help.html"), "UTF-8"));
+        String helpHtmlPath = "/recorder-help.html";
+        String helpHtml = IOUtils
+            .toString(HelpFrame.class.getResourceAsStream(helpHtmlPath), "UTF-8");
+        return helpHtml.replace("{{resourcesPath}}", getBaseResourcesPath(helpHtmlPath));
       } catch (IOException e) {
         LOG.error("Error when loading help panel", e);
+        return "PROBLEM LOADING HELP!, check logs.";
       }
-      add(helpLabel);
-      addWindowListener(new WindowAdapter() {
-        @Override
-        public void windowOpened(WindowEvent e) {
-          requestFocus();
+    }
+
+    private String getBaseResourcesPath(String helpHtmlPath) {
+      String helpHtmlFullResourcePath = HelpFrame.class.getResource(helpHtmlPath).toString();
+      return helpHtmlFullResourcePath
+          .substring(0, helpHtmlFullResourcePath.length() - helpHtmlPath.length());
+    }
+
+    private HyperlinkListener buildOpenBrowserLinkListener() {
+      return event -> {
+        if (HyperlinkEvent.EventType.ACTIVATED.equals(event.getEventType())) {
+          Desktop desktop = Desktop.getDesktop();
+          try {
+            desktop.browse(event.getURL().toURI());
+          } catch (IOException | URISyntaxException exception) {
+            LOG.error("Problem when accessing repository", exception);
+          }
         }
-      });
-      setVisible(true);
-      setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-      setBounds(0, 0, 600, 300);
+      };
     }
 
   }
+
 }
