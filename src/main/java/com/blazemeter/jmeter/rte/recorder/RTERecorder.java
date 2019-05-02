@@ -264,7 +264,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private String buildSampleName(Action action) {
-    return " bzm-RTE-" + action + (action == Action.SEND_INPUT ? "-" + sampleCount : "");
+    return "bzm-RTE-" + action + (action == Action.SEND_INPUT ? "-" + sampleCount : "");
   }
 
   private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
@@ -355,6 +355,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     } finally {
       if (sampleResult.getResponseCode().isEmpty()) {
         sampleResult.setSuccessful(true);
+        sampleResult.sampleEnd();
       }
       notifySampleOccurred();
       addTestElementToTestPlan(sampler, samplersTargetNode);
