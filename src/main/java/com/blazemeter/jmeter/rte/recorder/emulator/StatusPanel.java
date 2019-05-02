@@ -16,6 +16,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.event.HyperlinkEvent;
@@ -187,7 +188,8 @@ public class StatusPanel extends JPanel {
       textPane.setEditable(false);
       textPane.setOpaque(false);
       textPane.addHyperlinkListener(buildOpenBrowserLinkListener());
-      add(textPane);
+      JScrollPane scrollPane = new JScrollPane(textPane);
+      add(scrollPane);
       setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
       pack();
     }
