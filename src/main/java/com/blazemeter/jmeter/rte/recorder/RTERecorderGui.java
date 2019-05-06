@@ -71,6 +71,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
       recordingPanel.setTerminalType(recorder.getTerminalType());
       recordingPanel.setSSLType(recorder.getSSLType());
       recordingPanel.setConnectionTimeout(String.valueOf(recorder.getConnectionTimeout()));
+      recordingPanel.setThresholdTime(String.valueOf(recorder.getThresholdTime()));
     }
   }
 

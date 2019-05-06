@@ -127,6 +127,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }
 
+  public long getThresholdTime() {
+   
+  }
+  
   public void setRecordingStateListener(RecordingStateListener listener) {
     recordingListener = listener;
   }
