@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.recorder;
 
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 
 import java.util.ArrayList;
@@ -7,22 +8,33 @@ import java.util.Date;
 import java.util.List;
 
 public class WaitConditionsRecorder {
-  private long timeOutThreshold;
+  public final long stablePeriod = 1000L;
+  public long timeOutThreshold;
   private Date currentDate;
- 
-  public void startTime() {
-          this.currentDate = new Date();
+  private RteProtocolClient terminalClient;
+
+  public WaitConditionsRecorder(RteProtocolClient terminalClient) {
+    this.terminalClient = terminalClient;
   }
-  
-  public List<WaitCondition> buildWaitConditios() {
+
+  public WaitConditionsRecorder() {
+
+  }
+
+  public List<WaitCondition> buildWaitConditions() {
     List<WaitCondition> waiters = new ArrayList<>();
-    
-    waiters.add(new WaitCondition() {
-      @Override
-      public String getDescription() {
-        return null;
-      }
-    });
-return waiters;
+    return waiters;
+  }
+
+  public void start() {
+    currentDate = new Date();
+  }
+
+  public Date getStartTime() {
+    return currentDate;
+  }
+
+  public boolean getInputInhibitedStatus() {
+    return terminalClient.isInputInhibited();
   }
 }
