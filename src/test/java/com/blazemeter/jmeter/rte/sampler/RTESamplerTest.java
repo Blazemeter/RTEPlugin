@@ -37,8 +37,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
+import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
+import org.assertj.core.api.AbstractObjectAssert;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -538,6 +540,80 @@ public class RTESamplerTest {
     rteSampler.setSslType(SSLType.TLS);
     assertSampleResult(rteSampler.sample(null),
         buildExpectedSuccessfulSendInputResult(SSLType.TLS));
+  }
+
+  private void assertDifferentSampleResult(SampleResult result, SampleResult expected) {
+
+    boolean anyDifference = false;
+
+    //I should use another method to compare this differences
+    anyDifference = (result.isSuccessful() != expected.isSuccessful() ? true : anyDifference);
+    anyDifference = (!result.getSampleLabel().equals(expected.getSampleLabel()) ? true : anyDifference);
+
+    assertThat(anyDifference == true);
+
+  }
+
+  @Test
+  public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse(){
+
+    RteSampleResult sampleA = buildBaseSampleResult();
+    RteSampleResult sampleB = buildBaseSampleResult();
+
+    rteSampler.updateSampleResultResponse(sampleA, rteProtocolClientMock);
+
+    assertDifferentSampleResult(sampleA, sampleB);
+  }
+
+  @Test
+  public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition(){
+
+    RteSampleResult sampleA = buildBaseSampleResult();
+
+    String[] responseHeadersBefore = sampleA.getResponseHeaders().split("\n");
+
+    rteSampler.updateSampleResultResponse(sampleA, rteProtocolClientMock);
+
+    String[] responseHeadersAfter = sampleA.getResponseHeaders().split("\n");
+
+    boolean areDifferent = (!responseHeadersBefore[1].equals(responseHeadersAfter[1]));
+
+    assertThat(areDifferent);
+
+  }
+
+  @Test
+  public void shouldUpdateErrorResultWhenErrorOccours(){
+
+    try {
+      int testOperation = 1/0;
+    }
+    catch(Exception e){
+      RteSampleResult rteSampleResult = rteSampler.updateErrorResult(e, buildExpectedErrorResult(e));
+
+      assertThat(rteSampleResult.getResponseMessage().equals("/ by zero"));
+    }
+  }
+
+  @Test
+  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs(){
+
+    SampleResult resultA = rteSampler.sample(null);
+
+    List<Input> customInputs = Collections
+            .singletonList(new CoordInput(new Position(3, 2), "input"));
+
+    rteSampler.setInputs(customInputs);
+    rteSampler.setAction(Action.SEND_INPUT);
+
+    SampleResult resultB = rteSampler.sample(null);
+
+    String samplerDataA = resultA.getSamplerData();
+    String samplerDataB = resultB.getSamplerData();
+
+    boolean differentInputs = (!samplerDataA.equals(samplerDataB));
+
+    assertThat(differentInputs);
   }
 
 }
