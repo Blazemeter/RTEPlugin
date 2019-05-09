@@ -22,6 +22,7 @@ public class RTEConfigGui extends AbstractConfigGui {
 
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(rteConfigPanelConfigPanel, BorderLayout.CENTER);
+    add(new BlazemeterLabsLogo(), BorderLayout.PAGE_END);
   }
 
   @VisibleForTesting

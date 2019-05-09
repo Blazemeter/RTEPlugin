@@ -40,7 +40,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     RecordingStateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
-
+  private static final long DEFAULT_WAIT_CONDITION_THRESHOLD_TIMEOUT_MILLIS = 10000;
+  private static final String CONFIG_WAIT_CONDITION_THRESHOLD_MILLIS
+          = "waitConditionTimeoutThresholdMillis";
   private transient TerminalEmulator terminalEmulator;
   private transient JMeterTreeNode samplersTargetNode;
   private transient RecordingStateListener recordingListener;
@@ -127,14 +129,33 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     }
     setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, connectionTimeout);
   }
-  
+
+  public void setThresholdTimeoutMillis(String waitConditionsTimeoutThresholdMillis) {
+    long thresholdTimeoutMillis = DEFAULT_WAIT_CONDITION_THRESHOLD_TIMEOUT_MILLIS;
+    try {
+      thresholdTimeoutMillis = Integer.parseInt(waitConditionsTimeoutThresholdMillis);
+    } catch (NumberFormatException e) {
+      LOG.warn("Invalid threshold timeout value '{}', defaulting to {}",
+              waitConditionsTimeoutThresholdMillis,
+              DEFAULT_WAIT_CONDITION_THRESHOLD_TIMEOUT_MILLIS);
+    }
+    setProperty(CONFIG_WAIT_CONDITION_THRESHOLD_MILLIS, thresholdTimeoutMillis);
+  }
+
+  public long getThresholdTimeoutMillis() {
+    return getPropertyAsLong(CONFIG_WAIT_CONDITION_THRESHOLD_MILLIS,
+            DEFAULT_WAIT_CONDITION_THRESHOLD_TIMEOUT_MILLIS);
+  }
+
   public void setRecordingStateListener(RecordingStateListener listener) {
     recordingListener = listener;
   }
 
   public void onRecordingStart() throws Exception {
     sampleCount = 0;
-    waitConditionsRecorder = new WaitConditionsRecorder(terminalClient);
+    waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
+            getThresholdTimeoutMillis(), RTESampler.getStableTimeout());
+    waitConditionsRecorder.start();
     terminalEmulator = new Xtn5250TerminalEmulator();
     terminalEmulator.addTerminalEmulatorListener(this);
     samplersTargetNode = findTargetControllerNode();
@@ -292,7 +313,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private void initTerminalUpdater() {
     terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
     terminalClient.addTerminalStateListener(terminalEmulatorUpdater);
-    terminalEmulatorUpdater.onTerminalStateChange(); 
+    terminalEmulatorUpdater.onTerminalStateChange();
   }
 
   private void registerRequestListenerFor(SampleResult sampleResult) {
@@ -373,5 +394,4 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       recordingListener.onRecordingStop();
     }
   }
-
 }

@@ -1,27 +1,30 @@
 package com.blazemeter.jmeter.rte.recorder;
 
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 
 import java.util.Date;
 
-public abstract class WaitConditionRecorder extends WaitConditionsRecorder {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-  public long timeOutThreshold;
-  private Date startTime = getStartTime();
-  private Date lastStatusChangeTime;
-  private long maxStablePeriod;
+public abstract class WaitConditionRecorder {
+
+  protected static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
+  protected Date lastStatusChangeTime;
+  protected long maxStablePeriod;
+  protected RteProtocolClient rteProtocolClient;
 
   protected void onTerminalStatusChange() {
-    if (startTime.getTime() - lastStatusChangeTime.getTime() > maxStablePeriod) {
-      maxStablePeriod = startTime.getTime() - lastStatusChangeTime.getTime();
-    } else {
-      lastStatusChangeTime = startTime;
+    Date currentTime = new Date();
+    if (currentTime.getTime() - lastStatusChangeTime.getTime() > maxStablePeriod) {
+      maxStablePeriod = currentTime.getTime() - lastStatusChangeTime.getTime();
     }
+    lastStatusChangeTime = currentTime;
+
   }
 
   public abstract WaitCondition buildWaitCondition();
 
-  public long getMaxStablePeriod() {
-    return maxStablePeriod;
-  }
+  public abstract void start();
 }

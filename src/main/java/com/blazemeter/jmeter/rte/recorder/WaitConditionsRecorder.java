@@ -4,37 +4,36 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class WaitConditionsRecorder {
-  public final long stablePeriod = 1000L;
-  public long timeOutThreshold;
-  private Date currentDate;
-  private RteProtocolClient terminalClient;
+  private List<WaitConditionRecorder> waitConditionRecorders = new ArrayList<>();
 
-  public WaitConditionsRecorder(RteProtocolClient terminalClient) {
-    this.terminalClient = terminalClient;
-  }
-
-  public WaitConditionsRecorder() {
-
-  }
-
-  public List<WaitCondition> buildWaitConditions() {
-    List<WaitCondition> waiters = new ArrayList<>();
-    return waiters;
+  WaitConditionsRecorder(RteProtocolClient rteProtocolClient,
+                         long timeoutThresholdMillis, long stablePeriod) {
+    waitConditionRecorders.add(new SyncWaitRecorder(rteProtocolClient,
+            timeoutThresholdMillis, stablePeriod));
+    waitConditionRecorders.add(new SilentWaitRecorder());
   }
 
   public void start() {
-    currentDate = new Date();
+
+    for (WaitConditionRecorder waits : waitConditionRecorders) {
+      waits.start();
+    }
   }
 
-  public Date getStartTime() {
-    return currentDate;
+  public void stop() {
+
+    buildWaitConditions();
   }
 
-  public boolean getInputInhibitedStatus() {
-    return terminalClient.isInputInhibited();
+  public List<WaitCondition> buildWaitConditions() {
+    List<WaitCondition> waitConditionRecordersResult = new ArrayList<>();
+    for (WaitConditionRecorder waits : waitConditionRecorders) {
+      waitConditionRecordersResult.add(waits.buildWaitCondition());
+    }
+    return waitConditionRecordersResult;
   }
+
 }

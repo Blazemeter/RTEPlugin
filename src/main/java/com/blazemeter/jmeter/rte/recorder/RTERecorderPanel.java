@@ -25,8 +25,8 @@ import org.apache.jmeter.util.JMeterUtils;
 
 public class RTERecorderPanel extends JPanel implements ActionListener, RecordingStateListener {
 
-  private static JTextField currentTimeThreshold = SwingUtils
-      .createComponent("connectionTimeThreshold", new JTextField());
+  private static JTextField waitConditionsTimeoutThreshold = SwingUtils
+      .createComponent("waitConditionsTimeoutThreshold", new JTextField());
   private static final String ADD_ACTION_START = "addActionStart";
   private static final String ADD_ACTION_STOP = "addActionStop";
   private static final String ADD_ACTION_RESTART = "addActionRestart";
@@ -42,20 +42,20 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     GroupLayout layout = new GroupLayout(this);
     layout.setAutoCreateGaps(true);
     this.setLayout(layout);
-    JPanel currentTimeThreshold = buildTimeThresholdPanel();
+    JPanel waitConditionsPanel = buildTimeThresholdPanel();
     JPanel statePanel = buildStatePanel();
     configPanel = new RTEConfigPanel();
-    
+
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(statePanel)
         .addComponent(configPanel)
-        .addComponent(currentTimeThreshold)
+        .addComponent(waitConditionsPanel)
     );
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(statePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE)
         .addComponent(configPanel)
-        .addComponent(currentTimeThreshold)
+        .addComponent(waitConditionsPanel)
     );
 
   }
@@ -98,23 +98,26 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   }
 
   private JPanel buildTimeThresholdPanel() {
-    JPanel panel = SwingUtils.createComponent("Millis Threshold", new JPanel());
+    JPanel panel = SwingUtils.createComponent("timeThresholdPanel", new JPanel());
     panel
-        .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString("timelim")));
+        .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString(
+                "", "Wait conditions")));
     GroupLayout layout = new GroupLayout(panel);
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
-    JLabel connectTimeLabel = SwingUtils.createComponent("connectTimeLabel",
-        new JLabel("Wait Till"));
+    JLabel waitConditionTimeoutThreshold = SwingUtils.createComponent(
+            "waitConditionTimeoutThreshold",
+        new JLabel("Timeout threshold (ms)"));
     layout.setHorizontalGroup(layout.createSequentialGroup()
-        .addComponent(connectTimeLabel)
+        .addComponent(waitConditionTimeoutThreshold)
         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(currentTimeThreshold, GroupLayout.PREFERRED_SIZE, 150,
+        .addComponent(waitConditionsTimeoutThreshold, GroupLayout.PREFERRED_SIZE, 150,
             GroupLayout.PREFERRED_SIZE));
     layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-        .addComponent(connectTimeLabel)
-        .addComponent(currentTimeThreshold, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+        .addComponent(waitConditionTimeoutThreshold)
+        .addComponent(waitConditionsTimeoutThreshold, GroupLayout.PREFERRED_SIZE,
+                GroupLayout.DEFAULT_SIZE,
             GroupLayout.PREFERRED_SIZE));
     return panel;
   }
@@ -167,12 +170,12 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     configPanel.setConnectionTimeout(connectionTimeout);
   }
   
-  public String getThresholdTime() {
-    return currentTimeThreshold.getText();
+  public String getWaitConditionsTimeoutThresholdMillis() {
+    return waitConditionsTimeoutThreshold.getText();
   }
   
-  public void setThresholdTime(String thresholdTime) {
-    currentTimeThreshold.setText(thresholdTime);
+  public void setWaitConditionsTimeoutThresholdMillis(String thresholdTime) {
+    waitConditionsTimeoutThreshold.setText(thresholdTime);
   }
   
   @Override
