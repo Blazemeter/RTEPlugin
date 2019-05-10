@@ -30,7 +30,7 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
   @Override
   public Optional<WaitCondition> buildWaitCondition() {
 
-    if (rteProtocolClient.isInputInhibited() || lastStatusChangeTime ==null ) {
+    if (rteProtocolClient.isInputInhibited() || lastStatusChangeTime == null) {
       return Optional.empty();
     }
     if (maxStablePeriodMillis > stablePeriodMillis) {
