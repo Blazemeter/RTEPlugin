@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.recorder;
+package com.blazemeter.jmeter.rte.recorder.wait;
 
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -10,7 +10,7 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
 
   private final long stablePeriodMillis;
   private boolean lastInputInhibited = false;
-  
+
   public SyncWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
                           long stablePeriodThresholdMillis, long stablePeriodMillis) {
     super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis);
@@ -29,14 +29,17 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
 
   @Override
   public Optional<WaitCondition> buildWaitCondition() {
-    long recordedStablePeriodMillis = buildStablePeriodMillis();
-    if (recordedStablePeriodMillis > stablePeriodMillis) {
-      LOG.warn("Wait Condition time out, your query has exceeded stable time period.",
-          recordedStablePeriodMillis);
+
+    if (rteProtocolClient.isInputInhibited() || lastStatusChangeTime ==null ) {
+      return Optional.empty();
+    }
+    if (maxStablePeriodMillis > stablePeriodMillis) {
+      LOG.warn("Wait Condition time out {}, your query has exceeded stable time period.",
+          maxStablePeriodMillis);
       return Optional.empty();
     } else {
-      return Optional.of(new SyncWaitCondition(buildStablePeriodMillis(),
-          recordedStablePeriodMillis));
+      return Optional.of(new SyncWaitCondition(buildTimeout(),
+          stablePeriodMillis));
     }
   }
 
@@ -45,5 +48,5 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
     super.start();
     lastInputInhibited = rteProtocolClient.isInputInhibited();
   }
-  
+
 }

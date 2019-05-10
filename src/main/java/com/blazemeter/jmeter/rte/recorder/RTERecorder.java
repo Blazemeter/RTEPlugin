@@ -12,6 +12,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulatorListener;
 import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulator;
+import com.blazemeter.jmeter.rte.recorder.wait.WaitConditionsRecorder;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
@@ -332,9 +333,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult = buildSendInputSampleResult(attentionKey, inputs);
     registerRequestListenerFor(sampleResult);
     sampler = buildSampler(Action.SEND_INPUT, inputs, attentionKey);
-    waitConditionsRecorder.start();
     try {
       terminalClient.send(inputs, attentionKey);
+      waitConditionsRecorder.start();
     } catch (RteIOException e) {
       //TODO properly handle disconnection
       LOG.error("Problem sending input to server", e);

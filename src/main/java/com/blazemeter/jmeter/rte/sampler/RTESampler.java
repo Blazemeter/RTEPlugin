@@ -401,6 +401,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   //TODO: This method is going to be used whenever waits are added to recorder
   public void setWaitConditions(List<WaitCondition> waitConditions) {
+    setWaitSync(false);
     for (WaitCondition waitCondition : waitConditions) {
       addWaitCondition(waitCondition);
     }
