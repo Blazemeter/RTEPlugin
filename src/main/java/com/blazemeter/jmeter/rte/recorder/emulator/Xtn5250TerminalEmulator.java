@@ -79,6 +79,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   private JFrame frame;
   private XI5250Crt xi5250Crt;
   private StatusPanel statusPanel = new StatusPanel();
+  private boolean stopping;
 
   @Override
   public void start(int columns, int rows) {
@@ -139,8 +140,10 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
       @Override
       public void windowClosed(WindowEvent e) {
-        for (TerminalEmulatorListener g : terminalEmulatorListeners) {
-          g.onCloseTerminal();
+        if (!stopping) {
+          for (TerminalEmulatorListener g : terminalEmulatorListeners) {
+            g.onCloseTerminal();
+          }
         }
         statusPanel.dispose();
       }
@@ -160,6 +163,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
   @Override
   public void stop() {
+    stopping = true;
     frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
   }
 
