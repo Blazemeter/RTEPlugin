@@ -153,9 +153,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   public void onRecordingStart() throws Exception {
     sampleCount = 0;
-    waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
-            getThresholdTimeoutMillis(), RTESampler.getStableTimeout());
-    waitConditionsRecorder.start();
     terminalEmulator = new Xtn5250TerminalEmulator();
     terminalEmulator.addTerminalEmulatorListener(this);
     samplersTargetNode = findTargetControllerNode();
@@ -168,12 +165,16 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
     terminalClient = getProtocol().createProtocolClient();
+    
     try {
       terminalClient
           .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout(),
               RTESampler.getStableTimeout());
       sampleResult.connectEnd();
       initTerminalUpdater();
+      waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
+          getThresholdTimeoutMillis(), RTESampler.getStableTimeout());
+      waitConditionsRecorder.start(); 
       registerRequestListenerFor(sampleResult);
     } catch (Exception e) {
       terminalEmulator.stop();
@@ -331,6 +332,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult = buildSendInputSampleResult(attentionKey, inputs);
     registerRequestListenerFor(sampleResult);
     sampler = buildSampler(Action.SEND_INPUT, inputs, attentionKey);
+    waitConditionsRecorder.start();
     try {
       terminalClient.send(inputs, attentionKey);
     } catch (RteIOException e) {
@@ -346,7 +348,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
     }
     notifySampleOccurred();
-    //TODO set proper waits for sampler
+    sampler.setWaitConditions(waitConditionsRecorder.stop());
     addTestElementToTestPlan(sampler, samplersTargetNode);
   }
 

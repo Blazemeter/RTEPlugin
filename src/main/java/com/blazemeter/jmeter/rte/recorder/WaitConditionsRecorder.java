@@ -4,36 +4,48 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class WaitConditionsRecorder {
-  private List<WaitConditionRecorder> waitConditionRecorders = new ArrayList<>();
+
+  private SilentWaitRecorder silentWaitRecorder;
+  private SyncWaitRecorder syncWaitRecorder;
+  private long stablePeriodMillis;
 
   WaitConditionsRecorder(RteProtocolClient rteProtocolClient,
-                         long timeoutThresholdMillis, long stablePeriod) {
-    waitConditionRecorders.add(new SyncWaitRecorder(rteProtocolClient,
-            timeoutThresholdMillis, stablePeriod));
-    waitConditionRecorders.add(new SilentWaitRecorder());
+                         long timeoutThresholdMillis, long stablePeriodMillis) {
+    syncWaitRecorder = new SyncWaitRecorder(rteProtocolClient,
+        timeoutThresholdMillis, stablePeriodMillis, stablePeriodMillis);
+    silentWaitRecorder = new SilentWaitRecorder(rteProtocolClient, timeoutThresholdMillis,
+        stablePeriodMillis);
+    this.stablePeriodMillis = stablePeriodMillis;
   }
 
   public void start() {
-
-    for (WaitConditionRecorder waits : waitConditionRecorders) {
-      waits.start();
-    }
+    syncWaitRecorder.start();
+    silentWaitRecorder.start();
   }
 
-  public void stop() {
+  public List<WaitCondition> stop() {
+    List<WaitCondition> waitConditions = new ArrayList<>();
+    Date lastSyncInputInhibitedTime = syncWaitRecorder.getLastStatusChangeTime();
+    Date lastSilentTime = silentWaitRecorder.getLastStatusChangeTime();
 
-    buildWaitConditions();
-  }
+    if (syncWaitRecorder.buildWaitCondition().isPresent()) {
+      waitConditions.add(syncWaitRecorder.buildWaitCondition().get());
+      if (lastSilentTime.getTime() - lastSyncInputInhibitedTime.getTime() > stablePeriodMillis) {
+        if (silentWaitRecorder.buildWaitCondition().isPresent()) {
+          waitConditions.add(silentWaitRecorder.buildWaitCondition().get());
+        }
+      }
+      return waitConditions;
+    } else {
+      waitConditions.add(silentWaitRecorder.buildWaitCondition().get());
+      
+      return waitConditions;
 
-  public List<WaitCondition> buildWaitConditions() {
-    List<WaitCondition> waitConditionRecordersResult = new ArrayList<>();
-    for (WaitConditionRecorder waits : waitConditionRecorders) {
-      waitConditionRecordersResult.add(waits.buildWaitCondition());
     }
-    return waitConditionRecordersResult;
   }
 
 }

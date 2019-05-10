@@ -4,52 +4,46 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 
-import java.util.Date;
+import java.util.Optional;
 
 public class SyncWaitRecorder extends WaitConditionRecorder {
 
+  private final long stablePeriodMillis;
   private boolean lastInputInhibited = false;
-  private long timeOutMillis = buildTimeOut();
-  private Date startTime;
-  private long stablePeriod;
-  private RteProtocolClient rteProtocolClient;
-  private long timeoutThresholdMillis;
-
-  SyncWaitRecorder(RteProtocolClient rteProtocolClient,
-                   long timeoutThresholdMillis, long stablePeriod) {
-    super.rteProtocolClient = rteProtocolClient;
-    this.rteProtocolClient = rteProtocolClient;
-    this.timeoutThresholdMillis = timeoutThresholdMillis;
-    this.stablePeriod = stablePeriod;
+  
+  public SyncWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
+                          long stablePeriodThresholdMillis, long stablePeriodMillis) {
+    super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis);
+    this.stablePeriodMillis = stablePeriodMillis;
   }
 
   @Override
-  protected void onTerminalStatusChange() {
-    if (lastInputInhibited != rteProtocolClient.isInputInhibited()) {
-      lastInputInhibited = rteProtocolClient.isInputInhibited();
-      super.onTerminalStatusChange();
+  public void onTerminalStateChange() {
+    boolean inputInhibited = rteProtocolClient.isInputInhibited();
+    if (lastInputInhibited != inputInhibited) {
+      lastInputInhibited = inputInhibited;
+      super.onTerminalStateChange();
     }
 
   }
 
   @Override
-  public WaitCondition buildWaitCondition() {
-    if (maxStablePeriod > stablePeriod) {
+  public Optional<WaitCondition> buildWaitCondition() {
+    long recordedStablePeriodMillis = buildStablePeriodMillis();
+    if (recordedStablePeriodMillis > stablePeriodMillis) {
       LOG.warn("Wait Condition time out, your query has exceeded stable time period.",
-              maxStablePeriod);
-      return null;
+          recordedStablePeriodMillis);
+      return Optional.empty();
     } else {
-      return new SyncWaitCondition(timeOutMillis, maxStablePeriod + timeoutThresholdMillis);
+      return Optional.of(new SyncWaitCondition(buildStablePeriodMillis(),
+          recordedStablePeriodMillis));
     }
   }
 
   @Override
   public void start() {
-    startTime = new Date();
-
+    super.start();
+    lastInputInhibited = rteProtocolClient.isInputInhibited();
   }
-
-  private long buildTimeOut() {
-    return lastStatusChangeTime.getTime() - startTime.getTime();
-  }
+  
 }
