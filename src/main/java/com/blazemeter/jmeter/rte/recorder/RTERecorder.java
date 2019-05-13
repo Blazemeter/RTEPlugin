@@ -132,28 +132,23 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   public void onRecordingStart() throws Exception {
+    LOG.debug("Start recording");
     sampleCount = 0;
-    terminalEmulator = new Xtn5250TerminalEmulator();
-    terminalEmulator.addTerminalEmulatorListener(this);
     samplersTargetNode = findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
-    // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
-    // them to terminalEmulator
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
-    TerminalType terminalType = getTerminalType();
-    initTerminalEmulator(terminalType);
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
     terminalClient = getProtocol().createProtocolClient();
     try {
+      TerminalType terminalType = getTerminalType();
       terminalClient
           .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout(),
               RTESampler.getStableTimeout());
       sampleResult.connectEnd();
-      initTerminalUpdater();
+      initTerminalEmulator(terminalType);
       registerRequestListenerFor(sampleResult);
     } catch (Exception e) {
-      terminalEmulator.stop();
       terminalClient.disconnect();
       throw e;
     }
@@ -283,11 +278,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private void initTerminalEmulator(TerminalType terminalType) {
+    terminalEmulator = new Xtn5250TerminalEmulator();
+    terminalEmulator.addTerminalEmulatorListener(this);
     terminalEmulator.setKeyboardLock(true);
     terminalEmulator.start(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
-  }
-
-  private void initTerminalUpdater() {
     terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
     terminalClient.addTerminalStateListener(terminalEmulatorUpdater);
     terminalEmulatorUpdater.onTerminalStateChange();
@@ -342,6 +336,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onRecordingStop() {
+    LOG.debug("Stopping recording");
     recordPendingSample();
     sampleResult = buildSampleResult(Action.DISCONNECT);
     sampler = buildSampler(Action.DISCONNECT, null, null);
