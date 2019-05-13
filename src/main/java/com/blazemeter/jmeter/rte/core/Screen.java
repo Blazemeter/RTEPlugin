@@ -3,6 +3,8 @@ package com.blazemeter.jmeter.rte.core;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class Screen {
@@ -122,14 +124,74 @@ public class Screen {
       return text;
     }
 
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      Segment segment = (Segment) o;
+      return row == segment.row &&
+              column == segment.column &&
+              text.equals(segment.text);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(row, column, text);
+    }
+
+    @Override
+    public String toString() {
+      return "Segment{" +
+              "row=" + row +
+              ", column=" + column +
+              ", text='" + text + '\'' +
+              '}';
+    }
+
   }
 
-  public class Field extends Segment {
+  public static class Field extends Segment {
 
     public Field(int row, int column, String text) {
       super(row, column, text);
     }
 
+
+
+    /*
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      Field field = (Field) o;
+      return super.row == field.row &&
+              super.column == field.column &&
+              super.text.equals(field.text);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(super.row, super.column, super.text);
+    }
+*/
+    @Override
+    public String toString() {
+      return "Field{" +
+              "row=" + super.row +
+              ", column=" + super.column +
+              ", text='" + super.text + '\'' +
+              '}';
+    }
   }
 
 }
