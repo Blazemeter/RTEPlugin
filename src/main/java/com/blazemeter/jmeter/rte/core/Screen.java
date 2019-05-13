@@ -3,6 +3,8 @@ package com.blazemeter.jmeter.rte.core;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class Screen {
@@ -127,6 +129,53 @@ public class Screen {
     public boolean isEditable() {
       return editable;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      Segment segment = (Segment) o;
+      return row == segment.row &&
+              column == segment.column &&
+              text.equals(segment.text) &&
+              editable == segment.editable;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(row, column, text, editable);
+    }
+
+    @Override
+    public String toString() {
+      return "Segment{" +
+              "row=" + row +
+              ", column=" + column +
+              ", text='" + text +
+              ", editable=" + editable + '\'' +
+              '}';
+    }
   }
 
+  public static class Field extends Segment {
+
+    public Field(int row, int column, String text, boolean editable) {
+      super(row, column, text, editable);
+    }
+
+    @Override
+    public String toString() {
+      return "Field{" +
+              "row=" + super.row +
+              ", column=" + super.column +
+              ", text='" + super.text + "'" +
+              ", editable=" + '\'' +
+              '}';
+    }
+  }
 }
