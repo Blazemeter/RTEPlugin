@@ -34,8 +34,9 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
       return Optional.empty();
     }
     if (maxStablePeriodMillis > stablePeriodMillis) {
-      LOG.warn("Wait Condition time out {}, your query has exceeded stable time period.",
-          maxStablePeriodMillis);
+      LOG.warn("The period of time between the keyboard was locked and unlocked ("+maxStablePeriodMillis+") has exceed Stable Period("+stablePeriodMillis+"), therefore a" +
+              " Silent Wait condition will be added to your sampler." +
+              " If you like to extend this period, just go throw settings");
       return Optional.empty();
     } else {
       return Optional.of(new SyncWaitCondition(buildTimeout(),
