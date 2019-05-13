@@ -49,7 +49,7 @@ public abstract class ConditionWaiterIT<T extends ConditionWaiter<?>> {
 
   private Runnable buildOnExceptionEventGenerator() {
     return () -> listener
-        .onException();
+        .onException(null);
   }
 
   @After

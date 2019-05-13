@@ -29,9 +29,8 @@ public interface RteProtocolClient {
     return getSupportedTerminalTypes().get(0);
   }
 
-  void connect(String server, int port, SSLType sslType,
-      TerminalType terminalType, long timeoutMillis, long stableTimeout)
-      throws RteIOException, TimeoutException, InterruptedException;
+  void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+      long timeoutMillis) throws RteIOException, InterruptedException, TimeoutException;
 
   void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException;

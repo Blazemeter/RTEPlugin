@@ -96,10 +96,8 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public void connect(String server, int port, SSLType sslType,
-      TerminalType terminalType, long timeoutMillis,
-      long stableTimeoutMillis)
-      throws RteIOException, InterruptedException, TimeoutException {
+  public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+      long timeoutMillis) throws RteIOException, TimeoutException, InterruptedException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     /*
      we need to do this on connect to avoid leaving keyboard thread running when instance of client
@@ -122,16 +120,8 @@ public class Tn5250Client extends BaseProtocolClient {
     client.setConnectionTimeoutMillis((int) timeoutMillis);
     client.setTerminalType(terminalType.getId());
     client.setSocketFactory(getSocketFactory(sslType));
-    ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeoutMillis));
-    try {
-      client.connect(server, port);
-      unlock.await();
-    } catch (TimeoutException | InterruptedException | RteIOException e) {
-      doDisconnect();
-      throw e;
-    } finally {
-      unlock.stop();
-    }
+    client.connect(server, port);
+    awaitConnectionEnd(timeoutMillis);
   }
 
   @Override

@@ -4,6 +4,7 @@ import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
@@ -57,7 +58,7 @@ public class InputPanelIT {
 
   @BeforeClass
   public static void setupClass() {
-    TestJMeterUtils.createJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
   }
 
   @Before

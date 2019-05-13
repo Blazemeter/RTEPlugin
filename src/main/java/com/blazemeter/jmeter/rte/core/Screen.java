@@ -18,6 +18,10 @@ public class Screen {
     this.size = size;
   }
 
+  public boolean isEmpty() {
+    return segments.isEmpty();
+  }
+
   public static Screen valueOf(String screen) {
     int width = screen.indexOf('\n');
     int height = screen.length() / (width + 1);

@@ -143,8 +143,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     try {
       TerminalType terminalType = getTerminalType();
       terminalClient
-          .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout(),
-              RTESampler.getStableTimeout());
+          .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
       sampleResult.connectEnd();
       initTerminalEmulator(terminalType);
       registerRequestListenerFor(sampleResult);

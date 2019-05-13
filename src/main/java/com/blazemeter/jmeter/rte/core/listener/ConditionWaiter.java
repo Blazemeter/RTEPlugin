@@ -9,7 +9,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class ConditionWaiter<T extends WaitCondition> {
+public abstract class ConditionWaiter<T extends WaitCondition> implements ExceptionListener {
 
   protected final T condition;
   private ExceptionHandler exceptionHandler;
@@ -60,7 +60,8 @@ public abstract class ConditionWaiter<T extends WaitCondition> {
     endStablePeriod();
   }
 
-  public void onException() {
+  @Override
+  public void onException(Throwable e) {
     if (exceptionHandler.hasPendingError()) {
       cancelWait();
     }

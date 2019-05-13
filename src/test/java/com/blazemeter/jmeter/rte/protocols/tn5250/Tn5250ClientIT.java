@@ -57,15 +57,16 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     server.setSslEnabled(true);
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
-        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+        TIMEOUT_MILLIS);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
     assertThat(client.getScreen().toString())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, getDefaultTerminalType(), TIMEOUT_MILLIS,
-        STABLE_TIMEOUT_MILLIS);
+    client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, getDefaultTerminalType(), TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)
@@ -101,19 +102,19 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     connectToVirtualService();
     sendCredsByLabelWithSyncWait();
     assertThat(client.getScreen().toString())
-            .isEqualTo(getFileContent("user-menu-screen.txt"));
+        .isEqualTo(getFileContent("user-menu-screen.txt"));
   }
 
   private void sendCredsByLabelWithSyncWait() throws Exception {
     client.send(buildCredsFieldsByLabel(), AttentionKey.ENTER);
     client.await(
-            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   private List<Input> buildCredsFieldsByLabel() {
     return Arrays.asList(
-            new LabelInput("User", "TESTUSR"),
-            new LabelInput("Password", "TESTPSW"));
+        new LabelInput("User", "TESTUSR"),
+        new LabelInput("Password", "TESTPSW"));
   }
 
   @Test(expected = InvalidFieldPositionException.class)
@@ -128,11 +129,11 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   @Test(expected = InvalidFieldLabelException.class)
   public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPositionByLabel()
-          throws Exception {
+      throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-            new LabelInput("Usr", "TESTUSR"));
+        new LabelInput("Usr", "TESTUSR"));
     client.send(input, AttentionKey.ENTER);
   }
 

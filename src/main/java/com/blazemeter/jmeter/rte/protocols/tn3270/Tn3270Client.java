@@ -99,7 +99,7 @@ public class Tn3270Client extends BaseProtocolClient {
   };
 
   private TerminalClient client;
-  private Map<TerminalStateListener, ScreenChangeListener> listenersProxies =
+  private Map<TerminalStateListener, Tn3270TerminalStateListenerProxy> listenersProxies =
       new ConcurrentHashMap<>();
 
   @Override
@@ -109,8 +109,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
-      long timeoutMillis, long stableTimeout)
-      throws InterruptedException, TimeoutException, RteIOException {
+      long timeoutMillis) throws RteIOException, InterruptedException, TimeoutException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     client = new TerminalClient();
     Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
@@ -133,15 +132,7 @@ public class Tn3270Client extends BaseProtocolClient {
     client.setConnectionTimeoutMillis((int) timeoutMillis);
     client.setSocketFactory(getSocketFactory(sslType));
     client.connect(server, port);
-    ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeout));
-    try {
-      unlock.await();
-    } catch (TimeoutException | InterruptedException | RteIOException e) {
-      doDisconnect();
-      throw e;
-    } finally {
-      unlock.stop();
-    }
+    awaitConnectionEnd(timeoutMillis);
   }
 
   @Override
@@ -150,13 +141,17 @@ public class Tn3270Client extends BaseProtocolClient {
     client.addScreenChangeListener(listenerProxy);
     client.addKeyboardStatusListener(listenerProxy);
     client.addCursorMoveListener(listenerProxy);
+    exceptionHandler.addListener(listener);
     listenersProxies.put(listener, listenerProxy);
   }
 
   @Override
   public void removeTerminalStateListener(TerminalStateListener listener) {
-    ScreenChangeListener listenerProxy = listenersProxies.remove(listener);
+    Tn3270TerminalStateListenerProxy listenerProxy = listenersProxies.remove(listener);
+    exceptionHandler.removeListener(listener);
     client.removeScreenChangeListener(listenerProxy);
+    client.removeKeyboardStatusListener(listenerProxy);
+    client.removeCursorMoveListener(listenerProxy);
   }
 
   private void setFieldByCoord(CoordInput i) {

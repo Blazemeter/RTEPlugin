@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
-import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionListener;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -10,13 +10,13 @@ public class ExceptionHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(ExceptionHandler.class);
 
-  private List<ConditionWaiter> listeners = new ArrayList<>();
+  private List<ExceptionListener> listeners = new ArrayList<>();
   private Throwable pendingError;
 
   public synchronized void setPendingError(Throwable ex) {
     if (pendingError == null) {
       pendingError = ex;
-      listeners.forEach(ConditionWaiter::onException);
+      listeners.forEach(l -> l.onException(ex));
     } else {
       LOG.error("Exception ignored in step result due to previously thrown exception", ex);
     }
@@ -34,11 +34,11 @@ public class ExceptionHandler {
     }
   }
 
-  public void removeListener(ConditionWaiter listener) {
+  public void removeListener(ExceptionListener listener) {
     listeners.remove(listener);
   }
 
-  public void addListener(ConditionWaiter listener) {
+  public void addListener(ExceptionListener listener) {
     listeners.add(listener);
   }
 

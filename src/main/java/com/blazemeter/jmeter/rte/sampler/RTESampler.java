@@ -23,6 +23,7 @@ import com.helger.commons.annotation.VisibleForTesting;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -466,9 +467,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   @Override
   public SampleResult sample(Entry entry) {
-    //TODO Connect action do not show response properly.
     RteSampleResult rteSampleResult = buildSampleResult();
-
     RteProtocolClient client = null;
 
     try {
@@ -477,13 +476,16 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         if (client != null) {
           disconnect(client);
         }
-
         rteSampleResult.setSuccessful(true);
         rteSampleResult.sampleEnd();
         return rteSampleResult;
       }
       if (client == null) {
         client = buildClient();
+        if (getAction() == Action.SEND_INPUT) {
+          client.await(Collections
+              .singletonList(new SyncWaitCondition(getConnectionTimeout(), getStableTimeout())));
+        }
       }
       rteSampleResult.connectEnd();
       RequestListener<RteProtocolClient> requestListener = new RequestListener<>(rteSampleResult,
@@ -550,8 +552,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   private RteProtocolClient buildClient()
       throws RteIOException, InterruptedException, TimeoutException {
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
-        getStableTimeout());
+    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout());
     connections.get().put(buildConnectionId(), client);
     return client;
   }

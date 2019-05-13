@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.core;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -30,6 +31,17 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
       }
     } else {
       return SocketFactory.getDefault();
+    }
+  }
+
+  protected void awaitConnectionEnd(long timeoutMillis)
+      throws InterruptedException, TimeoutException, RteIOException {
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(this, exceptionHandler,
+        timeoutMillis);
+    try {
+      connectionEndWaiter.await();
+    } finally {
+      connectionEndWaiter.stop();
     }
   }
 
