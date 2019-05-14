@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.core.listener;
 
-public interface TerminalStateListener {
+public interface TerminalStateListener extends ExceptionListener {
 
   void onTerminalStateChange();
 
