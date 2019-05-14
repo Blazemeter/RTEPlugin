@@ -408,7 +408,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private void addWaitCondition(WaitCondition condition) {
-    /*
+
     if (condition instanceof SyncWaitCondition) {
       setWaitSync(true);
       setWaitSyncTimeout(String.valueOf(condition.getTimeoutMillis()));
@@ -436,7 +436,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     } else {
       throw new IllegalArgumentException("Unsupported condition type " + condition.getClass());
     }
-    */
   }
 
   public void setInputs(List<Input> inputs) {
