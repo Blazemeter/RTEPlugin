@@ -160,30 +160,7 @@ public class Screen {
     public Field(int row, int column, String text) {
       super(row, column, text);
     }
-
-
-
-    /*
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
-      Field field = (Field) o;
-      return super.row == field.row &&
-              super.column == field.column &&
-              super.text.equals(field.text);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(super.row, super.column, super.text);
-    }
-*/
+    
     @Override
     public String toString() {
       return "Field{" +
