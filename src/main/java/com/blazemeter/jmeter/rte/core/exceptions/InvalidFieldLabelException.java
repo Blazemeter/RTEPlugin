@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.core;
+package com.blazemeter.jmeter.rte.core.exceptions;
 
 public class InvalidFieldLabelException extends IllegalArgumentException {
 

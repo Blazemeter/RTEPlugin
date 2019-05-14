@@ -2,20 +2,21 @@ package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
-import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
-import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -111,17 +112,24 @@ public class Tn3270Client extends BaseProtocolClient {
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
       long timeoutMillis) throws RteIOException, InterruptedException, TimeoutException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
-    client = new TerminalClient();
     Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
-    client.setModel(termType.getModel());
-    client.setScreenDimensions(termType.getScreenDimensions());
+    client = new TerminalClient(termType.getModel(), termType.getScreenDimensions());
     client.setUsesExtended3270(termType.isExtended());
+    client.setConnectionTimeoutMillis((int) timeoutMillis);
+    client.setSocketFactory(getSocketFactory(sslType));
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
     exceptionHandler = new ExceptionHandler();
-    client.setExceptionHandler(new com.bytezone.dm3270.ExceptionHandler() {
+    client.setConnectionListener(new com.bytezone.dm3270.ConnectionListener() {
+
+      @Override
+      public void onConnection() {
+        connectionEndWaiter.stop();
+      }
 
       @Override
       public void onException(Exception e) {
         exceptionHandler.setPendingError(e);
+        connectionEndWaiter.stop();
       }
 
       @Override
@@ -129,10 +137,9 @@ public class Tn3270Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
-    client.setConnectionTimeoutMillis((int) timeoutMillis);
-    client.setSocketFactory(getSocketFactory(sslType));
     client.connect(server, port);
-    awaitConnectionEnd(timeoutMillis);
+    connectionEndWaiter.await();
+    exceptionHandler.throwAnyPendingError();
   }
 
   @Override

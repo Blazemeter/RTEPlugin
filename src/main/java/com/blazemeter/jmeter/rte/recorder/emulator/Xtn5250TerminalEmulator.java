@@ -178,11 +178,10 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
     xi5250Crt.clear();
     xi5250Crt.removeFields();
     for (Screen.Segment s : screen.getSegments()) {
-      if (s instanceof Screen.Field) {
-        Screen.Field f = (Screen.Field) s;
-        XI5250Field xi5250Field = new XI5250Field(xi5250Crt, f.getColumn() - 1, f.getRow() - 1,
-            f.getText().length(), 32);
-        xi5250Field.setString(f.getText());
+      if (s.isEditable()) {
+        XI5250Field xi5250Field = new XI5250Field(xi5250Crt, s.getColumn() - 1, s.getRow() - 1,
+            s.getText().length(), 32);
+        xi5250Field.setString(s.getText());
         xi5250Field.resetMDT();
         xi5250Crt.addField(xi5250Field);
       } else {

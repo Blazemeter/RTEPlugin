@@ -1,39 +1,20 @@
 package com.blazemeter.jmeter.rte.core.wait;
 
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
-import com.blazemeter.jmeter.rte.core.RteIOException;
-import com.blazemeter.jmeter.rte.core.RteProtocolClient;
-import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class ConnectionEndWaiter implements TerminalStateListener {
+public class ConnectionEndWaiter {
 
-  private final RteProtocolClient client;
-  private final ExceptionHandler exceptionHandler;
   private final long timeoutMillis;
   private final CountDownLatch connected = new CountDownLatch(1);
 
-  public ConnectionEndWaiter(RteProtocolClient client, ExceptionHandler exceptionHandler,
-      long timeoutMillis) {
-    this.client = client;
-    this.exceptionHandler = exceptionHandler;
+  public ConnectionEndWaiter(long timeoutMillis) {
     this.timeoutMillis = timeoutMillis;
-    client.addTerminalStateListener(this);
-    if (!client.getScreen().isEmpty()) {
-      connected.countDown();
-      stop();
-    }
   }
 
-  @Override
-  public void onTerminalStateChange() {
-    connected.countDown();
-  }
-
-  @Override
-  public void onException(Throwable e) {
+  public void stop() {
     connected.countDown();
   }
 
@@ -42,11 +23,6 @@ public class ConnectionEndWaiter implements TerminalStateListener {
       throw new TimeoutException(
           "Timeout waiting for connection end after " + timeoutMillis + " ms");
     }
-    exceptionHandler.throwAnyPendingError();
-  }
-
-  public void stop() {
-    client.removeTerminalStateListener(this);
   }
 
 }

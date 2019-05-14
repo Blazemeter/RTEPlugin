@@ -18,10 +18,6 @@ public class Screen {
     this.size = size;
   }
 
-  public boolean isEmpty() {
-    return segments.isEmpty();
-  }
-
   public static Screen valueOf(String screen) {
     int width = screen.indexOf('\n');
     int height = screen.length() / (width + 1);
@@ -39,11 +35,11 @@ public class Screen {
   }
 
   public void addSegment(int row, int column, String text) {
-    segments.add(new Segment(row, column, text));
+    segments.add(new Segment(row, column, text, false));
   }
 
   public void addField(int row, int column, String text) {
-    segments.add(new Field(row, column, text));
+    segments.add(new Segment(row, column, text, true));
   }
 
   @Override
@@ -104,14 +100,16 @@ public class Screen {
 
   public static class Segment {
 
-    private int row;
-    private int column;
-    private String text;
+    private final int row;
+    private final int column;
+    private final String text;
+    private final boolean editable;
 
-    public Segment(int row, int column, String text) {
+    public Segment(int row, int column, String text, boolean editable) {
       this.text = text;
       this.row = row;
       this.column = column;
+      this.editable = editable;
     }
 
     public int getRow() {
@@ -126,14 +124,9 @@ public class Screen {
       return text;
     }
 
-  }
-
-  public class Field extends Segment {
-
-    public Field(int row, int column, String text) {
-      super(row, column, text);
+    public boolean isEditable() {
+      return editable;
     }
-
   }
 
 }

@@ -6,11 +6,11 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
-import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -482,12 +482,12 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       }
       if (client == null) {
         client = buildClient();
+        rteSampleResult.connectEnd();
         if (getAction() == Action.SEND_INPUT) {
           client.await(Collections
               .singletonList(new SyncWaitCondition(getConnectionTimeout(), getStableTimeout())));
         }
       }
-      rteSampleResult.connectEnd();
       RequestListener<RteProtocolClient> requestListener = new RequestListener<>(rteSampleResult,
           client);
       client.addTerminalStateListener(requestListener);

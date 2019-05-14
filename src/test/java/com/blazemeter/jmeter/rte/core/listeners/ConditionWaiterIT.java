@@ -3,7 +3,7 @@ package com.blazemeter.jmeter.rte.core.listeners;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.google.common.base.Stopwatch;
 import java.util.concurrent.Executors;
