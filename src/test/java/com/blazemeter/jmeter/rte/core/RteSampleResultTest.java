@@ -1,71 +1,83 @@
 package com.blazemeter.jmeter.rte.core;
 
+import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.Action;
-import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
-import com.blazemeter.jmeter.rte.sampler.Inputs;
-import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import org.apache.jmeter.config.ConfigTestElement;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
+
 
 public class RteSampleResultTest {
 
+    private static final Position CURSOR_POSITION = new Position(1, 1);
+
     @Test
     public void shouldGetConnectionInfoAndActionWhenGetRequestHeaders(){
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
+        rteSampleResult.setInputInhibitedRequest(true);
+
+        String expectedHeaders = "Server: Test Server\n" +
+                "Port: 2123\n" +
+                "Protocol: TN5250\n" +
+                "Terminal-type: IBM-3179-2: 24x80\n" +
+                "Security: NONE\n" +
+                "Action: CONNECT\n"+
+                "Input-inhibited: true\n";
+
+        assertEquals(expectedHeaders, rteSampleResult.getRequestHeaders());
+    }
+
+    private RteSampleResult buildBasicRTESampleResult(){
         RteSampleResult rteSampleResult = new RteSampleResult();
         rteSampleResult.setAction(Action.CONNECT);
+        rteSampleResult.setProtocol(Protocol.TN5250);
+        rteSampleResult.setTerminalType(new TerminalType("IBM-3179-2", new Dimension(80, 24)));
         rteSampleResult.setServer("Test Server");
         rteSampleResult.setPort(2123);
+        rteSampleResult.setSslType(SSLType.NONE);
 
-        String expectedText = "Server: Test Server\n" +
-                "Port: 2123\n" +
-                "Protocol: null\n" +
-                "Terminal-type: null\n" +
-                "Security: null\n" +
-                "Action: CONNECT\n";
+        rteSampleResult.setCursorPosition(CURSOR_POSITION);
 
-        assertEquals(expectedText, rteSampleResult.getRequestHeaders());
+        return rteSampleResult;
     }
 
     @Test
     public void shouldGetNoInputInhibitedHeaderWhenGetRequestHeadersWithNotSetInputInhibitedRequest(){
-        RteSampleResult rteSampleResult = new RteSampleResult();
-        String expectedHeaders = "Server: null\n" +
-                "Port: 0\n" +
-                "Protocol: null\n" +
-                "Terminal-type: null\n" +
-                "Security: null\n" +
-                "Action: null\n";
+
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
+
+        rteSampleResult.setSoundedAlarm(true);
+        rteSampleResult.setCursorPosition(CURSOR_POSITION);
+        rteSampleResult.setScreen(new Screen(new Dimension(10,10)));
+
+        String expectedHeaders = "Server: Test Server\n" +
+                "Port: 2123\n" +
+                "Protocol: TN5250\n" +
+                "Terminal-type: IBM-3179-2: 24x80\n" +
+                "Security: NONE\n" +
+                "Action: CONNECT\n";
 
         assertEquals(expectedHeaders, rteSampleResult.getRequestHeaders());
     }
 
     @Test
     public void shouldGetEmptyStringWhenGetSamplerDataWithNoAttentionKey(){
-        RteSampleResult rteSampleResult = new RteSampleResult();
-        String expectedSamplerData = "";
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
 
-        assertEquals(expectedSamplerData, rteSampleResult.getSamplerData());
+        assertEquals("", rteSampleResult.getSamplerData());
     }
 
     @Test
     public void shouldGetTerminalStatusHeadersWhenGetResponseHeadersWithNoDisconnectAction(){
-        RteSampleResult rteSampleResult = new RteSampleResult();
-        rteSampleResult.setAction(Action.CONNECT);
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
         rteSampleResult.setSoundedAlarm(true);
-        rteSampleResult.setCursorPosition(new Position(1,1));
+        rteSampleResult.setInputInhibitedResponse(true);
 
-        String expectedResponseHeaders = "Input-inhibited: false\n" +
+        String expectedResponseHeaders = "Input-inhibited: true\n" +
                 "Cursor-position: 1,1\n" +
                 "Sound-Alarm: true";
 
@@ -74,7 +86,9 @@ public class RteSampleResultTest {
 
     @Test
     public void shouldGetEmptyStringWhenGetResponseHeadersWithDisconnectAction(){
-        RteSampleResult rteSampleResult = new RteSampleResult();
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
+        rteSampleResult.setSoundedAlarm(true);
+
         rteSampleResult.setAction(Action.DISCONNECT);
         String expectedResponseHeader = "";
 
@@ -83,9 +97,10 @@ public class RteSampleResultTest {
 
     @Test
     public void shouldGetNoSoundAlarmHeaderWhenGetResponseHeadersAndNoSoundAlarm(){
-        RteSampleResult rteSampleResult = new RteSampleResult();
-        String expectedResponseHeader = "Input-inhibited: false\n" +
-                "Cursor-position: ";
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
+        rteSampleResult.setInputInhibitedResponse(true);
+        String expectedResponseHeader = "Input-inhibited: true\n" +
+                "Cursor-position: 1,1";
 
         assertEquals(expectedResponseHeader, rteSampleResult.getResponseHeaders());
     }
@@ -104,10 +119,9 @@ public class RteSampleResultTest {
 
     @Test
     public void shouldGetEmptyStringWhenGetResponseDataWithoutScreen(){
-        RteSampleResult rteSampleResult = new RteSampleResult();
-        String expectedResponseData = "";
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
 
-        assertEquals(expectedResponseData, rteSampleResult.getResponseDataAsString());
+        assertEquals("", rteSampleResult.getResponseDataAsString());
     }
 
     @Test
@@ -115,7 +129,7 @@ public class RteSampleResultTest {
         List<Input> customInputs = Collections
                 .singletonList(new CoordInput(new Position(3, 2), "input"));
 
-        RteSampleResult rteSampleResult = new RteSampleResult();
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
         rteSampleResult.setInputs(customInputs);
         rteSampleResult.setAttentionKey(AttentionKey.ENTER);
         rteSampleResult.setAction(Action.CONNECT);
@@ -126,5 +140,4 @@ public class RteSampleResultTest {
 
         assertEquals(expectedSamplerData, rteSampleResult.getSamplerData());
     }
-
 }
