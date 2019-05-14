@@ -160,7 +160,7 @@ public class Screen {
     public Field(int row, int column, String text) {
       super(row, column, text);
     }
-    
+
     @Override
     public String toString() {
       return "Field{" +
