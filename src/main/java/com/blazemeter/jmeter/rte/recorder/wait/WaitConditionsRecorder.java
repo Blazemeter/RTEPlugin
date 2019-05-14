@@ -3,8 +3,8 @@ package com.blazemeter.jmeter.rte.recorder.wait;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,9 +34,9 @@ public class WaitConditionsRecorder {
     Optional<WaitCondition> syncWaitCondition = syncWaitRecorder.buildWaitCondition();
     if (syncWaitCondition.isPresent()) {
       waitConditions.add(syncWaitCondition.get());
-      Date lastSyncInputInhibitedTime = syncWaitRecorder.getLastStatusChangeTime().orElse(null);
-      Date lastSilentTime = silentWaitRecorder.getLastStatusChangeTime().orElse(null);
-      if (lastSilentTime.getTime() - lastSyncInputInhibitedTime.getTime() > stablePeriodMillis) {
+      Instant lastSyncInputInhibitedTime = syncWaitRecorder.getLastStatusChangeTime().orElse(null);
+      Instant lastSilentTime = silentWaitRecorder.getLastStatusChangeTime().orElse(null);
+      if (lastSilentTime.getEpochSecond() - lastSyncInputInhibitedTime.getEpochSecond() > stablePeriodMillis) {
 
         waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
 

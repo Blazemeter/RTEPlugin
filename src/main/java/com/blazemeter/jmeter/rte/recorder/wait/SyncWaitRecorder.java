@@ -30,15 +30,15 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
   @Override
   public Optional<WaitCondition> buildWaitCondition() {
 
-    if (rteProtocolClient.isInputInhibited() || lastStatusChangeTime == null) {
+    if (rteProtocolClient.isInputInhibited()) {
       return Optional.empty();
     }
     if (maxStablePeriodMillis > stablePeriodMillis) {
-      LOG.warn("The period of time between the keyboard was locked and unlocked (" + 
+      LOG.warn("The period of time between the keyboard was locked and unlocked (" +
           maxStablePeriodMillis + ") has exceed Stable Period(" + stablePeriodMillis +
           "), therefore a" +
-              " Silent Wait condition will be added to your sampler." +
-              " If you like to extend this period, just go throw settings");
+          " Silent Wait condition will be added to your sampler." +
+          " If you like to extend this period, just go throw settings");
       return Optional.empty();
     } else {
       return Optional.of(new SyncWaitCondition(buildTimeout(),

@@ -4,10 +4,11 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
-import java.util.Date;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Instant;
+import java.util.Optional;
 
 public abstract class WaitConditionRecorder implements TerminalStateListener {
 
@@ -15,8 +16,8 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   protected RteProtocolClient rteProtocolClient;
   protected long maxStablePeriodMillis;
   protected long stablePeriodThresholdMillis;
-  protected Date lastStatusChangeTime;
-  private Date startTime;
+  protected Instant lastStatusChangeTime;
+  private Instant startTime;
   private long timeoutThresholdMillis;
 
   public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
@@ -25,12 +26,12 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
     this.timeoutThresholdMillis = timeoutThresholdMillis;
     this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
   }
-
+  
   public void onTerminalStateChange() {
-    Date currentTime = new Date();
+    Instant currentTime = Instant.now();
     if (lastStatusChangeTime != null &&
-        currentTime.getTime() - lastStatusChangeTime.getTime() > maxStablePeriodMillis) {
-      maxStablePeriodMillis = currentTime.getTime() - lastStatusChangeTime.getTime();
+        currentTime.getEpochSecond() - lastStatusChangeTime.getEpochSecond() > maxStablePeriodMillis) {
+      maxStablePeriodMillis = currentTime.getEpochSecond() - lastStatusChangeTime.getEpochSecond();
     }
     lastStatusChangeTime = currentTime;
   }
@@ -38,12 +39,13 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   public abstract Optional<WaitCondition> buildWaitCondition();
 
   protected long buildTimeout() {
-    Date lastChangeTime = lastStatusChangeTime != null ? lastStatusChangeTime : new Date();
-    return lastChangeTime.getTime() - startTime.getTime() + timeoutThresholdMillis;
+    long maxTimeMillis = lastStatusChangeTime != null
+        ? lastStatusChangeTime.getEpochSecond() - startTime.getEpochSecond() : 0;
+    return maxTimeMillis + timeoutThresholdMillis;
   }
 
   public void start() {
-    startTime = new Date();
+    startTime = Instant.now();
     rteProtocolClient.addTerminalStateListener(this);
     lastStatusChangeTime = null;
     maxStablePeriodMillis = 0;
@@ -54,7 +56,7 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
     return buildWaitCondition();
   }
 
-  public Optional<Date> getLastStatusChangeTime() {
+  public Optional<Instant> getLastStatusChangeTime() {
     return Optional.ofNullable(lastStatusChangeTime);
   }
 }
