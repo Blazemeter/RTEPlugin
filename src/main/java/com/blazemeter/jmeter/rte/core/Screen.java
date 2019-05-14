@@ -174,7 +174,7 @@ public class Screen {
               "row=" + super.row +
               ", column=" + super.column +
               ", text='" + super.text + "'" +
-              ", editable=" + '\'' +
+              ", editable=" + isEditable() + '\'' +
               '}';
     }
   }
