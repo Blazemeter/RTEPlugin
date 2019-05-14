@@ -80,11 +80,9 @@ public class ScreenTest {
 
     @Test
     public void shouldGetScreenWithTwoRowsWhenValueOfWithStringWithOneEnter(){
-        Screen screen  = new Screen(new Dimension(SCREEN_WIDTH * 2 ,SCREEN_HEIGHT));
-        screen.addSegment(1,1, "Row1\nRow2");
-        String expectedScreen = "Row1\nRow2 \n";
+        String expectedScreen = "Row1\nRow2\n";
 
-        assertEquals(expectedScreen,screen.toString());
+        assertEquals(expectedScreen,Screen.valueOf("Row1\nRow2").toString());
     }
 
     @Test(expected = ArithmeticException.class)
