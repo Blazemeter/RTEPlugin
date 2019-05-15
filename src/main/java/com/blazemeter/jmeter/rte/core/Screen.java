@@ -148,7 +148,7 @@ public class Screen {
 
     @Override
     public int hashCode() {
-      return Objects.hash(row, column, text, editable);
+      return Objects.hash(row, column, text);
     }
 
     @Override
@@ -156,10 +156,10 @@ public class Screen {
       return "Segment{" +
               "row=" + row +
               ", column=" + column +
-              ", text='" + text +
-              ", editable=" + editable + '\'' +
+              ", text='" + text + '\'' +
               '}';
     }
+
   }
 
   public static class Field extends Segment {
