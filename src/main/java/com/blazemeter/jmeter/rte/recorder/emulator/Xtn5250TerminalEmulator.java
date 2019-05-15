@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -119,6 +120,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         }
       }
     };
+    xi5250Crt.setName("Terminal");
     xi5250Crt.setCrtSize(columns, rows);
     xi5250Crt.setDefBackground(BACKGROUND);
     xi5250Crt.setBlinkingCursor(true);
@@ -136,6 +138,8 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         xi5250Crt.setSize(testSize.width, testSize.height);
         frame.pack();
         xi5250Crt.requestFocus();
+        System.out.println("xi5250Crt - " + xi5250Crt.getSize());
+        System.out.println("statusPanel - " + statusPanel.getSize());
       }
 
       @Override
@@ -191,6 +195,18 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
     xi5250Crt.initAllFields();
   }
 
+  @VisibleForTesting
+  public String getScreen() {
+    int height = xi5250Crt.getCrtSize().height;
+    int width = xi5250Crt.getCrtSize().width;
+    StringBuilder screen = new StringBuilder();
+    for (int i = 0; i < height; i++) {
+      screen.append(xi5250Crt.getString(0, i, width).replaceAll("[\\x00-\\x19]", " "));
+      screen.append("\n");
+    }
+    return screen.toString();
+  }
+
   @Override
   public void soundAlarm() {
     Toolkit.getDefaultToolkit().beep();
@@ -222,6 +238,11 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       }
     }
     return fields;
+  }
+
+  @VisibleForTesting
+  public JFrame getFrame() {
+    return this.frame;
   }
 
   private static class KeyEventMap {
