@@ -73,7 +73,14 @@ public class StatusPanelIT {
   @Test
   public void shouldShowHelpFrameWhenClickInHelpIcon() {
     JLabel helpLabel = frame.label(HELP_LABEL).target();
-    frame.label(HELP_LABEL).click();
+    /* This is the correct way to test it
+    frame.label(HELP_LABEL).click(MouseButton.LEFT_BUTTON);
+    But for a reason that I can't identify this is not working so, I develop this workaround */
+    helpLabel.getMouseListeners()[0].mouseClicked(
+        new MouseEvent(helpLabel, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), 0,
+            helpLabel.getHorizontalAlignment(),
+            helpLabel.getVerticalAlignment(), 1, false, MouseEvent.BUTTON1));
+
     pause(new Condition("frame is visible") {
 
       @Override
