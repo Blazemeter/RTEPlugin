@@ -14,9 +14,10 @@ public class SilentWaitRecorder extends WaitConditionRecorder {
                             long stablePeriodThresholdMillis) {
     super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis);
   }
+
   @VisibleForTesting
   public SilentWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
-                               long stablePeriodThresholdMillis, Clock clock){
+                            long stablePeriodThresholdMillis, Clock clock) {
     super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis, clock);
 
   }
@@ -26,5 +27,5 @@ public class SilentWaitRecorder extends WaitConditionRecorder {
     return Optional.of(new SilentWaitCondition(buildTimeout(),
         maxStablePeriodMillis + stablePeriodThresholdMillis));
   }
-  
+
 }

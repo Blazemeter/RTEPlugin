@@ -3,12 +3,14 @@ package com.blazemeter.jmeter.rte.recorder.wait;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.helger.commons.annotation.VisibleForTesting;
 
+import java.time.Clock;
 import java.util.Optional;
 
 public class SyncWaitRecorder extends WaitConditionRecorder {
 
-  private final long stablePeriodMillis;
+  private long stablePeriodMillis;
   private boolean lastInputInhibited = false;
 
   public SyncWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
@@ -17,6 +19,13 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
     this.stablePeriodMillis = stablePeriodMillis;
   }
 
+  @VisibleForTesting
+  public SyncWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
+                          long stablePeriodMillis, Clock clock) {
+    super(rteProtocolClient, timeoutThresholdMillis, stablePeriodMillis, clock);
+    this.stablePeriodMillis = stablePeriodMillis;
+  }
+  
   @Override
   public void onTerminalStateChange() {
     boolean inputInhibited = rteProtocolClient.isInputInhibited();

@@ -31,13 +31,15 @@ public class WaitConditionsRecorder {
 
   public List<WaitCondition> stop() {
     List<WaitCondition> waitConditions = new ArrayList<>();
-    
+
     Optional<WaitCondition> syncWaitCondition = syncWaitRecorder.buildWaitCondition();
     if (syncWaitCondition.isPresent()) {
       waitConditions.add(syncWaitCondition.get());
       Instant lastSyncInputInhibitedTime = syncWaitRecorder.getLastStatusChangeTime().orElse(null);
       Instant lastSilentTime = silentWaitRecorder.getLastStatusChangeTime().orElse(null);
-      if (ChronoUnit.MILLIS.between(lastSyncInputInhibitedTime, lastSilentTime) > stablePeriodMillis) {
+      if ((lastSyncInputInhibitedTime != null) && 
+          (ChronoUnit.MILLIS.between(lastSyncInputInhibitedTime, 
+          lastSilentTime) > stablePeriodMillis)) {
         waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
       }
       return waitConditions;

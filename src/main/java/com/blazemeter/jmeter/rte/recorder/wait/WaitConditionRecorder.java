@@ -5,13 +5,12 @@ import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
 import com.helger.commons.annotation.VisibleForTesting;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class WaitConditionRecorder implements TerminalStateListener {
 
@@ -19,11 +18,10 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   protected RteProtocolClient rteProtocolClient;
   protected long maxStablePeriodMillis;
   protected long stablePeriodThresholdMillis;
-  protected Instant lastStatusChangeTime;
+  private Instant lastStatusChangeTime;
   private Instant startTime;
   private long timeoutThresholdMillis;
   private Clock clock;
-  
 
   public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
                                long stablePeriodThresholdMillis) {
@@ -32,16 +30,17 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
     this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
     this.clock = Clock.systemUTC();
   }
-  
+
   @VisibleForTesting
   public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
-                               long stablePeriodThresholdMillis, Clock clock){
+                               long stablePeriodThresholdMillis, Clock clock) {
     this.rteProtocolClient = rteProtocolClient;
     this.timeoutThresholdMillis = timeoutThresholdMillis;
     this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
     this.clock = clock;
     this.startTime = clock.instant();
   }
+
   public void onTerminalStateChange() {
     Instant currentTime = clock.instant();
     if (lastStatusChangeTime != null &&
@@ -75,8 +74,4 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
     return Optional.ofNullable(lastStatusChangeTime);
   }
   
-  @VisibleForTesting
-  public void setLastStatusChangeTime(Instant val) {
-    this.lastStatusChangeTime = val;
-  }
 }
