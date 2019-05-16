@@ -157,25 +157,10 @@ public class Screen {
               "row=" + row +
               ", column=" + column +
               ", text='" + text + '\'' +
+              ", editable=" + editable +
               '}';
     }
 
   }
 
-  public static class Field extends Segment {
-
-    public Field(int row, int column, String text, boolean editable) {
-      super(row, column, text, editable);
-    }
-
-    @Override
-    public String toString() {
-      return "Field{" +
-              "row=" + super.row +
-              ", column=" + super.column +
-              ", text='" + super.text + "'" +
-              ", editable=" + isEditable() + '\'' +
-              '}';
-    }
-  }
 }
