@@ -4,10 +4,13 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
+import com.helger.commons.annotation.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 public abstract class WaitConditionRecorder implements TerminalStateListener {
@@ -19,19 +22,31 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   protected Instant lastStatusChangeTime;
   private Instant startTime;
   private long timeoutThresholdMillis;
+  private Clock clock;
+  
 
   public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
                                long stablePeriodThresholdMillis) {
     this.rteProtocolClient = rteProtocolClient;
     this.timeoutThresholdMillis = timeoutThresholdMillis;
     this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
+    this.clock = Clock.systemUTC();
   }
   
+  @VisibleForTesting
+  public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
+                               long stablePeriodThresholdMillis, Clock clock){
+    this.rteProtocolClient = rteProtocolClient;
+    this.timeoutThresholdMillis = timeoutThresholdMillis;
+    this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
+    this.clock = clock;
+    this.startTime = clock.instant();
+  }
   public void onTerminalStateChange() {
-    Instant currentTime = Instant.now();
+    Instant currentTime = clock.instant();
     if (lastStatusChangeTime != null &&
-        currentTime.getEpochSecond() - lastStatusChangeTime.getEpochSecond() > maxStablePeriodMillis) {
-      maxStablePeriodMillis = currentTime.getEpochSecond() - lastStatusChangeTime.getEpochSecond();
+        ChronoUnit.MILLIS.between(lastStatusChangeTime, currentTime) > maxStablePeriodMillis) {
+      maxStablePeriodMillis = ChronoUnit.MILLIS.between(lastStatusChangeTime, currentTime);
     }
     lastStatusChangeTime = currentTime;
   }
@@ -40,12 +55,12 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
 
   protected long buildTimeout() {
     long maxTimeMillis = lastStatusChangeTime != null
-        ? lastStatusChangeTime.getEpochSecond() - startTime.getEpochSecond() : 0;
+        ? ChronoUnit.MILLIS.between(startTime, lastStatusChangeTime) : 0;
     return maxTimeMillis + timeoutThresholdMillis;
   }
 
   public void start() {
-    startTime = Instant.now();
+    startTime = clock.instant();
     rteProtocolClient.addTerminalStateListener(this);
     lastStatusChangeTime = null;
     maxStablePeriodMillis = 0;
@@ -58,5 +73,10 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
 
   public Optional<Instant> getLastStatusChangeTime() {
     return Optional.ofNullable(lastStatusChangeTime);
+  }
+  
+  @VisibleForTesting
+  public void setLastStatusChangeTime(Instant val) {
+    this.lastStatusChangeTime = val;
   }
 }

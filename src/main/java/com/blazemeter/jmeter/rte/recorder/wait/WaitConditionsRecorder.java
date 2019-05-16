@@ -4,6 +4,7 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,10 +37,8 @@ public class WaitConditionsRecorder {
       waitConditions.add(syncWaitCondition.get());
       Instant lastSyncInputInhibitedTime = syncWaitRecorder.getLastStatusChangeTime().orElse(null);
       Instant lastSilentTime = silentWaitRecorder.getLastStatusChangeTime().orElse(null);
-      if (lastSilentTime.getEpochSecond() - lastSyncInputInhibitedTime.getEpochSecond() > stablePeriodMillis) {
-
+      if (ChronoUnit.MILLIS.between(lastSyncInputInhibitedTime, lastSilentTime) > stablePeriodMillis) {
         waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
-
       }
       return waitConditions;
     } else {
