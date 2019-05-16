@@ -2,10 +2,10 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -35,7 +35,7 @@ public class RTESamplerGuiTest {
 
   @BeforeClass
   public static void setupClass() {
-    TestJMeterUtils.createJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
   }
 
   @Test

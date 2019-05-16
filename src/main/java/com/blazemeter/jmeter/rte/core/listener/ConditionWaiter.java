@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.core.listener;
 
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
-import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
@@ -9,7 +8,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public abstract class ConditionWaiter<T extends WaitCondition> {
+public abstract class ConditionWaiter<T extends WaitCondition> implements ExceptionListener {
 
   protected final T condition;
   private ExceptionHandler exceptionHandler;
@@ -60,7 +59,8 @@ public abstract class ConditionWaiter<T extends WaitCondition> {
     endStablePeriod();
   }
 
-  public void onException() {
+  @Override
+  public void onException(Throwable e) {
     if (exceptionHandler.hasPendingError()) {
       cancelWait();
     }

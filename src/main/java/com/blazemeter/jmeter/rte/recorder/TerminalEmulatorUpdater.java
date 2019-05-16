@@ -26,4 +26,9 @@ public class TerminalEmulatorUpdater implements TerminalStateListener {
     }
   }
 
+  @Override
+  public void onException(Throwable e) {
+    terminalEmulator.setStatusMessage(e.getMessage());
+  }
+
 }

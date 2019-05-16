@@ -2,25 +2,27 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
-import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
-import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConnectionEndTerminalListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
@@ -96,22 +98,25 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public void connect(String server, int port, SSLType sslType,
-      TerminalType terminalType, long timeoutMillis,
-      long stableTimeoutMillis)
-      throws RteIOException, InterruptedException, TimeoutException {
+  public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+      long timeoutMillis) throws RteIOException, TimeoutException, InterruptedException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     /*
      we need to do this on connect to avoid leaving keyboard thread running when instance of client
      is created for getting supported terminal types in jmeter
     */
     client = new TerminalClient();
+    client.setConnectionTimeoutMillis((int) timeoutMillis);
+    client.setTerminalType(terminalType.getId());
+    client.setSocketFactory(getSocketFactory(sslType));
     exceptionHandler = new ExceptionHandler();
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
     client.setExceptionHandler(new net.infordata.em.ExceptionHandler() {
 
       @Override
       public void onException(Throwable e) {
         exceptionHandler.setPendingError(e);
+        connectionEndWaiter.stop();
       }
 
       @Override
@@ -119,18 +124,15 @@ public class Tn5250Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
-    client.setConnectionTimeoutMillis((int) timeoutMillis);
-    client.setTerminalType(terminalType.getId());
-    client.setSocketFactory(getSocketFactory(sslType));
-    ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeoutMillis));
+    ConnectionEndTerminalListener connectionEndListener = new ConnectionEndTerminalListener(
+        connectionEndWaiter);
+    client.addEmulatorListener(connectionEndListener);
     try {
       client.connect(server, port);
-      unlock.await();
-    } catch (TimeoutException | InterruptedException | RteIOException e) {
-      doDisconnect();
-      throw e;
+      connectionEndWaiter.await();
+      exceptionHandler.throwAnyPendingError();
     } finally {
-      unlock.stop();
+      client.removeEmulatorListener(connectionEndListener);
     }
   }
 

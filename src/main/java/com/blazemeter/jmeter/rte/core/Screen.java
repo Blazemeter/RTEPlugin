@@ -3,6 +3,8 @@ package com.blazemeter.jmeter.rte.core;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class Screen {
@@ -35,11 +37,11 @@ public class Screen {
   }
 
   public void addSegment(int row, int column, String text) {
-    segments.add(new Segment(row, column, text));
+    segments.add(new Segment(row, column, text, false));
   }
 
   public void addField(int row, int column, String text) {
-    segments.add(new Field(row, column, text));
+    segments.add(new Segment(row, column, text, true));
   }
 
   @Override
@@ -100,14 +102,16 @@ public class Screen {
 
   public static class Segment {
 
-    private int row;
-    private int column;
-    private String text;
+    private final int row;
+    private final int column;
+    private final String text;
+    private final boolean editable;
 
-    public Segment(int row, int column, String text) {
+    public Segment(int row, int column, String text, boolean editable) {
       this.text = text;
       this.row = row;
       this.column = column;
+      this.editable = editable;
     }
 
     public int getRow() {
@@ -122,12 +126,39 @@ public class Screen {
       return text;
     }
 
-  }
+    public boolean isEditable() {
+      return editable;
+    }
 
-  public class Field extends Segment {
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
 
-    public Field(int row, int column, String text) {
-      super(row, column, text);
+      Segment segment = (Segment) o;
+      return row == segment.row &&
+              column == segment.column &&
+              text.equals(segment.text) &&
+              editable == segment.editable;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(row, column, text);
+    }
+
+    @Override
+    public String toString() {
+      return "Segment{" +
+              "row=" + row +
+              ", column=" + column +
+              ", text='" + text + '\'' +
+              ", editable=" + editable +
+              '}';
     }
 
   }
