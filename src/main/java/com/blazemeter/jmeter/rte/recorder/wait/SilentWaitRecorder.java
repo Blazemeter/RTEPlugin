@@ -28,4 +28,8 @@ public class SilentWaitRecorder extends WaitConditionRecorder {
         maxStablePeriodMillis + stablePeriodThresholdMillis));
   }
 
+  @Override
+  public void onException(Throwable e) {
+    
+  }
 }

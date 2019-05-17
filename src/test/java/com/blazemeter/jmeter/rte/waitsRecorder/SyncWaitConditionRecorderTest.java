@@ -18,7 +18,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SyncWaitConditionIT extends WaitConditionRecorderIT {
+public class SyncWaitConditionRecorderTest {
 
   private final long stablePeriodMillis = 1000L;
   private final long timeoutThresholdMillis = 10000L;

@@ -18,7 +18,7 @@ import java.util.Optional;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SilentWaitConditionRecorderTest extends WaitConditionRecorderIT {
+public class SilentWaitConditionRecorderTest {
   
   private final long VARIATION_OF_TIME = 1000L;
   private long stablePeriodMillis;

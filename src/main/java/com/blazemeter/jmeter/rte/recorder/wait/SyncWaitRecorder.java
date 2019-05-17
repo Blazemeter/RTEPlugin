@@ -61,4 +61,8 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
     lastInputInhibited = rteProtocolClient.isInputInhibited();
   }
 
+  @Override
+  public void onException(Throwable e) {
+    
+  }
 }

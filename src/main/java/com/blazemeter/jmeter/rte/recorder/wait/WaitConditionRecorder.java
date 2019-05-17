@@ -73,5 +73,5 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   public Optional<Instant> getLastStatusChangeTime() {
     return Optional.ofNullable(lastStatusChangeTime);
   }
-  
+
 }
