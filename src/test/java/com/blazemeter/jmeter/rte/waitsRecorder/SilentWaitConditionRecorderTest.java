@@ -30,8 +30,7 @@ public class SilentWaitConditionRecorderTest {
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
-
-
+  
   @Before
   public void setup() {
     stablePeriodMillis = 1000;

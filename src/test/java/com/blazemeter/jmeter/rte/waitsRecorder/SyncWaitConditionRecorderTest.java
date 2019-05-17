@@ -17,7 +17,7 @@ import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class SyncWaitConditionRecorderTest {
 
   private final long stablePeriodMillis = 1000L;
