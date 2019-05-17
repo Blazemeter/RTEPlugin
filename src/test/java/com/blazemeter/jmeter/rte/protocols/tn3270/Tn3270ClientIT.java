@@ -1,6 +1,8 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
@@ -11,6 +13,7 @@ import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -251,6 +254,58 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ROLL_UP);
+  }
+
+  @Test
+  public void shouldNotifyAddedListenerWhenTerminalStateChanges() throws Exception{
+
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+
+    loadLoginFlow();
+    connectToVirtualService();
+
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    client.send(buildUsernameField(), AttentionKey.ENTER);
+
+    /*
+     * Is expected to have 12 interactions, mainly because of the changes calls occours when
+     * there a key is pressed, when the cursor moves from one column to another and, last
+     * but not least, when the screen changes from "put your name" screen to,
+     * "put your password" screen. At the end, there is 12 calls for the
+     * method "onTerminalStateChange", divided as follows:
+     *
+     * 6 because of the even when the "cursor moved to the next column"
+     * 5 because of "changes in the keyboard"
+     * 1 because the "screen changes"
+     * */
+
+    verify(terminalEmulatorUpdater, times(12)).onTerminalStateChange();
+  }
+
+  @Test
+  public void shouldNotNotifyRemovedListenerWhenTerminalStateChanges() throws Exception{
+
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+
+    loadLoginFlow();
+    connectToVirtualService();
+
+    /*
+     * I'm not sure If I should:
+     * 1) Add the listener, do some interactions, remove it, do other interactions and them test
+     * 2) Add the listener, remove it, do interactions and test the listener
+     *
+     * I'm doing #2 since #1 will had 12 interactions, as proof in the test before this one,
+     * If I go with the "lets now remove it and see how it behaves well, it still has 12
+     * interactions, and it doesn't look so "intuitive" as it would be if it has 0
+     * calls for that method on that listener, instead.
+     * */
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    client.removeTerminalStateListener(terminalEmulatorUpdater);
+
+    client.send(buildUsernameField(), AttentionKey.ENTER);
+
+    verify(terminalEmulatorUpdater, times(0)).onTerminalStateChange();
   }
 
 }
