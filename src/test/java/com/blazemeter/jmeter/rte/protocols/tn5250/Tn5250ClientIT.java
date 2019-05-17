@@ -1,6 +1,8 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
 
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
@@ -8,6 +10,7 @@ import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.*;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -247,4 +250,34 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     client.send(buildCredsFieldsByCoord(), AttentionKey.PA1);
   }
 
+  @Test
+  public void shouldNotifyAddedListenerWhenTerminalStateChanges() throws Exception {
+
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+
+    loadLoginFlow();
+    connectToVirtualService();
+
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+
+    sendCredsByCoordWithSyncWait();
+
+    verify(terminalEmulatorUpdater, times(2)).onTerminalStateChange();
+  }
+
+  @Test
+  public void shouldNotNotifyRemovedListenerWhenTerminalStateChanges() throws Exception {
+
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+
+    loadLoginFlow();
+    connectToVirtualService();
+
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    client.removeTerminalStateListener(terminalEmulatorUpdater);
+
+    sendCredsByCoordWithSyncWait();
+
+    verify(terminalEmulatorUpdater, times(0)).onTerminalStateChange();
+  }
 }
