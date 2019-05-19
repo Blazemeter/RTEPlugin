@@ -265,21 +265,19 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
 
     client.addTerminalStateListener(terminalEmulatorUpdater);
-    client.send(buildUsernameField(), AttentionKey.ENTER);
+    List<Input> inputs = Collections.singletonList(new CoordInput(new Position(2, 1), "test"));
+
+    client.send(inputs, AttentionKey.ENTER);
 
     /*
-     * Is expected to have 12 interactions, mainly because of the changes calls occours when
+     * Is expected to have 2 interactions, mainly because of the changes calls occours when
      * there a key is pressed, when the cursor moves from one column to another and, last
      * but not least, when the screen changes from "put your name" screen to,
-     * "put your password" screen. At the end, there is 12 calls for the
-     * method "onTerminalStateChange", divided as follows:
-     *
-     * 6 because of the even when the "cursor moved to the next column"
-     * 5 because of "changes in the keyboard"
-     * 1 because the "screen changes"
+     * "put your password" screen. At the end, there is 2 calls for the
+     * method "onTerminalStateChange.
      * */
 
-    verify(terminalEmulatorUpdater, times(12)).onTerminalStateChange();
+    verify(terminalEmulatorUpdater, times(2)).onTerminalStateChange();
   }
 
   @Test
