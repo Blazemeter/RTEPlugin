@@ -27,9 +27,5 @@ public class SilentWaitRecorder extends WaitConditionRecorder {
     return Optional.of(new SilentWaitCondition(buildTimeout(),
         maxStablePeriodMillis + stablePeriodThresholdMillis));
   }
-
-  @Override
-  public void onException(Throwable e) {
-    
-  }
+  
 }

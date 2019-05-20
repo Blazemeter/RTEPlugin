@@ -3,7 +3,6 @@ package com.blazemeter.jmeter.rte.recorder.wait;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.recorder.RTERecorder;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.time.Clock;
 import java.time.Instant;
@@ -14,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 public abstract class WaitConditionRecorder implements TerminalStateListener {
 
-  protected static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
+  protected static final Logger LOG = LoggerFactory.getLogger(WaitConditionRecorder.class);
   protected RteProtocolClient rteProtocolClient;
   protected long maxStablePeriodMillis;
   protected long stablePeriodThresholdMillis;
@@ -25,10 +24,8 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
 
   public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
                                long stablePeriodThresholdMillis) {
-    this.rteProtocolClient = rteProtocolClient;
-    this.timeoutThresholdMillis = timeoutThresholdMillis;
-    this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
-    this.clock = Clock.systemUTC();
+    this(rteProtocolClient, timeoutThresholdMillis,
+        stablePeriodThresholdMillis, Clock.systemUTC());
   }
 
   @VisibleForTesting
@@ -38,7 +35,6 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
     this.timeoutThresholdMillis = timeoutThresholdMillis;
     this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
     this.clock = clock;
-    this.startTime = clock.instant();
   }
 
   public void onTerminalStateChange() {
@@ -73,5 +69,9 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   public Optional<Instant> getLastStatusChangeTime() {
     return Optional.ofNullable(lastStatusChangeTime);
   }
-
+  
+  @Override
+  public void onException(Throwable e){
+    
+  }
 }

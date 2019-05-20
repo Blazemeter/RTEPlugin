@@ -4,7 +4,6 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.recorder.wait.SyncWaitRecorder;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,14 +14,15 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.Silent.class)
+@RunWith(MockitoJUnitRunner.class)
 public class SyncWaitConditionRecorderTest {
 
-  private final long stablePeriodMillis = 1000L;
-  private final long timeoutThresholdMillis = 10000L;
-  private long CTE = 400;
+  private final long STABLE_PERIOD_MILLIS = 1000L;
+  private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
+  private long CLOCK_STEP_MILLIS = 400;
   private SyncWaitRecorder syncWaitRecorder;
   @Mock
   private Clock clock;
@@ -32,83 +32,55 @@ public class SyncWaitConditionRecorderTest {
   @Before
   public void setup() {
     when(clock.instant()).thenReturn(Instant.now());
-    syncWaitRecorder = new SyncWaitRecorder(rteProtocolClientMock, timeoutThresholdMillis, 
-        stablePeriodMillis, clock);
-  }
-
-  @Test
-  public void shouldReturnEmptyWhenNoChangesInTerminalStateAndChangesInInputInhibited() {
+    syncWaitRecorder = new SyncWaitRecorder(rteProtocolClientMock, TIMEOUT_THRESHOLD_MILLIS,
+        STABLE_PERIOD_MILLIS, clock);
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false, true, false, false);
     Instant startTime = clock.instant();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE));
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
-    syncWaitRecorder.start();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true);
-    Assert.assertTrue(!syncWaitRecorder.stop().isPresent());
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS),
+        startTime.plusMillis(CLOCK_STEP_MILLIS * 2),
+        startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
   }
 
   @Test
   public void shouldReturnEmptyWhenMaxInputInhibitedIsBiggerThanStablePeriod() {
     Instant startTime = clock.instant();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE));
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS), 
+        startTime.plusMillis(CLOCK_STEP_MILLIS),
+        startTime.plusMillis(CLOCK_STEP_MILLIS * 13));
     syncWaitRecorder.start();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true);
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE));
     syncWaitRecorder.onTerminalStateChange();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE * 13));
     syncWaitRecorder.onTerminalStateChange();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
-    Assert.assertTrue(!syncWaitRecorder.stop().isPresent());
+    assertEquals(Optional.empty(), syncWaitRecorder.stop());
   }
 
   @Test
   public void shouldReturnWaitConditionWhenTerminalStateAndInputInhibitedChange() {
-    //This will happen with a normal flow of inputInhibited changes.
-    Instant startTime = clock.instant();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE));
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
     syncWaitRecorder.start();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true);
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE * 2));
     syncWaitRecorder.onTerminalStateChange();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE * 3));
     syncWaitRecorder.onTerminalStateChange();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
-    Optional<WaitCondition> waitCondition = syncWaitRecorder.stop();
+    assertEquals(Optional.of(buildExpectedWaitConditionWithNormalFlowOfInputsInhibited()),
+        syncWaitRecorder.stop());
 
-    waitCondition.ifPresent(waitCondition1 -> Assert.assertEquals(
-        buildExpectedWaitConditionWithNormalFlowOfInputsInhibited(), waitCondition1));
   }
 
   private WaitCondition buildExpectedWaitConditionWithNormalFlowOfInputsInhibited() {
-    long timeout = (CTE * 2) + timeoutThresholdMillis;
-    return new SyncWaitCondition(timeout, stablePeriodMillis);
+    long timeout = (CLOCK_STEP_MILLIS * 2) + TIMEOUT_THRESHOLD_MILLIS;
+    return new SyncWaitCondition(timeout, STABLE_PERIOD_MILLIS);
   }
 
   @Test
-  public void shouldGetWaitConditionWhenInputInhibitedKeepSameStateAsBefore() {
-    //Here it just enter twice to onTerminalStateChange even knowing that it is called thrice,
-    //cause InputInhibited have not changed once during the flow.
-    Instant startTime = clock.instant();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE));
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
+  public void shouldGetWaitConditionIgnoringNonKeyboardStatusChangesWhenStop() {
     syncWaitRecorder.start();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true);
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE * 2));
     syncWaitRecorder.onTerminalStateChange();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true);
-    when(clock.instant()).thenReturn(startTime.plusMillis(CTE * 3));
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true, false);
     syncWaitRecorder.onTerminalStateChange();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
-    syncWaitRecorder.stop().ifPresent(waitCondition1 -> Assert.assertEquals(
-        buildExpectedWaitConditionIrregularInputInhibited(), waitCondition1));
+    assertEquals(Optional.of(buildExpectedWaitConditionIrregularInputInhibited()),
+        syncWaitRecorder.stop());
 
   }
 
   private WaitCondition buildExpectedWaitConditionIrregularInputInhibited() {
-    long timeout = CTE + timeoutThresholdMillis;
-    return new SyncWaitCondition(timeout, stablePeriodMillis);
+    long timeout = CLOCK_STEP_MILLIS + TIMEOUT_THRESHOLD_MILLIS;
+    return new SyncWaitCondition(timeout, STABLE_PERIOD_MILLIS);
   }
 }

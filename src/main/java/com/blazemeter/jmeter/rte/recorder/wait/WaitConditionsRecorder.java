@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.recorder.wait;
 
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.helger.commons.annotation.VisibleForTesting;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -24,6 +25,14 @@ public class WaitConditionsRecorder {
     this.stablePeriodMillis = stablePeriodMillis;
   }
 
+  @VisibleForTesting
+  public WaitConditionsRecorder(SilentWaitRecorder silentWaitRecorder,
+                                SyncWaitRecorder syncWaitRecorder, long stablePeriodMillis) {
+    this.silentWaitRecorder = silentWaitRecorder;
+    this.syncWaitRecorder = syncWaitRecorder;
+    this.stablePeriodMillis = stablePeriodMillis;
+  }
+  
   public void start() {
     syncWaitRecorder.start();
     silentWaitRecorder.start();
@@ -42,13 +51,11 @@ public class WaitConditionsRecorder {
           lastSilentTime) > stablePeriodMillis)) {
         waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
       }
-      return waitConditions;
     } else {
       waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
 
-      return waitConditions;
-
     }
+    return waitConditions;
   }
 
 }

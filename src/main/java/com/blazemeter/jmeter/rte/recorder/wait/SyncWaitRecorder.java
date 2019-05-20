@@ -38,7 +38,6 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
 
   @Override
   public Optional<WaitCondition> buildWaitCondition() {
-
     if (rteProtocolClient.isInputInhibited()) {
       return Optional.empty();
     }
@@ -60,9 +59,5 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
     super.start();
     lastInputInhibited = rteProtocolClient.isInputInhibited();
   }
-
-  @Override
-  public void onException(Throwable e) {
-    
-  }
+  
 }

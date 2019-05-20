@@ -400,7 +400,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return getLongProperty(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
   }
 
-  //TODO: This method is going to be used whenever waits are added to recorder
   public void setWaitConditions(List<WaitCondition> waitConditions) {
     setWaitSync(false);
     for (WaitCondition waitCondition : waitConditions) {
