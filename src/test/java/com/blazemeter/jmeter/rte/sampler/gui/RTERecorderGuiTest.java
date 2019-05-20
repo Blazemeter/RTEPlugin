@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
 import com.blazemeter.jmeter.rte.recorder.RTERecorderGui;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
@@ -19,20 +20,19 @@ import static org.mockito.Mockito.when;
 
 public class RTERecorderGuiTest {
 
-  private static final String LOCAL_SERVER = "localhost";
-  private static final String SERVER = "localhost";
-  private static final int PORT = 2323;
-  private static final Protocol PROTOCOL = Protocol.TN3270;
-  private static final SSLType SSL_TYPE = SSLType.NONE;
-  private static final long CONNECTION_TIMEOUT = 30;
+  private final String server = "Server";
+  private final int port = 80;
+  private final Protocol protocol = Protocol.TN5250;
+  private final TerminalType terminalType = protocol.createProtocolClient().getDefaultTerminalType();
+  private final SSLType sslType = SSLType.NONE;
+  private final long timeout = 10000;
 
   private RTERecorderGui rteRecorderGui;
   private RTERecorder testElement;
 
 
-  /**/
   @Rule
-  /**/ public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
   @Before
   public void setup() {
@@ -66,23 +66,19 @@ public class RTERecorderGuiTest {
   public void shouldConfigurePanelWithGivenTestElementWhenConfigure(){
 
     RTERecorder testElement = Mockito.mock(RTERecorder.class);
-    when(testElement.getServer()).thenReturn(LOCAL_SERVER);
-    when(testElement.getPort()).thenReturn(PORT);
-    when(testElement.getProtocol()).thenReturn(PROTOCOL);
-    when(testElement.getTerminalType()).thenReturn(null);
-    when(testElement.getSSLType()).thenReturn(SSL_TYPE);
-    when(testElement.getConnectionTimeout()).thenReturn(CONNECTION_TIMEOUT);
+    when(testElement.getServer()).thenReturn(server);
+    when(testElement.getPort()).thenReturn(port);
+    when(testElement.getProtocol()).thenReturn(protocol);
+    when(testElement.getTerminalType()).thenReturn(terminalType);
+    when(testElement.getSSLType()).thenReturn(sslType);
+    when(testElement.getConnectionTimeout()).thenReturn(timeout);
 
     rteRecorderGui.configure(testElement);
+    
   }
 
   @Test
   public void shouldSetTestElementFromTheRecordingPanelWhenModifyTestElement() {
-
-    /*
-    * I think I'm making a mistake since I aint using RecordingPanel but,
-    * */
-
 
 
     RTERecorder testElement = Mockito.mock(RTERecorder.class);
