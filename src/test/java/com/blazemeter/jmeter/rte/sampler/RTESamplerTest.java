@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.sampler;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -30,17 +31,15 @@ import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import java.awt.Dimension;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
+
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
-import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
-import org.assertj.core.api.AbstractObjectAssert;
+
+import org.apache.poi.ss.formula.functions.T;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -48,7 +47,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.OngoingStubbing;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RTESamplerTest {
@@ -57,13 +58,19 @@ public class RTESamplerTest {
   private static final long CUSTOM_STABLE_TIMEOUT_MILLIS = 500;
   private static final String TEST_SCREEN = "Test screen\n";
   private static final List<Input> INPUTS = Collections
-      .singletonList(new CoordInput(new Position(1, 1), "input"));
+          .singletonList(new CoordInput(new Position(1, 1), "input"));
   private static final Position CURSOR_POSITION = new Position(1, 1);
 
   @Mock
   private RteProtocolClient rteProtocolClientMock;
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
+
+  @Mock
+  private RteProtocolClient rteProtocolClientWithoutCursor;
+
+  @Mock
+  private RteSampleResult rteSampleResultMock;
 
   @BeforeClass
   public static void setupClass() {
@@ -95,7 +102,7 @@ public class RTESamplerTest {
     configTestElement.setProperty(RTESampler.CONFIG_SERVER, "server");
     configTestElement.setProperty(RTESampler.CONFIG_PORT, 23);
     configTestElement
-        .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, RTESampler.DEFAULT_TERMINAL_TYPE.getId());
+            .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, RTESampler.DEFAULT_TERMINAL_TYPE.getId());
     configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL, RTESampler.DEFAULT_PROTOCOL.name());
     configTestElement.setProperty(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name());
     configTestElement.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, "0");
@@ -117,7 +124,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenGetClientThrowTimeoutException() throws Exception {
     TimeoutException e = new TimeoutException();
     doThrow(e).when(rteProtocolClientMock)
-        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+            .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
     assertSampleResult(rteSampler.sample(null), buildExpectedConnectTimeoutErrorResult(e));
   }
 
@@ -144,16 +151,16 @@ public class RTESamplerTest {
 
   private void assertSampleResult(SampleResult result, SampleResult expected) {
     assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "requestHeaders", "samplerData",
-            "successful", "responseCode", "responseMessage", "responseHeaders", "dataType",
-            "responseDataAsString");
+            .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "requestHeaders", "samplerData",
+                    "successful", "responseCode", "responseMessage", "responseHeaders", "dataType",
+                    "responseDataAsString");
   }
 
   @Test
   public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
     InterruptedException e = new InterruptedException();
     doThrow(e).when(rteProtocolClientMock)
-        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+            .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
     assertSampleResult(rteSampler.sample(null), buildExpectedErrorResult(e));
   }
 
@@ -175,7 +182,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenSendThrowIllegalArgumentException() throws Exception {
     IllegalArgumentException e = new IllegalArgumentException();
     doThrow(e).when(rteProtocolClientMock)
-        .send(any(), any());
+            .send(any(), any());
     RteSampleResult expected = buildExpectedErrorResult(e);
     expected.setInputInhibitedRequest(true);
     expected.setInputs(INPUTS);
@@ -196,7 +203,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenAwaitThrowsException() throws Exception {
     TimeoutException e = new TimeoutException();
     doThrow(e).
-        when(rteProtocolClientMock).await(any());
+            when(rteProtocolClientMock).await(any());
     when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
     assertSampleResult(rteSampler.sample(null), buildExpectedTimeoutErrorResult(e));
   }
@@ -241,19 +248,19 @@ public class RTESamplerTest {
 
   @Test
   public void shouldSendDefaultAttentionKeyToEmulatorWhenSampleWithoutSpecifyingAttentionKey()
-      throws Exception {
+          throws Exception {
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(AttentionKey.ENTER));
+            .send(any(), eq(AttentionKey.ENTER));
   }
 
   @Test
   public void shouldSendCustomAttentionKeyToEmulatorWhenSampleWithCustomAttentionKey()
-      throws Exception {
+          throws Exception {
     rteSampler.setAttentionKey(AttentionKey.F1);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .send(any(), eq(AttentionKey.F1));
+            .send(any(), eq(AttentionKey.F1));
   }
 
   @Test
@@ -261,7 +268,7 @@ public class RTESamplerTest {
     rteSampler.setAction(Action.CONNECT);
     rteSampler.sample(null);
     verify(rteProtocolClientMock, never())
-        .send(any(), any());
+            .send(any(), any());
   }
 
   @Test
@@ -298,7 +305,7 @@ public class RTESamplerTest {
 
   @Test
   public void shouldNotDisconnectEmulatorWhenIterationStartAndReuseConnectionsEnabled()
-      throws Exception {
+          throws Exception {
     rteSampler.setReuseConnections(true);
     try {
       rteSampler.sample(null);
@@ -319,7 +326,7 @@ public class RTESamplerTest {
 
   @Test
   public void shouldNotDisconnectEmulatorWhenIterationStartAndIterationHasNotChanged()
-      throws Exception {
+          throws Exception {
     rteSampler.sample(null);
     rteSampler.iterationStart(null);
     reset(rteProtocolClientMock);
@@ -355,7 +362,7 @@ public class RTESamplerTest {
     rteSampler.setAction(Action.DISCONNECT);
     RteIOException e = new RteIOException(null);
     doThrow(e)
-        .when(rteProtocolClientMock).disconnect();
+            .when(rteProtocolClientMock).disconnect();
     SampleResult result = rteSampler.sample(null);
     SampleResult expected = buildExpectedErrorResultDisconnect(e);
     assertSampleResult(result, expected);
@@ -379,9 +386,9 @@ public class RTESamplerTest {
   public void shouldAwaitSyncWaiterWhenSyncWaitEnabled() throws Exception {
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(
-            new SyncWaitCondition(RTESampler.DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS,
-                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+            .await(Collections.singletonList(
+                    new SyncWaitCondition(RTESampler.DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS,
+                            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -390,8 +397,8 @@ public class RTESamplerTest {
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(
-            new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS)));
+            .await(Collections.singletonList(
+                    new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -399,36 +406,36 @@ public class RTESamplerTest {
     rteSampler.setWaitSync(false);
     rteSampler.sample(null);
     verify(rteProtocolClientMock, never())
-        .await(any());
+            .await(any());
   }
 
   @Test
   public void shouldAwaitWithDefaultOrderConditionsWhenSampleAndWaitersHaveSameTimeout()
-      throws Exception {
+          throws Exception {
     rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.setWaitCursor(true);
     rteSampler.setWaitCursorTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Arrays.asList(
-            new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
-            new CursorWaitCondition(CURSOR_POSITION, CUSTOM_TIMEOUT_MILLIS,
-                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+            .await(Arrays.asList(
+                    new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS, RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
+                    new CursorWaitCondition(CURSOR_POSITION, CUSTOM_TIMEOUT_MILLIS,
+                            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
   public void shouldAwaitWithConditionsSortedByTimeoutToOptimizeWaitingTimeOnTimeouts()
-      throws Exception {
+          throws Exception {
     rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     rteSampler.setWaitCursor(true);
     rteSampler.setWaitCursorTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS - 1));
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Arrays.asList(
-            new CursorWaitCondition(CURSOR_POSITION, CUSTOM_TIMEOUT_MILLIS - 1,
-                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
-            new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS,
-                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+            .await(Arrays.asList(
+                    new CursorWaitCondition(CURSOR_POSITION, CUSTOM_TIMEOUT_MILLIS - 1,
+                            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS),
+                    new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS,
+                            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -437,9 +444,9 @@ public class RTESamplerTest {
     rteSampler.setWaitSilent(true);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(
-            new SilentWaitCondition(RTESampler.DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS,
-                RTESampler.DEFAULT_WAIT_SILENT_TIME_MILLIS)));
+            .await(Collections.singletonList(
+                    new SilentWaitCondition(RTESampler.DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS,
+                            RTESampler.DEFAULT_WAIT_SILENT_TIME_MILLIS)));
   }
 
   @Test
@@ -450,8 +457,8 @@ public class RTESamplerTest {
     rteSampler.setWaitSilentTime(String.valueOf(CUSTOM_STABLE_TIMEOUT_MILLIS));
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(
-            new SilentWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS)));
+            .await(Collections.singletonList(
+                    new SilentWaitCondition(CUSTOM_TIMEOUT_MILLIS, CUSTOM_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -460,9 +467,9 @@ public class RTESamplerTest {
     rteSampler.setWaitCursor(true);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(new CursorWaitCondition(CURSOR_POSITION,
-            RTESampler.DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS,
-            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+            .await(Collections.singletonList(new CursorWaitCondition(CURSOR_POSITION,
+                    RTESampler.DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS,
+                    RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -477,9 +484,9 @@ public class RTESamplerTest {
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(
-            new CursorWaitCondition(new Position(customRow, customColumn), CUSTOM_TIMEOUT_MILLIS,
-                CUSTOM_STABLE_TIMEOUT_MILLIS)));
+            .await(Collections.singletonList(
+                    new CursorWaitCondition(new Position(customRow, customColumn), CUSTOM_TIMEOUT_MILLIS,
+                            CUSTOM_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -490,13 +497,13 @@ public class RTESamplerTest {
     rteSampler.setWaitTextRegex(regex);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections.singletonList(new TextWaitCondition(
-            JMeterUtils.getPattern(regex),
-            JMeterUtils.getMatcher(),
-            Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
-                Position.UNSPECIFIED_INDEX),
-            RTESampler.DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS,
-            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+            .await(Collections.singletonList(new TextWaitCondition(
+                    JMeterUtils.getPattern(regex),
+                    JMeterUtils.getMatcher(),
+                    Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
+                            Position.UNSPECIFIED_INDEX),
+                    RTESampler.DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS,
+                    RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -517,103 +524,103 @@ public class RTESamplerTest {
     rteSampler.setStableTimeout(CUSTOM_STABLE_TIMEOUT_MILLIS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .await(Collections
-            .singletonList(new TextWaitCondition(
-                JMeterUtils.getPattern(regex),
-                JMeterUtils.getMatcher(),
-                Area.fromTopLeftBottomRight(areaTop, areaLeft, areaBottom, areaRight),
-                CUSTOM_TIMEOUT_MILLIS,
-                CUSTOM_STABLE_TIMEOUT_MILLIS)));
+            .await(Collections
+                    .singletonList(new TextWaitCondition(
+                            JMeterUtils.getPattern(regex),
+                            JMeterUtils.getMatcher(),
+                            Area.fromTopLeftBottomRight(areaTop, areaLeft, areaBottom, areaRight),
+                            CUSTOM_TIMEOUT_MILLIS,
+                            CUSTOM_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
   public void shouldConnectUsingCustomSSLTypeValueToEmulatorWhenKeyStorePropertiesEnabled()
-      throws Exception {
+          throws Exception {
     rteSampler.setSslType(SSLType.TLS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .connect(any(), anyInt(), eq(SSLType.TLS), any(), anyLong(), anyLong());
+            .connect(any(), anyInt(), eq(SSLType.TLS), any(), anyLong(), anyLong());
   }
 
   @Test
   public void shouldGetCustomSslHeaderWhenUsingCustomSsl() {
     rteSampler.setSslType(SSLType.TLS);
     assertSampleResult(rteSampler.sample(null),
-        buildExpectedSuccessfulSendInputResult(SSLType.TLS));
+            buildExpectedSuccessfulSendInputResult(SSLType.TLS));
   }
 
-  private void assertDifferentSampleResult(SampleResult result, SampleResult expected) {
 
-    boolean anyDifference = false;
-
-    //I should use another method to compare this differences
-    anyDifference = (result.isSuccessful() != expected.isSuccessful() ? true : anyDifference);
-    anyDifference = (!result.getSampleLabel().equals(expected.getSampleLabel()) ? true : anyDifference);
-
-    assertThat(anyDifference == true);
-
-  }
-
+  /*
+   * I'm assuming, by the name, that we are testing that all the data from the
+   * ProtocolClient is setted into the Sampler, instead of the verification
+   * of the "setProtocol" method on the rteSample.
+   *
+   * The setProtocol is never called when using
+   * UpdateSampleResultResponse, either way.
+   * */
   @Test
   public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse(){
 
-    RteSampleResult sampleA = buildBaseSampleResult();
-    RteSampleResult sampleB = buildBaseSampleResult();
+    RteSampleResult rteSampleResult = Mockito.spy(buildBaseSampleResult());
 
-    rteSampler.updateSampleResultResponse(sampleA, rteProtocolClientMock);
+    Optional<Position> DEFAULT_POSITION = Optional.of(CURSOR_POSITION);
 
-    assertDifferentSampleResult(sampleA, sampleB);
+    when(rteProtocolClientMock.getCursorPosition()).thenReturn(DEFAULT_POSITION);
+    when(rteProtocolClientMock.isAlarmOn()).thenReturn(true);
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
+    when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
+
+    rteSampler.updateSampleResultResponse(rteSampleResult, rteProtocolClientMock);
+
+    String expectedResult = "Input-inhibited: false\n" +
+            "Cursor-position: 1,1\n" +
+            "Sound-Alarm: true";
+
+    assertEquals(expectedResult, rteSampleResult.getResponseHeaders());
+
+    /*
+      I might be missing the "setScreen" from the updateSampleResultResponse.
+      Should I evaluate this as well?
+     */
   }
+
 
   @Test
   public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition(){
 
-    RteSampleResult sampleA = buildBaseSampleResult();
+    RteSampleResult rteSampleResult = Mockito.spy(buildBaseSampleResult());
 
-    String[] responseHeadersBefore = sampleA.getResponseHeaders().split("\n");
+    rteSampler.updateSampleResultResponse(rteSampleResult, rteProtocolClientWithoutCursor);
 
-    rteSampler.updateSampleResultResponse(sampleA, rteProtocolClientMock);
+    verify(rteSampleResult).setCursorPosition(eq(null));
 
-    String[] responseHeadersAfter = sampleA.getResponseHeaders().split("\n");
-
-    boolean areDifferent = (!responseHeadersBefore[1].equals(responseHeadersAfter[1]));
-
-    assertThat(areDifferent);
-
+    //I know, I shouldn't be doing two assertion one after another but: I'm not sure if this
+    // is what we meant when we added the "AndProtocolClientReturnsAbsentCursorPosition".
+    assertEquals(Optional.empty(), rteProtocolClientWithoutCursor.getCursorPosition());
   }
+
 
   @Test
   public void shouldUpdateErrorResultWhenErrorOccours(){
 
-    try {
-      int testOperation = 1/0;
-    }
-    catch(Exception e){
-      RteSampleResult rteSampleResult = rteSampler.updateErrorResult(e, buildExpectedErrorResult(e));
+    String expectedExceptionMessage = "Testing error";
+    RuntimeException testingError = new RuntimeException(expectedExceptionMessage);
+    RteSampleResult rteSampleResult = rteSampler.updateErrorResult(testingError, buildExpectedErrorResult(testingError));
 
-      assertThat(rteSampleResult.getResponseMessage().equals("/ by zero"));
-    }
+    assertEquals(expectedExceptionMessage, rteSampleResult.getResponseMessage());
   }
 
+
   @Test
-  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs(){
+  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs()
+          throws Exception{
 
-    SampleResult resultA = rteSampler.sample(null);
-
-    List<Input> customInputs = Collections
-            .singletonList(new CoordInput(new Position(3, 2), "input"));
-
-    rteSampler.setInputs(customInputs);
+    rteSampler.setInputs(INPUTS);
     rteSampler.setAction(Action.SEND_INPUT);
 
-    SampleResult resultB = rteSampler.sample(null);
+    rteSampler.sample(null);
 
-    String samplerDataA = resultA.getSamplerData();
-    String samplerDataB = resultB.getSamplerData();
-
-    boolean differentInputs = (!samplerDataA.equals(samplerDataB));
-
-    assertThat(differentInputs);
+    verify(rteProtocolClientMock).send(eq(INPUTS), any());
   }
 
 }
