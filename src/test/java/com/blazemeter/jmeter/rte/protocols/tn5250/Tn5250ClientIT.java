@@ -278,6 +278,6 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
     sendCredsByCoordWithSyncWait();
 
-    verify(terminalEmulatorUpdater, times(0)).onTerminalStateChange();
+    verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
   }
 }
