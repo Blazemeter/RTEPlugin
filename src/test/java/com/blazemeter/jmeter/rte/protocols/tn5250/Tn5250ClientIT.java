@@ -28,6 +28,8 @@ import java.util.concurrent.TimeoutException;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
+import org.mockito.MockingDetails;
+import org.mockito.Mockito;
 
 public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
@@ -261,6 +263,17 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     client.addTerminalStateListener(terminalEmulatorUpdater);
 
     sendCredsByCoordWithSyncWait();
+    MockingDetails details = Mockito.mockingDetails(terminalEmulatorUpdater);
+
+    System.out.println("Invocations");
+    details.getInvocations().stream().forEach(s -> System.out.println(s));
+
+    /*
+    * When the inputs are sent to the client, 2 changes happens:
+    * The listener method, onTerminalStateChange, is executed twice. Each time
+    * because a new Panel is Received
+    * The Method
+    * */
 
     verify(terminalEmulatorUpdater, times(2)).onTerminalStateChange();
   }
