@@ -14,6 +14,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -114,6 +115,13 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       }
 
       @Override
+      protected void processMouseEvent(MouseEvent e) {
+        super.processMouseEvent(e);
+        statusPanel
+            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+      }
+
+      @Override
       public void paintComponent(Graphics g) {
         synchronized (Xtn5250TerminalEmulator.this) {
           super.paintComponent(g);
@@ -138,8 +146,6 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         xi5250Crt.setSize(testSize.width, testSize.height);
         frame.pack();
         xi5250Crt.requestFocus();
-        System.out.println("xi5250Crt - " + xi5250Crt.getSize());
-        System.out.println("statusPanel - " + statusPanel.getSize());
       }
 
       @Override
