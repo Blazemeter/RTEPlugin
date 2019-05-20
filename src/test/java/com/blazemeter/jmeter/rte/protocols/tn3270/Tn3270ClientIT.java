@@ -50,7 +50,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadLoginFlow();
     connectToVirtualService();
     assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+            .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
   private void loadLoginFlow() throws FileNotFoundException {
@@ -66,11 +66,11 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     server.setSslEnabled(true);
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
-        TIMEOUT_MILLIS);
+            TIMEOUT_MILLIS);
     client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
     assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+            .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
   @Test
@@ -91,7 +91,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
     client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, client.getDefaultTerminalType(),
-        TIMEOUT_MILLIS);
+            TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)
@@ -106,13 +106,13 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     sendUsernameWithSyncWait();
     assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("user-menu-screen.txt"));
+            .isEqualTo(getFileContent("user-menu-screen.txt"));
   }
 
   private void sendUsernameWithSyncWait() throws Exception {
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   private List<Input> buildUsernameField() {
@@ -126,39 +126,39 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     sendUsernameWithSyncWait();
     sendPasswordByLabelWithSyncWait();
     assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-success-screen.txt"));
+            .isEqualTo(getFileContent("login-success-screen.txt"));
   }
 
   private void sendPasswordByLabelWithSyncWait() throws Exception {
     client.send(buildPasswordByLabel(), AttentionKey.ENTER);
     client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   private List<Input> buildPasswordByLabel() {
     return Collections.singletonList(
-        new LabelInput("Password", "testpsw"));
+            new LabelInput("Password", "testpsw"));
   }
 
   @Test(expected = InvalidFieldLabelException.class)
   public void shouldThrowInvalidLabelExceptionWhenShowsIncorrectLabel()
-      throws Exception {
+          throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-        new LabelInput("Address", "address_Example_123"));
+            new LabelInput("Address", "address_Example_123"));
     client.send(input, AttentionKey.ENTER);
     client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = InvalidFieldPositionException.class)
   public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPosition()
-      throws Exception {
+          throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-        new CoordInput(new Position(81, 1), "TEST"));
+            new CoordInput(new Position(81, 1), "TEST"));
     client.send(input, AttentionKey.ENTER);
   }
 
@@ -172,16 +172,16 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test(expected = UnsupportedOperationException.class)
   public void shouldThrowUnsupportedOperationExceptionWhenAwaitWithUndefinedCondition()
-      throws Exception {
+          throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     List<WaitCondition> conditions = Collections
-        .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
-          @Override
-          public String getDescription() {
-            return "test";
-          }
-        });
+            .singletonList(new WaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS) {
+              @Override
+              public String getDescription() {
+                return "test";
+              }
+            });
     client.await(conditions);
   }
 
@@ -191,18 +191,18 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenCursorWaitAndNotExpectedCursorPosition()
-      throws Exception {
+          throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(Collections.singletonList(
-        new CursorWaitCondition(new Position(1,
-            1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            new CursorWaitCondition(new Position(1,
+                    1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
@@ -211,22 +211,22 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(
-        Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenTextWaitWithNoMatchingRegex()
-      throws Exception {
+          throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(Collections
-        .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
-            new Perl5Matcher(),
-            Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
-                Position.UNSPECIFIED_INDEX),
-            TIMEOUT_MILLIS,
-            STABLE_TIMEOUT_MILLIS)));
+            .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
+                    new Perl5Matcher(),
+                    Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
+                            Position.UNSPECIFIED_INDEX),
+                    TIMEOUT_MILLIS,
+                    STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -237,7 +237,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     client.disconnect();
     connectToVirtualService();
     assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+            .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
 
   @Test
@@ -250,7 +250,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   @Test(expected = UnsupportedOperationException.class)
   public void shouldThrowUnsupportedOperationExceptionWhenSelectAttentionKeyUnsupported()
-      throws Exception {
+          throws Exception {
     loadFlow("login.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ROLL_UP);
@@ -265,19 +265,21 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
 
     client.addTerminalStateListener(terminalEmulatorUpdater);
-    List<Input> inputs = Collections.singletonList(new CoordInput(new Position(2, 1), "test"));
-
-    client.send(inputs, AttentionKey.ENTER);
+    sendInputsAndWait();
 
     /*
-     * Is expected to have 2 interactions, mainly because of the changes calls occours when
-     * there a key is pressed, when the cursor moves from one column to another and, last
-     * but not least, when the screen changes from "put your name" screen to,
-     * "put your password" screen. At the end, there is 2 calls for the
-     * method "onTerminalStateChange.
+     * When inputs are sent to client, 17 changes happens: the screen changes, the cursor moves
+     * and also the keyboard changes.
      * */
 
-    verify(terminalEmulatorUpdater, times(2)).onTerminalStateChange();
+    verify(terminalEmulatorUpdater, times(17)).onTerminalStateChange();
+  }
+
+  public void sendInputsAndWait() throws InterruptedException, TimeoutException, RteIOException {
+    List<Input> inputs = Collections.singletonList(new CoordInput(new Position(2, 1), "test"));
+    client.send(inputs, AttentionKey.ENTER);
+    client.await(
+            Collections.singletonList(new SyncWaitCondition(10000, 10000)));
   }
 
   @Test
@@ -288,22 +290,13 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadLoginFlow();
     connectToVirtualService();
 
-    /*
-     * I'm not sure If I should:
-     * 1) Add the listener, do some interactions, remove it, do other interactions and them test
-     * 2) Add the listener, remove it, do interactions and test the listener
-     *
-     * I'm doing #2 since #1 will had 12 interactions, as proof in the test before this one,
-     * If I go with the "lets now remove it and see how it behaves well, it still has 12
-     * interactions, and it doesn't look so "intuitive" as it would be if it has 0
-     * calls for that method on that listener, instead.
-     * */
     client.addTerminalStateListener(terminalEmulatorUpdater);
     client.removeTerminalStateListener(terminalEmulatorUpdater);
-
     client.send(buildUsernameField(), AttentionKey.ENTER);
+    client.await(
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
 
-    verify(terminalEmulatorUpdater, times(0)).onTerminalStateChange();
+    verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
   }
 
 }
