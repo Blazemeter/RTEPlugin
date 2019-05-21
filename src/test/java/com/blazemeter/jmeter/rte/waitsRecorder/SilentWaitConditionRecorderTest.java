@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class SilentWaitConditionRecorderTest {
   
-  private final long CLOCK_STEP_MILLIS = 1000L;
+  private final static long CLOCK_STEP_MILLIS = 1000L;
   private final long STABLE_PERIOD_MILLIS = 1000L;
   private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
   private SilentWaitRecorder silentWaitRecorder;
@@ -80,7 +80,7 @@ public class SilentWaitConditionRecorderTest {
   }
   
   @Test
-  public void shouldGetStandardWaitWhenStopStart() {
+  public void shouldGetExpectedWaitWhenStartSecondRecordingWithNoTerminalStateChanges() {
     silentWaitRecorder.start();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS),
         startTime.plusMillis(CLOCK_STEP_MILLIS *2),
@@ -96,7 +96,7 @@ public class SilentWaitConditionRecorderTest {
     
   }
   @Test
-  public void shouldGetExpectedWaitWhenStopStart() {
+  public void shouldGetExpectedWaitWhenWhenStartSecondRecordingWithTerminalStateChanges() {
     silentWaitRecorder.start();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS),
         startTime.plusMillis(CLOCK_STEP_MILLIS *2),

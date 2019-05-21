@@ -14,6 +14,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,27 +49,25 @@ public class WaitConditionsRecorderTest {
         TIMEOUT_THRESHOLD_MILLIS, STABLE_PERIOD_MILLIS);
     when(silentWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(silentWaitCondition));
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
-    for (WaitCondition waitCondition : waitConditions) {
-      assertEquals(silentWaitCondition, waitCondition);
-    }
+      assertEquals(Collections.singletonList(silentWaitCondition), waitConditions);
+    
   }
 
   @Test
   public void shouldReturnSyncWaitConditionWhenDifferenceBetweenEventsLowerThanStablePeriod(){
     
     when(syncWaitRecorder.getLastStatusChangeTime()).thenReturn(Optional.of(now));
-    when(silentWaitRecorder.getLastStatusChangeTime()).thenReturn(Optional.of(now.plusMillis(100)));
+    when(silentWaitRecorder.getLastStatusChangeTime()).thenReturn(
+        Optional.of(now.plusMillis(STABLE_PERIOD_MILLIS - 100)));
     when(syncWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SYNC_WAIT_CONDITION));
-    List<WaitCondition> waitConditionsExpected = new ArrayList<>();
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
-    waitConditionsExpected.add(SYNC_WAIT_CONDITION);
-    assertEquals(waitConditionsExpected, waitConditions);
+    assertEquals(Collections.singletonList(SYNC_WAIT_CONDITION), waitConditions);
   }
   @Test
   public void shouldReturnSyncAndSilentWaitConditionWhenDifferenceBetweenEventsIsBiggerThanStablePeriod() {
     when(syncWaitRecorder.getLastStatusChangeTime()).thenReturn(Optional.of(now));
     when(silentWaitRecorder.getLastStatusChangeTime())
-        .thenReturn(Optional.of(now.plusMillis(2000)));
+        .thenReturn(Optional.of(now.plusMillis(STABLE_PERIOD_MILLIS + 100)));
     when(syncWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SYNC_WAIT_CONDITION));
     when(silentWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SILENT_WAIT_CONDITION));
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();

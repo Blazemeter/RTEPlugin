@@ -22,7 +22,7 @@ public class SyncWaitConditionRecorderTest {
 
   private final long STABLE_PERIOD_MILLIS = 1000L;
   private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
-  private long CLOCK_STEP_MILLIS = 400;
+  private final static long  CLOCK_STEP_MILLIS = 400L;
   private SyncWaitRecorder syncWaitRecorder;
   @Mock
   private Clock clock;
