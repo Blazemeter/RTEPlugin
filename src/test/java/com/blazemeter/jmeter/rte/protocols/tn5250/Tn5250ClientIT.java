@@ -263,16 +263,9 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     client.addTerminalStateListener(terminalEmulatorUpdater);
 
     sendCredsByCoordWithSyncWait();
-    MockingDetails details = Mockito.mockingDetails(terminalEmulatorUpdater);
-
-    System.out.println("Invocations");
-    details.getInvocations().stream().forEach(s -> System.out.println(s));
 
     /*
-    * When the inputs are sent to the client, 2 changes happens:
-    * The listener method, onTerminalStateChange, is executed twice. Each time
-    * because a new Panel is Received
-    * The Method
+    * When inputs are sent to client 2 changes happen: screen change and mouse moved
     * */
 
     verify(terminalEmulatorUpdater, times(2)).onTerminalStateChange();
