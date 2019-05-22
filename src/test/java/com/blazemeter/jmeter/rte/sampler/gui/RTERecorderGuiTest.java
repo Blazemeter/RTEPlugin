@@ -29,12 +29,9 @@ public class RTERecorderGuiTest {
   private final long TIMEOUT = 5000;
 
   public RTERecorderGui rteRecorderGui;
-  public RTERecorder testElement;
-
 
   @Before
   public void setup() {
-    testElement = new RTERecorder();
     rteRecorderGui = new RTERecorderGui();
   }
 
@@ -55,32 +52,14 @@ public class RTERecorderGuiTest {
     when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
 
     rteRecorderGui.configure(testElement);
+    rteRecorderGui.modifyTestElement(testElement);
     rteRecorderGui.onRecordingStart();
 
-    /*
-     * Doubt: How do I access/or add the TestStateListener in the rteRecorderGui?
-     * */
+    verify(testElement, times(1)).onRecordingStart();
   }
 
   @Test
-  public void shouldNotifyRecorderWhenOnRecordingStop(){
-    /*
-     * Doubt: How do I access/or add the TestStateListener in the rteRecorderGui?
-     * Obviously, this test is not complete.
-     * */
-
-    rteRecorderGui.onRecordingStop();
-  }
-
-  private void testME(String name, String content){
-    System.out.println("<"+name+">");
-    System.out.println(content);
-    System.out.println("</"+name+">");
-  }
-
-  @Test
-  public void shouldConfigurePanelWithGivenTestElementWhenConfigure(){
-    /*
+  public void shouldNotifyRecorderWhenOnRecordingStop() throws Exception {
     RTERecorder testElement = Mockito.mock(RTERecorder.class);
     when(testElement.getServer()).thenReturn(SERVER);
     when(testElement.getPort()).thenReturn(PORT);
@@ -88,15 +67,18 @@ public class RTERecorderGuiTest {
     when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
     when(testElement.getSSLType()).thenReturn(SSL_TYPE);
     when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
-    */
-    RTERecorder configurationElement = buildDefaultRTERecorder();
-    configurationElement.setServer(SERVER);
-    configurationElement.setPort(String.valueOf(PORT));
-    configurationElement.setProtocol(PROTOCOL);
-    configurationElement.setTerminalType(TERMINAL_TYPE);
-    configurationElement.setSSLType(SSL_TYPE);
-    configurationElement.setConnectionTimeout(Long.toString(TIMEOUT));
 
+    rteRecorderGui.configure(testElement);
+    rteRecorderGui.modifyTestElement(testElement);
+    rteRecorderGui.onRecordingStart();
+    rteRecorderGui.onRecordingStop();
+
+    verify(testElement, times(1)).onRecordingStop();
+  }
+
+  @Test
+  public void shouldConfigurePanelWithGivenTestElementWhenConfigure(){
+    RTERecorder configurationElement = buildRTERecorderToBeConfigured();
     rteRecorderGui.configure(configurationElement);
 
     String expected = "RTERecorderGui { \n" +
@@ -112,10 +94,21 @@ public class RTERecorderGuiTest {
     assertEquals(expected, rteRecorderGui.toString());
   }
 
+  private RTERecorder buildRTERecorderToBeConfigured(){
+    RTERecorder configurationElement = new RTERecorder();
+    configurationElement.setServer(SERVER);
+    configurationElement.setPort(String.valueOf(PORT));
+    configurationElement.setProtocol(PROTOCOL);
+    configurationElement.setTerminalType(TERMINAL_TYPE);
+    configurationElement.setSSLType(SSL_TYPE);
+    configurationElement.setConnectionTimeout(Long.toString(TIMEOUT));
+
+    return configurationElement;
+  }
+
   @Test
   public void shouldSetTestElementFromTheRecordingPanelWhenModifyTestElement() {
-
-    RTERecorder expected = buildDefaultRTERecorder();
+    RTERecorder expected = buildRTERecorderToBeConfigured();
     RTERecorder modified = new RTERecorder();
 
     rteRecorderGui.configure(expected);
@@ -124,22 +117,8 @@ public class RTERecorderGuiTest {
     assertRecorder(expected, modified);
   }
 
-  public RTERecorder buildDefaultRTERecorder(){
-    RTERecorder recorder = new RTERecorder();
-
-    recorder.setServer(SERVER);
-    recorder.setPort(String.valueOf(PORT));
-    recorder.setProtocol(PROTOCOL);
-    recorder.setTerminalType(TERMINAL_TYPE);
-    recorder.setSSLType(SSL_TYPE);
-    recorder.setConnectionTimeout(Long.toString(TIMEOUT));
-
-    return recorder;
-  }
-
   private void assertRecorder(RTERecorder result, RTERecorder expected) {
     assertThat(result)
             .isEqualToComparingOnlyGivenFields(expected, "port", "server", "protocol", "terminalType", "connectionTimeout");
   }
-
 }
