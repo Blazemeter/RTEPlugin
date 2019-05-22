@@ -16,11 +16,13 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
   private RTERecorder recorder;
 
   public RTERecorderGui() {
+    System.out.println("Inicializando RTE Recorder GUI");
     recordingPanel = new RTERecorderPanel(this);
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(recordingPanel, BorderLayout.CENTER);
+    System.out.println("Fin RTE Recorder GUI");
   }
 
   @Override
@@ -96,4 +98,16 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     recorder.onRecordingStop();
   }
 
+  @Override
+  public String toString() {
+
+    return "RTERecorderGui { \nrecordingPanel { \nserver=" + recordingPanel.getServer() +
+            ", \nport=" + recordingPanel.getPort()  +
+            ", \nprotocol=" + recordingPanel.getProtocol() +
+            ", \nterminalType=" + recordingPanel.getTerminalType() +
+            ", \nsslType=" + recordingPanel.getSSLType() +
+            ", \nconnectionTimeout=" + recordingPanel.getConnectionTimeout() + "}" +
+            ", \nrecorder=" + recorder + " } } ";
+
+  }
 }

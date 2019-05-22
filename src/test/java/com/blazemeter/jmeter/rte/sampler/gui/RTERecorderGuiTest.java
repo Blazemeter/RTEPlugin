@@ -7,6 +7,7 @@ import com.blazemeter.jmeter.rte.recorder.RTERecorder;
 import com.blazemeter.jmeter.rte.recorder.RTERecorderGui;
 import com.blazemeter.jmeter.rte.recorder.RecordingStateListener;
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.jmeter.testelement.TestElement;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -15,19 +16,20 @@ import org.mockito.Mockito;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class RTERecorderGuiTest {
 
   private final String SERVER = "localhost";
-  private final int port = 23;
-  private final Protocol protocol = Protocol.TN5250;
-  private final TerminalType terminalType = protocol.createProtocolClient().getDefaultTerminalType();
-  private final SSLType sslType = SSLType.NONE;
-  private final long timeout = 60000;
+  private final int PORT = 23;
+  private final Protocol PROTOCOL = Protocol.TN5250;
+  private final TerminalType TERMINAL_TYPE = PROTOCOL.createProtocolClient().getDefaultTerminalType();
+  private final SSLType SSL_TYPE = SSLType.NONE;
+  private final long TIMEOUT = 5000;
 
-  private RTERecorderGui rteRecorderGui;
-  private RTERecorder testElement;
+  public RTERecorderGui rteRecorderGui;
+  public RTERecorder testElement;
 
 
   @Before
@@ -46,11 +48,11 @@ public class RTERecorderGuiTest {
 
     RTERecorder testElement = Mockito.mock(RTERecorder.class);
     when(testElement.getServer()).thenReturn(SERVER);
-    when(testElement.getPort()).thenReturn(port);
-    when(testElement.getProtocol()).thenReturn(protocol);
-    when(testElement.getTerminalType()).thenReturn(terminalType);
-    when(testElement.getSSLType()).thenReturn(sslType);
-    when(testElement.getConnectionTimeout()).thenReturn(timeout);
+    when(testElement.getPort()).thenReturn(PORT);
+    when(testElement.getProtocol()).thenReturn(PROTOCOL);
+    when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
+    when(testElement.getSSLType()).thenReturn(SSL_TYPE);
+    when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
 
     rteRecorderGui.configure(testElement);
     rteRecorderGui.onRecordingStart();
@@ -70,36 +72,44 @@ public class RTERecorderGuiTest {
     rteRecorderGui.onRecordingStop();
   }
 
+  private void testME(String name, String content){
+    System.out.println("<"+name+">");
+    System.out.println(content);
+    System.out.println("</"+name+">");
+  }
+
   @Test
   public void shouldConfigurePanelWithGivenTestElementWhenConfigure(){
-
+    /*
     RTERecorder testElement = Mockito.mock(RTERecorder.class);
     when(testElement.getServer()).thenReturn(SERVER);
-    when(testElement.getPort()).thenReturn(port);
-    when(testElement.getProtocol()).thenReturn(protocol);
-    when(testElement.getTerminalType()).thenReturn(terminalType);
-    when(testElement.getSSLType()).thenReturn(sslType);
-    when(testElement.getConnectionTimeout()).thenReturn(timeout);
+    when(testElement.getPort()).thenReturn(PORT);
+    when(testElement.getProtocol()).thenReturn(PROTOCOL);
+    when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
+    when(testElement.getSSLType()).thenReturn(SSL_TYPE);
+    when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
+    */
+    RTERecorder configurationElement = buildDefaultRTERecorder();
+    configurationElement.setServer(SERVER);
+    configurationElement.setPort(String.valueOf(PORT));
+    configurationElement.setProtocol(PROTOCOL);
+    configurationElement.setTerminalType(TERMINAL_TYPE);
+    configurationElement.setSSLType(SSL_TYPE);
+    configurationElement.setConnectionTimeout(Long.toString(TIMEOUT));
 
-    rteRecorderGui.configure(testElement);
+    rteRecorderGui.configure(configurationElement);
 
-    /*
-     * I know there most be another way to try to see if the Panel is
-     * well configured but, since I don't know how to reach the
-     * configured panel without making modifications into
-     * the actual RTERecorderGui, I'm pushing this
-     * approach.
-     *
-     * Here I'm just testing method where called, but not set,
-     * which isn't what the method said it should do.
-     * */
+    String expected = "RTERecorderGui { \n" +
+            "recordingPanel { \n" +
+            "server="+SERVER+", \n" +
+            "port="+PORT+", \n" +
+            "protocol="+PROTOCOL+", \n" +
+            "terminalType="+TERMINAL_TYPE+", \n" +
+            "sslType="+SSL_TYPE+", \n" +
+            "connectionTimeout="+TIMEOUT+"}, \n" +
+            "recorder=null } }";
 
-    verify(testElement, times(1)).getServer();
-    verify(testElement, times(1)).getPort();
-    verify(testElement, times(1)).getProtocol();
-    verify(testElement, times(1)).getTerminalType();
-    verify(testElement, times(1)).getSSLType();
-    verify(testElement, times(1)).getConnectionTimeout();
+    assertEquals(expected, rteRecorderGui.toString());
   }
 
   @Test
@@ -118,11 +128,11 @@ public class RTERecorderGuiTest {
     RTERecorder recorder = new RTERecorder();
 
     recorder.setServer(SERVER);
-    recorder.setPort(String.valueOf(port));
-    recorder.setProtocol(protocol);
-    recorder.setTerminalType(terminalType);
-    recorder.setSSLType(sslType);
-    recorder.setConnectionTimeout(Long.toString(timeout));
+    recorder.setPort(String.valueOf(PORT));
+    recorder.setProtocol(PROTOCOL);
+    recorder.setTerminalType(TERMINAL_TYPE);
+    recorder.setSSLType(SSL_TYPE);
+    recorder.setConnectionTimeout(Long.toString(TIMEOUT));
 
     return recorder;
   }
