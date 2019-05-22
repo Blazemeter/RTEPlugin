@@ -11,7 +11,8 @@ import java.util.Optional;
 public class SyncWaitRecorder extends WaitConditionRecorder {
 
   private long stablePeriodMillis;
-  private boolean lastInputInhibited = false;
+  private boolean lastInputInhibited;
+  private boolean hasUnlockedKeyboard;
 
   public SyncWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
                           long stablePeriodThresholdMillis, long stablePeriodMillis) {
@@ -31,7 +32,10 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
     boolean inputInhibited = rteProtocolClient.isInputInhibited();
     if (lastInputInhibited != inputInhibited) {
       lastInputInhibited = inputInhibited;
-      super.onTerminalStateChange();
+      hasUnlockedKeyboard = hasUnlockedKeyboard || !inputInhibited;
+      if (hasUnlockedKeyboard) {
+        super.onTerminalStateChange();
+      }
     }
 
   }
@@ -57,6 +61,7 @@ public class SyncWaitRecorder extends WaitConditionRecorder {
   public void start() {
     super.start();
     lastInputInhibited = rteProtocolClient.isInputInhibited();
+    hasUnlockedKeyboard = false;
   }
   
 }
