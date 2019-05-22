@@ -56,8 +56,8 @@ public class RTERecorderGuiTest {
     rteRecorderGui.onRecordingStart();
 
     /*
-    * Doubt: How do I access/or add the TestStateListener in the rteRecorderGui?
-    * */
+     * Doubt: How do I access/or add the TestStateListener in the rteRecorderGui?
+     * */
   }
 
   @Test
@@ -84,15 +84,15 @@ public class RTERecorderGuiTest {
     rteRecorderGui.configure(testElement);
 
     /*
-    * I know there most be another way to try to see if the Panel is
-    * well configured but, since I don't know how to reach the
-    * configured panel without making modifications into
-    * the actual RTERecorderGui, I'm pushing this
-    * approach.
-    *
-    * Here I'm just testing method where called, but not set,
-    * which isn't what the method said it should do.
-    * */
+     * I know there most be another way to try to see if the Panel is
+     * well configured but, since I don't know how to reach the
+     * configured panel without making modifications into
+     * the actual RTERecorderGui, I'm pushing this
+     * approach.
+     *
+     * Here I'm just testing method where called, but not set,
+     * which isn't what the method said it should do.
+     * */
 
     verify(testElement, times(1)).getServer();
     verify(testElement, times(1)).getPort();

@@ -47,17 +47,28 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
 
   @Override
   public void modifyTestElement(TestElement te) {
+    System.out.println("1");
     configureTestElement(te);
+    System.out.println("2");
     if (te instanceof RTERecorder) {
+      System.out.println("3");
       recorder = (RTERecorder) te;
+      System.out.println("4");
       recorder.setRecordingStateListener(recordingPanel);
+      System.out.println("5");
       recorder.setServer(recordingPanel.getServer());
+      System.out.println("6");
       recorder.setPort(recordingPanel.getPort());
+      System.out.println("7");
       recorder.setProtocol(recordingPanel.getProtocol());
+      System.out.println("8");
       recorder.setTerminalType(recordingPanel.getTerminalType());
+      System.out.println("9");
       recorder.setSSLType(recordingPanel.getSSLType());
+      System.out.println("10");
       recorder.setConnectionTimeout(recordingPanel.getConnectionTimeout());
     }
+    System.out.println("11");
   }
 
   @Override
