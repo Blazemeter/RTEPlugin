@@ -276,10 +276,10 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   public void sendInputsAndWait() throws InterruptedException, TimeoutException, RteIOException {
-    List<Input> inputs = Collections.singletonList(new CoordInput(new Position(2, 1), "test"));
+    List<Input> inputs = Collections.singletonList(new CoordInput(new Position(2, 1), "testusr"));
     client.send(inputs, AttentionKey.ENTER);
     client.await(
-            Collections.singletonList(new SyncWaitCondition(10000, 10000)));
+            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
