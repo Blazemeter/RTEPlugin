@@ -56,9 +56,9 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
 
   public void start() {
     startTime = clock.instant();
-    rteProtocolClient.addTerminalStateListener(this);
     lastStatusChangeTime = null;
     maxStablePeriodMillis = 0;
+    rteProtocolClient.addTerminalStateListener(this);
   }
 
   public Optional<WaitCondition> stop() {

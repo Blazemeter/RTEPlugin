@@ -137,28 +137,40 @@ public class Tn3270Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
+    for (TerminalStateListener listener: listenersProxies.keySet()) {
+      addListener(listener);
+    }
     client.connect(server, port);
     connectionEndWaiter.await();
     exceptionHandler.throwAnyPendingError();
   }
 
-  @Override
-  public void addTerminalStateListener(TerminalStateListener listener) {
-    Tn3270TerminalStateListenerProxy listenerProxy = new Tn3270TerminalStateListenerProxy(listener);
+  private void addListener(TerminalStateListener listener) {
+    Tn3270TerminalStateListenerProxy listenerProxy = listenersProxies.get(listener);
     client.addScreenChangeListener(listenerProxy);
     client.addKeyboardStatusListener(listenerProxy);
     client.addCursorMoveListener(listenerProxy);
     exceptionHandler.addListener(listener);
+  }
+
+  @Override
+  public void addTerminalStateListener(TerminalStateListener listener) {
+    Tn3270TerminalStateListenerProxy listenerProxy = new Tn3270TerminalStateListenerProxy(listener);
     listenersProxies.put(listener, listenerProxy);
+    if (client != null) {
+      addListener(listener);
+    }
   }
 
   @Override
   public void removeTerminalStateListener(TerminalStateListener listener) {
     Tn3270TerminalStateListenerProxy listenerProxy = listenersProxies.remove(listener);
-    exceptionHandler.removeListener(listener);
-    client.removeScreenChangeListener(listenerProxy);
-    client.removeKeyboardStatusListener(listenerProxy);
-    client.removeCursorMoveListener(listenerProxy);
+    if (client != null) {
+      exceptionHandler.removeListener(listener);
+      client.removeScreenChangeListener(listenerProxy);
+      client.removeKeyboardStatusListener(listenerProxy);
+      client.removeCursorMoveListener(listenerProxy);
+    }
   }
 
   private void setFieldByCoord(CoordInput i) {
@@ -245,7 +257,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public boolean isInputInhibited() {
-    return client.isKeyboardLocked();
+    return client == null ? true : client.isKeyboardLocked();
   }
 
   @Override
