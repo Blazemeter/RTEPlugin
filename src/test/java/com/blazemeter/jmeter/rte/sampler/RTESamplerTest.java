@@ -40,6 +40,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 
 import org.apache.poi.ss.formula.functions.T;
+import org.apache.sis.internal.jaxb.metadata.EX_Extent;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -549,78 +550,77 @@ public class RTESamplerTest {
             buildExpectedSuccessfulSendInputResult(SSLType.TLS));
   }
 
-
-  /*
-   * I'm assuming, by the name, that we are testing that all the data from the
-   * ProtocolClient is setted into the Sampler, instead of the verification
-   * of the "setProtocol" method on the rteSample.
-   *
-   * The setProtocol is never called when using
-   * UpdateSampleResultResponse, either way.
-   * */
   @Test
   public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse(){
 
-    RteSampleResult rteSampleResult = Mockito.spy(buildBaseSampleResult());
+    RteSampleResult updated  = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
+    RteSampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
+    expected.setInputInhibitedResponse(true);
 
-    Optional<Position> DEFAULT_POSITION = Optional.of(CURSOR_POSITION);
+    rteSampler.updateSampleResultResponse(updated, rteProtocolClientMock);
 
-    when(rteProtocolClientMock.getCursorPosition()).thenReturn(DEFAULT_POSITION);
-    when(rteProtocolClientMock.isAlarmOn()).thenReturn(true);
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false);
-    when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
-
-    rteSampler.updateSampleResultResponse(rteSampleResult, rteProtocolClientMock);
-
-    String expectedResult = "Input-inhibited: false\n" +
-            "Cursor-position: 1,1\n" +
-            "Sound-Alarm: true";
-
-    assertEquals(expectedResult, rteSampleResult.getResponseHeaders());
-
-    /*
-      I might be missing the "setScreen" from the updateSampleResultResponse.
-      Should I evaluate this as well?
-     */
+    assertSampleResultByAttributes(expected, updated);
   }
 
+  private void assertSampleResultByAttributes(SampleResult result, SampleResult expected) {
+    assertThat(result)
+            .isEqualToComparingOnlyGivenFields(expected, "server", "port", "protocol",
+                    "sslType", "action", "inputInhibitedRequest", "inputs",
+                    "attentionKey", "inputInhibitedResponse", "cursorPosition", "soundedAlarm");
+  }
 
   @Test
   public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition(){
 
-    RteSampleResult rteSampleResult = Mockito.spy(buildBaseSampleResult());
+    RteSampleResult updated = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
+    RteSampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
+    expected.setCursorPosition(null);
 
-    rteSampler.updateSampleResultResponse(rteSampleResult, rteProtocolClientWithoutCursor);
+    rteSampler.updateSampleResultResponse(updated, rteProtocolClientWithoutCursor);
 
-    verify(rteSampleResult).setCursorPosition(eq(null));
-
-    //I know, I shouldn't be doing two assertion one after another but: I'm not sure if this
-    // is what we meant when we added the "AndProtocolClientReturnsAbsentCursorPosition".
-    assertEquals(Optional.empty(), rteProtocolClientWithoutCursor.getCursorPosition());
+    assertSampleResultByAttributes(expected, updated);
   }
-
 
   @Test
   public void shouldUpdateErrorResultWhenErrorOccours(){
+    RuntimeException testingError = new RuntimeException("Testing error");
+    RteSampleResult updated  = buildExpectedForUpdateErrorResult(SSLType.NONE);
+    RteSampleResult expected = buildExpectedErrorResult(testingError);
+    expected.setInputInhibitedRequest(false);
 
-    String expectedExceptionMessage = "Testing error";
-    RuntimeException testingError = new RuntimeException(expectedExceptionMessage);
-    RteSampleResult rteSampleResult = rteSampler.updateErrorResult(testingError, buildExpectedErrorResult(testingError));
+    updated  = rteSampler.updateErrorResult(testingError, updated);
 
-    assertEquals(expectedExceptionMessage, rteSampleResult.getResponseMessage());
+    assertSampleResultByErrorFields(expected, updated);
   }
 
+  private RteSampleResult buildExpectedForUpdateErrorResult(SSLType sslType) {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSslType(sslType);
+    expected.setAction(Action.SEND_INPUT);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    expected.setInputs(INPUTS);
+    expected.setInputInhibitedRequest(true);
+    expected.setSuccessful(true);
+    expected.setScreen(Screen.valueOf(TEST_SCREEN));
+    expected.setInputInhibitedResponse(false);
+    return expected;
+  }
+
+  private void assertSampleResultByErrorFields(SampleResult result, SampleResult expected) {
+    assertThat(result)
+            .isEqualToComparingOnlyGivenFields(expected, "success", "responseHeaders", "responseCode",
+                    "responseMessage", "dataType", "responseData", "dataEncoding");
+  }
 
   @Test
-  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs()
-          throws Exception{
-
+  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs() {
+    SampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
     rteSampler.setInputs(INPUTS);
     rteSampler.setAction(Action.SEND_INPUT);
 
-    rteSampler.sample(null);
+    SampleResult result = rteSampler.sample(null);
 
-    verify(rteProtocolClientMock).send(eq(INPUTS), any());
+    assertSampleResultByAttributes(expected, result);
   }
 
 }
