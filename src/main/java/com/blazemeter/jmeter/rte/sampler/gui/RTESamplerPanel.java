@@ -115,8 +115,6 @@ public class RTESamplerPanel extends JPanel {
         r.addItemListener(e -> {
           if (e.getStateChange() == ItemEvent.SELECTED) {
             updateActionPanels(a);
-            validate();
-            repaint();
           }
         })
     );
@@ -127,6 +125,8 @@ public class RTESamplerPanel extends JPanel {
   private void updateActionPanels(Action action) {
     waitPanel.setVisible(Action.DISCONNECT != action);
     requestPanel.setVisible(Action.SEND_INPUT == action);
+    validate();
+    repaint();
   }
 
   private JPanel buildRequestPanel() {
