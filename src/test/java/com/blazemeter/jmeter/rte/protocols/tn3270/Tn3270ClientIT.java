@@ -2,7 +2,6 @@ package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
@@ -275,7 +274,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     verify(terminalEmulatorUpdater, times(17)).onTerminalStateChange();
   }
 
-  public void sendInputsAndWait() throws InterruptedException, TimeoutException, RteIOException {
+  private void sendInputsAndWait() throws InterruptedException, TimeoutException, RteIOException {
     List<Input> inputs = Collections.singletonList(new CoordInput(new Position(2, 1), "testusr"));
     client.send(inputs, AttentionKey.ENTER);
     client.await(
