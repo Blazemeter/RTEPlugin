@@ -55,8 +55,6 @@ public class RteSampleResultTest {
     public void shouldGetNoInputInhibitedHeaderWhenGetRequestHeadersWithNotSetInputInhibitedRequest(){
 
         RteSampleResult rteSampleResult = buildBasicRTESampleResult();
-
-        rteSampleResult.setSoundedAlarm(true);
         rteSampleResult.setScreen(new Screen(new Dimension(10,10)));
 
         assertEquals(EXPECTED_HEADERS, rteSampleResult.getRequestHeaders());
@@ -85,7 +83,6 @@ public class RteSampleResultTest {
     @Test
     public void shouldGetTerminalStatusHeadersWhenGetResponseHeadersWithNoDisconnectAction(){
         RteSampleResult rteSampleResult = buildBasicRTESampleResult();
-        rteSampleResult.setSoundedAlarm(true);
         rteSampleResult.setInputInhibitedResponse(true);
 
         String expectedResponseHeaders = EXPECTED_HEADERS_REPONSE + "\n" +
@@ -97,8 +94,6 @@ public class RteSampleResultTest {
     @Test
     public void shouldGetEmptyStringWhenGetResponseHeadersWithDisconnectAction(){
         RteSampleResult rteSampleResult = buildBasicRTESampleResult();
-        rteSampleResult.setSoundedAlarm(true);
-
         rteSampleResult.setAction(Action.DISCONNECT);
 
         assertEquals("", rteSampleResult.getResponseHeaders());
@@ -106,24 +101,11 @@ public class RteSampleResultTest {
 
     @Test
     public void shouldGetNoSoundAlarmHeaderWhenGetResponseHeadersAndNoSoundAlarm(){
-        RteSampleResult rteSampleResult = buildBasicRTESampleResultWithNoAlarm();
+        RteSampleResult rteSampleResult = buildBasicRTESampleResult();
+        rteSampleResult.setSoundedAlarm(false);
         rteSampleResult.setInputInhibitedResponse(true);
 
         assertEquals(EXPECTED_HEADERS_REPONSE, rteSampleResult.getResponseHeaders());
-    }
-
-    private RteSampleResult buildBasicRTESampleResultWithNoAlarm(){
-        RteSampleResult rteSampleResult = new RteSampleResult();
-        rteSampleResult.setAction(Action.CONNECT);
-        rteSampleResult.setProtocol(Protocol.TN5250);
-        rteSampleResult.setTerminalType(new TerminalType("IBM-3179-2", new Dimension(80, 24)));
-        rteSampleResult.setServer("Test Server");
-        rteSampleResult.setPort(2123);
-        rteSampleResult.setSslType(SSLType.NONE);
-
-        rteSampleResult.setCursorPosition(CURSOR_POSITION);
-
-        return rteSampleResult;
     }
 
     @Test
