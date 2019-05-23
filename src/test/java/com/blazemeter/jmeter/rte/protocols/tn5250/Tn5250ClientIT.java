@@ -1,8 +1,10 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
@@ -28,8 +30,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
-import org.mockito.MockingDetails;
-import org.mockito.Mockito;
+
 
 public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
