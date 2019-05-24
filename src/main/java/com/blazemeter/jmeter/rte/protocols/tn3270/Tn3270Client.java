@@ -137,7 +137,7 @@ public class Tn3270Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
-    for (TerminalStateListener listener: listenersProxies.keySet()) {
+    for (TerminalStateListener listener : listenersProxies.keySet()) {
       addListener(listener);
     }
     client.connect(server, port);
@@ -236,14 +236,16 @@ public class Tn3270Client extends BaseProtocolClient {
     Dimension size = getScreenSize();
     Screen ret = new Screen(size);
     for (Field f : client.getFields()) {
-      int linealPosition = f.getFirstLocation();
-      int row = (linealPosition / size.width) + 1;
-      int column = (linealPosition % size.width) + 1;
+      int linealPosition =
+          (f.getFirstLocation() != 0 ? f.getFirstLocation() : size.height * size.width) - 1;
       String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
       if (f.isProtected()) {
-        ret.addSegment(row, column, text);
+        ret.addSegment(linealPosition, " " + text);
       } else {
-        ret.addField(row, column, text);
+        ret.addSegment(linealPosition, " ");
+        if (linealPosition + 1 < size.height * size.width) {
+          ret.addField(linealPosition + 1, text);
+        }
       }
     }
     return ret;
@@ -257,7 +259,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public boolean isInputInhibited() {
-    return client == null ? true : client.isKeyboardLocked();
+    return client == null || client.isKeyboardLocked();
   }
 
   @Override
