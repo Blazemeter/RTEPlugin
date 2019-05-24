@@ -67,9 +67,13 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
+    awaitSync();
+    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
+  }
+
+  private void awaitSync() throws InterruptedException, TimeoutException, RteIOException {
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
-    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
   }
 
   @Test
@@ -109,8 +113,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   private void sendUsernameWithSyncWait() throws Exception {
     client.send(buildUsernameField(), AttentionKey.ENTER);
-    client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    awaitSync();
   }
 
   private List<Input> buildUsernameField() {
@@ -132,8 +135,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   private void sendPasswordByLabelWithSyncWait() throws Exception {
     client.send(buildPasswordByLabel(), AttentionKey.ENTER);
-    client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    awaitSync();
   }
 
   private List<Input> buildPasswordByLabel() {
@@ -149,8 +151,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     List<Input> input = Collections.singletonList(
         new LabelInput("Address", "address_Example_123"));
     client.send(input, AttentionKey.ENTER);
-    client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    awaitSync();
   }
 
   @Test(expected = InvalidFieldPositionException.class)
@@ -191,8 +192,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("slow-response.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ENTER);
-    client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    awaitSync();
   }
 
   @Test(expected = TimeoutException.class)
@@ -254,6 +254,32 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ROLL_UP);
+  }
+
+  @Test
+  public void shouldGetWelcomeScreenWhenSscpLuLogin() throws Exception {
+    loadFlow("sscplu-login.yml");
+    connectExtendedProtocolClientToVirtualService();
+    assertThat(client.getScreen())
+        .isEqualTo(buildScreenFromHtmlFile("sscplu-welcome-screen.html"));
+  }
+
+  private void connectExtendedProtocolClientToVirtualService()
+      throws RteIOException, InterruptedException, TimeoutException {
+    client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE,
+        client.getTerminalTypeById("IBM-3278-M2-E"), TIMEOUT_MILLIS);
+    awaitSync();
+  }
+
+  @Test
+  public void shouldGetWelcomeScreenWhenLoginWithoutFields() throws Exception {
+    loadFlow("login-without-fields.yml");
+    connectExtendedProtocolClientToVirtualService();
+    client.send(Collections.singletonList(new CoordInput(new Position(20, 48), "testusr")),
+        AttentionKey.ENTER);
+    awaitSync();
+    assertThat(client.getScreen())
+        .isEqualTo(buildScreenFromHtmlFile("login-without-fields-screen.html"));
   }
 
 }
