@@ -70,9 +70,6 @@ public class RTESamplerTest {
   @Mock
   private RteProtocolClient rteProtocolClientWithoutCursor;
 
-  @Mock
-  private RteSampleResult rteSampleResultMock;
-
   @BeforeClass
   public static void setupClass() {
     TestJMeterUtils.createJmeterEnv();
@@ -552,75 +549,80 @@ public class RTESamplerTest {
 
   @Test
   public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse(){
-
-    RteSampleResult updated  = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
-    RteSampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
+    RteSampleResult expected = buildExpectedUpdatedSample();
+    expected.setScreen(Screen.valueOf(TEST_SCREEN));
     expected.setInputInhibitedResponse(true);
+
+    RteSampleResult updated  = buildBaseSampleResult();
+    updated.setAction(Action.CONNECT);
+    updated.setInputs(INPUTS);
+    updated.setInputInhibitedRequest(true);
+    updated.setAttentionKey(AttentionKey.ENTER);
 
     rteSampler.updateSampleResultResponse(updated, rteProtocolClientMock);
 
-    assertSampleResultByAttributes(expected, updated);
+    assertSampleResult(updated, expected);
   }
 
-  private void assertSampleResultByAttributes(SampleResult result, SampleResult expected) {
-    assertThat(result)
-            .isEqualToComparingOnlyGivenFields(expected, "server", "port", "protocol",
-                    "sslType", "action", "inputInhibitedRequest", "inputs",
-                    "attentionKey", "inputInhibitedResponse", "cursorPosition", "soundedAlarm");
+  public RteSampleResult buildExpectedUpdatedSample(){
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSuccessful(true);
+    expected.setDataType("text");
+    expected.setCursorPosition(CURSOR_POSITION);
+    expected.setAction(Action.CONNECT);
+    expected.setInputs(INPUTS);
+    expected.setInputInhibitedRequest(true);
+    expected.setAttentionKey(AttentionKey.ENTER);
+
+    return expected;
   }
 
   @Test
   public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition(){
 
-    RteSampleResult updated = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
-    RteSampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
+    RteSampleResult updated  = buildBaseSampleResult();
+    updated.setAction(Action.CONNECT);
+    updated.setInputs(INPUTS);
+    updated.setInputInhibitedRequest(true);
+    updated.setAttentionKey(AttentionKey.ENTER);
+
+    RteSampleResult expected = buildExpectedUpdatedSample();
     expected.setCursorPosition(null);
 
     rteSampler.updateSampleResultResponse(updated, rteProtocolClientWithoutCursor);
 
-    assertSampleResultByAttributes(expected, updated);
+    assertSampleResult(updated, expected);
   }
 
   @Test
   public void shouldUpdateErrorResultWhenErrorOccours(){
     RuntimeException testingError = new RuntimeException("Testing error");
-    RteSampleResult updated  = buildExpectedForUpdateErrorResult(SSLType.NONE);
     RteSampleResult expected = buildExpectedErrorResult(testingError);
-    expected.setInputInhibitedRequest(false);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    expected.setInputInhibitedRequest(true);
+    expected.setInputs(INPUTS);
+
+    RteSampleResult updated  = buildBaseSampleResult();
+    updated.setAttentionKey(AttentionKey.ENTER);
+    updated.setInputInhibitedRequest(true);
+    updated.setAction(Action.SEND_INPUT);
+    updated.setSslType(SSLType.NONE);
+    updated.setInputs(INPUTS);
 
     updated  = rteSampler.updateErrorResult(testingError, updated);
 
-    assertSampleResultByErrorFields(expected, updated);
-  }
-
-  private RteSampleResult buildExpectedForUpdateErrorResult(SSLType sslType) {
-    RteSampleResult expected = buildBaseSampleResult();
-    expected.setSslType(sslType);
-    expected.setAction(Action.SEND_INPUT);
-    expected.setAttentionKey(AttentionKey.ENTER);
-    expected.setInputs(INPUTS);
-    expected.setInputInhibitedRequest(true);
-    expected.setSuccessful(true);
-    expected.setScreen(Screen.valueOf(TEST_SCREEN));
-    expected.setInputInhibitedResponse(false);
-    return expected;
-  }
-
-  private void assertSampleResultByErrorFields(SampleResult result, SampleResult expected) {
-    assertThat(result)
-            .isEqualToComparingOnlyGivenFields(expected, "success", "responseHeaders", "responseCode",
-                    "responseMessage", "dataType", "responseData", "dataEncoding");
+    assertSampleResult(updated, expected);
   }
 
   @Test
-  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs() {
-    SampleResult expected = buildExpectedSuccessfulSendInputResult(SSLType.NONE);
-    rteSampler.setInputs(INPUTS);
-    rteSampler.setAction(Action.SEND_INPUT);
+  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs() throws RteIOException {
 
+    rteSampler.setAttentionKey(AttentionKey.ENTER);
+    rteSampler.setInputs(INPUTS);
     SampleResult result = rteSampler.sample(null);
 
-    assertSampleResultByAttributes(expected, result);
+    verify(rteProtocolClientMock).send(INPUTS, AttentionKey.ENTER);
+
   }
 
 }
