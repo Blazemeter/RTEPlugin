@@ -28,7 +28,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class Xtn5250TerminalEmulatorIT {
 
-  private static final long PAUSE_TIMEOUT = 10000;
+  private static final long PAUSE_TIMEOUT = 15000;
   private static final int COLUMNS = 132;
   private static final int ROWS = 43;
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
@@ -40,6 +40,7 @@ public class Xtn5250TerminalEmulatorIT {
 
   @After
   public void teardown() {
+    xtn5250TerminalEmulator.stop();
   }
 
   @Test
@@ -90,6 +91,8 @@ public class Xtn5250TerminalEmulatorIT {
         }
       }, PAUSE_TIMEOUT);
     } finally {
+      System.out.println(xtn5250TerminalEmulator.getScreen());
+      System.out.println(getFileContent("test-screen.txt"));
       frame.cleanUp();
     }
   }
@@ -124,7 +127,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldDeleteTextWhenPressBackspaceKey() {
+  public void shouldDeleteTextWhenPressBackspaceKey() throws IOException {
     xtn5250TerminalEmulator.start(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(printHomeWithText());
     FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator.getFrame());
@@ -147,6 +150,8 @@ public class Xtn5250TerminalEmulatorIT {
         }
       }, PAUSE_TIMEOUT);
     } finally {
+      System.out.println(xtn5250TerminalEmulator.getScreen());
+      System.out.println(getFileContent("test-screen.txt"));
       frame.cleanUp();
     }
   }
@@ -167,7 +172,8 @@ public class Xtn5250TerminalEmulatorIT {
       pause(new Condition("Listener is called") {
         @Override
         public boolean test() {
-          return terminalEmulatorListener.getAttentionKey().equals(AttentionKey.F1);
+          return terminalEmulatorListener.getAttentionKey() != null ? terminalEmulatorListener
+              .getAttentionKey().equals(AttentionKey.F1) : false;
         }
       }, PAUSE_TIMEOUT);
     } finally {

@@ -49,7 +49,6 @@ public class StatusPanel extends JPanel {
   private HelpFrame helpFrame;
 
   public StatusPanel() {
-    JLabel helpLabel = new JLabel(HELP_ICON);
     helpLabel.addMouseListener(buildShowHelpOnMouseClickListener());
 
     GroupLayout layout = new GroupLayout(this);
@@ -151,7 +150,6 @@ public class StatusPanel extends JPanel {
       setTitle(HELP_FRAME_TITLE);
       setName("helpFrame");
       setLayout(new CardLayout());
-      JLabel helpLabel = null;
       setLayout(new CardLayout(10, 10));
       JTextPane textPane = new JTextPane();
       textPane.setContentType("text/html");
