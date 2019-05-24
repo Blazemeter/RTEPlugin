@@ -267,7 +267,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
 
     client.addTerminalStateListener(terminalEmulatorUpdater);
-    sendInputsAndWait();
+    sendUsernameWithSyncWait();
 
     /*
      * When inputs are sent to client, 17 changes happens: the screen changes, the cursor moves
@@ -275,13 +275,6 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
      * */
 
     verify(terminalEmulatorUpdater, times(17)).onTerminalStateChange();
-  }
-
-  private void sendInputsAndWait() throws InterruptedException, TimeoutException, RteIOException {
-    List<Input> inputs = Collections.singletonList(new CoordInput(new Position(2, 1), "testusr"));
-    client.send(inputs, AttentionKey.ENTER);
-    client.await(
-            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -294,9 +287,12 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
     client.addTerminalStateListener(terminalEmulatorUpdater);
     client.removeTerminalStateListener(terminalEmulatorUpdater);
+    /*
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(
             Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    */
+    sendUsernameWithSyncWait();
 
     verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
   }
