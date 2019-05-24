@@ -89,10 +89,6 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   }
 
   public String getServer() {
-    if (configPanel == null) {
-      System.out.println("El panel de configuracion esta nulo 2");
-    }
-
     return configPanel.getServer();
   }
 

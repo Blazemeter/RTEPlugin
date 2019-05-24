@@ -5,21 +5,26 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
 import com.blazemeter.jmeter.rte.recorder.RTERecorderGui;
+import com.blazemeter.jmeter.rte.recorder.RTERecorderPanel;
 import com.blazemeter.jmeter.rte.recorder.RecordingStateListener;
 import kg.apc.emulators.TestJMeterUtils;
-import org.apache.jmeter.testelement.TestElement;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.VerificationCollector;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class RTERecorderGuiTest {
+
+  @Rule
+  public VerificationCollector collector = MockitoJUnit.collector();
 
   private final String SERVER = "localhost";
   private final int PORT = 23;
@@ -29,6 +34,9 @@ public class RTERecorderGuiTest {
   private final long TIMEOUT = 5000;
 
   public RTERecorderGui rteRecorderGui;
+
+  @Mock
+  private RTERecorder testElement;
 
   @Before
   public void setup() {
@@ -42,56 +50,55 @@ public class RTERecorderGuiTest {
 
   @Test
   public void shouldNotifyRecorderOnRecordingStartWhenOnRecordingStart() throws Exception {
-
-    RTERecorder testElement = Mockito.mock(RTERecorder.class);
-    when(testElement.getServer()).thenReturn(SERVER);
-    when(testElement.getPort()).thenReturn(PORT);
-    when(testElement.getProtocol()).thenReturn(PROTOCOL);
-    when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
-    when(testElement.getSSLType()).thenReturn(SSL_TYPE);
-    when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
+    prepareTestElement();
 
     rteRecorderGui.configure(testElement);
     rteRecorderGui.modifyTestElement(testElement);
     rteRecorderGui.onRecordingStart();
 
-    verify(testElement, times(1)).onRecordingStart();
+    verify(testElement).onRecordingStart();
   }
 
-  @Test
-  public void shouldNotifyRecorderWhenOnRecordingStop() throws Exception {
-    RTERecorder testElement = Mockito.mock(RTERecorder.class);
+  private void prepareTestElement(){
+    testElement = Mockito.mock(RTERecorder.class);
     when(testElement.getServer()).thenReturn(SERVER);
     when(testElement.getPort()).thenReturn(PORT);
     when(testElement.getProtocol()).thenReturn(PROTOCOL);
     when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
     when(testElement.getSSLType()).thenReturn(SSL_TYPE);
     when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
+  }
+
+  @Test
+  public void shouldNotifyRecorderWhenOnRecordingStop() throws Exception {
+    prepareTestElement();
 
     rteRecorderGui.configure(testElement);
     rteRecorderGui.modifyTestElement(testElement);
     rteRecorderGui.onRecordingStart();
     rteRecorderGui.onRecordingStop();
 
-    verify(testElement, times(1)).onRecordingStop();
+    verify(testElement).onRecordingStop();
   }
 
   @Test
   public void shouldConfigurePanelWithGivenTestElementWhenConfigure(){
-    RTERecorder configurationElement = buildRTERecorderToBeConfigured();
-    rteRecorderGui.configure(configurationElement);
+    RTERecorder configurationElement    = buildRTERecorderToBeConfigured();
 
-    String expected = "RTERecorderGui { \n" +
-            "recordingPanel { \n" +
-            "server="+SERVER+", \n" +
-            "port="+PORT+", \n" +
-            "protocol="+PROTOCOL+", \n" +
-            "terminalType="+TERMINAL_TYPE+", \n" +
-            "sslType="+SSL_TYPE+", \n" +
-            "connectionTimeout="+TIMEOUT+"}, \n" +
-            "recorder=null } }";
+    RecordingStateListener listener = Mockito.mock(RecordingStateListener.class);
 
-    assertEquals(expected, rteRecorderGui.toString());
+    RTERecorderPanel mockRecordingPanel = new RTERecorderPanel(listener);
+    RTERecorderPanel spyRecordingPanel = Mockito.spy(mockRecordingPanel);
+    RTERecorderGui rteRecorderGuiWithMockPanel = new RTERecorderGui(spyRecordingPanel);
+
+    rteRecorderGuiWithMockPanel.configure(configurationElement);
+
+    verify(spyRecordingPanel).setServer(SERVER);
+    verify(spyRecordingPanel).setPort(Long.toString(PORT));
+    verify(spyRecordingPanel).setProtocol(PROTOCOL);
+    verify(spyRecordingPanel).setTerminalType(TERMINAL_TYPE);
+    verify(spyRecordingPanel).setSSLType(SSL_TYPE);
+    verify(spyRecordingPanel).setConnectionTimeout(Long.toString(TIMEOUT));
   }
 
   private RTERecorder buildRTERecorderToBeConfigured(){

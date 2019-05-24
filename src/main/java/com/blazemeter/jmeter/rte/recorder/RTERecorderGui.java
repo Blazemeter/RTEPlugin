@@ -1,8 +1,10 @@
 package com.blazemeter.jmeter.rte.recorder;
 
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.util.Collection;
 import java.util.Collections;
+
 import org.apache.jmeter.control.gui.LogicControllerGui;
 import org.apache.jmeter.gui.JMeterGUIComponent;
 import org.apache.jmeter.gui.UnsharedComponent;
@@ -17,6 +19,15 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
 
   public RTERecorderGui() {
     recordingPanel = new RTERecorderPanel(this);
+    setLayout(new BorderLayout(0, 5));
+    setBorder(makeBorder());
+    add(makeTitlePanel(), BorderLayout.NORTH);
+    add(recordingPanel, BorderLayout.CENTER);
+  }
+
+  @VisibleForTesting
+  public RTERecorderGui(RTERecorderPanel mockRecordingPanel) {
+    recordingPanel = mockRecordingPanel;
     setLayout(new BorderLayout(0, 5));
     setBorder(makeBorder());
     add(makeTitlePanel(), BorderLayout.NORTH);
@@ -83,18 +94,5 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
   @Override
   public void onRecordingStop() {
     recorder.onRecordingStop();
-  }
-
-  @Override
-  public String toString() {
-
-    return "RTERecorderGui { \nrecordingPanel { \nserver=" + recordingPanel.getServer() +
-            ", \nport=" + recordingPanel.getPort()  +
-            ", \nprotocol=" + recordingPanel.getProtocol() +
-            ", \nterminalType=" + recordingPanel.getTerminalType() +
-            ", \nsslType=" + recordingPanel.getSSLType() +
-            ", \nconnectionTimeout=" + recordingPanel.getConnectionTimeout() + "}" +
-            ", \nrecorder=" + recorder + " } }";
-
   }
 }
