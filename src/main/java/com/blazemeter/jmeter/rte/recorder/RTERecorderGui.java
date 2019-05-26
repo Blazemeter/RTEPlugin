@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import com.helger.commons.annotation.VisibleForTesting;
+import com.blazemeter.jmeter.rte.sampler.gui.BlazemeterLabsLogo;
 import java.awt.BorderLayout;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +24,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     setBorder(makeBorder());
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(recordingPanel, BorderLayout.CENTER);
+    add(new BlazemeterLabsLogo(), BorderLayout.AFTER_LAST_LINE);
   }
 
   @VisibleForTesting
@@ -68,6 +70,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
       recorder.setTerminalType(recordingPanel.getTerminalType());
       recorder.setSSLType(recordingPanel.getSSLType());
       recorder.setConnectionTimeout(recordingPanel.getConnectionTimeout());
+      recorder.setTimeoutThresholdMillis(recordingPanel.getWaitConditionsTimeoutThresholdMillis());
     }
   }
 
@@ -82,6 +85,8 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
       recordingPanel.setTerminalType(recorder.getTerminalType());
       recordingPanel.setSSLType(recorder.getSSLType());
       recordingPanel.setConnectionTimeout(String.valueOf(recorder.getConnectionTimeout()));
+      recordingPanel.setWaitConditionsTimeoutThresholdMillis(String.valueOf(recorder
+              .getTimeoutThresholdMillis()));
     }
   }
 

@@ -111,19 +111,22 @@ public class RTESamplerPanel extends JPanel {
       actionsGroup.add(r);
     });
 
-    actions.get(Action.SEND_INPUT).addItemListener(e -> {
-      requestPanel.setVisible(e.getStateChange() == ItemEvent.SELECTED);
-      validate();
-      repaint();
-    });
-
-    actions.get(Action.DISCONNECT).addItemListener(e -> {
-      waitPanel.setVisible(e.getStateChange() != ItemEvent.SELECTED);
-      validate();
-      repaint();
-    });
+    actions.forEach((a, r) ->
+        r.addItemListener(e -> {
+          if (e.getStateChange() == ItemEvent.SELECTED) {
+            updateActionPanels(a);
+          }
+        })
+    );
 
     return panel;
+  }
+
+  private void updateActionPanels(Action action) {
+    waitPanel.setVisible(Action.DISCONNECT != action);
+    requestPanel.setVisible(Action.SEND_INPUT == action);
+    validate();
+    repaint();
   }
 
   private JPanel buildRequestPanel() {
@@ -440,11 +443,9 @@ public class RTESamplerPanel extends JPanel {
   }
 
   public void setAction(Action action) {
-    if (actions.containsKey(action)) {
-      actions.get(action).setSelected(true);
-    } else {
-      actions.get(RTESampler.DEFAULT_ACTION).setSelected(true);
-    }
+    action = actions.containsKey(action) ? action : RTESampler.DEFAULT_ACTION;
+    actions.get(action).setSelected(true);
+    updateActionPanels(action);
   }
 
   public InputPanel getPayload() {

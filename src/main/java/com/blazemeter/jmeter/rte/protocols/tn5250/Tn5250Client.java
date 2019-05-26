@@ -102,8 +102,9 @@ public class Tn5250Client extends BaseProtocolClient {
       long timeoutMillis) throws RteIOException, TimeoutException, InterruptedException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     /*
-     we need to do this on connect to avoid leaving keyboard thread running when instance of client
-     is created for getting supported terminal types in jmeter
+     we need create terminalClient instance on connect instead of 
+     constructor to avoid leaving keyboard thread running when 
+     instance of this class is created for getting supported terminal types in jmeter
     */
     client = new TerminalClient();
     client.setConnectionTimeoutMillis((int) timeoutMillis);
@@ -124,6 +125,9 @@ public class Tn5250Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
+    for (TerminalStateListener listener: listenersProxies.keySet()) {
+      addListener(listener);
+    }
     ConnectionEndTerminalListener connectionEndListener = new ConnectionEndTerminalListener(
         connectionEndWaiter);
     client.addEmulatorListener(connectionEndListener);
@@ -205,13 +209,24 @@ public class Tn5250Client extends BaseProtocolClient {
   @Override
   public void addTerminalStateListener(TerminalStateListener listener) {
     Tn5250TerminalStateListenerProxy proxy = new Tn5250TerminalStateListenerProxy(listener);
-    client.addEmulatorListener(proxy);
     listenersProxies.put(listener, proxy);
+    if (client != null) {
+      addListener(listener);
+    }
+  }
+
+  private void addListener(TerminalStateListener listener) {
+    Tn5250TerminalStateListenerProxy listenerProxy = listenersProxies.get(listener);
+    client.addEmulatorListener(listenerProxy);
+    exceptionHandler.addListener(listener);
   }
 
   public void removeTerminalStateListener(TerminalStateListener listener) {
     Tn5250TerminalStateListenerProxy proxy = listenersProxies.remove(listener);
-    client.removeEmulatorListener(proxy);
+    if (client != null) {
+      client.removeEmulatorListener(proxy);
+      exceptionHandler.removeListener(listener);
+    }
   }
 
   @Override
@@ -258,7 +273,7 @@ public class Tn5250Client extends BaseProtocolClient {
 
   @Override
   public boolean isInputInhibited() {
-    return client.isKeyboardLocked();
+    return client == null ? true : client.isKeyboardLocked();
   }
 
   @Override
