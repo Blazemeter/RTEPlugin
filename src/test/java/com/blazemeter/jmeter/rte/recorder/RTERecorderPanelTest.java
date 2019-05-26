@@ -1,12 +1,21 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import static org.mockito.Mockito.verify;
 
 public class RTERecorderPanelTest {
 
   @Test
-  public void shouldNotifyStartRecordingListenerWhenStartRecording(){
+  public void shouldNotifyStartRecordingListenerWhenStartRecording() throws Exception {
 
+    RecordingStateListener listener = Mockito.mock(RecordingStateListener.class);
+    RTERecorderPanel panel = new RTERecorderPanel(listener);
+
+    panel.onRecordingStart();
+
+    verify(listener.onRecordingStart()).times(1);
   }
 
   @Test
