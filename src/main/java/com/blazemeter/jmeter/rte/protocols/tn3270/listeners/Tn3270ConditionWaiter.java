@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import java.util.concurrent.ScheduledExecutorService;

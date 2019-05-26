@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270.listeners;
 
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270Client;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;

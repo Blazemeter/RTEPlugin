@@ -33,7 +33,7 @@ public class RTEConfigPanel extends JPanel {
 
   private ButtonGroup sslTypeGroup = new ButtonGroup();
   private Map<SSLType, JRadioButton> sslTypeRadios = new EnumMap<>(SSLType.class);
-  
+
   private JTextField serverField = SwingUtils.createComponent("serverField", new JTextField());
   private JTextField portField = SwingUtils.createComponent("portField", new JTextField());
   private JComboBox<Protocol> protocolComboBox;
@@ -48,25 +48,14 @@ public class RTEConfigPanel extends JPanel {
     this.setLayout(layout);
 
     JPanel connectionPanel = buildConnectionPanel();
-    JPanel timeoutPanel = buildTimeoutPanel();
-    BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo();
 
     layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
         .addComponent(connectionPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE,
-            Short.MAX_VALUE)
-        .addComponent(timeoutPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, 
-            Short.MAX_VALUE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, 
             Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
-        .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, 
+        .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
             GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(timeoutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, 
-            GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, 
-            GroupLayout.PREFERRED_SIZE));
+        .addPreferredGap(ComponentPlacement.RELATED));
   }
 
   private JPanel buildConnectionPanel() {
@@ -83,7 +72,7 @@ public class RTEConfigPanel extends JPanel {
     JLabel terminalTypeLabel = SwingUtils
         .createComponent("terminalTypeLabel", new JLabel("Terminal Type:"));
     JPanel sslPanel = buildSslPanel();
-
+    JPanel timeOutPanel = buildTimeoutPanel();
     layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
         .addGroup(layout.createSequentialGroup()
             .addComponent(serverLabel)
@@ -105,9 +94,18 @@ public class RTEConfigPanel extends JPanel {
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(terminalTypeComboBox, 0, 1, Short.MAX_VALUE)
                 .addPreferredGap(ComponentPlacement.UNRELATED))
+        .addGroup(
+                layout.createSequentialGroup()
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addComponent(connectionTimeout, GroupLayout.PREFERRED_SIZE, 150,
+                GroupLayout.PREFERRED_SIZE))
         .addComponent(sslPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE));
-
+            GroupLayout.PREFERRED_SIZE)
+        .addGroup(
+            layout.createSequentialGroup()
+            .addComponent(timeOutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+                          GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(ComponentPlacement.RELATED)));
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
             .addComponent(serverLabel)
@@ -126,8 +124,15 @@ public class RTEConfigPanel extends JPanel {
             .addComponent(terminalTypeLabel)
             .addComponent(terminalTypeComboBox, GroupLayout.PREFERRED_SIZE,
                 GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+            .addComponent(connectionTimeout, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                    GroupLayout.PREFERRED_SIZE))
         .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(sslPanel));
+        .addComponent(sslPanel)
+            .addPreferredGap(ComponentPlacement.RELATED)
+            .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                  .addComponent(timeOutPanel)
+            ));
     return panel;
   }
 

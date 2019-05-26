@@ -1,4 +1,4 @@
-package com.blazemeter.jmeter.rte.core;
+package com.blazemeter.jmeter.rte.core.exceptions;
 
 import java.net.SocketException;
 

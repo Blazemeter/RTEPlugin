@@ -1,4 +1,6 @@
-package com.blazemeter.jmeter.rte.core;
+package com.blazemeter.jmeter.rte.core.exceptions;
+
+import com.blazemeter.jmeter.rte.core.Position;
 
 public class InvalidFieldPositionException extends IllegalArgumentException {
 

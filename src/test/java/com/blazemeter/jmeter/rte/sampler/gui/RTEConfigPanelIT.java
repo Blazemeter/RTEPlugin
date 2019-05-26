@@ -3,12 +3,12 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComboBox;
-import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JComboBoxFixture;
 import org.assertj.swing.timing.Condition;
@@ -22,7 +22,7 @@ public class RTEConfigPanelIT {
 
   @BeforeClass
   public static void setUpOnce() {
-    TestJMeterUtils.createJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
   }
 
   @After

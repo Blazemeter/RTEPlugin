@@ -4,11 +4,11 @@ import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.driver.WaitForComponentToShowCondition;
 import org.assertj.swing.fixture.AbstractJComponentFixture;
 import org.assertj.swing.fixture.FrameFixture;
@@ -44,15 +44,16 @@ public class RTESamplerPanelIT {
   private static final long CHANGE_TIMEOUT_MILLIS = 10000;
 
   private FrameFixture frame;
+  private RTESamplerPanel panel;
 
   @BeforeClass
   public static void setupClass() {
-    TestJMeterUtils.createJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
   }
 
   @Before
   public void setup() {
-    RTESamplerPanel panel = new RTESamplerPanel();
+    panel = new RTESamplerPanel();
     frame = showInFrame(panel);
   }
 
@@ -96,6 +97,12 @@ public class RTESamplerPanelIT {
     switchAction(Action.DISCONNECT, Action.SEND_INPUT);
     JPanelFixture panel = frame.panel(WAITS_PANEL);
     pause(WaitForComponentToShowCondition.untilIsShowing(panel.target()));
+  }
+
+  @Test
+  public void shouldHideRequestPanelWhenSetActionToConnect() {
+    panel.setAction(Action.CONNECT);
+    assertPanelIsNotVisible(REQUEST_PANEL);
   }
 
   @Test

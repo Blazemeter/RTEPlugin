@@ -5,11 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
-import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -63,7 +63,9 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     server.setSslEnabled(true);
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
-        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+        TIMEOUT_MILLIS);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
     assertThat(client.getScreen().toString())
         .isEqualTo(getFileContent("login-welcome-screen.txt"));
   }
@@ -86,7 +88,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
     client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, client.getDefaultTerminalType(),
-        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
+        TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)

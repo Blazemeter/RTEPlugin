@@ -5,221 +5,88 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
+
 
 public class ScreenTest {
 
+    private final int SCREEN_WIDTH  = 5;
+    private final int SCREEN_HEIGHT = 2;
+    private final String WHITESPACES_FILLED_ROW = StringUtils.repeat(' ', (SCREEN_WIDTH));
 
-@Test
-public void shouldSplitRowWhenAddSegmentWithLengthBiggerThanScreenWidth(){
-
-    Dimension size = new Dimension(5,5);
-    Screen screen  = new Screen(size);
-
-    screen.addSegment(1, 1, StringUtils.repeat(' ', (size.width*2)));
-
-    String screenToString = screen.toString();
-
-    assertNotEquals(screenToString.indexOf('\n'),-1);
-}
-
-@Test
-public void shouldSplitRowWhenFinalSegmentPositionGreaterThanScreenWidth(){
-    Dimension size = new Dimension(5,5);
-    Screen screen  = new Screen(size);
-
-    screen.addSegment(1, 4, StringUtils.repeat(' ', (size.width)));
-
-    String screenToString = screen.toString();
-
-    assertNotEquals(screenToString.indexOf('\n'),-1);
-}
-
-@Test
-public void shouldGetCompleteRowWhenToStringWithAddSegmentShorterThanScreenWidth(){
-    Dimension size = new Dimension(5,5);
-    Screen screen  = new Screen(size);
-
-    screen.addSegment(1, 1, "Test");
-
-    String screenToString = screen.toString();
-
-    String[] rows = screenToString.split("\n");
-    String firstRow = rows[0];
-
-    assertTrue(firstRow.length() == size.getWidth());
-}
-
-@Test
-public void shouldGetCompleteRowWhenAddSegmentWithEmptyString(){
-    Dimension size = new Dimension(5,5);
-    Screen screen  = new Screen(size);
-
-    screen.addSegment(1, 1, "");
-
-    String screenToString = screen.toString();
-
-    String[] rows = screenToString.split("\n");
-    String firstRow = rows[0];
-
-    assertTrue(firstRow.length() == size.getWidth());
-}
-
-//@Test
-public void shouldGetAddedFieldsAndSegmentsWhenGetSegments(){
-    Dimension size = new Dimension(5,5);
-    Screen screen  = new Screen(size);
-
-    screen.addSegment(1, 1, "Segment 1");
-    screen.addSegment(1, 1, "Segment 2");
-    screen.addSegment(1, 1, "Segment 3");
-    int segments = 0;
-
-    screen.addField(2,1,"Field 1");
-    screen.addField(2,1,"Field 2");
-    screen.addField(2,1,"Field 3");
-    int fields = 0;
-
-    List<Screen.Segment> segmentList = screen.getSegments();
-
-    //this should be two separated Tests
-    /*
-    for (int i = 0; i < segmentList.size(); i++){
-        if (segmentList.get(i).getClass().isInstance(Screen.Segment.class))
-            segments++;
-
-        if (segmentList.get(i).getClass().isInstance(Screen.Field.class))
-            fields++;
-    }*/
-
-    assertTrue(segmentList.size()==6);
-}
-
-@Test
-public void shouldGetAddedFieldsWhenGetSegments(){
-        Dimension size = new Dimension(5,5);
-        Screen screen  = new Screen(size);
-
-        screen.addSegment(1, 1, "Segment 1");
-        screen.addSegment(1, 1, "Segment 2");
-        screen.addSegment(1, 1, "Segment 3");
-        int segments = 0;
-
-        screen.addField(2,1,"Field 1");
-        screen.addField(2,1,"Field 2");
-        screen.addField(2,1,"Field 3");
-        int fields = 0;
-
-        List<Screen.Segment> segmentList = screen.getSegments();
-
-        //this should be two separated Tests
-        for (int i = 0; i < segmentList.size(); i++){
-
-            if (segmentList.get(i).getClass().getSimpleName().equals("Field"))
-            fields++;
-        }
-
-        assertTrue(fields==3);
+    private Screen buildScreen(){
+        return new Screen(new Dimension(SCREEN_WIDTH,SCREEN_HEIGHT));
     }
 
-@Test
-public void shouldGetAddedSegmentsWhenGetSegments(){
-        Dimension size = new Dimension(5,5);
-        Screen screen  = new Screen(size);
-
-        screen.addSegment(1, 1, "Segment 1");
-        screen.addSegment(1, 1, "Segment 2");
-        screen.addSegment(1, 1, "Segment 3");
-        int segments = 0;
-
-        screen.addField(2,1,"Field 1");
-        screen.addField(2,1,"Field 2");
-        screen.addField(2,1,"Field 3");
-        int fields = 0;
-
-        List<Screen.Segment> segmentList = screen.getSegments();
-
-        //this should be two separated Tests
-        for (int i = 0; i < segmentList.size(); i++){
-            if (segmentList.get(i).getClass().getSimpleName().equals("Segment"))
-                segments++;
-        }
-
-        assertTrue(segments==3);
+    @Test
+    public void shouldSplitRowWhenAddSegmentWithLengthBiggerThanScreenWidth() {
+        Screen screen = buildScreen();
+        screen.addSegment(1, 1, WHITESPACES_FILLED_ROW + WHITESPACES_FILLED_ROW);
+        String expectedScreen = WHITESPACES_FILLED_ROW + "\n"+WHITESPACES_FILLED_ROW+"\n";
+        assertEquals(expectedScreen, screen.toString());
     }
 
-@Test
-public void shouldGetScreenTextWithAddedFieldsAndSegmentsWhenToString(){
-    Dimension size = new Dimension(15,5);
-    Screen screen  = new Screen(size);
+    @Test
+    public void shouldSplitRowWhenFinalSegmentPositionGreaterThanScreenWidth(){
+        Screen screen  = buildScreen();
+        screen.addSegment(1, 4, WHITESPACES_FILLED_ROW);
+        String expectedScreen = WHITESPACES_FILLED_ROW +"\n"+WHITESPACES_FILLED_ROW+"\n";
+        assertEquals(expectedScreen,screen.toString());
+    }
 
-    screen.addSegment(1,1, "Name: ");
-    screen.addField(1, 7, "TESTUSR");
+    @Test
+    public void shouldGetCompleteRowWhenToStringWithAddSegmentShorterThanScreenWidth(){
+        Screen screen  = buildScreen();
+        screen.addSegment(1, 1, "Test");
+        assertEquals("Test \n", screen.toString());
+    }
 
-    String toString = screen.toString();
+    @Test
+    public void shouldGetCompleteRowWhenAddSegmentWithEmptyString(){
+        Screen screen  = buildScreen();
+        screen.addSegment(1, 1, "");
+        String expectedScreenText = WHITESPACES_FILLED_ROW+"\n";
+        assertEquals(expectedScreenText, screen.toString());
+    }
 
-    //  This should be done in steps or in different tests, since there
-    // is no way we can test both scenarios at the same time
-    // assertTrue(toString.contains("Name:"));
-    assertTrue(toString.contains("TESTUSR"));
-}
+    @Test
+    public void shouldGetAddedFieldsAndSegmentsWhenGetSegments(){
+        Screen screen  = new Screen(new Dimension(SCREEN_WIDTH*2,SCREEN_HEIGHT));
 
-@Test
-public void shouldGetScreenWithOneRowWhenValueOfWithStringWithoutEnter(){
-    Dimension size = new Dimension(15,5);
-    Screen screen  = new Screen(size);
+        screen.addSegment(1, 1, "S1: ");
+        screen.addField(1,5,"F1");
+        screen.addSegment(2, 1, "S2: ");
+        screen.addField(2,5,"F2");
 
-    String newRowWithoutEnter = "One big line";
-    String extraEnter = "\n";
+        List<Screen.Segment> expectedSegments = new ArrayList<>();
+        expectedSegments.add(new Screen.Segment(1,1,"S1: ", false));
+        expectedSegments.add(new Screen.Segment(1,5,"F1", true));
+        expectedSegments.add(new Screen.Segment(2,1,"S2: ", false));
+        expectedSegments.add(new Screen.Segment(2,5,"F2", true));
 
-    // Without this extraEnter the test breaks with an "java.lang.ArithmeticException: / by zero"
-    Screen newScreen = screen.valueOf(newRowWithoutEnter + extraEnter);
+        assertEquals(expectedSegments, screen.getSegments());
+    }
 
-    String[] rows = newScreen.toString().split("\n");
+    @Test
+    public void shouldGetScreenTextWithAddedFieldsAndSegmentsWhenToString(){
+        Screen screen  = new Screen(new Dimension(SCREEN_WIDTH * 3 ,SCREEN_HEIGHT));
+        screen.addSegment(1,1, "Name: ");
+        screen.addField(1, 7, "TESTUSR");
+        String expectedString = "Name: TESTUSR  \n";
 
-    assertTrue(rows.length == 1);
-}
+        assertEquals(expectedString, screen.toString());
+    }
 
-@Test
-public void shouldGetScreenWithTwoRowsWhenValueOfWithStringWithOneEnter(){
-    Dimension size = new Dimension(15,5);
-    Screen screen  = new Screen(size);
+    @Test
+    public void shouldGetScreenWithTwoRowsWhenValueOfWithStringWithOneEnter(){
+        String expectedScreen = "Row1\nRow2\n";
 
-    String newRowWithoutEnter = "One big line     \n Other big line";
+        assertEquals(expectedScreen,Screen.valueOf("Row1\nRow2").toString());
+    }
 
-    Screen newScreen = screen.valueOf(newRowWithoutEnter);
-
-    String[] rows = newScreen.toString().split("\n");
-
-    assertTrue(rows.length == 2);
-}
-
-@Test
-public void shouldGetSameStringWhenGettingScreenStringFromValueOf(){
-    Dimension size = new Dimension(15,5);
-    Screen screen  = new Screen(size);
-
-    //The extra \n is required to avoid the "java.lang.ArithmeticException: / by zero"
-    String newRowWithoutEnter = "One big line with a lot of letters \n";
-
-    Screen newScreen = screen.valueOf(newRowWithoutEnter);
-
-    String rowResult = newScreen.toString();
-
-    assertTrue(rowResult.equals(newRowWithoutEnter));
-}
-
-
-
-/*
-    WhenToStringWithAddedSegmentBiggerThanScreenWidth,
-    WhenToStringWithAddedSegmentFinalPositionGreaterThanScreenWidth, etc
-
-shouldGetCompleteRowWhenAddSegmentWithLengthShorterThanScreenWidth
-shouldGetCompleteRowWhenAddSegmentWithEmptyString
-
-
-* */
-
-
+    @Test(expected = ArithmeticException.class)
+    public void shouldThrowArithmeticExceptionWhenValueOfStringWithoutEnter(){
+        Screen.valueOf("Row1");
+    }
 }

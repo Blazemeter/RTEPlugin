@@ -36,4 +36,8 @@ public class RequestListener<T extends RteProtocolClient> implements TerminalSta
     client.removeTerminalStateListener(this);
   }
 
+  @Override
+  public void onException(Throwable e) {
+  }
+
 }

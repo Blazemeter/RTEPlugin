@@ -9,15 +9,17 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
-import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.Screen;
@@ -33,14 +35,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
-
-import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 
-import org.apache.poi.ss.formula.functions.T;
-import org.apache.sis.internal.jaxb.metadata.EX_Extent;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -48,9 +46,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.OngoingStubbing;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RTESamplerTest {
@@ -72,7 +68,7 @@ public class RTESamplerTest {
 
   @BeforeClass
   public static void setupClass() {
-    TestJMeterUtils.createJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
   }
 
   @AfterClass
@@ -122,7 +118,8 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenGetClientThrowTimeoutException() throws Exception {
     TimeoutException e = new TimeoutException();
     doThrow(e).when(rteProtocolClientMock)
-            .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+            .connect(any(), anyInt(), any(), any(), anyLong());
+
     assertSampleResult(rteSampler.sample(null), buildExpectedConnectTimeoutErrorResult(e));
   }
 
@@ -158,7 +155,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
     InterruptedException e = new InterruptedException();
     doThrow(e).when(rteProtocolClientMock)
-            .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+            .connect(any(), anyInt(), any(), any(), anyLong());
     assertSampleResult(rteSampler.sample(null), buildExpectedErrorResult(e));
   }
 
@@ -198,10 +195,14 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldGetErrorSamplerResultWhenAwaitThrowsException() throws Exception {
+  public void shouldGetErrorSamplerResultWhenSendAwaitThrowsException() throws Exception {
     TimeoutException e = new TimeoutException();
+    // we use a custom timeout to differentiate it from connection wait
+    rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     doThrow(e).
-            when(rteProtocolClientMock).await(any());
+        when(rteProtocolClientMock).await(Collections
+        .singletonList(new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS,
+            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
     when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
     assertSampleResult(rteSampler.sample(null), buildExpectedTimeoutErrorResult(e));
   }
@@ -381,12 +382,13 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldAwaitSyncWaiterWhenSyncWaitEnabled() throws Exception {
+  public void shouldAwaitSyncWaiterWhenSendInputWithSyncWaitEnabled() throws Exception {
     rteSampler.sample(null);
-    verify(rteProtocolClientMock)
-            .await(Collections.singletonList(
-                    new SyncWaitCondition(RTESampler.DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS,
-                            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
+    // we wait for 2 events since both connection wait and send input wait use same parameters
+    verify(rteProtocolClientMock, times(2))
+        .await(Collections.singletonList(
+            new SyncWaitCondition(RTESampler.DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS,
+                RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test
@@ -400,11 +402,10 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldNotAwaitWhenNoWaitersAreEnabled() throws Exception {
+  public void shouldAwaitOnlyConnectionSyncWhenNoWaitersAreEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.sample(null);
-    verify(rteProtocolClientMock, never())
-            .await(any());
+    verify(rteProtocolClientMock).await(any());
   }
 
   @Test
@@ -537,7 +538,7 @@ public class RTESamplerTest {
     rteSampler.setSslType(SSLType.TLS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-            .connect(any(), anyInt(), eq(SSLType.TLS), any(), anyLong(), anyLong());
+        .connect(any(), anyInt(), eq(SSLType.TLS), any(), anyLong());
   }
 
   @Test
