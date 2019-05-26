@@ -552,12 +552,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   private RteProtocolClient buildClient()
           throws RteIOException, InterruptedException, TimeoutException {
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-<<<<<<< HEAD
-    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
-            getStableTimeout());
-=======
     client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout());
->>>>>>> master
     connections.get().put(buildConnectionId(), client);
     return client;
   }
