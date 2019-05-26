@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.recorder;
 
-import com.helger.commons.annotation.VisibleForTesting;
 import com.blazemeter.jmeter.rte.sampler.gui.BlazemeterLabsLogo;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.util.Collection;
 import java.util.Collections;
