@@ -408,6 +408,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private void addWaitCondition(WaitCondition condition) {
+
     if (condition instanceof SyncWaitCondition) {
       setWaitSync(true);
       setWaitSyncTimeout(String.valueOf(condition.getTimeoutMillis()));
@@ -557,7 +558,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return client;
   }
 
-  public List<Input> getInputs() {
+  private List<Input> getInputs() {
     List<Input> inputs = new ArrayList<>();
     for (JMeterProperty p : getInputsTestElement()) {
       InputTestElement c = (InputTestElement) p.getObjectValue();
