@@ -548,28 +548,34 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse(){
+  public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse() {
     RteSampleResult expected = buildExpectedUpdatedSample();
     expected.setScreen(Screen.valueOf(TEST_SCREEN));
     expected.setInputInhibitedResponse(true);
 
-    RteSampleResult updated  = buildBaseSampleResult();
-    updated.setAction(Action.CONNECT);
-    updated.setInputs(INPUTS);
-    updated.setInputInhibitedRequest(true);
-    updated.setAttentionKey(AttentionKey.ENTER);
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
 
     rteSampler.updateSampleResultResponse(updated, rteProtocolClientMock);
 
     assertSampleResult(updated, expected);
   }
 
-  public RteSampleResult buildExpectedUpdatedSample(){
+  public RteSampleResult buildSendInputsRequestSampleResult() {
+    RteSampleResult updated  = buildBaseSampleResult();
+    updated.setAction(Action.SEND_INPUT);
+    updated.setInputs(INPUTS);
+    updated.setInputInhibitedRequest(true);
+    updated.setAttentionKey(AttentionKey.ENTER);
+
+    return updated;
+  }
+
+  public RteSampleResult buildExpectedUpdatedSample() {
     RteSampleResult expected = buildBaseSampleResult();
     expected.setSuccessful(true);
     expected.setDataType("text");
     expected.setCursorPosition(CURSOR_POSITION);
-    expected.setAction(Action.CONNECT);
+    expected.setAction(Action.SEND_INPUT);
     expected.setInputs(INPUTS);
     expected.setInputInhibitedRequest(true);
     expected.setAttentionKey(AttentionKey.ENTER);
@@ -578,13 +584,9 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition(){
+  public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition() {
 
-    RteSampleResult updated  = buildBaseSampleResult();
-    updated.setAction(Action.CONNECT);
-    updated.setInputs(INPUTS);
-    updated.setInputInhibitedRequest(true);
-    updated.setAttentionKey(AttentionKey.ENTER);
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
 
     RteSampleResult expected = buildExpectedUpdatedSample();
     expected.setCursorPosition(null);
@@ -595,19 +597,15 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldUpdateErrorResultWhenErrorOccours(){
+  public void shouldUpdateErrorResultWhenErrorOccours() {
     RuntimeException testingError = new RuntimeException("Testing error");
     RteSampleResult expected = buildExpectedErrorResult(testingError);
     expected.setAttentionKey(AttentionKey.ENTER);
     expected.setInputInhibitedRequest(true);
     expected.setInputs(INPUTS);
 
-    RteSampleResult updated  = buildBaseSampleResult();
-    updated.setAttentionKey(AttentionKey.ENTER);
-    updated.setInputInhibitedRequest(true);
-    updated.setAction(Action.SEND_INPUT);
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
     updated.setSslType(SSLType.NONE);
-    updated.setInputs(INPUTS);
 
     updated  = rteSampler.updateErrorResult(testingError, updated);
 
