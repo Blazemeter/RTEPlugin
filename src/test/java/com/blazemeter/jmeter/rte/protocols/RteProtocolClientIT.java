@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols;
 
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -74,8 +75,8 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
 
   protected abstract TerminalType getDefaultTerminalType();
 
-  protected String getFileContent(String file) throws IOException {
-    return Resources.toString(findResource(file), Charsets.UTF_8);
+  protected Screen buildScreenFromHtmlFile(String fileName) throws IOException {
+    return Screen.fromHtml(Resources.toString(findResource(fileName), Charsets.UTF_8));
   }
 
 }

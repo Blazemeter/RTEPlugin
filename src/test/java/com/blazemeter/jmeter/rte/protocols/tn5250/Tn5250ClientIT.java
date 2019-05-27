@@ -48,12 +48,16 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildLoginWelcomeScreen());
   }
 
   private void loadLoginFlow() throws FileNotFoundException {
     loadFlow("login-immediate-responses.yml");
+  }
+
+  private Screen buildLoginWelcomeScreen() throws java.io.IOException {
+    return buildScreenFromHtmlFile("login-welcome-screen.html");
   }
 
   @Test
@@ -68,8 +72,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
         TIMEOUT_MILLIS);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildLoginWelcomeScreen());
   }
 
   @Test(expected = RteIOException.class)
@@ -88,8 +92,11 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     sendCredsByCoordWithSyncWait();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("user-menu-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces()).isEqualTo(buildUserMenuScreen());
+  }
+
+  private Screen buildUserMenuScreen() throws java.io.IOException {
+    return buildScreenFromHtmlFile("user-menu-screen.html");
   }
 
   private void sendCredsByCoordWithSyncWait() throws Exception {
@@ -109,8 +116,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     sendCredsByLabelWithSyncWait();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("user-menu-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces()).isEqualTo(buildUserMenuScreen());
   }
 
   private void sendCredsByLabelWithSyncWait() throws Exception {
@@ -233,8 +239,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     sendCredsByCoordWithSyncWait();
     client.disconnect();
     connectToVirtualService();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildLoginWelcomeScreen());
   }
 
   @Test
