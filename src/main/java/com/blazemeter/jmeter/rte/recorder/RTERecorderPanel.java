@@ -7,6 +7,9 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
+
+import com.helger.commons.annotation.VisibleForTesting;
+
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -177,7 +180,22 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   public void setWaitConditionsTimeoutThresholdMillis(String thresholdTime) {
     waitConditionsTimeoutThreshold.setText(thresholdTime);
   }
-  
+
+  @VisibleForTesting
+  public JButton getStartButton() {
+    return startButton;
+  }
+
+  @VisibleForTesting
+  public JButton getStopButton() {
+    return stopButton;
+  }
+
+  @VisibleForTesting
+  public JButton getRestartButton() {
+    return restartButton;
+  }
+
   @Override
   public void actionPerformed(ActionEvent e) {
     String action = e.getActionCommand();
