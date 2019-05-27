@@ -10,7 +10,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.net.URL;
@@ -45,33 +44,37 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldShowTerminalEmulatorFrameWithProperlySizeWhenStart() {
-    xtn5250TerminalEmulator.start(COLUMNS, ROWS);
-    Frame frame = xtn5250TerminalEmulator.getFrame();
-    int expectedHeight = 750;
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.start();
+    int expectedHeight = 731 + 31;
     int expectedWidth = 1056;
     Dimension expectedSize = new Dimension(expectedWidth, expectedHeight);
-    pause(new Condition("frame size is correct") {
-      @Override
-      public boolean test() {
-        Dimension size = frame.getSize();
-        return size.getHeight() >= expectedHeight && size.getHeight() <= expectedHeight + 30
-            && size.getWidth() >= expectedWidth && size.getWidth() <= expectedWidth + 20;
-      }
-    }, PAUSE_TIMEOUT);
+    try {
+      pause(new Condition("frame size is correct") {
+        @Override
+        public boolean test() {
+          Dimension size = xtn5250TerminalEmulator.getSize();
+          return size.getHeight() >= expectedHeight && size.getHeight() <= expectedHeight + 30
+              && size.getWidth() >= expectedWidth && size.getWidth() <= expectedWidth + 30;
+        }
+      }, PAUSE_TIMEOUT);
+    } finally {
+      xtn5250TerminalEmulator.stop();
+    }
   }
 
   @Test
   public void shouldShowTheScreenExpectedWhenSetScreen() throws IOException {
-    xtn5250TerminalEmulator.start(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(printHome());
     assertThat(xtn5250TerminalEmulator.getScreen()).isEqualTo(getFileContent("test-screen.txt"));
   }
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnField() throws IOException {
-    xtn5250TerminalEmulator.start(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(printHome());
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator.getFrame());
+    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
     try {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
@@ -99,9 +102,9 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnFieldAndKeyboardIsLocked() throws IOException {
-    xtn5250TerminalEmulator.start(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(printHome());
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator.getFrame());
+    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
     try {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
@@ -128,9 +131,9 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldDeleteTextWhenPressBackspaceKey() throws IOException {
-    xtn5250TerminalEmulator.start(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(printHomeWithText());
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator.getFrame());
+    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
     try {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
@@ -158,11 +161,11 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldCallTheListenerWhenPressAttentionKey() {
-    xtn5250TerminalEmulator.start(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(printHome());
     TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
     xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator.getFrame());
+    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
     try {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
@@ -183,9 +186,9 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldGetProperTextWhenPressKeyOutOfField() {
-    xtn5250TerminalEmulator.start(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(printHome());
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator.getFrame());
+    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
     try {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);

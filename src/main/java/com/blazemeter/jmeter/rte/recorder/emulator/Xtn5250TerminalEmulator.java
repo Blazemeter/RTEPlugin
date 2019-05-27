@@ -26,7 +26,7 @@ import javax.swing.JFrame;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 
-public class Xtn5250TerminalEmulator implements TerminalEmulator {
+public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator {
 
   private static final Map<KeyEventMap, AttentionKey> KEY_EVENTS =
       new HashMap<KeyEventMap, AttentionKey>() {
@@ -75,76 +75,72 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   private static final String TITLE = "Recorder";
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
+  private static final int DEFAULT_COLUMNS = 132;
+  private static final int DEFAULT_ROWS = 43;
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
-  private JFrame frame;
-  private XI5250Crt xi5250Crt;
   private StatusPanel statusPanel = new StatusPanel();
   private boolean stopping;
 
-  @Override
-  public void start(int columns, int rows) {
-    xi5250Crt = new XI5250Crt() {
-      @Override
-      protected void processKeyEvent(KeyEvent e) {
-        synchronized (Xtn5250TerminalEmulator.this) {
-          AttentionKey attentionKey = null;
-          if (e.getID() == KeyEvent.KEY_PRESSED) {
-            attentionKey = KEY_EVENTS
-                .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-            if (attentionKey != null) {
+  private XI5250Crt xi5250Crt = new XI5250Crt() {
+    @Override
+    protected void processKeyEvent(KeyEvent e) {
+      synchronized (Xtn5250TerminalEmulator.this) {
+        AttentionKey attentionKey = null;
+        if (e.getID() == KeyEvent.KEY_PRESSED) {
+          attentionKey = KEY_EVENTS
+              .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
+          if (attentionKey != null) {
 
-              List<Input> fields = getInputFields();
-              for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-                listener.onAttentionKey(attentionKey, fields);
-              }
+            List<Input> fields = getInputFields();
+            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+              listener.onAttentionKey(attentionKey, fields);
             }
           }
-          if (!locked || attentionKey != null) {
-            //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
-            // when shift mask is enabled, in this way allways delete
-            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-              e.setModifiers(KeyEvent.SHIFT_MASK);
-            }
-            super.processKeyEvent(e);
-            statusPanel
-                .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+        }
+        if (!locked || attentionKey != null) {
+          //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
+          // when shift mask is enabled, in this way allways delete
+          if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+            e.setModifiers(KeyEvent.SHIFT_MASK);
           }
+          super.processKeyEvent(e);
+          statusPanel
+              .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
         }
       }
+    }
 
-      @Override
-      protected void processMouseEvent(MouseEvent e) {
-        super.processMouseEvent(e);
-        statusPanel
-            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
-      }
+    @Override
+    protected void processMouseEvent(MouseEvent e) {
+      super.processMouseEvent(e);
+      statusPanel
+          .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+    }
 
-      @Override
-      public void paintComponent(Graphics g) {
-        synchronized (Xtn5250TerminalEmulator.this) {
-          super.paintComponent(g);
-        }
+    @Override
+    public void paintComponent(Graphics g) {
+      synchronized (Xtn5250TerminalEmulator.this) {
+        super.paintComponent(g);
       }
-    };
+    }
+  };
+
+  public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
-    xi5250Crt.setCrtSize(columns, rows);
     xi5250Crt.setDefBackground(BACKGROUND);
     xi5250Crt.setBlinkingCursor(true);
     xi5250Crt.setEnabled(true);
-
-    frame = new JFrame(TITLE);
-    frame.setLayout(new BorderLayout());
-    frame.add(xi5250Crt, BorderLayout.CENTER);
-    frame.add(statusPanel, BorderLayout.SOUTH);
-    frame.addWindowListener(new WindowAdapter() {
+    setTitle(TITLE);
+    setLayout(new BorderLayout());
+    add(xi5250Crt, BorderLayout.CENTER);
+    add(statusPanel, BorderLayout.SOUTH);
+    addWindowListener(new WindowAdapter() {
 
       @Override
       public void windowOpened(WindowEvent e) {
-        Dimension testSize = calculateCrtDefaultSize();
-        xi5250Crt.setSize(testSize.width, testSize.height);
-        frame.pack();
+        setScreenSize(DEFAULT_COLUMNS, DEFAULT_ROWS);
         xi5250Crt.requestFocus();
       }
 
@@ -158,9 +154,24 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
         statusPanel.dispose();
       }
     });
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    frame.setVisible(true);
+  }
+
+  @Override
+  public void start() {
+    setVisible(true);
+  }
+
+  @Override
+  public void setScreenSize(int columns, int rows) {
+    xi5250Crt.setCrtSize(columns, rows);
+    Dimension testSize = calculateCrtDefaultSize();
+    xi5250Crt.setSize(testSize.width, testSize.height);
+    pack();
+    System.out.println(xi5250Crt.getSize());
+    System.out.println(statusPanel.getSize());
+    System.out.println(getSize());
   }
 
   private Dimension calculateCrtDefaultSize() {
@@ -174,7 +185,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   @Override
   public void stop() {
     stopping = true;
-    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+    dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
   }
 
   @Override
@@ -244,11 +255,6 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       }
     }
     return fields;
-  }
-
-  @VisibleForTesting
-  public JFrame getFrame() {
-    return this.frame;
   }
 
   private static class KeyEventMap {
