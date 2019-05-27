@@ -110,22 +110,4 @@ public class RteSampleResult extends SampleResult {
         + cursorPosition.getColumn() : "") +
         (soundedAlarm ? "\nSound-Alarm: true" : "");
   }
-
-  @Override
-  public String toString() {
-    return "RteSampleResult{" +
-            "server='" + server + '\'' +
-            ", port=" + port +
-            ", protocol=" + protocol +
-            ", terminalType=" + terminalType +
-            ", sslType=" + sslType +
-            ", action=" + action +
-            ", inputInhibitedRequest=" + inputInhibitedRequest +
-            ", inputs=" + inputs +
-            ", attentionKey=" + attentionKey +
-            ", inputInhibitedResponse=" + inputInhibitedResponse +
-            ", cursorPosition=" + cursorPosition +
-            ", soundedAlarm=" + soundedAlarm +
-            '}';
-  }
 }
