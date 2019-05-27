@@ -13,7 +13,7 @@ import org.apache.jmeter.gui.util.MenuFactory;
 import org.apache.jmeter.testelement.TestElement;
 
 public class RTERecorderGui extends LogicControllerGui implements JMeterGUIComponent,
-        UnsharedComponent, RecordingStateListener {
+    UnsharedComponent, RecordingStateListener {
 
   private RTERecorderPanel recordingPanel;
   private RTERecorder recorder;
