@@ -287,11 +287,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
     client.addTerminalStateListener(terminalEmulatorUpdater);
     client.removeTerminalStateListener(terminalEmulatorUpdater);
-    /*
-    client.send(buildUsernameField(), AttentionKey.ENTER);
-    client.await(
-            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
-    */
+
     sendUsernameWithSyncWait();
 
     verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
