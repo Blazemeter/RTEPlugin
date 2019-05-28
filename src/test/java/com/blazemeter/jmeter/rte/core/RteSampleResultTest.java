@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.Action;
@@ -31,7 +31,7 @@ public class RteSampleResultTest {
 
     String expectedHeaders = EXPECTED_HEADERS +
         "Input-inhibited: true\n";
-    assertEquals(expectedHeaders, rteSampleResult.getRequestHeaders());
+    assertThat(rteSampleResult.getRequestHeaders()).isEqualTo(expectedHeaders);
   }
 
   private RteSampleResult buildBasicRTESampleResult() {
@@ -51,13 +51,13 @@ public class RteSampleResultTest {
   public void shouldGetNoInputInhibitedHeaderWhenGetRequestHeadersWithNotSetInputInhibitedRequest() {
     RteSampleResult rteSampleResult = buildBasicRTESampleResult();
     rteSampleResult.setScreen(new Screen(new Dimension(10, 10)));
-    assertEquals(EXPECTED_HEADERS, rteSampleResult.getRequestHeaders());
+    assertThat(rteSampleResult.getRequestHeaders()).isEqualTo(EXPECTED_HEADERS);
   }
 
   @Test
   public void shouldGetEmptyStringWhenGetSamplerDataWithNoAttentionKey() {
     RteSampleResult rteSampleResult = buildBasicRTESampleResult();
-    assertEquals("", rteSampleResult.getSamplerData());
+    assertThat(rteSampleResult.getSamplerData()).isEqualTo("");
   }
 
   @Test
@@ -69,7 +69,7 @@ public class RteSampleResultTest {
     String expectedSamplerData = "AttentionKey: ENTER\n" +
         "Inputs:\n" +
         "3,2,input\n";
-    assertEquals(expectedSamplerData, rteSampleResult.getSamplerData());
+    assertThat(rteSampleResult.getSamplerData()).isEqualTo(expectedSamplerData);
   }
 
   @Test
@@ -79,14 +79,14 @@ public class RteSampleResultTest {
 
     String expectedResponseHeaders = EXPECTED_HEADERS_REPONSE + "\n" +
         "Sound-Alarm: true";
-    assertEquals(expectedResponseHeaders, rteSampleResult.getResponseHeaders());
+    assertThat(rteSampleResult.getResponseHeaders()).isEqualTo(expectedResponseHeaders);
   }
 
   @Test
   public void shouldGetEmptyStringWhenGetResponseHeadersWithDisconnectAction() {
     RteSampleResult rteSampleResult = buildBasicRTESampleResult();
     rteSampleResult.setAction(Action.DISCONNECT);
-    assertEquals("", rteSampleResult.getResponseHeaders());
+    assertThat(rteSampleResult.getResponseHeaders()).isEqualTo("");
   }
 
   @Test
@@ -94,7 +94,8 @@ public class RteSampleResultTest {
     RteSampleResult rteSampleResult = buildBasicRTESampleResult();
     rteSampleResult.setSoundedAlarm(false);
     rteSampleResult.setInputInhibitedResponse(true);
-    assertEquals(EXPECTED_HEADERS_REPONSE, rteSampleResult.getResponseHeaders());
+
+    assertThat(rteSampleResult.getResponseHeaders()).isEqualTo(EXPECTED_HEADERS_REPONSE);
   }
 
   @Test
@@ -106,13 +107,13 @@ public class RteSampleResultTest {
     RteSampleResult rteSampleResult = new RteSampleResult();
     rteSampleResult.setScreen(screen);
 
-    assertEquals(screenText, rteSampleResult.getResponseDataAsString());
+    assertThat(rteSampleResult.getResponseDataAsString()).isEqualTo(screenText);
   }
 
   @Test
   public void shouldGetEmptyStringWhenGetResponseDataWithoutScreen() {
     RteSampleResult rteSampleResult = buildBasicRTESampleResult();
-    assertEquals("", rteSampleResult.getResponseDataAsString());
+    assertThat(rteSampleResult.getResponseDataAsString()).isEqualTo("");
   }
 
 }
