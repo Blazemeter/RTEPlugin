@@ -69,7 +69,6 @@ public class RteSampleResultTest {
     String expectedSamplerData = "AttentionKey: ENTER\n" +
         "Inputs:\n" +
         "3,2,input\n";
-
     assertThat(rteSampleResult.getSamplerData()).isEqualTo(expectedSamplerData);
   }
 
