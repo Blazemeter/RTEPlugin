@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import com.blazemeter.jmeter.rte.sampler.gui.BlazemeterLabsLogo;
-import com.helger.commons.annotation.VisibleForTesting;
+
 import java.awt.BorderLayout;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,13 +27,20 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     add(new BlazemeterLabsLogo(), BorderLayout.AFTER_LAST_LINE);
   }
 
-  @VisibleForTesting
   public RTERecorderGui(RTERecorderPanel mockRecordingPanel) {
+    System.out.println("Test: 1.1");
     recordingPanel = mockRecordingPanel;
+    System.out.println("Test: 1.2");
     setLayout(new BorderLayout(0, 5));
+    System.out.println("Test: 1.3");
     setBorder(makeBorder());
+    System.out.println("Test: 1.4");
     add(makeTitlePanel(), BorderLayout.NORTH);
-    add(recordingPanel, BorderLayout.CENTER);
+    System.out.println("Test: 1.5");
+    //add(recordingPanel, BorderLayout.CENTER);
+    System.out.println("Test: 1.6");
+    add(new BlazemeterLabsLogo(), BorderLayout.AFTER_LAST_LINE);
+    System.out.println("Test: 1.7");
   }
 
   @Override
