@@ -12,7 +12,9 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
 import org.assertj.swing.fixture.FrameFixture;
@@ -96,11 +98,7 @@ public class Xtn5250TerminalEmulatorIT {
       xtn5250TerminalEmulator.setKeyboardLock(keyboardLocked);
       xtn5250TerminalEmulator.setCursor(row, column);
       driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key));
-      try {
-        awaitTextInScreen(getFileContent(expectedScreen));
-      } catch (IOException e) {
-        throw e;
-      }
+      awaitTextInScreen(getFileContent(expectedScreen));
     } finally {
       frame.cleanUp();
     }
@@ -143,8 +141,8 @@ public class Xtn5250TerminalEmulatorIT {
       pause(new Condition("Listener is called") {
         @Override
         public boolean test() {
-          return terminalEmulatorListener.getAttentionKey() != null ? terminalEmulatorListener
-              .getAttentionKey().equals(AttentionKey.F1) : false;
+          return terminalEmulatorListener.getAttentionKey() != null && terminalEmulatorListener
+              .getAttentionKey().equals(AttentionKey.F1);
         }
       }, PAUSE_TIMEOUT);
     } finally {
@@ -158,26 +156,35 @@ public class Xtn5250TerminalEmulatorIT {
         "test-screen.txt", true);
   }
 
-
   private String getFileContent(String file) throws IOException {
     return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
   }
 
   private static Screen buildScreen(boolean fieldIsEmpty) {
-    Screen screen = new Screen();
-    screen.addSegment(1, 1, "*****************************************");
-    screen.addField(2, 1,
-        "" + (fieldIsEmpty ? " " : "E") + "                                        ");
-    screen.addSegment(3, 1, "TEXTO DE PRUEBA 1");
-    screen.addSegment(4, 1, "TEXTO DE PRUEBA 2");
-    screen.addSegment(5, 1, "TEXTO DE PRUEBA 3");
-    screen.addSegment(6, 1, "*****************************************");
+    Dimension screenSize = new Dimension(80, 24);
+    Screen screen = new Screen(screenSize);
+    int segmentPosition = 0;
+    screen.addSegment(segmentPosition,
+        completeLine("*****************************************", screenSize.width));
+    segmentPosition += screenSize.width;
+    screen.addField(segmentPosition, completeLine((fieldIsEmpty ? " " : "E"), screenSize.width));
+    segmentPosition += screenSize.width;
+    for (String lineText : Arrays
+        .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
+            "*****************************************")) {
+      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width));
+      segmentPosition += screenSize.width;
+    }
     return screen;
+  }
+
+  private static String completeLine(String baseLine, int width) {
+    return baseLine + StringUtils.repeat(' ', width - baseLine.length());
   }
 
   private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {
 
-    AttentionKey attentionKey = null;
+    private AttentionKey attentionKey = null;
 
     @Override
     public void onCloseTerminal() {
@@ -191,5 +198,7 @@ public class Xtn5250TerminalEmulatorIT {
     public AttentionKey getAttentionKey() {
       return attentionKey;
     }
+
   }
+
 }
