@@ -110,5 +110,4 @@ public class RteSampleResult extends SampleResult {
         + cursorPosition.getColumn() : "") +
         (soundedAlarm ? "\nSound-Alarm: true" : "");
   }
-
 }

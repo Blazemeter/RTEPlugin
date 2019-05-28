@@ -406,9 +406,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       addWaitCondition(waitCondition);
     }
   }
-
+  
   private void addWaitCondition(WaitCondition condition) {
-
     if (condition instanceof SyncWaitCondition) {
       setWaitSync(true);
       setWaitSyncTimeout(String.valueOf(condition.getTimeoutMillis()));
