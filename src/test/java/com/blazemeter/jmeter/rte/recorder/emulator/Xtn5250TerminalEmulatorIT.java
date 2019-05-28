@@ -73,7 +73,7 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldShowTheScreenExpectedWhenSetScreen() throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome(true));
+    xtn5250TerminalEmulator.setScreen(buildScreen(true));
     assertThat(xtn5250TerminalEmulator.getScreen()).isEqualTo(getFileContent("test-screen.txt"));
   }
 
@@ -87,7 +87,7 @@ public class Xtn5250TerminalEmulatorIT {
       boolean fieldIsEmpty)
       throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome(fieldIsEmpty));
+    xtn5250TerminalEmulator.setScreen(buildScreen(fieldIsEmpty));
     FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
     try {
@@ -130,7 +130,7 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldCallTheListenerWhenPressAttentionKey() {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome(true));
+    xtn5250TerminalEmulator.setScreen(buildScreen(true));
     TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
     xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
     FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
@@ -163,7 +163,7 @@ public class Xtn5250TerminalEmulatorIT {
     return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
   }
 
-  private static Screen printHome(boolean fieldIsEmpty) {
+  private static Screen buildScreen(boolean fieldIsEmpty) {
     Screen screen = new Screen();
     screen.addSegment(1, 1, "*****************************************");
     screen.addField(2, 1,
