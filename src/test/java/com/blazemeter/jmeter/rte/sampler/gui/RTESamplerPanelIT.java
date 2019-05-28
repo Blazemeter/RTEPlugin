@@ -44,6 +44,7 @@ public class RTESamplerPanelIT {
   private static final long CHANGE_TIMEOUT_MILLIS = 10000;
 
   private FrameFixture frame;
+  private RTESamplerPanel panel;
 
   @BeforeClass
   public static void setupClass() {
@@ -52,8 +53,13 @@ public class RTESamplerPanelIT {
 
   @Before
   public void setup() {
-    RTESamplerPanel panel = new RTESamplerPanel();
+    panel = new RTESamplerPanel();
     frame = showInFrame(panel);
+  }
+
+  @After
+  public void tearDown() {
+    frame.cleanUp();
   }
 
   @Test
@@ -96,6 +102,12 @@ public class RTESamplerPanelIT {
     switchAction(Action.DISCONNECT, Action.SEND_INPUT);
     JPanelFixture panel = frame.panel(WAITS_PANEL);
     pause(WaitForComponentToShowCondition.untilIsShowing(panel.target()));
+  }
+
+  @Test
+  public void shouldHideRequestPanelWhenSetActionToConnect() {
+    panel.setAction(Action.CONNECT);
+    assertPanelIsNotVisible(REQUEST_PANEL);
   }
 
   @Test
@@ -181,11 +193,6 @@ public class RTESamplerPanelIT {
     expected.add(frame.textBox(WAIT_TEXT_AREA_BOTTOM));
     expected.add(frame.textBox(WAIT_TEXT_AREA_RIGHT));
     validateEnabled(false, expected);
-  }
-
-  @After
-  public void tearDown() {
-    frame.cleanUp();
   }
 
   private void switchCheckboxTo(boolean state, JCheckBoxFixture check) {

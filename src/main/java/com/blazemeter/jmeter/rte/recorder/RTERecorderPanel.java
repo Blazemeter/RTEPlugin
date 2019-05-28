@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
+import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,12 +15,18 @@ import javax.swing.Box;
 import javax.swing.GroupLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.LayoutStyle;
+
 import org.apache.jmeter.gui.util.JMeterToolBar;
 import org.apache.jmeter.util.JMeterUtils;
 
 public class RTERecorderPanel extends JPanel implements ActionListener, RecordingStateListener {
 
+  private static JTextField waitConditionsTimeoutThreshold = SwingUtils
+      .createComponent("waitConditionsTimeoutThreshold", new JTextField());
   private static final String ADD_ACTION_START = "addActionStart";
   private static final String ADD_ACTION_STOP = "addActionStop";
   private static final String ADD_ACTION_RESTART = "addActionRestart";
@@ -35,18 +42,20 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     GroupLayout layout = new GroupLayout(this);
     layout.setAutoCreateGaps(true);
     this.setLayout(layout);
-
+    JPanel waitConditionsPanel = buildTimeThresholdPanel();
     JPanel statePanel = buildStatePanel();
     configPanel = new RTEConfigPanel();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(statePanel)
         .addComponent(configPanel)
+        .addComponent(waitConditionsPanel)
     );
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(statePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE)
         .addComponent(configPanel)
+        .addComponent(waitConditionsPanel)
     );
 
   }
@@ -88,6 +97,31 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     restartButton.setEnabled(running);
   }
 
+  private JPanel buildTimeThresholdPanel() {
+    JPanel panel = SwingUtils.createComponent("timeThresholdPanel", new JPanel());
+    panel
+        .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString(
+                "", "Wait conditions")));
+    GroupLayout layout = new GroupLayout(panel);
+    layout.setAutoCreateContainerGaps(true);
+    panel.setLayout(layout);
+
+    JLabel waitConditionTimeoutThreshold = SwingUtils.createComponent(
+            "waitConditionTimeoutThreshold",
+        new JLabel("Timeout threshold (ms)"));
+    layout.setHorizontalGroup(layout.createSequentialGroup()
+        .addComponent(waitConditionTimeoutThreshold)
+        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(waitConditionsTimeoutThreshold, GroupLayout.PREFERRED_SIZE, 150,
+            GroupLayout.PREFERRED_SIZE));
+    layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+        .addComponent(waitConditionTimeoutThreshold)
+        .addComponent(waitConditionsTimeoutThreshold, GroupLayout.PREFERRED_SIZE,
+                GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+    return panel;
+  }
+  
   public String getServer() {
     return configPanel.getServer();
   }
@@ -135,7 +169,15 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   public void setConnectionTimeout(String connectionTimeout) {
     configPanel.setConnectionTimeout(connectionTimeout);
   }
-
+  
+  public String getWaitConditionsTimeoutThresholdMillis() {
+    return waitConditionsTimeoutThreshold.getText();
+  }
+  
+  public void setWaitConditionsTimeoutThresholdMillis(String thresholdTime) {
+    waitConditionsTimeoutThreshold.setText(thresholdTime);
+  }
+  
   @Override
   public void actionPerformed(ActionEvent e) {
     String action = e.getActionCommand();
