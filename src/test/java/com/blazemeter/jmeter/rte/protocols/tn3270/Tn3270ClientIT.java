@@ -1,16 +1,22 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
-import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -20,12 +26,11 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.RteProtocolClientIT;
-
 import java.io.FileNotFoundException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-
+import java.io.IOException;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
@@ -46,8 +51,11 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
+  }
+
+  private Screen buildExpectedWelcomeScreen() throws IOException {
+    return buildScreenFromHtmlFile("login-welcome-screen.html");
   }
 
   private void loadLoginFlow() throws FileNotFoundException {
@@ -66,8 +74,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
         TIMEOUT_MILLIS);
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
   }
 
   @Test
@@ -102,8 +109,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     sendUsernameWithSyncWait();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("user-menu-screen.txt"));
+    assertThat(client.getScreen()).isEqualTo(buildScreenFromHtmlFile("user-menu-screen.html"));
   }
 
   private void sendUsernameWithSyncWait() throws Exception {
@@ -122,8 +128,11 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     sendUsernameWithSyncWait();
     sendPasswordByLabelWithSyncWait();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-success-screen.txt"));
+    assertThat(client.getScreen()).isEqualTo(buildLoginSuccessScreen());
+  }
+
+  private Screen buildLoginSuccessScreen() throws IOException {
+    return buildScreenFromHtmlFile("login-success-screen.html");
   }
 
   private void sendPasswordByLabelWithSyncWait() throws Exception {
@@ -233,8 +242,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     sendUsernameWithSyncWait();
     client.disconnect();
     connectToVirtualService();
-    assertThat(client.getScreen().toString())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
   }
 
   @Test
@@ -251,6 +259,36 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ROLL_UP);
+  }
+
+  @Test
+  public void shouldNotifyAddedListenerWhenTerminalStateChanges() throws Exception{
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+    loadLoginFlow();
+    connectToVirtualService();
+
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    sendUsernameWithSyncWait();
+
+    /*
+     * When inputs are sent to client, 17 changes happens: the screen changes, the cursor moves
+     * and also the keyboard changes.
+     * */
+
+    verify(terminalEmulatorUpdater, times(17)).onTerminalStateChange();
+  }
+
+  @Test
+  public void shouldNotNotifyRemovedListenerWhenTerminalStateChanges() throws Exception{
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+    loadLoginFlow();
+    connectToVirtualService();
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    client.removeTerminalStateListener(terminalEmulatorUpdater);
+
+    sendUsernameWithSyncWait();
+
+    verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
   }
 
 }

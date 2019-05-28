@@ -58,7 +58,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   public static final AttentionKey DEFAULT_ATTENTION_KEY = AttentionKey.ENTER;
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = DEFAULT_PROTOCOL.createProtocolClient()
-          .getDefaultTerminalType();
+      .getDefaultTerminalType();
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
   @VisibleForTesting
   protected static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
@@ -100,7 +100,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
-          .withInitial(HashMap::new);
+      .withInitial(HashMap::new);
 
   private final transient Function<Protocol, RteProtocolClient> protocolFactory;
 
@@ -151,7 +151,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   private TerminalType getTerminalType() {
     return getProtocol().createProtocolClient()
-            .getTerminalTypeById(getPropertyAsString(CONFIG_TERMINAL_TYPE));
+        .getTerminalTypeById(getPropertyAsString(CONFIG_TERMINAL_TYPE));
   }
 
   private long getConnectionTimeout() {
@@ -254,7 +254,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   public String getWaitCursorTimeout() {
     return getPropertyAsString(WAIT_CURSOR_TIMEOUT_PROPERTY,
-            String.valueOf(DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS));
+        String.valueOf(DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS));
   }
 
   public void setWaitCursorTimeout(String waitTimeoutCursor) {
@@ -299,7 +299,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   public String getWaitSilentTime() {
     return getPropertyAsString(WAIT_SILENT_TIME_PROPERTY,
-            String.valueOf(DEFAULT_WAIT_SILENT_TIME_MILLIS));
+        String.valueOf(DEFAULT_WAIT_SILENT_TIME_MILLIS));
   }
 
   public void setWaitSilentTime(String waitSilentTime) {
@@ -312,7 +312,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   public String getWaitSilentTimeout() {
     return getPropertyAsString(WAIT_SILENT_TIMEOUT_PROPERTY,
-            String.valueOf(DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS));
+        String.valueOf(DEFAULT_WAIT_SILENT_TIMEOUT_MILLIS));
   }
 
   public void setWaitSilentTimeout(String waitSilentTimeout) {
@@ -389,7 +389,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   public String getWaitTextTimeout() {
     return getPropertyAsString(WAIT_TEXT_TIMEOUT_PROPERTY,
-            String.valueOf(DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS));
+        String.valueOf(DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS));
   }
 
   public void setWaitTextTimeout(String timeout) {
@@ -406,7 +406,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       addWaitCondition(waitCondition);
     }
   }
-
+  
   private void addWaitCondition(WaitCondition condition) {
     if (condition instanceof SyncWaitCondition) {
       setWaitSync(true);
@@ -489,7 +489,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         }
       }
       RequestListener<RteProtocolClient> requestListener = new RequestListener<>(rteSampleResult,
-              client);
+          client);
       client.addTerminalStateListener(requestListener);
 
       try {
@@ -550,14 +550,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private RteProtocolClient buildClient()
-          throws RteIOException, InterruptedException, TimeoutException {
+      throws RteIOException, InterruptedException, TimeoutException {
     RteProtocolClient client = protocolFactory.apply(getProtocol());
     client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout());
     connections.get().put(buildConnectionId(), client);
     return client;
   }
 
-  public List<Input> getInputs() {
+  private List<Input> getInputs() {
     List<Input> inputs = new ArrayList<>();
     for (JMeterProperty p : getInputsTestElement()) {
       InputTestElement c = (InputTestElement) p.getObjectValue();
@@ -590,22 +590,22 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   private CursorWaitCondition buildCursorWaitCondition() {
     return new CursorWaitCondition(
-            new Position(getWaitCursorRowValue(), getWaitCursorColumnValue()),
-            getWaitCursorTimeoutValue(), getStableTimeout());
+        new Position(getWaitCursorRowValue(), getWaitCursorColumnValue()),
+        getWaitCursorTimeoutValue(), getStableTimeout());
   }
 
   private TextWaitCondition buildTextWaitCondition() {
     return new TextWaitCondition(
-            JMeterUtils.getPattern(getWaitTextRegex()),
-            JMeterUtils.getMatcher(),
-            Area.fromTopLeftBottomRight(getWaitTextAreaTopValue(), getWaitTextAreaLeftValue(),
-                    getWaitTextAreaBottomValue(), getWaitTextAreaRightValue()),
-            getWaitTextTimeoutValue(),
-            getStableTimeout());
+        JMeterUtils.getPattern(getWaitTextRegex()),
+        JMeterUtils.getMatcher(),
+        Area.fromTopLeftBottomRight(getWaitTextAreaTopValue(), getWaitTextAreaLeftValue(),
+            getWaitTextAreaBottomValue(), getWaitTextAreaRightValue()),
+        getWaitTextTimeoutValue(),
+        getStableTimeout());
   }
 
   public static void updateSampleResultResponse(RteSampleResult result,
-                                                RteProtocolClient client) {
+      RteProtocolClient client) {
     result.setSuccessful(true);
     result.setCursorPosition(client.getCursorPosition().orElse(null));
     result.setSoundedAlarm(client.isAlarmOn());
