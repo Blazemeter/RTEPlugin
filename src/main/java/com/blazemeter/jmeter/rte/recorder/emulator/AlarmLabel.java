@@ -11,6 +11,7 @@ import javax.swing.JLabel;
 class AlarmLabel extends JLabel {
 
   private static final int ALARM_ITERATION = 10;
+  private static final int BLINK_TIME_PERIOD_MILLIS = 500;
   private final ScheduledExecutorService alarmExecutor;
   private ScheduledFuture future;
   private int counter;
@@ -40,7 +41,7 @@ class AlarmLabel extends JLabel {
         future.cancel(true);
         setVisible(false);
       }
-    }, 0, 500, TimeUnit.MILLISECONDS);
+    }, 0, BLINK_TIME_PERIOD_MILLIS, TimeUnit.MILLISECONDS);
   }
 
   public void shutdown() {
