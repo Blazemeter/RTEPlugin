@@ -1,7 +1,10 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -53,37 +56,40 @@ public class AlarmLabelIT {
 
   @Test
   public void shouldBlinkForAPeriodWhenSoundAlarm() {
-    boolean visible = false;
-    softly.assertThat(alarmLabel.isVisible()).isEqualTo(visible);
+    List<Boolean> expected = Arrays
+        .asList(false, true, false, true, false, true, false, true, false, true, false, false);
+    List<Boolean> result = new ArrayList<>();
+    result.add(alarmLabel.isVisible());
     alarmLabel.soundAlarm();
     for (int i = 0; i < 10; i++) {
       executorService.tock();
-      visible = !visible;
-      softly.assertThat(alarmLabel.isVisible()).isEqualTo(visible);
+      result.add(alarmLabel.isVisible());
     }
     executorService.tock();
-    softly.assertThat(alarmLabel.isVisible()).isEqualTo(false);
+    result.add(alarmLabel.isVisible());
+    assertThat(result).isEqualTo(expected);
   }
 
   @Test
   public void shouldStartNewBlinkPeriodWhenAlarmIsSoundedAndSoundAlarm() {
-    boolean visible = false;
-    softly.assertThat(alarmLabel.isVisible()).isEqualTo(visible);
+    List<Boolean> expected = Arrays
+        .asList(false, true, false, true, false, true, false, true, false, true, false, true,
+            false, false);
+    List<Boolean> result = new ArrayList<>();
+    result.add(alarmLabel.isVisible());
     alarmLabel.soundAlarm();
     for (int i = 0; i < 2; i++) {
       executorService.tock();
-      visible = !visible;
-      softly.assertThat(alarmLabel.isVisible()).isEqualTo(visible);
+      result.add(alarmLabel.isVisible());
     }
-    visible = false;
     alarmLabel.soundAlarm();
     for (int i = 0; i < 10; i++) {
       executorService.tock();
-      visible = !visible;
-      softly.assertThat(alarmLabel.isVisible()).isEqualTo(visible);
+      result.add(alarmLabel.isVisible());
     }
     executorService.tock();
-    softly.assertThat(alarmLabel.isVisible()).isEqualTo(false);
+    result.add(alarmLabel.isVisible());
+    assertThat(result).isEqualTo(expected);
   }
 
   private static class TestScheduledExecutorService implements ScheduledExecutorService {

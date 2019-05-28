@@ -10,6 +10,7 @@ import javax.swing.JLabel;
 
 class AlarmLabel extends JLabel {
 
+  private static final int ALARM_ITERATION = 10;
   private final ScheduledExecutorService alarmExecutor;
   private ScheduledFuture future;
   private int counter;
@@ -33,7 +34,7 @@ class AlarmLabel extends JLabel {
     counter = 0;
     future = alarmExecutor.scheduleAtFixedRate(() -> {
       setVisible(!isVisible());
-      if (counter < 10) {
+      if (counter < ALARM_ITERATION) {
         counter++;
       } else {
         future.cancel(true);

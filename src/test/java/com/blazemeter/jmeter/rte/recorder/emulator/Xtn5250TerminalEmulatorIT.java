@@ -12,7 +12,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
@@ -46,123 +45,92 @@ public class Xtn5250TerminalEmulatorIT {
   public void shouldShowTerminalEmulatorFrameWithProperlySizeWhenStart() {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.start();
+    //xi5250Crt expected Height + StatusPanel expected height
     int expectedHeight = 731 + 31;
     int expectedWidth = 1056;
-    Dimension expectedSize = new Dimension(expectedWidth, expectedHeight);
+    //The title bar size is depending on the OS,
+    // so a threshold is added to be able to test on different OS
+    int threshold = 30;
     try {
-      pause(new Condition("frame size is correct") {
-        @Override
-        public boolean test() {
-          Dimension size = xtn5250TerminalEmulator.getSize();
-          return size.getHeight() >= expectedHeight && size.getHeight() <= expectedHeight + 30
-              && size.getWidth() >= expectedWidth && size.getWidth() <= expectedWidth + 30;
-        }
-      }, PAUSE_TIMEOUT);
+      awaitFrameSizeIs(expectedWidth, expectedHeight, threshold);
     } finally {
       xtn5250TerminalEmulator.stop();
     }
   }
 
+  private void awaitFrameSizeIs(int expectedWidth, int expectedHeight, int threshold) {
+    pause(new Condition("frame size is correct") {
+      @Override
+      public boolean test() {
+        Dimension size = xtn5250TerminalEmulator.getSize();
+        return size.getHeight() >= expectedHeight
+            && size.getHeight() <= expectedHeight + threshold
+            && size.getWidth() >= expectedWidth && size.getWidth() <= expectedWidth + threshold;
+      }
+    }, PAUSE_TIMEOUT);
+  }
+
   @Test
   public void shouldShowTheScreenExpectedWhenSetScreen() throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome());
+    xtn5250TerminalEmulator.setScreen(printHome(true));
     assertThat(xtn5250TerminalEmulator.getScreen()).isEqualTo(getFileContent("test-screen.txt"));
   }
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnField() throws IOException {
+    sendKey(KeyEvent.VK_E, 2, 1, false,
+        "test-screen-press-key-on-field.txt", true);
+  }
+
+  private void sendKey(int key, int row, int column, boolean keyboardLocked, String expectedScreen,
+      boolean fieldIsEmpty)
+      throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome());
+    xtn5250TerminalEmulator.setScreen(printHome(fieldIsEmpty));
     FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
     try {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
       JComponentDriver driver = new JComponentDriver(frame.robot());
-      xtn5250TerminalEmulator.setCursor(2, 1);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(KeyEvent.VK_E));
-      pause(new Condition("Screen with text") {
-        @Override
-        public boolean test() {
-          try {
-            return xtn5250TerminalEmulator.getScreen()
-                .equals(getFileContent("test-screen-press-key-on-field.txt"));
-          } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-          }
-        }
-      }, PAUSE_TIMEOUT);
+      xtn5250TerminalEmulator.setKeyboardLock(keyboardLocked);
+      xtn5250TerminalEmulator.setCursor(row, column);
+      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key));
+      try {
+        awaitTextInScreen(getFileContent(expectedScreen));
+      } catch (IOException e) {
+        throw e;
+      }
     } finally {
-      System.out.println(xtn5250TerminalEmulator.getScreen());
-      System.out.println(getFileContent("test-screen.txt"));
       frame.cleanUp();
     }
+  }
+
+  private void awaitTextInScreen(String text) {
+    pause(new Condition("Screen with text") {
+      @Override
+      public boolean test() {
+        return xtn5250TerminalEmulator.getScreen().equals(text);
+      }
+    }, PAUSE_TIMEOUT);
   }
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnFieldAndKeyboardIsLocked() throws IOException {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome());
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
-    frame.show();
-    try {
-      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
-      JComponentDriver driver = new JComponentDriver(frame.robot());
-      xtn5250TerminalEmulator.setKeyboardLock(true);
-      xtn5250TerminalEmulator.setCursor(2, 1);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(KeyEvent.VK_E));
-      pause(new Condition("Screen with text") {
-        @Override
-        public boolean test() {
-          try {
-            return xtn5250TerminalEmulator.getScreen()
-                .equals(getFileContent("test-screen.txt"));
-          } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-          }
-        }
-      }, PAUSE_TIMEOUT);
-    } finally {
-      frame.cleanUp();
-    }
+    sendKey(KeyEvent.VK_E, 2, 1, true,
+        "test-screen.txt", true);
   }
 
   @Test
   public void shouldDeleteTextWhenPressBackspaceKey() throws IOException {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHomeWithText());
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
-    frame.show();
-    try {
-      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
-      JComponentDriver driver = new JComponentDriver(frame.robot());
-      xtn5250TerminalEmulator.setCursor(2, 2);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(KeyEvent.VK_BACK_SPACE));
-      pause(new Condition("Screen with text") {
-        @Override
-        public boolean test() {
-          try {
-            return xtn5250TerminalEmulator.getScreen()
-                .equals(getFileContent("test-screen.txt"));
-          } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-          }
-        }
-      }, PAUSE_TIMEOUT);
-    } finally {
-      System.out.println(xtn5250TerminalEmulator.getScreen());
-      System.out.println(getFileContent("test-screen.txt"));
-      frame.cleanUp();
-    }
+    sendKey(KeyEvent.VK_BACK_SPACE, 2, 2, false,
+        "test-screen.txt", false);
   }
 
   @Test
   public void shouldCallTheListenerWhenPressAttentionKey() {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome());
+    xtn5250TerminalEmulator.setScreen(printHome(true));
     TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
     xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
     FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
@@ -185,57 +153,21 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldGetProperTextWhenPressKeyOutOfField() {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(printHome());
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
-    frame.show();
-    try {
-      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
-      JComponentDriver driver = new JComponentDriver(frame.robot());
-      xtn5250TerminalEmulator.setCursor(1, 1);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(KeyEvent.VK_E));
-      pause(new Condition("Screen with text") {
-        @Override
-        public boolean test() {
-          try {
-            return xtn5250TerminalEmulator.getScreen()
-                .equals(getFileContent("test-screen.txt"));
-          } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-          }
-        }
-      }, PAUSE_TIMEOUT);
-    } finally {
-      frame.cleanUp();
-    }
+  public void shouldGetProperTextWhenPressKeyOutOfField() throws IOException {
+    sendKey(KeyEvent.VK_E, 1, 1, false,
+        "test-screen.txt", true);
   }
 
 
   private String getFileContent(String file) throws IOException {
-    return Resources.toString(findResource(file), Charsets.UTF_8);
+    return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
   }
 
-  private URL findResource(String file) {
-    return getClass().getResource(file);
-  }
-
-  private static Screen printHome() {
+  private static Screen printHome(boolean fieldIsEmpty) {
     Screen screen = new Screen();
     screen.addSegment(1, 1, "*****************************************");
-    screen.addField(2, 1, "                                         ");
-    screen.addSegment(3, 1, "TEXTO DE PRUEBA 1");
-    screen.addSegment(4, 1, "TEXTO DE PRUEBA 2");
-    screen.addSegment(5, 1, "TEXTO DE PRUEBA 3");
-    screen.addSegment(6, 1, "*****************************************");
-    return screen;
-  }
-
-  private static Screen printHomeWithText() {
-    Screen screen = new Screen();
-    screen.addSegment(1, 1, "*****************************************");
-    screen.addField(2, 1, "E                                        ");
+    screen.addField(2, 1,
+        "" + (fieldIsEmpty ? " " : "E") + "                                        ");
     screen.addSegment(3, 1, "TEXTO DE PRUEBA 1");
     screen.addSegment(4, 1, "TEXTO DE PRUEBA 2");
     screen.addSegment(5, 1, "TEXTO DE PRUEBA 3");

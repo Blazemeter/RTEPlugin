@@ -80,52 +80,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
-  private StatusPanel statusPanel = new StatusPanel();
   private boolean stopping;
-
-  private XI5250Crt xi5250Crt = new XI5250Crt() {
-    @Override
-    protected void processKeyEvent(KeyEvent e) {
-      synchronized (Xtn5250TerminalEmulator.this) {
-        AttentionKey attentionKey = null;
-        if (e.getID() == KeyEvent.KEY_PRESSED) {
-          attentionKey = KEY_EVENTS
-              .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-          if (attentionKey != null) {
-
-            List<Input> fields = getInputFields();
-            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-              listener.onAttentionKey(attentionKey, fields);
-            }
-          }
-        }
-        if (!locked || attentionKey != null) {
-          //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
-          // when shift mask is enabled, in this way allways delete
-          if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-            e.setModifiers(KeyEvent.SHIFT_MASK);
-          }
-          super.processKeyEvent(e);
-          statusPanel
-              .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
-        }
-      }
-    }
-
-    @Override
-    protected void processMouseEvent(MouseEvent e) {
-      super.processMouseEvent(e);
-      statusPanel
-          .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
-    }
-
-    @Override
-    public void paintComponent(Graphics g) {
-      synchronized (Xtn5250TerminalEmulator.this) {
-        super.paintComponent(g);
-      }
-    }
-  };
+  private StatusPanel statusPanel = new StatusPanel();
+  private XI5250Crt xi5250Crt = createCustomXI5250Crt();
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -158,6 +115,52 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   }
 
+  private XI5250Crt createCustomXI5250Crt() {
+    return new XI5250Crt() {
+      @Override
+      protected void processKeyEvent(KeyEvent e) {
+        synchronized (Xtn5250TerminalEmulator.this) {
+          AttentionKey attentionKey = null;
+          if (e.getID() == KeyEvent.KEY_PRESSED) {
+            attentionKey = KEY_EVENTS
+                .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
+            if (attentionKey != null) {
+
+              List<Input> fields = getInputFields();
+              for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+                listener.onAttentionKey(attentionKey, fields);
+              }
+            }
+          }
+          if (!locked || attentionKey != null) {
+            //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
+            // when shift mask is enabled, in this way allways delete
+            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+              e.setModifiers(KeyEvent.SHIFT_MASK);
+            }
+            super.processKeyEvent(e);
+            statusPanel
+                .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+          }
+        }
+      }
+
+      @Override
+      protected void processMouseEvent(MouseEvent e) {
+        super.processMouseEvent(e);
+        statusPanel
+            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+      }
+
+      @Override
+      public void paintComponent(Graphics g) {
+        synchronized (Xtn5250TerminalEmulator.this) {
+          super.paintComponent(g);
+        }
+      }
+    };
+  }
+
   @Override
   public void start() {
     setVisible(true);
@@ -169,9 +172,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     Dimension testSize = calculateCrtDefaultSize();
     xi5250Crt.setSize(testSize.width, testSize.height);
     pack();
-    System.out.println(xi5250Crt.getSize());
-    System.out.println(statusPanel.getSize());
-    System.out.println(getSize());
   }
 
   private Dimension calculateCrtDefaultSize() {
