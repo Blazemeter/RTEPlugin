@@ -88,6 +88,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
         JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
     JButton button = new JButton(JMeterUtils.getResString(resourceString));
     ImageIcon image = JMeterUtils.getImage("toolbar/" + iconSize + imageName);
+    button.setName(resourceString);
     button.setIcon(image);
     button.addActionListener(this);
     button.setActionCommand(actionCommand);
