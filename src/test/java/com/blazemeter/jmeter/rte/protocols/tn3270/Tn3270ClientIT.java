@@ -1,6 +1,10 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
@@ -12,6 +16,7 @@ import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -22,10 +27,10 @@ import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.RteProtocolClientIT;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.io.IOException;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
@@ -254,6 +259,36 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     client.send(buildUsernameField(), AttentionKey.ROLL_UP);
+  }
+
+  @Test
+  public void shouldNotifyAddedListenerWhenTerminalStateChanges() throws Exception{
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+    loadLoginFlow();
+    connectToVirtualService();
+
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    sendUsernameWithSyncWait();
+
+    /*
+     * When inputs are sent to client, 17 changes happens: the screen changes, the cursor moves
+     * and also the keyboard changes.
+     * */
+
+    verify(terminalEmulatorUpdater, times(17)).onTerminalStateChange();
+  }
+
+  @Test
+  public void shouldNotNotifyRemovedListenerWhenTerminalStateChanges() throws Exception{
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+    loadLoginFlow();
+    connectToVirtualService();
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    client.removeTerminalStateListener(terminalEmulatorUpdater);
+
+    sendUsernameWithSyncWait();
+
+    verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
   }
 
 }
