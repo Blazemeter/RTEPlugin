@@ -6,8 +6,10 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.RTERecorder;
 import com.blazemeter.jmeter.rte.recorder.RTERecorderGui;
 import com.blazemeter.jmeter.rte.recorder.RTERecorderPanel;
+
 import com.blazemeter.jmeter.rte.recorder.RecordingStateListener;
 import kg.apc.emulators.TestJMeterUtils;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -18,10 +20,6 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.VerificationCollector;
 
-
-import java.awt.*;
-
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -29,6 +27,9 @@ public class RTERecorderGuiTest {
 
   @Rule
   public VerificationCollector collector = MockitoJUnit.collector();
+
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
   private final String SERVER = "localhost";
   private final int PORT = 23;
@@ -52,15 +53,25 @@ public class RTERecorderGuiTest {
   public void setup() {
     rteRecorderGui = new RTERecorderGui();
     prepareTestElement();
+    preparePanel();
   }
 
   private void prepareTestElement(){
     when(testElement.getServer()).thenReturn(SERVER);
     when(testElement.getPort()).thenReturn(PORT);
     when(testElement.getProtocol()).thenReturn(PROTOCOL);
-    when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
     when(testElement.getSSLType()).thenReturn(SSL_TYPE);
+    when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
     when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
+  }
+
+  private void preparePanel(){
+    when(panel.getServer()).thenReturn(SERVER);
+    when(panel.getPort()).thenReturn(Integer.toString(PORT));
+    when(panel.getProtocol()).thenReturn(PROTOCOL);
+    when(panel.getSSLType()).thenReturn(SSL_TYPE);
+    when(panel.getTerminalType()).thenReturn(TERMINAL_TYPE);
+    when(panel.getConnectionTimeout()).thenReturn(Long.toString(TIMEOUT));
   }
 
   @BeforeClass
@@ -90,28 +101,22 @@ public class RTERecorderGuiTest {
   }
 
   @Test
-  public void shouldConfigurePanelWithGivenTestElementWhenConfigure(){
-    RTERecorder configurationElement    = buildRTERecorderToBeConfigured();
-    RTERecorderGui rteRecorderGui = new RTERecorderGui(panel);
-
-    /*
-    listener = Mockito.mock(RecordingStateListener.class);
-    RTERecorderPanel mockRecordingPanel = new RTERecorderPanel(listener);
-    RTERecorderPanel spyRecordingPanel = Mockito.spy(mockRecordingPanel);
-    RTERecorderGui rteRecorderGuiWithMockPanel = new RTERecorderGui(spyRecordingPanel);
-    */
+  public void shouldConfigurePanelWithGivenTestElementWhenConfigure() {
+    RTERecorder configurationElement = buildRTERecorderForConfiguration();
+    RTERecorderPanel configuredPanel = new RTERecorderPanel(listener);
+    rteRecorderGui = new RTERecorderGui(configuredPanel);
 
     rteRecorderGui.configure(configurationElement);
 
-    verify(panel).setServer(SERVER);
-    verify(panel).setPort(Long.toString(PORT));
-    verify(panel).setProtocol(PROTOCOL);
-    verify(panel).setTerminalType(TERMINAL_TYPE);
-    verify(panel).setSSLType(SSL_TYPE);
-    verify(panel).setConnectionTimeout(Long.toString(TIMEOUT));
+    softly.assertThat(configuredPanel.getServer()).as("server").isEqualTo(SERVER);
+    softly.assertThat(configuredPanel.getPort()).as("port").isEqualTo(Integer.toString(PORT));
+    softly.assertThat(configuredPanel.getProtocol()).as("protocol").isEqualTo(PROTOCOL);
+    softly.assertThat(configuredPanel.getTerminalType()).as("terminalType").isEqualTo(TERMINAL_TYPE);
+    softly.assertThat(configuredPanel.getSSLType()).as("sslType").isEqualTo(SSL_TYPE);
+    softly.assertThat(configuredPanel.getConnectionTimeout()).as("timeout").isEqualTo(Long.toString(TIMEOUT));
   }
 
-  private RTERecorder buildRTERecorderToBeConfigured(){
+  private RTERecorder buildRTERecorderForConfiguration() {
     RTERecorder configurationElement = new RTERecorder();
     configurationElement.setServer(SERVER);
     configurationElement.setPort(String.valueOf(PORT));
@@ -125,17 +130,17 @@ public class RTERecorderGuiTest {
 
   @Test
   public void shouldSetTestElementFromTheRecordingPanelWhenModifyTestElement() {
-    RTERecorder expected = buildRTERecorderToBeConfigured();
-    RTERecorder modified = new RTERecorder();
+    rteRecorderGui = new RTERecorderGui(panel);
 
-    rteRecorderGui.configure(expected);
+    RTERecorder modified = new RTERecorder();
     rteRecorderGui.modifyTestElement(modified);
 
-    assertRecorder(expected, modified);
+    softly.assertThat(modified.getServer()).as("server").isEqualTo(SERVER);
+    softly.assertThat(modified.getPort()).as("port").isEqualTo(PORT);
+    softly.assertThat(modified.getProtocol()).as("protocol").isEqualTo(PROTOCOL);
+    softly.assertThat(modified.getTerminalType()).as("terminalType").isEqualTo(TERMINAL_TYPE);
+    softly.assertThat(modified.getSSLType()).as("sslType").isEqualTo(SSL_TYPE);
+    softly.assertThat(modified.getConnectionTimeout()).as("timeout").isEqualTo(TIMEOUT);
   }
 
-  private void assertRecorder(RTERecorder result, RTERecorder expected) {
-    assertThat(result)
-            .isEqualToComparingOnlyGivenFields(expected, "port", "server", "protocol", "terminalType", "connectionTimeout");
-  }
 }
