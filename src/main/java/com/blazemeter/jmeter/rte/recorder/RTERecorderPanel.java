@@ -4,12 +4,14 @@ import static org.apache.tika.parser.ner.NamedEntityParser.LOG;
 
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.TimeoutException;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.GroupLayout;
@@ -202,7 +204,15 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
         default:
           throw new UnsupportedOperationException(action);
       }
-    } catch (Exception ex) {
+    } catch (TimeoutException timeout) {
+      onRecordingStop();
+      JMeterUtils.reportErrorToUser(
+          "Timeout waiting for connection end after " + getConnectionTimeout() + "ms");
+    } catch (RteIOException rte) {
+      onRecordingStop();
+      LOG.error("Could not connect to the server ");
+      JMeterUtils.reportErrorToUser("Could not connect to the server");
+    } catch (Exception ex) { 
       LOG.error("Problem performing requested action {}", action, ex);
       JMeterUtils.reportErrorToUser(ex.getMessage());
     }

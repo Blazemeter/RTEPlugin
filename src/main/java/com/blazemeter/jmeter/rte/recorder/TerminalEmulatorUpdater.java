@@ -1,10 +1,9 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
-import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 
-public class TerminalEmulatorUpdater implements TerminalStateListener {
+public class TerminalEmulatorUpdater {
 
   private final TerminalEmulator terminalEmulator;
   private final RteProtocolClient terminalClient;
@@ -14,8 +13,7 @@ public class TerminalEmulatorUpdater implements TerminalStateListener {
     this.terminalEmulator = terminalEmulator;
     this.terminalClient = terminalClient;
   }
-
-  @Override
+  
   public void onTerminalStateChange() {
     terminalEmulator.setScreen(terminalClient.getScreen());
     terminalClient.getCursorPosition().ifPresent(cursorPosition -> terminalEmulator
@@ -24,11 +22,6 @@ public class TerminalEmulatorUpdater implements TerminalStateListener {
     if (terminalClient.isAlarmOn()) {
       terminalEmulator.soundAlarm();
     }
-  }
-
-  @Override
-  public void onException(Throwable e) {
-    terminalEmulator.setStatusMessage(e.getMessage());
   }
 
 }

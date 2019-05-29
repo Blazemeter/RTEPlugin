@@ -8,6 +8,7 @@ import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulatorListener;
@@ -17,11 +18,10 @@ import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
-
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RTERecorder extends GenericController implements TerminalEmulatorListener,
-    RecordingStateListener {
+    RecordingStateListener, TerminalStateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
   private static final long DEFAULT_WAIT_CONDITION_TIMEOUT_THRESHOLD_MILLIS = 10000;
@@ -58,7 +58,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient WaitConditionsRecorder waitConditionsRecorder;
 
   public RTERecorder() {
-  
+
   }
 
   @Override
@@ -174,10 +174,22 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       sampleResult.connectEnd();
       initTerminalEmulator(terminalType);
       registerRequestListenerFor(sampleResult);
-    } catch (Exception e) {
-      terminalClient.disconnect();
-      throw e;
+    } catch (TimeoutException timeout) {
+      LOG.error("Connection Timeout", timeout);
+      throw buildExceptionResult(timeout);
+    } catch (InterruptedException interrupted) {
+      LOG.warn("Connection Interrupted ({})", interrupted);
+      throw buildExceptionResult(interrupted);
+    } catch (RteIOException e) {
+      LOG.warn("Connection closed or never reached by remote end ({})", e);
+      throw buildExceptionResult(e);
     }
+  }
+
+  private Exception buildExceptionResult(Exception e) {
+    RTESampler.updateErrorResult(e, sampleResult);
+    recordPendingSample();
+    return e;
   }
 
   private JMeterTreeNode findTargetControllerNode() {
@@ -309,7 +321,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator.setKeyboardLock(true);
     terminalEmulator.start(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
     terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
-    terminalClient.addTerminalStateListener(terminalEmulatorUpdater);
+    terminalClient.addTerminalStateListener(this);
     terminalEmulatorUpdater.onTerminalStateChange();
   }
 
@@ -331,11 +343,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     try {
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
-    } catch (RteIOException e) {
-      //TODO properly handle disconnection
+    } catch (RteIOException e) { 
       LOG.error("Problem sending input to server", e);
       RTESampler.updateErrorResult(e, sampleResult);
-      terminalEmulator.setStatusMessage(e.getMessage());
+      terminalEmulator.stop();
+      if (recordingListener != null) {
+        recordingListener.onRecordingStop();
+      }
     }
   }
 
@@ -382,7 +396,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       notifySampleOccurred();
       addTestElementToTestPlan(sampler, samplersTargetNode);
     }
-    terminalClient.removeTerminalStateListener(terminalEmulatorUpdater);
+    terminalClient.removeTerminalStateListener(this);
     notifyChildren(TestStateListener.class, TestStateListener::testEnded);
   }
 
@@ -394,4 +408,20 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     }
   }
 
+  @Override
+  public void onTerminalStateChange() {
+    terminalEmulatorUpdater.onTerminalStateChange();
+  }
+
+  @Override
+  public void onException(Throwable e) {
+    LOG.error("Connection has suffered a ", e);
+    RTESampler.updateErrorResult(e, sampleResult);
+    recordPendingSample();
+    JMeterUtils.reportErrorToUser("The connection to the server failed ");
+    terminalEmulator.stop();
+    if (recordingListener != null) {
+      recordingListener.onRecordingStop();
+    }
+  }
 }
