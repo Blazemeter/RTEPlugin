@@ -7,10 +7,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -27,7 +24,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderPanelIT {
-  
+
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
@@ -46,6 +43,11 @@ public class RTERecorderPanelIT {
   public void setup() {
     panel = new RTERecorderPanel(listener);
     frame = showInFrame(panel);
+  }
+
+  @After
+  public void tearDown() {
+    frame.cleanUp();
   }
 
   @Test
