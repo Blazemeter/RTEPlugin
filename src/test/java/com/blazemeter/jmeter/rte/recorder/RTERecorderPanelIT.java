@@ -46,13 +46,9 @@ public class RTERecorderPanelIT {
 
   @Before
   public void setup() {
-    prepareListener();
     panel = new RTERecorderPanel(listener);
     frame = showInFrame(panel);
   }
-
-  /* TODO: Prepare the mock listener*/
-  private void prepareListener(){ }
 
   @Test
   public void shouldNotifyStartRecordingListenerWhenStartRecording() throws Exception {
