@@ -27,9 +27,7 @@ import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderPanelIT {
-
-  //@Rule
-  //public VerificationCollector collector = MockitoJUnit.collector();
+  
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
