@@ -39,9 +39,6 @@ public class RTERecorderPanelIT {
   @Mock
   public RecordingStateListener listener;
 
-  @Mock
-  RTERecorder configurationElement;
-
   private FrameFixture frame;
   private RTERecorderPanel panel;
 
@@ -70,20 +67,8 @@ public class RTERecorderPanelIT {
 
   @Before
   public void setup() {
-    buildRTERecorderForConfiguration();
     panel = new RTERecorderPanel(listener);
-
     frame = showInFrame(panel);
-  }
-
-  private void buildRTERecorderForConfiguration(){
-    when(configurationElement.getPort()).thenReturn(Integer.parseInt(PORT));
-    when(configurationElement.getConnectionTimeout()).thenReturn(Long.parseLong(TIMEOUT));
-    when(configurationElement.getProtocol()).thenReturn(PROTOCOL);
-    when(configurationElement.getServer()).thenReturn(SERVER);
-    when(configurationElement.getSSLType()).thenReturn(SSL_TYPE);
-    when(configurationElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
-    when(configurationElement.getTimeoutThresholdMillis()).thenReturn(Long.parseLong(WAIT_TIMEOUT));
   }
 
   @After
@@ -200,21 +185,48 @@ public class RTERecorderPanelIT {
     waitButtonEnabled(RESTART_BUTTON_TEXT, false);
   }
 
-
-  /*
-  * TODO:
-  *  Roger comments
-  *   o sea, cuando llamas al setter los campos en la interfaz deberian
-  *   mostrar los valores que seteaste en los setters y lo mismo en
-  *   la inversa, si seteas campos por la interfaz, cuando usas
-  *   los getters deberias obtener los valores que seteaste
-  *   por la interfaz
-  * */
   @Test
-  public void shouldGetConfiguredPropertiesWhenFieldsAreSet(){}
+  public void shouldGetConfiguredPropertiesWhenFieldsAreSet(){
+    settingFields();
 
-  //@Test
+    softly.assertThat(panel.getPort()).as("portField").isEqualTo(PORT);
+    softly.assertThat(panel.getServer()).as("serverField").isEqualTo(SERVER);
+    softly.assertThat(panel.getConnectionTimeout()).as("connectionTimeout").isEqualTo(TIMEOUT);
+    softly.assertThat(panel.getWaitConditionsTimeoutThresholdMillis()).as("waitConditionsTimeoutThreshold").isEqualTo(WAIT_TIMEOUT);
+
+    softly.assertThat(panel.getProtocol().name()).as("protocolComboBox").isEqualTo(PROTOCOL_TEXT).toString();
+    softly.assertThat(panel.getTerminalType().toString()).as("terminalTypeComboBox").isEqualTo(TERMINAL_TYPE_TEXT);
+
+    softly.assertThat(panel.getSSLType().toString()).as("sslType_NONE").isEqualTo(SSL_TYPE.toString());
+  }
+
+  private void settingFields(){
+    /*Text Fields*/
+    JTextComponentFixture portField = frame.textBox("portField");
+    JTextComponentFixture serverField = frame.textBox(("serverField"));
+    JTextComponentFixture connectionTimeoutField = frame.textBox(("connectionTimeout"));
+    JTextComponentFixture waitConditionsTimeoutThresholdField = frame.textBox(("waitConditionsTimeoutThreshold"));
+
+    /*ComboBoxes*/
+    JComboBoxFixture protocolComboBox = frame.comboBox("protocolComboBox");
+    JComboBoxFixture terminalTypeComboBox = frame.comboBox("terminalTypeComboBox");
+
+    /*RadioButton*/
+    JRadioButtonFixture sslTypeRadioButton = frame.radioButton("NONE");
+
+    portField.enterText(PORT);
+    serverField.enterText(SERVER);
+    connectionTimeoutField.enterText(TIMEOUT);
+    waitConditionsTimeoutThresholdField.enterText(WAIT_TIMEOUT);
+    protocolComboBox.selectItem(PROTOCOL_TEXT);
+    terminalTypeComboBox.selectItem(TERMINAL_TYPE_TEXT);
+    sslTypeRadioButton.check();
+  }
+
+  @Test
   public void shouldGetConfiguredFieldsWhenPropertiesAreSet(){
+    configureProperties();
+
     /*Text Fields*/
     JTextComponentFixture portField = frame.textBox("portField");
     JTextComponentFixture serverField = frame.textBox(("serverField"));
@@ -237,5 +249,15 @@ public class RTERecorderPanelIT {
     softly.assertThat(terminalTypeComboBox.selectedItem()).as("terminalTypeComboBox").isEqualTo(TERMINAL_TYPE_TEXT);
 
     softly.assertThat(sslTypeRadioButton.isEnabled()).as("sslType_NONE").isEqualTo(true);
+  }
+
+  private void configureProperties(){
+    panel.setPort(PORT);
+    panel.setServer(SERVER);
+    panel.setConnectionTimeout(TIMEOUT);
+    panel.setWaitConditionsTimeoutThresholdMillis(WAIT_TIMEOUT);
+    panel.setProtocol(PROTOCOL);
+    panel.setTerminalType(TERMINAL_TYPE);
+    panel.setSSLType(SSL_TYPE);
   }
 }
