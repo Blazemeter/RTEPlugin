@@ -68,17 +68,12 @@ public class RTERecorderPanelIT {
     JMeterTestUtils.setupJmeterEnv();
   }
 
-  @Mock
-  private RTERecorderGui rteRecorderGui;
-
   @Before
   public void setup() {
     buildRTERecorderForConfiguration();
     panel = new RTERecorderPanel(listener);
-    rteRecorderGui = new RTERecorderGui(panel);
-    rteRecorderGui.configure(configurationElement);
 
-    frame = showInFrame(rteRecorderGui);
+    frame = showInFrame(panel);
   }
 
   private void buildRTERecorderForConfiguration(){
@@ -205,10 +200,20 @@ public class RTERecorderPanelIT {
     waitButtonEnabled(RESTART_BUTTON_TEXT, false);
   }
 
+
+  /*
+  * TODO:
+  *  Roger comments
+  *   o sea, cuando llamas al setter los campos en la interfaz deberian
+  *   mostrar los valores que seteaste en los setters y lo mismo en
+  *   la inversa, si seteas campos por la interfaz, cuando usas
+  *   los getters deberias obtener los valores que seteaste
+  *   por la interfaz
+  * */
   @Test
   public void shouldGetConfiguredPropertiesWhenFieldsAreSet(){}
 
-  @Test
+  //@Test
   public void shouldGetConfiguredFieldsWhenPropertiesAreSet(){
     /*Text Fields*/
     JTextComponentFixture portField = frame.textBox("portField");
