@@ -319,7 +319,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator = new Xtn5250TerminalEmulator();
     terminalEmulator.addTerminalEmulatorListener(this);
     terminalEmulator.setKeyboardLock(true);
-    terminalEmulator.start(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
+    terminalEmulator
+        .setScreenSize(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
+    terminalEmulator.start();
     terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
     terminalClient.addTerminalStateListener(this);
     terminalEmulatorUpdater.onTerminalStateChange();
@@ -368,7 +370,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private RteSampleResult buildSendInputSampleResult(AttentionKey attentionKey,
-                                                     List<Input> inputs) {
+      List<Input> inputs) {
     RteSampleResult ret = buildSampleResult(Action.SEND_INPUT);
     ret.setInputs(inputs);
     ret.setAttentionKey(attentionKey);
