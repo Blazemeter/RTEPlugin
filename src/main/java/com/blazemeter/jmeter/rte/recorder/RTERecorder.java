@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
@@ -176,17 +177,17 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       registerRequestListenerFor(sampleResult);
     } catch (TimeoutException timeout) {
       LOG.error("Connection Timeout", timeout);
-      throw buildExceptionResult(timeout);
+      throw buildSamplerResultWhenException(timeout);
     } catch (InterruptedException interrupted) {
       LOG.warn("Connection Interrupted ({})", interrupted);
-      throw buildExceptionResult(interrupted);
+      throw buildSamplerResultWhenException(interrupted);
     } catch (RteIOException e) {
       LOG.warn("Connection closed or never reached by remote end ({})", e);
-      throw buildExceptionResult(e);
+      throw buildSamplerResultWhenException(e);
     }
   }
 
-  private Exception buildExceptionResult(Exception e) {
+  private Exception buildSamplerResultWhenException(Exception e) {
     RTESampler.updateErrorResult(e, sampleResult);
     recordPendingSample();
     return e;
@@ -345,7 +346,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     try {
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
-    } catch (RteIOException e) { 
+    } catch (RteIOException e) {
       LOG.error("Problem sending input to server", e);
       RTESampler.updateErrorResult(e, sampleResult);
       terminalEmulator.stop();
@@ -370,7 +371,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private RteSampleResult buildSendInputSampleResult(AttentionKey attentionKey,
-      List<Input> inputs) {
+                                                     List<Input> inputs) {
     RteSampleResult ret = buildSampleResult(Action.SEND_INPUT);
     ret.setInputs(inputs);
     ret.setAttentionKey(attentionKey);
@@ -417,10 +418,20 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onException(Throwable e) {
-    LOG.error("Connection has suffered a ", e);
+    if (e instanceof ConnectionClosedException) {
+      LOG.error("Connection closed by remote end ", e);
+      buildExceptionResult(e);
+      JMeterUtils.reportErrorToUser("The connection to the server failed ");
+    } else {
+      LOG.error("Connection has suffered a ", e);
+      buildExceptionResult(e);
+      JMeterUtils.reportErrorToUser("Unexpected connection error");
+    }
+  }
+
+  private void buildExceptionResult(Throwable e) {
     RTESampler.updateErrorResult(e, sampleResult);
     recordPendingSample();
-    JMeterUtils.reportErrorToUser("The connection to the server failed ");
     terminalEmulator.stop();
     if (recordingListener != null) {
       recordingListener.onRecordingStop();
