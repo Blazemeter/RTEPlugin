@@ -53,7 +53,6 @@ public class RTERecorderGuiTest {
   public void setup() {
     prepareTestElement();
     preparePanel();
-    
     rteRecorderGui = new RTERecorderGui();
   }
 
