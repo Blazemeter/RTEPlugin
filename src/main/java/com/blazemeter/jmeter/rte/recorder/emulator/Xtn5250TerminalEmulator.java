@@ -75,8 +75,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final String TITLE = "Recorder";
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
-  private static final int DEFAULT_COLUMNS = 132;
-  private static final int DEFAULT_ROWS = 43;
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
@@ -97,7 +95,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
       @Override
       public void windowOpened(WindowEvent e) {
-        setScreenSize(DEFAULT_COLUMNS, DEFAULT_ROWS);
+        Dimension testSize = calculateCrtDefaultSize();
+        xi5250Crt.setSize(testSize.width, testSize.height);
+        pack();
         xi5250Crt.requestFocus();
       }
 
@@ -169,9 +169,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   @Override
   public void setScreenSize(int columns, int rows) {
     xi5250Crt.setCrtSize(columns, rows);
-    Dimension testSize = calculateCrtDefaultSize();
-    xi5250Crt.setSize(testSize.width, testSize.height);
-    pack();
   }
 
   private Dimension calculateCrtDefaultSize() {
