@@ -51,9 +51,10 @@ public class RTERecorderGuiTest {
 
   @Before
   public void setup() {
-    rteRecorderGui = new RTERecorderGui();
     prepareTestElement();
     preparePanel();
+    
+    rteRecorderGui = new RTERecorderGui();
   }
 
   private void prepareTestElement(){
@@ -102,11 +103,10 @@ public class RTERecorderGuiTest {
 
   @Test
   public void shouldConfigurePanelWithGivenTestElementWhenConfigure() {
-    RTERecorder configurationElement = buildRTERecorderForConfiguration();
     RTERecorderPanel configuredPanel = new RTERecorderPanel(listener);
     rteRecorderGui = new RTERecorderGui(configuredPanel);
 
-    rteRecorderGui.configure(configurationElement);
+    rteRecorderGui.configure(testElement);
 
     softly.assertThat(configuredPanel.getServer()).as("server").isEqualTo(SERVER);
     softly.assertThat(configuredPanel.getPort()).as("port").isEqualTo(Integer.toString(PORT));
@@ -114,18 +114,6 @@ public class RTERecorderGuiTest {
     softly.assertThat(configuredPanel.getTerminalType()).as("terminalType").isEqualTo(TERMINAL_TYPE);
     softly.assertThat(configuredPanel.getSSLType()).as("sslType").isEqualTo(SSL_TYPE);
     softly.assertThat(configuredPanel.getConnectionTimeout()).as("timeout").isEqualTo(Long.toString(TIMEOUT));
-  }
-
-  private RTERecorder buildRTERecorderForConfiguration() {
-    RTERecorder configurationElement = new RTERecorder();
-    configurationElement.setServer(SERVER);
-    configurationElement.setPort(String.valueOf(PORT));
-    configurationElement.setProtocol(PROTOCOL);
-    configurationElement.setTerminalType(TERMINAL_TYPE);
-    configurationElement.setSSLType(SSL_TYPE);
-    configurationElement.setConnectionTimeout(Long.toString(TIMEOUT));
-
-    return configurationElement;
   }
 
   @Test
