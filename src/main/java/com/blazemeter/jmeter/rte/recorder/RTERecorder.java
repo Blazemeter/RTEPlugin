@@ -336,17 +336,32 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     try {
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
+    } catch (UnsupportedOperationException e) {
+      String errorMsg =
+          attentionKey.name() + " Attention key not supported by Protocol " + getProtocol().name(); 
+      LOG.error(errorMsg, e);
+      RTESampler.updateErrorResult(e, sampleResult);
+      JMeterUtils.reportErrorToUser(errorMsg);
     } catch (RteIOException e) {
       LOG.error("Problem sending input to server", e);
-      RTESampler.updateErrorResult(e, sampleResult);
       JMeterUtils.reportErrorToUser("Problem sending input to server");
-      terminalEmulator.stop();
-      if (recordingListener != null) {
-        recordingListener.onRecordingStop();
-      }
+      exceptionalCase(e);
+    } catch (Exception e) {
+      LOG.error("Unexpected error while sending input to server", e);
+      JMeterUtils.reportErrorToUser("Unexpected error while sending input to server");
+      exceptionalCase(e);
     }
   }
-
+  
+  private void exceptionalCase(Throwable e) {
+    RTESampler.updateErrorResult(e, sampleResult);
+    recordPendingSample();
+    terminalEmulator.stop();
+    if (recordingListener != null) {
+      recordingListener.onRecordingStop();
+    }
+  }
+  
   private void recordPendingSample() {
     if (sampleResult.getResponseCode().isEmpty()) {
       RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
@@ -415,14 +430,5 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     LOG.error(errorMessage, e);
     JMeterUtils.reportErrorToUser(errorMessage);
     exceptionalCase(e);
-  }
-
-  private void exceptionalCase(Throwable e) {
-    RTESampler.updateErrorResult(e, sampleResult);
-    recordPendingSample();
-    terminalEmulator.stop();
-    if (recordingListener != null) {
-      recordingListener.onRecordingStop();
-    }
   }
 }
