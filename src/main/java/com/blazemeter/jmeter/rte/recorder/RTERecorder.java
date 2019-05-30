@@ -175,22 +175,12 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       sampleResult.connectEnd();
       initTerminalEmulator(terminalType);
       registerRequestListenerFor(sampleResult);
-    } catch (TimeoutException timeout) {
-      LOG.error("Connection Timeout", timeout);
-      throw buildSamplerResultWhenException(timeout);
-    } catch (InterruptedException interrupted) {
-      LOG.warn("Connection Interrupted ({})", interrupted);
-      throw buildSamplerResultWhenException(interrupted);
-    } catch (RteIOException e) {
-      LOG.warn("Connection closed or never reached by remote end ({})", e);
-      throw buildSamplerResultWhenException(e);
+    } catch (TimeoutException | InterruptedException | RteIOException e) {
+      LOG.error("Problem while connecting to {}", getServer(), e);
+      RTESampler.updateErrorResult(e, sampleResult);
+      recordPendingSample();
+      throw e;
     }
-  }
-
-  private Exception buildSamplerResultWhenException(Exception e) {
-    RTESampler.updateErrorResult(e, sampleResult);
-    recordPendingSample();
-    return e;
   }
 
   private JMeterTreeNode findTargetControllerNode() {
@@ -349,6 +339,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     } catch (RteIOException e) {
       LOG.error("Problem sending input to server", e);
       RTESampler.updateErrorResult(e, sampleResult);
+      JMeterUtils.reportErrorToUser("Problem sending input to server");
       terminalEmulator.stop();
       if (recordingListener != null) {
         recordingListener.onRecordingStop();
@@ -418,18 +409,15 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onException(Throwable e) {
-    if (e instanceof ConnectionClosedException) {
-      LOG.error("Connection closed by remote end ", e);
-      buildExceptionResult(e);
-      JMeterUtils.reportErrorToUser("The connection to the server failed ");
-    } else {
-      LOG.error("Connection has suffered a ", e);
-      buildExceptionResult(e);
-      JMeterUtils.reportErrorToUser("Unexpected connection error");
-    }
+    String errorMessage = 
+        (e instanceof ConnectionClosedException) ? "Connection to the server has been closed" 
+            : "Communication error with the server";
+    LOG.error(errorMessage, e);
+    JMeterUtils.reportErrorToUser(errorMessage);
+    exceptionalCase(e);
   }
 
-  private void buildExceptionResult(Throwable e) {
+  private void exceptionalCase(Throwable e) {
     RTESampler.updateErrorResult(e, sampleResult);
     recordPendingSample();
     terminalEmulator.stop();
