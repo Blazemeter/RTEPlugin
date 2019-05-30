@@ -141,7 +141,11 @@ public class StatusPanel extends JPanel {
   public void dispose() {
     alarmLabel.shutdown();
   }
-
+  
+  public void closeHelpFrame() {
+    helpFrame.dispose();
+  }
+  
   private static class HelpFrame extends JFrame {
 
     private static final String HELP_FRAME_TITLE = "Help";
@@ -193,7 +197,6 @@ public class StatusPanel extends JPanel {
         }
       };
     }
-
   }
 
 }
