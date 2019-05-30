@@ -143,9 +143,7 @@ public class StatusPanel extends JPanel {
   }
   
   public void closeHelpFrame() {
-    if (helpFrame != null) {
-      helpFrame.dispose();
-    }
+    helpFrame.dispose();
   }
   
   private static class HelpFrame extends JFrame {
