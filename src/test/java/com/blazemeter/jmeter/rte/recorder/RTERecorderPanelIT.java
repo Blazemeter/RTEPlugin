@@ -1,33 +1,31 @@
 package com.blazemeter.jmeter.rte.recorder;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
+
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
-import org.apache.jmeter.testelement.TestElement;
+
 import org.assertj.core.api.JUnitSoftAssertions;
-import org.assertj.swing.core.BasicComponentFinder;
-import org.assertj.swing.core.ComponentFinder;
-import org.assertj.swing.fixture.FrameFixture;
-import org.assertj.swing.fixture.JButtonFixture;
+import org.assertj.swing.fixture.*;
+import org.assertj.swing.timing.Condition;
 import org.junit.Rule;
-import org.junit.Test;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
+
 import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.VerificationCollector;
 
-import javax.swing.*;
 import java.awt.*;
 
 import static org.assertj.swing.fixture.Containers.showInFrame;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.assertj.swing.timing.Pause.pause;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderPanelIT {
@@ -40,6 +38,9 @@ public class RTERecorderPanelIT {
 
   @Mock
   public RecordingStateListener listener;
+
+  @Mock
+  RTERecorder configurationElement;
 
   private FrameFixture frame;
   private RTERecorderPanel panel;
@@ -60,17 +61,19 @@ public class RTERecorderPanelIT {
   private final String STOP_BUTTON_TEXT = "stop";
   private final String RESTART_BUTTON_TEXT = "restart";
 
+  private final long VERIFY_TIMEOUT = 100l;
+
   @BeforeClass
   public static void setupClass() {
     JMeterTestUtils.setupJmeterEnv();
   }
 
+  @Mock
   private RTERecorderGui rteRecorderGui;
 
   @Before
   public void setup() {
-
-    RTERecorder configurationElement = buildRTERecorderForConfiguration();
+    buildRTERecorderForConfiguration();
     panel = new RTERecorderPanel(listener);
     rteRecorderGui = new RTERecorderGui(panel);
     rteRecorderGui.configure(configurationElement);
@@ -78,17 +81,14 @@ public class RTERecorderPanelIT {
     frame = showInFrame(rteRecorderGui);
   }
 
-  private RTERecorder buildRTERecorderForConfiguration(){
-    RTERecorder configurationElement = new RTERecorder();
-    configurationElement.setPort(PORT);
-    configurationElement.setConnectionTimeout(TIMEOUT);
-    configurationElement.setProtocol(PROTOCOL);
-    configurationElement.setServer(SERVER);
-    configurationElement.setSSLType(SSL_TYPE);
-    configurationElement.setTerminalType(TERMINAL_TYPE);
-    configurationElement.setTimeoutThresholdMillis(WAIT_TIMEOUT);
-
-    return configurationElement;
+  private void buildRTERecorderForConfiguration(){
+    when(configurationElement.getPort()).thenReturn(Integer.parseInt(PORT));
+    when(configurationElement.getConnectionTimeout()).thenReturn(Long.parseLong(TIMEOUT));
+    when(configurationElement.getProtocol()).thenReturn(PROTOCOL);
+    when(configurationElement.getServer()).thenReturn(SERVER);
+    when(configurationElement.getSSLType()).thenReturn(SSL_TYPE);
+    when(configurationElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
+    when(configurationElement.getTimeoutThresholdMillis()).thenReturn(Long.parseLong(WAIT_TIMEOUT));
   }
 
   @After
@@ -101,7 +101,7 @@ public class RTERecorderPanelIT {
     JButtonFixture start = frame.button(START_BUTTON_TEXT);
     start.click();
 
-    verify(listener).onRecordingStart();
+    verify(listener, timeout(VERIFY_TIMEOUT)).onRecordingStart();
   }
 
   @Test
@@ -112,7 +112,7 @@ public class RTERecorderPanelIT {
     start.click();
     stop.click();
 
-    verify(listener).onRecordingStop();
+    verify(listener, timeout(VERIFY_TIMEOUT)).onRecordingStop();
   }
 
   @Test
@@ -123,8 +123,8 @@ public class RTERecorderPanelIT {
     JButtonFixture restart = frame.button(RESTART_BUTTON_TEXT);
     restart.click();
 
-    verify(listener).onRecordingStop();
-    verify(listener, times(2)).onRecordingStart();
+    verify(listener, timeout(VERIFY_TIMEOUT)).onRecordingStop();
+    verify(listener, timeout(VERIFY_TIMEOUT).times(2)).onRecordingStart();
   }
 
   @Test
@@ -132,7 +132,16 @@ public class RTERecorderPanelIT {
     JButtonFixture start = frame.button(START_BUTTON_TEXT);
     start.click();
 
-    assertEquals(false, start.isEnabled());
+    waitButtonEnabled(START_BUTTON_TEXT, false);
+  }
+
+  private void waitButtonEnabled(String buttonName, boolean enable) {
+    pause(new Condition("button " + buttonName + " to be " + (enable ? "enabled" : "disabled")) {
+      @Override
+      public boolean test() {
+        return frame.button(buttonName).isEnabled() == enable;
+      }
+    });
   }
 
   @Test
@@ -140,9 +149,7 @@ public class RTERecorderPanelIT {
     JButtonFixture start = frame.button(START_BUTTON_TEXT);
     start.click();
 
-    JButtonFixture stop = frame.button(STOP_BUTTON_TEXT);
-
-    assertEquals(true, stop.isEnabled());
+    waitButtonEnabled(STOP_BUTTON_TEXT, true);
   }
 
   @Test
@@ -150,28 +157,22 @@ public class RTERecorderPanelIT {
     JButtonFixture start = frame.button(START_BUTTON_TEXT);
     start.click();
 
-    JButtonFixture restart = frame.button(RESTART_BUTTON_TEXT);
-
-    assertEquals(true, restart.isEnabled());
+    waitButtonEnabled(RESTART_BUTTON_TEXT, true);
   }
 
   @Test
   public void shouldHaveEnabledStartButtonWhenInitPanel(){
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-
-    assertEquals(true, start.isEnabled());
+    waitButtonEnabled(START_BUTTON_TEXT, true);
   }
 
   @Test
   public void shouldHaveDisabledStopButtonWhenInitPanel(){
-    JButtonFixture stop = frame.button(STOP_BUTTON_TEXT);
-    assertEquals(false, stop.isEnabled());
+    waitButtonEnabled(STOP_BUTTON_TEXT, false);
   }
 
   @Test
   public void shouldHaveDisabledRestartButtonWhenInitPanel(){
-    JButtonFixture restart = frame.button(RESTART_BUTTON_TEXT);
-    assertEquals(false, restart.isEnabled());
+    waitButtonEnabled(RESTART_BUTTON_TEXT, false);
   }
 
   @Test
@@ -181,7 +182,7 @@ public class RTERecorderPanelIT {
     start.click();
     stop.click();
 
-    assertEquals(true, start.isEnabled());
+    waitButtonEnabled(START_BUTTON_TEXT, true);
   }
 
   @Test
@@ -191,7 +192,7 @@ public class RTERecorderPanelIT {
     start.click();
     stop.click();
 
-    assertEquals(false, stop.isEnabled());
+    waitButtonEnabled(STOP_BUTTON_TEXT, false);
   }
 
   @Test
@@ -201,45 +202,34 @@ public class RTERecorderPanelIT {
     start.click();
     stop.click();
 
-    JButtonFixture restart = frame.button(RESTART_BUTTON_TEXT);
-
-    assertEquals(false, restart.isEnabled());
+    waitButtonEnabled(RESTART_BUTTON_TEXT, false);
   }
 
   @Test
-  public void shouldGetConfiguredPropertiesWhenFieldsAreSet(){
-
-  }
+  public void shouldGetConfiguredPropertiesWhenFieldsAreSet(){}
 
   @Test
   public void shouldGetConfiguredFieldsWhenPropertiesAreSet(){
-    ComponentFinder finder = BasicComponentFinder.finderWithCurrentAwtHierarchy();
-
-    /**
-     * The true at the end of finder.findByName("name") was necessary since,
-     * when running the whole set of tests, founded multiple instances
-     * of the same element with all but one of then with visibility = true.
-     * */
     /*Text Fields*/
-    JTextField portField = ( JTextField ) finder.findByName("portField", true);
-    JTextField serverField = ( JTextField ) finder.findByName("serverField", true);
-    JTextField connectionTimeoutField = ( JTextField ) finder.findByName("connectionTimeout", true);
-    JTextField waitConditionsTimeoutThresholdField = ( JTextField ) finder.findByName("waitConditionsTimeoutThreshold", true);
+    JTextComponentFixture portField = frame.textBox("portField");
+    JTextComponentFixture serverField = frame.textBox(("serverField"));
+    JTextComponentFixture connectionTimeoutField = frame.textBox(("connectionTimeout"));
+    JTextComponentFixture waitConditionsTimeoutThresholdField = frame.textBox(("waitConditionsTimeoutThreshold"));
 
     /*ComboBoxes*/
-    JComboBox protocolComboBox = (JComboBox) finder.findByName("protocolComboBox", true);
-    JComboBox terminalTypeComboBox = (JComboBox) finder.findByName("terminalTypeComboBox", true);
+    JComboBoxFixture protocolComboBox = frame.comboBox("protocolComboBox");
+    JComboBoxFixture terminalTypeComboBox = frame.comboBox("terminalTypeComboBox");
 
     /*RadioButton*/
-    JRadioButton sslTypeRadioButton = (JRadioButton) finder.findByName("NONE", true);
+    JRadioButtonFixture sslTypeRadioButton = frame.radioButton("NONE");
 
-    softly.assertThat(portField.getText()).as("portField").isEqualTo(PORT);
-    softly.assertThat(serverField.getText()).as("serverField").isEqualTo(SERVER);
-    softly.assertThat(connectionTimeoutField.getText()).as("connectionTimeout").isEqualTo(TIMEOUT);
-    softly.assertThat(waitConditionsTimeoutThresholdField.getText()).as("waitConditionsTimeoutThreshold").isEqualTo(WAIT_TIMEOUT);
+    softly.assertThat(portField.text()).as("portField").isEqualTo(PORT);
+    softly.assertThat(serverField.text()).as("serverField").isEqualTo(SERVER);
+    softly.assertThat(connectionTimeoutField.text()).as("connectionTimeout").isEqualTo(TIMEOUT);
+    softly.assertThat(waitConditionsTimeoutThresholdField.text()).as("waitConditionsTimeoutThreshold").isEqualTo(WAIT_TIMEOUT);
 
-    softly.assertThat(protocolComboBox.getSelectedItem().toString()).as("protocolComboBox").isEqualTo(PROTOCOL_TEXT);
-    softly.assertThat(terminalTypeComboBox.getSelectedItem().toString()).as("terminalTypeComboBox").isEqualTo(TERMINAL_TYPE_TEXT);
+    softly.assertThat(protocolComboBox.selectedItem()).as("protocolComboBox").isEqualTo(PROTOCOL_TEXT);
+    softly.assertThat(terminalTypeComboBox.selectedItem()).as("terminalTypeComboBox").isEqualTo(TERMINAL_TYPE_TEXT);
 
     softly.assertThat(sslTypeRadioButton.isEnabled()).as("sslType_NONE").isEqualTo(true);
   }
