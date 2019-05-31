@@ -340,7 +340,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       String errorMsg =
           attentionKey.name() + " Attention key not supported by Protocol " + getProtocol().name(); 
       LOG.error(errorMsg, e);
-      RTESampler.updateErrorResult(e, sampleResult);
       JMeterUtils.reportErrorToUser(errorMsg);
     } catch (Exception e) {
       onException(e);
