@@ -23,7 +23,7 @@ import org.mockito.junit.VerificationCollector;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class RTERecorderGuiTest {
+  public class RTERecorderGuiTest {
 
   @Rule
   public VerificationCollector collector = MockitoJUnit.collector();
