@@ -19,6 +19,8 @@ import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
@@ -42,6 +44,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private static final Logger LOG = LoggerFactory.getLogger(RTERecorder.class);
 
   private transient TerminalEmulator terminalEmulator;
+  private transient Supplier<TerminalEmulator> terminalEmulatorSupplier;
   private transient JMeterTreeNode samplersTargetNode;
   private transient RecordingStateListener recordingListener;
   private transient RteProtocolClient terminalClient;
@@ -52,6 +55,11 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient int sampleCount;
 
   public RTERecorder() {
+    terminalEmulatorSupplier = Xtn5250TerminalEmulator::new;
+  }
+
+  public RTERecorder(Supplier<TerminalEmulator> supplier) {
+    terminalEmulatorSupplier = supplier;
   }
 
   @Override
@@ -133,7 +141,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   public void onRecordingStart() throws Exception {
     sampleCount = 0;
-    terminalEmulator = new Xtn5250TerminalEmulator();
+    //terminalEmulator = new Xtn5250TerminalEmulator();
+    terminalEmulator = terminalEmulatorSupplier.get();
+
     terminalEmulator.addTerminalEmulatorListener(this);
     samplersTargetNode = findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
