@@ -46,14 +46,16 @@ public class RTERecorderGuiTest {
   @Mock
   private RTERecorderPanel panel;
 
-  @Mock
-  private RecordingStateListener listener;
+  @BeforeClass
+  public static void setupClass() {
+    TestJMeterUtils.createJmeterEnv();
+  }
 
   @Before
   public void setup() {
     prepareTestElement();
     preparePanel();
-    rteRecorderGui = new RTERecorderGui();
+    rteRecorderGui = new RTERecorderGui(panel);
   }
 
   private void prepareTestElement(){
@@ -74,11 +76,6 @@ public class RTERecorderGuiTest {
     when(panel.getConnectionTimeout()).thenReturn(Long.toString(TIMEOUT));
   }
 
-  @BeforeClass
-  public static void setupClass() {
-    TestJMeterUtils.createJmeterEnv();
-  }
-
   @Test
   public void shouldNotifyRecorderOnRecordingStartWhenOnRecordingStart() throws Exception {
     rteRecorderGui.configure(testElement);
@@ -90,8 +87,6 @@ public class RTERecorderGuiTest {
 
   @Test
   public void shouldNotifyRecorderWhenOnRecordingStop() throws Exception {
-    prepareTestElement();
-
     rteRecorderGui.configure(testElement);
     rteRecorderGui.modifyTestElement(testElement);
     rteRecorderGui.onRecordingStart();
@@ -102,23 +97,18 @@ public class RTERecorderGuiTest {
 
   @Test
   public void shouldConfigurePanelWithGivenTestElementWhenConfigure() {
-    RTERecorderPanel configuredPanel = new RTERecorderPanel(listener);
-    rteRecorderGui = new RTERecorderGui(configuredPanel);
-
     rteRecorderGui.configure(testElement);
 
-    softly.assertThat(configuredPanel.getServer()).as("server").isEqualTo(SERVER);
-    softly.assertThat(configuredPanel.getPort()).as("port").isEqualTo(Integer.toString(PORT));
-    softly.assertThat(configuredPanel.getProtocol()).as("protocol").isEqualTo(PROTOCOL);
-    softly.assertThat(configuredPanel.getTerminalType()).as("terminalType").isEqualTo(TERMINAL_TYPE);
-    softly.assertThat(configuredPanel.getSSLType()).as("sslType").isEqualTo(SSL_TYPE);
-    softly.assertThat(configuredPanel.getConnectionTimeout()).as("timeout").isEqualTo(Long.toString(TIMEOUT));
+    softly.assertThat(panel.getServer()).as("server").isEqualTo(SERVER);
+    softly.assertThat(panel.getPort()).as("port").isEqualTo(Integer.toString(PORT));
+    softly.assertThat(panel.getProtocol()).as("protocol").isEqualTo(PROTOCOL);
+    softly.assertThat(panel.getTerminalType()).as("terminalType").isEqualTo(TERMINAL_TYPE);
+    softly.assertThat(panel.getSSLType()).as("sslType").isEqualTo(SSL_TYPE);
+    softly.assertThat(panel.getConnectionTimeout()).as("timeout").isEqualTo(Long.toString(TIMEOUT));
   }
 
   @Test
   public void shouldSetTestElementFromTheRecordingPanelWhenModifyTestElement() {
-    rteRecorderGui = new RTERecorderGui(panel);
-
     RTERecorder modified = new RTERecorder();
     rteRecorderGui.modifyTestElement(modified);
 
