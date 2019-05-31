@@ -342,23 +342,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       LOG.error(errorMsg, e);
       RTESampler.updateErrorResult(e, sampleResult);
       JMeterUtils.reportErrorToUser(errorMsg);
-    } catch (RteIOException e) {
-      LOG.error("Problem sending input to server", e);
-      JMeterUtils.reportErrorToUser("Problem sending input to server");
-      exceptionalCase(e);
     } catch (Exception e) {
-      LOG.error("Unexpected error while sending input to server", e);
-      JMeterUtils.reportErrorToUser("Unexpected error while sending input to server");
-      exceptionalCase(e);
-    }
-  }
-  
-  private void exceptionalCase(Throwable e) {
-    RTESampler.updateErrorResult(e, sampleResult);
-    recordPendingSample();
-    terminalEmulator.stop();
-    if (recordingListener != null) {
-      recordingListener.onRecordingStop();
+      onException(e);
     }
   }
   
@@ -429,6 +414,11 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
             : "Communication error with the server";
     LOG.error(errorMessage, e);
     JMeterUtils.reportErrorToUser(errorMessage);
-    exceptionalCase(e);
+    RTESampler.updateErrorResult(e, sampleResult);
+    recordPendingSample();
+    terminalEmulator.stop();
+    if (recordingListener != null) {
+      recordingListener.onRecordingStop();
+    }
   }
 }
