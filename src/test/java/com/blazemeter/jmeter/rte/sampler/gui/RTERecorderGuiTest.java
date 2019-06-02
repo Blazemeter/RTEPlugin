@@ -99,12 +99,12 @@ import static org.mockito.Mockito.*;
   public void shouldConfigurePanelWithGivenTestElementWhenConfigure() {
     rteRecorderGui.configure(testElement);
 
-    softly.assertThat(panel.getServer()).as("server").isEqualTo(SERVER);
-    softly.assertThat(panel.getPort()).as("port").isEqualTo(Integer.toString(PORT));
-    softly.assertThat(panel.getProtocol()).as("protocol").isEqualTo(PROTOCOL);
-    softly.assertThat(panel.getTerminalType()).as("terminalType").isEqualTo(TERMINAL_TYPE);
-    softly.assertThat(panel.getSSLType()).as("sslType").isEqualTo(SSL_TYPE);
-    softly.assertThat(panel.getConnectionTimeout()).as("timeout").isEqualTo(Long.toString(TIMEOUT));
+    verify(testElement).getServer();
+    verify(testElement).getPort();
+    verify(testElement).getProtocol();
+    verify(testElement).getTerminalType();
+    verify(testElement).getSSLType();
+    verify(testElement).getConnectionTimeout();
   }
 
   @Test
@@ -112,12 +112,12 @@ import static org.mockito.Mockito.*;
     RTERecorder modified = new RTERecorder();
     rteRecorderGui.modifyTestElement(modified);
 
-    softly.assertThat(modified.getServer()).as("server").isEqualTo(SERVER);
-    softly.assertThat(modified.getPort()).as("port").isEqualTo(PORT);
-    softly.assertThat(modified.getProtocol()).as("protocol").isEqualTo(PROTOCOL);
-    softly.assertThat(modified.getTerminalType()).as("terminalType").isEqualTo(TERMINAL_TYPE);
-    softly.assertThat(modified.getSSLType()).as("sslType").isEqualTo(SSL_TYPE);
-    softly.assertThat(modified.getConnectionTimeout()).as("timeout").isEqualTo(TIMEOUT);
+    verify(panel).getServer();
+    verify(panel).getPort();
+    verify(panel).getProtocol();
+    verify(panel).getTerminalType();
+    verify(panel).getSSLType();
+    verify(panel).getConnectionTimeout();
   }
 
 }
