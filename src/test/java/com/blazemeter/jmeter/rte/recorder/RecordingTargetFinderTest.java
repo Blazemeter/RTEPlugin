@@ -1,7 +1,6 @@
 //Backup RecordingTargetFinderTest
 package com.blazemeter.jmeter.rte.recorder;
 
-import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -85,7 +84,7 @@ public class RecordingTargetFinderTest {
 
   @BeforeClass
   public static void setupClass() {
-    JMeterTestUtils.setupJmeterEnv();
+    //JMeterTestUtils.setupJmeterEnv();
   }
 
   @Before
