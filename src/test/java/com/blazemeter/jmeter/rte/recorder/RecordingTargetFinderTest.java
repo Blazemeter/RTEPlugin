@@ -95,10 +95,8 @@ public class RecordingTargetFinderTest {
 
   @Test
   public void shouldGetFirstThreadGroupWhenFindTargetControllerNodeWithThreadGroups() {
-    RecordingTargetFinder recordingTargetFinder = new RecordingTargetFinder(jMeterTreeNode);
-    JMeterTreeNode targetControllerNode1 = recordingTargetFinder.findTargetControllerNode();
-
-
+    //RecordingTargetFinder recordingTargetFinder = new RecordingTargetFinder(jMeterTreeNode);
+    //JMeterTreeNode targetControllerNode1 = recordingTargetFinder.findTargetControllerNode();
   }
 
   @Test
