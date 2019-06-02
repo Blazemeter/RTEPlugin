@@ -27,13 +27,11 @@ import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
-import org.apache.jmeter.protocol.http.control.RecordingController;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
-import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +43,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private transient TerminalEmulator terminalEmulator;
   private transient Supplier<TerminalEmulator> terminalEmulatorSupplier;
+  private transient RecordingTargetFinder finder;
   private transient JMeterTreeNode samplersTargetNode;
   private transient RecordingStateListener recordingListener;
   private transient RteProtocolClient terminalClient;
@@ -53,13 +52,15 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient RequestListener requestListener;
   private transient TerminalEmulatorUpdater terminalEmulatorUpdater;
   private transient int sampleCount;
-
+  
   public RTERecorder() {
-    terminalEmulatorSupplier = Xtn5250TerminalEmulator::new;
+    this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()));
+    
   }
 
-  public RTERecorder(Supplier<TerminalEmulator> supplier) {
+  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder) {
     terminalEmulatorSupplier = supplier;
+    this.finder = finder;
   }
 
   @Override
@@ -141,11 +142,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   public void onRecordingStart() throws Exception {
     sampleCount = 0;
-    //terminalEmulator = new Xtn5250TerminalEmulator();
     terminalEmulator = terminalEmulatorSupplier.get();
 
     terminalEmulator.addTerminalEmulatorListener(this);
-    samplersTargetNode = findTargetControllerNode();
+    samplersTargetNode = finder.findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
     // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
     // them to terminalEmulator
@@ -169,41 +169,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     }
   }
 
-  private JMeterTreeNode findTargetControllerNode() {
-    JMeterTreeNode targetNode = findFirstNodeOfType(RecordingController.class);
-    if (targetNode == null) {
-      targetNode = findFirstNodeOfType(AbstractThreadGroup.class);
-    }
-    if (targetNode != null) {
-      int i = targetNode.getChildCount() - 1;
-      JMeterTreeNode c = null;
-      while (i >= 0 && targetNode != c) {
-        c = (JMeterTreeNode) targetNode.getChildAt(i);
-        if (c.getTestElement() instanceof GenericController) {
-          targetNode = c;
-        }
-        i--;
-      }
-    }
-    if (targetNode == null) {
-      throw new IllegalStateException(
-          "No ThreadGroup or RecordingController was found where to add recorded samplers");
-    }
-    return targetNode;
-  }
-
-  private JMeterTreeNode findFirstNodeOfType(Class<?> type) {
-    JMeterTreeModel treeModel = getJmeterTreeModel();
-    List<JMeterTreeNode> nodes = treeModel.getNodesOfType(type);
-    for (JMeterTreeNode node : nodes) {
-      if (node.isEnabled()) {
-        return node;
-      }
-    }
-    return null;
-  }
-
-  private JMeterTreeModel getJmeterTreeModel() {
+  private static JMeterTreeModel getJmeterTreeModel() {
     return GuiPackage.getInstance().getTreeModel();
   }
 
