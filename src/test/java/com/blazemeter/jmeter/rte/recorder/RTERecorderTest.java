@@ -6,6 +6,7 @@ import org.apache.jmeter.gui.GuiPackage;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -52,6 +53,11 @@ public class RTERecorderTest {
   JMeterTreeNode targetControllerNode;
 
   private RTERecorder rteRecorder;
+
+  @BeforeClass
+  public static void setupClass() {
+    JMeterTestUtils.setupJmeterEnv();
+  }
 
   @Before
   public void setup(){
