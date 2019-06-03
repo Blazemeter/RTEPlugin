@@ -166,17 +166,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   public void onRecordingStart() throws Exception {
-    System.out.println("1");
     sampleCount = 0;
-    System.out.println("2");
     terminalEmulator = terminalEmulatorSupplier.get();
-    System.out.println("3");
+
     terminalEmulator.addTerminalEmulatorListener(this);
-    System.out.println("4");
     samplersTargetNode = finder.findTargetControllerNode();
-    System.out.println("5");
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
-    System.out.println("6");
+    System.out.println("Llega hasta aqui");
     // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
     // them to terminalEmulator
 

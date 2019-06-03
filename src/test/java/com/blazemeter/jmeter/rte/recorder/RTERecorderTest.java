@@ -1,6 +1,8 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
+import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulator;
 import org.apache.jmeter.gui.GuiPackage;
@@ -10,9 +12,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
@@ -21,8 +28,8 @@ public class RTERecorderTest {
    * TODO:
    * Comments
    * RTERecorder
-   * [ ] Create a constructor of RTERecorder that receives a Supplier<TerminalEmulator> and
-   * is initialized by default to Xtn5250TerminalEmulator::new
+   * [ ] Create a constructor of RTERecorder (Supplier<TerminalEmulator> supplier) and
+   * is initialized by default to     Xtn5250TerminalEmulator::new
    * [ ] Use it instead of the new of Xtn5250TerminalEmulator.
    *
    * This will allow you to provide a different supplier for tests which return mocked
@@ -35,21 +42,30 @@ public class RTERecorderTest {
    * [ ] In (@Before) setup add the RTERecorder to the tree node and a
    * MOCKED TestStateListener and SampleListener as children of recorder
    * in tree model, so you can verify if it is called in later test
+   *
    * Provide a protocolFactory (as we do in RTESampler) to be able to provide
    * mocked instances of client for verifying connect and getting expected
    * logic (status of keyboard etc)
   **/
 
+  private RTERecorder rteRecorder;
+
   //@Mock
+  private Supplier<TerminalEmulator> terminalEmulatorSupplier;
+
+  @Mock
   private RecordingTargetFinder finder;
 
-  //@Mock
-  Supplier<TerminalEmulator> terminalEmulatorSupplier;
+  @Mock
+  private JMeterTreeNode jMeterTreeNode;
 
-  //@Mock
-  JMeterTreeNode targetControllerNode;
+  @Mock
+  private TerminalEmulator mockTerminalEmulator;
 
-  private RTERecorder rteRecorder;
+  @Mock
+  private JMeterTreeModel treeModel;
+
+  private Function<Protocol, RteProtocolClient> protocolFactory;
 
   @BeforeClass
   public static void setupClass() {
@@ -58,22 +74,31 @@ public class RTERecorderTest {
 
   @Before
   public void setup(){
-    prepareMocks();
+
     terminalEmulatorSupplier = Xtn5250TerminalEmulator::new;
+
+    //prepareMocks();
+    //terminalEmulatorSupplier = Xtn5250TerminalEmulator::new;
+
+    //TODO: Move this to prepareMocks
+    //when(terminalEmulatorSupplier.get()).thenReturn(mockTerminalEmulator);
+    when(finder.findTargetControllerNode()).thenReturn(jMeterTreeNode);
+
+    //finder = new RecordingTargetFinder(treeModel);
     rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder);
   }
 
   public void prepareMocks(){
+    GuiPackage instance = GuiPackage.getInstance();
+    JMeterTreeModel treeModel = instance.getTreeModel();
 
-    //Now they are real
-    JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
     finder = new RecordingTargetFinder(treeModel);
 
-    //We should be making them mocks
+    //We should be making them mocks instead of using real objects
+    when(terminalEmulatorSupplier.get()).thenReturn(mockTerminalEmulator);
 
     //RecordingTargetFinder recordingTargetFinder = new RecordingTargetFinder(GuiPackage.getInstance().getTreeModel());
     //JMeterTreeNode targetControllerNode = recordingTargetFinder.findTargetControllerNode();
-
     //when(targetControllerNode.getUserObject()).thenReturn(JMeterTreeNode.class);
     //when(targetControllerNode.getChildCount()).thenReturn(0);
     //when(finder.findTargetControllerNode()).thenReturn(targetControllerNode);
@@ -88,7 +113,9 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldAddRteConfigToTargetControllerNodeWhenStart(){}
+  public void shouldAddRteConfigToTargetControllerNodeWhenStart(){
+
+  }
 
   @Test
   public void shouldNotifyChildrenTestStateListenersWhenStart(){}
@@ -98,7 +125,12 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldStartEmulatorWhenStart(){}
+  public void shouldStartEmulatorWhenStart() throws Exception {
+    rteRecorder.onRecordingStart();
+
+    verify(mockTerminalEmulator).start();
+
+  }
 
   @Test
   public void shouldConnectTerminalClientWhenStart(){}
