@@ -192,7 +192,7 @@ public class RTERecorderPanelIT {
     softly.assertThat(panel.getPort()).as("portField").isEqualTo(PORT);
     softly.assertThat(panel.getServer()).as("serverField").isEqualTo(SERVER);
     softly.assertThat(panel.getConnectionTimeout()).as("connectionTimeout").isEqualTo(TIMEOUT);
-    softly.assertThat(panel.getWaitConditionsTimeoutThresholdMillis().toString()).as("waitConditionsTimeoutThreshold").isEqualTo(WAIT_TIMEOUT.toString());
+    softly.assertThat(panel.getWaitConditionsTimeoutThresholdMillis()).as("waitConditionsTimeoutThreshold").isEqualTo(WAIT_TIMEOUT);
 
     softly.assertThat(panel.getProtocol().name()).as("protocolComboBox").isEqualTo(PROTOCOL_TEXT).toString();
     softly.assertThat(panel.getTerminalType().toString()).as("terminalTypeComboBox").isEqualTo(TERMINAL_TYPE_TEXT);
