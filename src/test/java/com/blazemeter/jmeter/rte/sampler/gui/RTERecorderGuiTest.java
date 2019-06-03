@@ -27,10 +27,7 @@ import static org.mockito.Mockito.*;
 
   @Rule
   public VerificationCollector collector = MockitoJUnit.collector();
-
-  @Rule
-  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
+  
   private final String SERVER = "localhost";
   private final int PORT = 23;
   private final Protocol PROTOCOL = Protocol.TN5250;
@@ -99,12 +96,12 @@ import static org.mockito.Mockito.*;
   public void shouldConfigurePanelWithGivenTestElementWhenConfigure() {
     rteRecorderGui.configure(testElement);
 
-    verify(testElement).getServer();
-    verify(testElement).getPort();
-    verify(testElement).getProtocol();
-    verify(testElement).getTerminalType();
-    verify(testElement).getSSLType();
-    verify(testElement).getConnectionTimeout();
+    verify(panel).setServer(SERVER);
+    verify(panel).setPort(Long.toString(PORT));
+    verify(panel).setProtocol(PROTOCOL);
+    verify(panel).setTerminalType(TERMINAL_TYPE);
+    verify(panel).setSSLType(SSL_TYPE);
+    verify(panel).setConnectionTimeout(Long.toString(TIMEOUT));
   }
 
   @Test
@@ -112,12 +109,12 @@ import static org.mockito.Mockito.*;
     RTERecorder modified = new RTERecorder();
     rteRecorderGui.modifyTestElement(modified);
 
-    verify(panel).getServer();
-    verify(panel).getPort();
-    verify(panel).getProtocol();
-    verify(panel).getTerminalType();
-    verify(panel).getSSLType();
-    verify(panel).getConnectionTimeout();
+    verify(testElement).setServer(SERVER);
+    verify(testElement).setPort(Long.toString(PORT));
+    verify(testElement).setProtocol(PROTOCOL);
+    verify(testElement).setTerminalType(TERMINAL_TYPE);
+    verify(testElement).setSSLType(SSL_TYPE);
+    verify(testElement).setConnectionTimeout(Long.toString(TIMEOUT));
   }
 
 }
