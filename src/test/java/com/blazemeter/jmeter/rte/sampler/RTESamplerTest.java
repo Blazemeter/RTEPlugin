@@ -64,6 +64,9 @@ public class RTESamplerTest {
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
 
+  @Mock
+  private RteProtocolClient rteProtocolClientWithoutCursor;
+
   @BeforeClass
   public static void setupClass() {
     JMeterTestUtils.setupJmeterEnv();
@@ -543,6 +546,71 @@ public class RTESamplerTest {
     rteSampler.setSslType(SSLType.TLS);
     assertSampleResult(rteSampler.sample(null),
         buildExpectedSuccessfulSendInputResult(SSLType.TLS));
+  }
+
+  @Test
+  public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse() {
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
+    RTESampler.updateSampleResultResponse(updated, rteProtocolClientMock);
+
+    RteSampleResult expected = buildExpectedUpdatedSample();
+    expected.setScreen(Screen.valueOf(TEST_SCREEN));
+    expected.setInputInhibitedResponse(true);
+    assertSampleResult(updated, expected);
+  }
+
+  public RteSampleResult buildSendInputsRequestSampleResult() {
+    RteSampleResult updated  = buildBaseSampleResult();
+    updated.setAction(Action.SEND_INPUT);
+    updated.setInputs(INPUTS);
+    updated.setInputInhibitedRequest(true);
+    updated.setAttentionKey(AttentionKey.ENTER);
+    return updated;
+  }
+
+  public RteSampleResult buildExpectedUpdatedSample() {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSuccessful(true);
+    expected.setDataType("text");
+    expected.setCursorPosition(CURSOR_POSITION);
+    expected.setAction(Action.SEND_INPUT);
+    expected.setInputs(INPUTS);
+    expected.setInputInhibitedRequest(true);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    return expected;
+  }
+
+  @Test
+  public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition() {
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
+    RTESampler.updateSampleResultResponse(updated, rteProtocolClientWithoutCursor);
+
+    RteSampleResult expected = buildExpectedUpdatedSample();
+    expected.setCursorPosition(null);
+    assertSampleResult(updated, expected);
+  }
+
+  @Test
+  public void shouldUpdateErrorResultWhenErrorOccours() {
+    RuntimeException testingError = new RuntimeException("Testing error");
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
+    updated.setSslType(SSLType.NONE);
+
+    RTESampler.updateErrorResult(testingError, updated);
+
+    RteSampleResult expected = buildExpectedErrorResult(testingError);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    expected.setInputInhibitedRequest(true);
+    expected.setInputs(INPUTS);
+    assertSampleResult(updated, expected);
+  }
+
+  @Test
+  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs() throws RteIOException {
+    rteSampler.setAttentionKey(AttentionKey.ENTER);
+    rteSampler.setInputs(INPUTS);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock).send(INPUTS, AttentionKey.ENTER);
   }
 
 }

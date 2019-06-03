@@ -4,7 +4,6 @@ import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import java.awt.Dimension;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
@@ -43,8 +42,6 @@ public interface RteProtocolClient {
   void send(List<Input> input, AttentionKey attentionKey) throws RteIOException;
 
   Screen getScreen();
-
-  Dimension getScreenSize();
 
   boolean isInputInhibited();
 

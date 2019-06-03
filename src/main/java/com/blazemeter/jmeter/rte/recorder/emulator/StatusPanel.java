@@ -1,15 +1,15 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
+import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
+
 import java.awt.CardLayout;
 import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
@@ -38,16 +38,20 @@ public class StatusPanel extends JPanel {
   private static final ImageIcon HELP_ICON = new ImageIcon(
       StatusPanel.class.getResource("/help.png"));
 
-  private JLabel positionLabel = new JLabel("row: 00 / column: 00");
-  private JLabel messageLabel = new JLabel("");
-  private AlarmLabel alarmLabel = new AlarmLabel(ALARM_ICON);
-  private JLabel keyboardLabel = new JLabel(KEYBOARD_UNLOCKED_ICON);
+  private JLabel positionLabel = SwingUtils
+      .createComponent("positionLabel", new JLabel("row: 00 / column: 00"));
+  private JLabel messageLabel = SwingUtils
+      .createComponent("messageLabel", new JLabel(""));
+  private AlarmLabel alarmLabel = SwingUtils
+      .createComponent("alarmLabel", new AlarmLabel(ALARM_ICON));
+  private JLabel keyboardLabel = SwingUtils
+      .createComponent("keyboardLabel", new JLabel(KEYBOARD_UNLOCKED_ICON));
+  private JLabel helpLabel = SwingUtils
+      .createComponent("helpLabel", new JLabel(HELP_ICON));
 
   private HelpFrame helpFrame;
 
   public StatusPanel() {
-    alarmLabel.setVisible(false);
-    JLabel helpLabel = new JLabel(HELP_ICON);
     helpLabel.addMouseListener(buildShowHelpOnMouseClickListener());
 
     GroupLayout layout = new GroupLayout(this);
@@ -92,6 +96,8 @@ public class StatusPanel extends JPanel {
         if (helpFrame == null) {
           helpFrame = new HelpFrame();
         }
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        helpFrame.setSize((int) screen.getWidth() / 3, (int) screen.getHeight() / 2);
         helpFrame.setVisible(true);
         helpFrame.requestFocus();
       }
@@ -139,52 +145,24 @@ public class StatusPanel extends JPanel {
 
   public void dispose() {
     alarmLabel.shutdown();
+    if (helpFrame != null) {
+      helpFrame.dispose();
+    }
   }
-
-  private static class AlarmLabel extends JLabel {
-
-    private ScheduledExecutorService alarmExecutor = Executors.newSingleThreadScheduledExecutor();
-    private ScheduledFuture future;
-    private int counter;
-
-    private AlarmLabel(ImageIcon icon) {
-      super(icon);
-    }
-
-    private synchronized void soundAlarm() {
-      if (future != null) {
-        future.cancel(true);
-        setVisible(false);
-      }
-      counter = 0;
-      setVisible(true);
-      future = alarmExecutor.scheduleAtFixedRate(() -> {
-        setVisible(!isVisible());
-        if (counter < 10) {
-          counter++;
-        } else {
-          future.cancel(true);
-          setVisible(false);
-        }
-      }, 0, 500, TimeUnit.MILLISECONDS);
-    }
-
-    private void shutdown() {
-      alarmExecutor.shutdown();
-    }
-
-  }
-
+  
   private static class HelpFrame extends JFrame {
 
     private static final String HELP_FRAME_TITLE = "Help";
 
     private HelpFrame() {
       setTitle(HELP_FRAME_TITLE);
+      setName("helpFrame");
+      setLayout(new CardLayout());
       setLayout(new CardLayout(10, 10));
       JTextPane textPane = new JTextPane();
       textPane.setContentType("text/html");
       textPane.setText(buildHelpHtml());
+      textPane.setCaretPosition(0);
       textPane.setEditable(false);
       textPane.setOpaque(false);
       textPane.addHyperlinkListener(buildOpenBrowserLinkListener());
@@ -224,7 +202,6 @@ public class StatusPanel extends JPanel {
         }
       };
     }
-
   }
 
 }

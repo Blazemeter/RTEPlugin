@@ -73,7 +73,7 @@ public class RteSampleResult extends SampleResult {
 
   public void setScreen(Screen screen) {
     setDataType(SampleResult.TEXT);
-    setResponseData(screen != null ? screen.toString() : "", "utf-8");
+    setResponseData(screen != null ? screen.getText() : "", "utf-8");
   }
 
   @Override
@@ -110,5 +110,4 @@ public class RteSampleResult extends SampleResult {
         + cursorPosition.getColumn() : "") +
         (soundedAlarm ? "\nSound-Alarm: true" : "");
   }
-
 }

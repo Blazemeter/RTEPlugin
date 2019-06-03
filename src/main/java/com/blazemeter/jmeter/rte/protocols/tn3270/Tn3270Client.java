@@ -12,10 +12,10 @@ import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
-import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
@@ -52,56 +52,62 @@ public class Tn3270Client extends BaseProtocolClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(Tn3270Client.class);
 
-  private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
-      new Tn3270TerminalType(DeviceModel.M2, false),
-      new Tn3270TerminalType(DeviceModel.M2, true),
-      new Tn3270TerminalType(DeviceModel.M3, false),
-      new Tn3270TerminalType(DeviceModel.M3, true),
-      new Tn3270TerminalType(DeviceModel.M4, false),
-      new Tn3270TerminalType(DeviceModel.M4, true),
-      new Tn3270TerminalType(DeviceModel.M5, false),
-      new Tn3270TerminalType(DeviceModel.M5, true)
-  );
-
-  private static final Map<AttentionKey, Byte> AID_COMMANDS = new EnumMap<AttentionKey, Byte>(
-      AttentionKey.class) {
-    {
-      put(AttentionKey.F1, AIDCommand.AID_PF1);
-      put(AttentionKey.F2, AIDCommand.AID_PF2);
-      put(AttentionKey.F3, AIDCommand.AID_PF3);
-      put(AttentionKey.F4, AIDCommand.AID_PF4);
-      put(AttentionKey.F5, AIDCommand.AID_PF5);
-      put(AttentionKey.F6, AIDCommand.AID_PF6);
-      put(AttentionKey.F7, AIDCommand.AID_PF7);
-      put(AttentionKey.F8, AIDCommand.AID_PF8);
-      put(AttentionKey.F9, AIDCommand.AID_PF9);
-      put(AttentionKey.F10, AIDCommand.AID_PF10);
-      put(AttentionKey.F11, AIDCommand.AID_PF11);
-      put(AttentionKey.F12, AIDCommand.AID_PF12);
-      put(AttentionKey.F13, AIDCommand.AID_PF13);
-      put(AttentionKey.F14, AIDCommand.AID_PF14);
-      put(AttentionKey.F15, AIDCommand.AID_PF15);
-      put(AttentionKey.F16, AIDCommand.AID_PF16);
-      put(AttentionKey.F17, AIDCommand.AID_PF17);
-      put(AttentionKey.F18, AIDCommand.AID_PF18);
-      put(AttentionKey.F19, AIDCommand.AID_PF19);
-      put(AttentionKey.F20, AIDCommand.AID_PF20);
-      put(AttentionKey.F21, AIDCommand.AID_PF21);
-      put(AttentionKey.F22, AIDCommand.AID_PF22);
-      put(AttentionKey.F23, AIDCommand.AID_PF23);
-      put(AttentionKey.F24, AIDCommand.AID_PF24);
-      put(AttentionKey.ENTER, AIDCommand.AID_ENTER);
-      put(AttentionKey.PA1, AIDCommand.AID_PA1);
-      put(AttentionKey.PA2, AIDCommand.AID_PA2);
-      put(AttentionKey.PA3, AIDCommand.AID_PA3);
-      put(AttentionKey.SYSRQ, AIDCommand.AID_SYSREQ);
-      put(AttentionKey.CLEAR, AIDCommand.AID_CLEAR);
-    }
-  };
+  private static final List<TerminalType> TERMINAL_TYPES = buildTerminalTypes();
+  private static final Map<AttentionKey, Byte> AID_COMMANDS = buildAIdCommandsKeysMapping();
 
   private TerminalClient client;
   private Map<TerminalStateListener, Tn3270TerminalStateListenerProxy> listenersProxies =
       new ConcurrentHashMap<>();
+
+  private static List<TerminalType> buildTerminalTypes() {
+    return Arrays.asList(
+        new Tn3270TerminalType(DeviceModel.M2, false),
+        new Tn3270TerminalType(DeviceModel.M2, true),
+        new Tn3270TerminalType(DeviceModel.M3, false),
+        new Tn3270TerminalType(DeviceModel.M3, true),
+        new Tn3270TerminalType(DeviceModel.M4, false),
+        new Tn3270TerminalType(DeviceModel.M4, true),
+        new Tn3270TerminalType(DeviceModel.M5, false),
+        new Tn3270TerminalType(DeviceModel.M5, true)
+    );
+  }
+
+  private static EnumMap<AttentionKey, Byte> buildAIdCommandsKeysMapping() {
+    return new EnumMap<AttentionKey, Byte>(AttentionKey.class) {
+      {
+        put(AttentionKey.F1, AIDCommand.AID_PF1);
+        put(AttentionKey.F2, AIDCommand.AID_PF2);
+        put(AttentionKey.F3, AIDCommand.AID_PF3);
+        put(AttentionKey.F4, AIDCommand.AID_PF4);
+        put(AttentionKey.F5, AIDCommand.AID_PF5);
+        put(AttentionKey.F6, AIDCommand.AID_PF6);
+        put(AttentionKey.F7, AIDCommand.AID_PF7);
+        put(AttentionKey.F8, AIDCommand.AID_PF8);
+        put(AttentionKey.F9, AIDCommand.AID_PF9);
+        put(AttentionKey.F10, AIDCommand.AID_PF10);
+        put(AttentionKey.F11, AIDCommand.AID_PF11);
+        put(AttentionKey.F12, AIDCommand.AID_PF12);
+        put(AttentionKey.F13, AIDCommand.AID_PF13);
+        put(AttentionKey.F14, AIDCommand.AID_PF14);
+        put(AttentionKey.F15, AIDCommand.AID_PF15);
+        put(AttentionKey.F16, AIDCommand.AID_PF16);
+        put(AttentionKey.F17, AIDCommand.AID_PF17);
+        put(AttentionKey.F18, AIDCommand.AID_PF18);
+        put(AttentionKey.F19, AIDCommand.AID_PF19);
+        put(AttentionKey.F20, AIDCommand.AID_PF20);
+        put(AttentionKey.F21, AIDCommand.AID_PF21);
+        put(AttentionKey.F22, AIDCommand.AID_PF22);
+        put(AttentionKey.F23, AIDCommand.AID_PF23);
+        put(AttentionKey.F24, AIDCommand.AID_PF24);
+        put(AttentionKey.ENTER, AIDCommand.AID_ENTER);
+        put(AttentionKey.PA1, AIDCommand.AID_PA1);
+        put(AttentionKey.PA2, AIDCommand.AID_PA2);
+        put(AttentionKey.PA3, AIDCommand.AID_PA3);
+        put(AttentionKey.SYSRQ, AIDCommand.AID_SYSREQ);
+        put(AttentionKey.CLEAR, AIDCommand.AID_CLEAR);
+      }
+    };
+  }
 
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
@@ -137,7 +143,7 @@ public class Tn3270Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
-    for (TerminalStateListener listener: listenersProxies.keySet()) {
+    for (TerminalStateListener listener : listenersProxies.keySet()) {
       addListener(listener);
     }
     client.connect(server, port);
@@ -233,23 +239,52 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public Screen getScreen() {
+    // when sscp lu data screen or screens without explicit fields
+    if (client.getFields().isEmpty()) {
+      return buildScreenFromText(client.getScreenText().replace("\n", ""));
+    } else {
+      return buildScreenFromFields(client.getFields());
+    }
+  }
+
+  private Screen buildScreenFromText(String screenText) {
     Dimension size = getScreenSize();
     Screen ret = new Screen(size);
-    for (Field f : client.getFields()) {
-      int linealPosition = f.getFirstLocation();
-      int row = (linealPosition / size.width) + 1;
-      int column = (linealPosition % size.width) + 1;
-      String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
-      if (f.isProtected()) {
-        ret.addSegment(row, column, text);
-      } else {
-        ret.addField(row, column, text);
-      }
+    int lastNonBlankPosition = screenText.length() - 1;
+    while (lastNonBlankPosition >= 0 && screenText.charAt(lastNonBlankPosition) == ' ') {
+      lastNonBlankPosition--;
+    }
+    int segmentEndPosition = lastNonBlankPosition + 1;
+    if (segmentEndPosition <= 0) {
+      ret.addField(0, screenText);
+    } else if (segmentEndPosition >= screenText.length()) {
+      ret.addSegment(0, screenText);
+    } else {
+      ret.addSegment(0, screenText.substring(0, segmentEndPosition + 1));
+      ret.addField(segmentEndPosition + 1, screenText.substring(segmentEndPosition + 1));
     }
     return ret;
   }
 
-  @Override
+  private Screen buildScreenFromFields(List<Field> fields) {
+    Dimension size = getScreenSize();
+    Screen ret = new Screen(size);
+    for (Field f : fields) {
+      int linealPosition =
+          (f.getFirstLocation() != 0 ? f.getFirstLocation() : size.height * size.width) - 1;
+      String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
+      if (f.isProtected()) {
+        ret.addSegment(linealPosition, " " + text);
+      } else {
+        ret.addSegment(linealPosition, " ");
+        if (linealPosition + 1 < size.height * size.width) {
+          ret.addField(linealPosition + 1, text);
+        }
+      }
+    }
+    return ret;
+  }
+  
   public Dimension getScreenSize() {
     ScreenDimensions dimensions = client.getScreenDimensions();
     return new Dimension(dimensions.columns, dimensions.rows);
@@ -257,7 +292,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public boolean isInputInhibited() {
-    return client == null ? true : client.isKeyboardLocked();
+    return client == null || client.isKeyboardLocked();
   }
 
   @Override

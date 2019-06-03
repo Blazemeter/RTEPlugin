@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -13,6 +14,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -24,7 +26,7 @@ import javax.swing.JFrame;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 
-public class Xtn5250TerminalEmulator implements TerminalEmulator {
+public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator {
 
   private static final Map<KeyEventMap, AttentionKey> KEY_EVENTS =
       new HashMap<KeyEventMap, AttentionKey>() {
@@ -76,14 +78,45 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
-  private JFrame frame;
-  private XI5250Crt xi5250Crt;
-  private StatusPanel statusPanel = new StatusPanel();
   private boolean stopping;
+  private StatusPanel statusPanel = new StatusPanel();
+  private XI5250Crt xi5250Crt = createCustomXI5250Crt();
 
-  @Override
-  public void start(int columns, int rows) {
-    xi5250Crt = new XI5250Crt() {
+  public Xtn5250TerminalEmulator() {
+    xi5250Crt.setName("Terminal");
+    xi5250Crt.setDefBackground(BACKGROUND);
+    xi5250Crt.setBlinkingCursor(true);
+    xi5250Crt.setEnabled(true);
+    setTitle(TITLE);
+    setLayout(new BorderLayout());
+    add(xi5250Crt, BorderLayout.CENTER);
+    add(statusPanel, BorderLayout.SOUTH);
+    addWindowListener(new WindowAdapter() {
+
+      @Override
+      public void windowOpened(WindowEvent e) {
+        Dimension testSize = calculateCrtDefaultSize();
+        xi5250Crt.setSize(testSize.width, testSize.height);
+        pack();
+        xi5250Crt.requestFocus();
+      }
+
+      @Override
+      public void windowClosed(WindowEvent e) {
+        if (!stopping) {
+          for (TerminalEmulatorListener g : terminalEmulatorListeners) {
+            g.onCloseTerminal();
+          }
+        }
+        statusPanel.dispose();
+      }
+    });
+    setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+  }
+
+  private XI5250Crt createCustomXI5250Crt() {
+    return new XI5250Crt() {
       @Override
       protected void processKeyEvent(KeyEvent e) {
         synchronized (Xtn5250TerminalEmulator.this) {
@@ -113,44 +146,29 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       }
 
       @Override
+      protected void processMouseEvent(MouseEvent e) {
+        super.processMouseEvent(e);
+        statusPanel
+            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+      }
+
+      @Override
       public void paintComponent(Graphics g) {
         synchronized (Xtn5250TerminalEmulator.this) {
           super.paintComponent(g);
         }
       }
     };
+  }
+
+  @Override
+  public void start() {
+    setVisible(true);
+  }
+
+  @Override
+  public void setScreenSize(int columns, int rows) {
     xi5250Crt.setCrtSize(columns, rows);
-    xi5250Crt.setDefBackground(BACKGROUND);
-    xi5250Crt.setBlinkingCursor(true);
-    xi5250Crt.setEnabled(true);
-
-    frame = new JFrame(TITLE);
-    frame.setLayout(new BorderLayout());
-    frame.add(xi5250Crt, BorderLayout.CENTER);
-    frame.add(statusPanel, BorderLayout.SOUTH);
-    frame.addWindowListener(new WindowAdapter() {
-
-      @Override
-      public void windowOpened(WindowEvent e) {
-        Dimension testSize = calculateCrtDefaultSize();
-        xi5250Crt.setSize(testSize.width, testSize.height);
-        frame.pack();
-        xi5250Crt.requestFocus();
-      }
-
-      @Override
-      public void windowClosed(WindowEvent e) {
-        if (!stopping) {
-          for (TerminalEmulatorListener g : terminalEmulatorListeners) {
-            g.onCloseTerminal();
-          }
-        }
-        statusPanel.dispose();
-      }
-    });
-
-    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    frame.setVisible(true);
   }
 
   private Dimension calculateCrtDefaultSize() {
@@ -164,7 +182,7 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
   @Override
   public void stop() {
     stopping = true;
-    frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+    dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
   }
 
   @Override
@@ -189,6 +207,18 @@ public class Xtn5250TerminalEmulator implements TerminalEmulator {
       }
     }
     xi5250Crt.initAllFields();
+  }
+
+  @VisibleForTesting
+  public String getScreen() {
+    int height = xi5250Crt.getCrtSize().height;
+    int width = xi5250Crt.getCrtSize().width;
+    StringBuilder screen = new StringBuilder();
+    for (int i = 0; i < height; i++) {
+      screen.append(xi5250Crt.getString(0, i, width).replaceAll("[\\x00-\\x19]", " "));
+      screen.append("\n");
+    }
+    return screen.toString();
   }
 
   @Override
