@@ -217,7 +217,7 @@ public class RTERecorderPanelIT {
     portField.enterText(PORT);
     serverField.enterText(SERVER);
     connectionTimeoutField.enterText(TIMEOUT);
-    waitConditionsTimeoutThresholdField.enterText(WAIT_TIMEOUT);
+    waitConditionsTimeoutThresholdField.setText(WAIT_TIMEOUT);
     protocolComboBox.selectItem(PROTOCOL_TEXT);
     terminalTypeComboBox.selectItem(TERMINAL_TYPE_TEXT);
     sslTypeRadioButton.check();
