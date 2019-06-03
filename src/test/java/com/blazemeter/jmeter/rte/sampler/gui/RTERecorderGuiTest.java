@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 
   @Rule
   public VerificationCollector collector = MockitoJUnit.collector();
-  
+
   private final String SERVER = "localhost";
   private final int PORT = 23;
   private final Protocol PROTOCOL = Protocol.TN5250;
@@ -106,8 +106,7 @@ import static org.mockito.Mockito.*;
 
   @Test
   public void shouldSetTestElementFromTheRecordingPanelWhenModifyTestElement() {
-    RTERecorder modified = new RTERecorder();
-    rteRecorderGui.modifyTestElement(modified);
+    rteRecorderGui.modifyTestElement(testElement);
 
     verify(testElement).setServer(SERVER);
     verify(testElement).setPort(Long.toString(PORT));
