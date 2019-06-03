@@ -44,8 +44,6 @@ public interface RteProtocolClient {
 
   Screen getScreen();
 
-  Dimension getScreenSize();
-
   boolean isInputInhibited();
 
   Optional<Position> getCursorPosition();

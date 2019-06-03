@@ -30,7 +30,7 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
 
   private void setupScreenWithText(String screen) {
     when(client.getScreen()).thenReturn(Screen.valueOf(screen));
-    when(client.getScreenSize()).thenReturn(new Dimension(screen.length(), 1));
+    when(client.getScreen().getSize()).thenReturn(new Dimension(screen.length(), 1));
   }
 
   @Override
