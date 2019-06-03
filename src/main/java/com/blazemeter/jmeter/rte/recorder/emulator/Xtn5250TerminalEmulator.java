@@ -181,7 +181,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   @Override
   public void stop() {
-    statusPanel.dispose();
     stopping = true;
     dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
   }
