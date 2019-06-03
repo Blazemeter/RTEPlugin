@@ -1,8 +1,11 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
+
 import java.awt.CardLayout;
 import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
@@ -93,6 +96,8 @@ public class StatusPanel extends JPanel {
         if (helpFrame == null) {
           helpFrame = new HelpFrame();
         }
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        helpFrame.setSize((int) screen.getWidth() / 3, (int) screen.getHeight() / 2);
         helpFrame.setVisible(true);
         helpFrame.requestFocus();
       }
@@ -140,8 +145,11 @@ public class StatusPanel extends JPanel {
 
   public void dispose() {
     alarmLabel.shutdown();
+    if (helpFrame != null) {
+      helpFrame.dispose();
+    }
   }
-
+  
   private static class HelpFrame extends JFrame {
 
     private static final String HELP_FRAME_TITLE = "Help";
@@ -154,6 +162,7 @@ public class StatusPanel extends JPanel {
       JTextPane textPane = new JTextPane();
       textPane.setContentType("text/html");
       textPane.setText(buildHelpHtml());
+      textPane.setCaretPosition(0);
       textPane.setEditable(false);
       textPane.setOpaque(false);
       textPane.addHyperlinkListener(buildOpenBrowserLinkListener());
@@ -193,7 +202,6 @@ public class StatusPanel extends JPanel {
         }
       };
     }
-
   }
 
 }
