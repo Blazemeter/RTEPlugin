@@ -12,10 +12,10 @@ import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
-import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
@@ -125,7 +125,7 @@ public class Tn5250Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
-    for (TerminalStateListener listener: listenersProxies.keySet()) {
+    for (TerminalStateListener listener : listenersProxies.keySet()) {
       addListener(listener);
     }
     ConnectionEndTerminalListener connectionEndListener = new ConnectionEndTerminalListener(
@@ -231,7 +231,7 @@ public class Tn5250Client extends BaseProtocolClient {
 
   @Override
   public Screen getScreen() {
-    Dimension screenSize = getScreenSize();
+    Dimension screenSize = client.getScreenDimensions();
     Screen ret = new Screen(screenSize);
     String screenText = client.getScreenText().replace("\n", "");
     int textStartPos = 0;
@@ -251,11 +251,6 @@ public class Tn5250Client extends BaseProtocolClient {
 
   private int getFieldLinealPosition(XI5250Field field, Dimension screenSize) {
     return field.getRow() * screenSize.width + field.getCol();
-  }
-
-  @Override
-  public Dimension getScreenSize() {
-    return client.getScreenDimensions();
   }
 
   @Override

@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.core.wait;
 
 import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.Screen;
 import java.awt.Dimension;
 import java.util.Objects;
 import org.apache.oro.text.regex.Pattern;
@@ -41,8 +42,8 @@ public class TextWaitCondition extends WaitCondition {
     return "emulator screen area " + searchArea + " to contain " + regex.getPattern();
   }
 
-  public boolean matchesScreen(String screen, Dimension screenSize) {
-    String screenArea = extractScreenArea(searchArea, screen, screenSize);
+  public boolean matchesScreen(Screen screen) {
+    String screenArea = extractScreenArea(searchArea, screen.getText(), screen.getSize());
     return matcher.contains(screenArea, regex);
   }
 

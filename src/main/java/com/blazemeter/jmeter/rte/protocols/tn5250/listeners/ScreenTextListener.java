@@ -57,7 +57,7 @@ public class ScreenTextListener extends Tn5250ConditionWaiter<TextWaitCondition>
   }
 
   private void checkIfScreenMatchesCondition() {
-    if (condition.matchesScreen(client.getScreen().getText(), client.getScreenSize())) {
+    if (condition.matchesScreen(client.getScreen())) {
       LOG.debug("Found matching text in screen, now waiting for silent period.");
       matched = true;
     }
