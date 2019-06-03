@@ -141,12 +141,17 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   public void onRecordingStart() throws Exception {
+    System.out.println("1");
     sampleCount = 0;
+    System.out.println("2");
     terminalEmulator = terminalEmulatorSupplier.get();
-
+    System.out.println("3");
     terminalEmulator.addTerminalEmulatorListener(this);
+    System.out.println("4");
     samplersTargetNode = finder.findTargetControllerNode();
+    System.out.println("5");
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
+    System.out.println("6");
     // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
     // them to terminalEmulator
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
@@ -155,6 +160,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
     terminalClient = getProtocol().createProtocolClient();
+    System.out.println("12");
     try {
       terminalClient
           .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout(),
@@ -165,6 +171,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     } catch (Exception e) {
       terminalEmulator.stop();
       terminalClient.disconnect();
+      System.out.println("18");
       throw e;
     }
   }

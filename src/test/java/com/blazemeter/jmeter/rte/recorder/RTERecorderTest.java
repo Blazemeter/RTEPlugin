@@ -1,9 +1,22 @@
 package com.blazemeter.jmeter.rte.recorder;
 
+import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
+import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulator;
+import org.apache.jmeter.gui.GuiPackage;
+import org.apache.jmeter.gui.tree.JMeterTreeModel;
+import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.function.Supplier;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
 
   /**
@@ -29,18 +42,47 @@ public class RTERecorderTest {
    * logic (status of keyboard etc)
   **/
 
-  @Mock
+  //@Mock
   private RecordingTargetFinder finder;
+
+  //@Mock
+  Supplier<TerminalEmulator> terminalEmulatorSupplier;
+
+  //@Mock
+  JMeterTreeNode targetControllerNode;
 
   private RTERecorder rteRecorder;
 
   @Before
   public void setup(){
+    prepareMocks();
+    terminalEmulatorSupplier = Xtn5250TerminalEmulator::new;
+    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder);
+  }
+
+  public void prepareMocks(){
+
+    //Now they are real
+    JMeterTreeModel treeModel = GuiPackage.getInstance().getTreeModel();
+    finder = new RecordingTargetFinder(treeModel);
+
+    //We should be making them mocks
+
+    //RecordingTargetFinder recordingTargetFinder = new RecordingTargetFinder(GuiPackage.getInstance().getTreeModel());
+    //JMeterTreeNode targetControllerNode = recordingTargetFinder.findTargetControllerNode();
+
+    //when(targetControllerNode.getUserObject()).thenReturn(JMeterTreeNode.class);
+    //when(targetControllerNode.getChildCount()).thenReturn(0);
+    //when(finder.findTargetControllerNode()).thenReturn(targetControllerNode);
 
   }
 
   @Test
-  public void shouldAddRecorderAsEmulatorListenerWhenStart(){}
+  public void shouldAddRecorderAsEmulatorListenerWhenStart() throws Exception {
+    rteRecorder.onRecordingStart();
+
+    //verify(terminalEmulatorSupplier).get();
+  }
 
   @Test
   public void shouldAddRteConfigToTargetControllerNodeWhenStart(){}
@@ -49,7 +91,8 @@ public class RTERecorderTest {
   public void shouldNotifyChildrenTestStateListenersWhenStart(){}
 
   @Test
-  public void shouldLockEmulatorKeyboardWhenStart(){}
+  public void shouldLockEmulatorKeyboardWhenStart(){
+  }
 
   @Test
   public void shouldStartEmulatorWhenStart(){}
