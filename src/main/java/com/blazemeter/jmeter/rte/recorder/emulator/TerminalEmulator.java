@@ -4,7 +4,7 @@ import com.blazemeter.jmeter.rte.core.Screen;
 
 public interface TerminalEmulator {
 
-  void start(int columns, int rows);
+  void start();
 
   void stop();
 
@@ -17,6 +17,8 @@ public interface TerminalEmulator {
   void setStatusMessage(String message);
 
   void setKeyboardLock(boolean lock);
+
+  void setScreenSize(int columns, int rows);
 
   void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener);
 

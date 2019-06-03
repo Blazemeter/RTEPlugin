@@ -4,6 +4,7 @@ import static org.apache.tika.parser.ner.NamedEntityParser.LOG;
 
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
@@ -11,6 +12,7 @@ import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.TimeoutException;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.GroupLayout;
@@ -26,11 +28,11 @@ import org.apache.jmeter.util.JMeterUtils;
 
 public class RTERecorderPanel extends JPanel implements ActionListener, RecordingStateListener {
 
-  private static JTextField waitConditionsTimeoutThreshold = SwingUtils
-      .createComponent("waitConditionsTimeoutThreshold", new JTextField());
   private static final String ADD_ACTION_START = "addActionStart";
   private static final String ADD_ACTION_STOP = "addActionStop";
   private static final String ADD_ACTION_RESTART = "addActionRestart";
+  private static JTextField waitConditionsTimeoutThreshold = SwingUtils
+      .createComponent("waitConditionsTimeoutThreshold", new JTextField());
   private final RecordingStateListener recordingStateListener;
   private final RTEConfigPanel configPanel;
   private JButton startButton;
@@ -81,7 +83,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   }
 
   private JButton buildButton(String resourceString, String imageName,
-      String actionCommand) {
+                              String actionCommand) {
     String iconSize = JMeterUtils.getPropDefault(JMeterToolBar.TOOLBAR_ICON_SIZE,
         JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
     JButton button = new JButton(JMeterUtils.getResString(resourceString));
@@ -103,13 +105,13 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     JPanel panel = SwingUtils.createComponent("timeThresholdPanel", new JPanel());
     panel
         .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString(
-                "", "Wait conditions")));
+            "", "Wait conditions")));
     GroupLayout layout = new GroupLayout(panel);
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
 
     JLabel waitConditionTimeoutThreshold = SwingUtils.createComponent(
-            "waitConditionTimeoutThreshold",
+        "waitConditionTimeoutThreshold",
         new JLabel("Timeout threshold (ms)"));
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(waitConditionTimeoutThreshold)
@@ -119,11 +121,11 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
         .addComponent(waitConditionTimeoutThreshold)
         .addComponent(waitConditionsTimeoutThreshold, GroupLayout.PREFERRED_SIZE,
-                GroupLayout.DEFAULT_SIZE,
+            GroupLayout.DEFAULT_SIZE,
             GroupLayout.PREFERRED_SIZE));
     return panel;
   }
-  
+
   public String getServer() {
     return configPanel.getServer();
   }
@@ -171,11 +173,11 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   public void setConnectionTimeout(String connectionTimeout) {
     configPanel.setConnectionTimeout(connectionTimeout);
   }
-  
+
   public String getWaitConditionsTimeoutThresholdMillis() {
     return waitConditionsTimeoutThreshold.getText();
   }
-  
+
   public void setWaitConditionsTimeoutThresholdMillis(String thresholdTime) {
     waitConditionsTimeoutThreshold.setText(thresholdTime);
   }
@@ -204,6 +206,12 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
         default:
           throw new UnsupportedOperationException(action);
       }
+    } catch (TimeoutException | RteIOException ex) {
+      String errorMsg = 
+          (ex instanceof TimeoutException) ? "Timeout waiting for connection end after " + 
+              getConnectionTimeout() + "ms" : "Could not connect to the server";
+      onRecordingStop();
+      JMeterUtils.reportErrorToUser(errorMsg);
     } catch (Exception ex) {
       LOG.error("Problem performing requested action {}", action, ex);
       JMeterUtils.reportErrorToUser(ex.getMessage());

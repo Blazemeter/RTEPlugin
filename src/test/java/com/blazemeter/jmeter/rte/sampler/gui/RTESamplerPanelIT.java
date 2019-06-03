@@ -57,6 +57,11 @@ public class RTESamplerPanelIT {
     frame = showInFrame(panel);
   }
 
+  @After
+  public void tearDown() {
+    frame.cleanUp();
+  }
+
   @Test
   public void shouldHideRequestPanelWhenNotSendInputAction() {
     switchAction(Action.SEND_INPUT, Action.CONNECT);
@@ -188,11 +193,6 @@ public class RTESamplerPanelIT {
     expected.add(frame.textBox(WAIT_TEXT_AREA_BOTTOM));
     expected.add(frame.textBox(WAIT_TEXT_AREA_RIGHT));
     validateEnabled(false, expected);
-  }
-
-  @After
-  public void tearDown() {
-    frame.cleanUp();
   }
 
   private void switchCheckboxTo(boolean state, JCheckBoxFixture check) {
