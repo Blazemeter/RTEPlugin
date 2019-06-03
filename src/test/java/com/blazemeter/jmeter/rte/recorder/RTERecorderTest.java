@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.recorder;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulator;
 import org.apache.jmeter.gui.GuiPackage;
@@ -9,13 +10,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.function.Supplier;
-
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {

@@ -8,15 +8,17 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
-import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.Screen;
@@ -35,12 +37,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
-import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
-import org.assertj.core.api.AbstractObjectAssert;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -65,9 +64,12 @@ public class RTESamplerTest {
   private RTESampler rteSampler;
   private ConfigTestElement configTestElement = new ConfigTestElement();
 
+  @Mock
+  private RteProtocolClient rteProtocolClientWithoutCursor;
+
   @BeforeClass
   public static void setupClass() {
-    TestJMeterUtils.createJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
   }
 
   @AfterClass
@@ -117,7 +119,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenGetClientThrowTimeoutException() throws Exception {
     TimeoutException e = new TimeoutException();
     doThrow(e).when(rteProtocolClientMock)
-        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+        .connect(any(), anyInt(), any(), any(), anyLong());
     assertSampleResult(rteSampler.sample(null), buildExpectedConnectTimeoutErrorResult(e));
   }
 
@@ -153,7 +155,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenGetClientThrowInterruptedException() throws Exception {
     InterruptedException e = new InterruptedException();
     doThrow(e).when(rteProtocolClientMock)
-        .connect(any(), anyInt(), any(), any(), anyLong(), anyLong());
+        .connect(any(), anyInt(), any(), any(), anyLong());
     assertSampleResult(rteSampler.sample(null), buildExpectedErrorResult(e));
   }
 
@@ -193,10 +195,14 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldGetErrorSamplerResultWhenAwaitThrowsException() throws Exception {
+  public void shouldGetErrorSamplerResultWhenSendAwaitThrowsException() throws Exception {
     TimeoutException e = new TimeoutException();
+    // we use a custom timeout to differentiate it from connection wait
+    rteSampler.setWaitSyncTimeout(String.valueOf(CUSTOM_TIMEOUT_MILLIS));
     doThrow(e).
-        when(rteProtocolClientMock).await(any());
+        when(rteProtocolClientMock).await(Collections
+        .singletonList(new SyncWaitCondition(CUSTOM_TIMEOUT_MILLIS,
+            RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
     when(rteProtocolClientMock.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
     assertSampleResult(rteSampler.sample(null), buildExpectedTimeoutErrorResult(e));
   }
@@ -376,9 +382,10 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldAwaitSyncWaiterWhenSyncWaitEnabled() throws Exception {
+  public void shouldAwaitSyncWaiterWhenSendInputWithSyncWaitEnabled() throws Exception {
     rteSampler.sample(null);
-    verify(rteProtocolClientMock)
+    // we wait for 2 events since both connection wait and send input wait use same parameters
+    verify(rteProtocolClientMock, times(2))
         .await(Collections.singletonList(
             new SyncWaitCondition(RTESampler.DEFAULT_WAIT_SYNC_TIMEOUT_MILLIS,
                 RTESampler.DEFAULT_STABLE_TIMEOUT_MILLIS)));
@@ -395,11 +402,10 @@ public class RTESamplerTest {
   }
 
   @Test
-  public void shouldNotAwaitWhenNoWaitersAreEnabled() throws Exception {
+  public void shouldAwaitOnlyConnectionSyncWhenNoWaitersAreEnabled() throws Exception {
     rteSampler.setWaitSync(false);
     rteSampler.sample(null);
-    verify(rteProtocolClientMock, never())
-        .await(any());
+    verify(rteProtocolClientMock).await(any());
   }
 
   @Test
@@ -532,7 +538,7 @@ public class RTESamplerTest {
     rteSampler.setSslType(SSLType.TLS);
     rteSampler.sample(null);
     verify(rteProtocolClientMock)
-        .connect(any(), anyInt(), eq(SSLType.TLS), any(), anyLong(), anyLong());
+        .connect(any(), anyInt(), eq(SSLType.TLS), any(), anyLong());
   }
 
   @Test
@@ -542,78 +548,69 @@ public class RTESamplerTest {
         buildExpectedSuccessfulSendInputResult(SSLType.TLS));
   }
 
-  private void assertDifferentSampleResult(SampleResult result, SampleResult expected) {
+  @Test
+  public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse() {
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
+    RTESampler.updateSampleResultResponse(updated, rteProtocolClientMock);
 
-    boolean anyDifference = false;
+    RteSampleResult expected = buildExpectedUpdatedSample();
+    expected.setScreen(Screen.valueOf(TEST_SCREEN));
+    expected.setInputInhibitedResponse(true);
+    assertSampleResult(updated, expected);
+  }
 
-    //I should use another method to compare this differences
-    anyDifference = (result.isSuccessful() != expected.isSuccessful() ? true : anyDifference);
-    anyDifference = (!result.getSampleLabel().equals(expected.getSampleLabel()) ? true : anyDifference);
+  public RteSampleResult buildSendInputsRequestSampleResult() {
+    RteSampleResult updated  = buildBaseSampleResult();
+    updated.setAction(Action.SEND_INPUT);
+    updated.setInputs(INPUTS);
+    updated.setInputInhibitedRequest(true);
+    updated.setAttentionKey(AttentionKey.ENTER);
+    return updated;
+  }
 
-    assertThat(anyDifference == true);
-
+  public RteSampleResult buildExpectedUpdatedSample() {
+    RteSampleResult expected = buildBaseSampleResult();
+    expected.setSuccessful(true);
+    expected.setDataType("text");
+    expected.setCursorPosition(CURSOR_POSITION);
+    expected.setAction(Action.SEND_INPUT);
+    expected.setInputs(INPUTS);
+    expected.setInputInhibitedRequest(true);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    return expected;
   }
 
   @Test
-  public void shouldSetProtocolClientStatusToSampleResultWhenUpdateSampleResultResponse(){
+  public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition() {
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
+    RTESampler.updateSampleResultResponse(updated, rteProtocolClientWithoutCursor);
 
-    RteSampleResult sampleA = buildBaseSampleResult();
-    RteSampleResult sampleB = buildBaseSampleResult();
-
-    rteSampler.updateSampleResultResponse(sampleA, rteProtocolClientMock);
-
-    assertDifferentSampleResult(sampleA, sampleB);
+    RteSampleResult expected = buildExpectedUpdatedSample();
+    expected.setCursorPosition(null);
+    assertSampleResult(updated, expected);
   }
 
   @Test
-  public void shouldSetNullCursorPositionWhenUpdateSampleResultResponseAndProtocolClientReturnsAbsentCursorPosition(){
+  public void shouldUpdateErrorResultWhenErrorOccours() {
+    RuntimeException testingError = new RuntimeException("Testing error");
+    RteSampleResult updated  = buildSendInputsRequestSampleResult();
+    updated.setSslType(SSLType.NONE);
 
-    RteSampleResult sampleA = buildBaseSampleResult();
+    RTESampler.updateErrorResult(testingError, updated);
 
-    String[] responseHeadersBefore = sampleA.getResponseHeaders().split("\n");
-
-    rteSampler.updateSampleResultResponse(sampleA, rteProtocolClientMock);
-
-    String[] responseHeadersAfter = sampleA.getResponseHeaders().split("\n");
-
-    boolean areDifferent = (!responseHeadersBefore[1].equals(responseHeadersAfter[1]));
-
-    assertThat(areDifferent);
-
+    RteSampleResult expected = buildExpectedErrorResult(testingError);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    expected.setInputInhibitedRequest(true);
+    expected.setInputs(INPUTS);
+    assertSampleResult(updated, expected);
   }
 
   @Test
-  public void shouldUpdateErrorResultWhenErrorOccours(){
-
-    try {
-      int testOperation = 1/0;
-    }
-    catch(Exception e){
-      RteSampleResult rteSampleResult = rteSampler.updateErrorResult(e, buildExpectedErrorResult(e));
-
-      assertThat(rteSampleResult.getResponseMessage().equals("/ by zero"));
-    }
-  }
-
-  @Test
-  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs(){
-
-    SampleResult resultA = rteSampler.sample(null);
-
-    List<Input> customInputs = Collections
-            .singletonList(new CoordInput(new Position(3, 2), "input"));
-
-    rteSampler.setInputs(customInputs);
-    rteSampler.setAction(Action.SEND_INPUT);
-
-    SampleResult resultB = rteSampler.sample(null);
-
-    String samplerDataA = resultA.getSamplerData();
-    String samplerDataB = resultB.getSamplerData();
-
-    boolean differentInputs = (!samplerDataA.equals(samplerDataB));
-
-    assertThat(differentInputs);
+  public void shouldSendInputsToProtocolClientWhenSampleAfterSetInputs() throws RteIOException {
+    rteSampler.setAttentionKey(AttentionKey.ENTER);
+    rteSampler.setInputs(INPUTS);
+    rteSampler.sample(null);
+    verify(rteProtocolClientMock).send(INPUTS, AttentionKey.ENTER);
   }
 
 }

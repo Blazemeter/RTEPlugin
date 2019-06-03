@@ -2,7 +2,7 @@
 
 We are using a custom [checkstyle](http://checkstyle.sourceforge.net/index.html) configuration file which is based on google's one, is advisable to use one of the [google style configuration files](https://github.com/google/styleguide) in IDEs to reduce the friction with checkstyle and automate styling.
 
-##Design
+## Design
 
 Check our general design of classes [UML](docs/class-diagram.puml).
 

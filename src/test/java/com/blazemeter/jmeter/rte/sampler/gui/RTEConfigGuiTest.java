@@ -2,11 +2,11 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.assertj.core.api.JUnitSoftAssertions;
@@ -38,7 +38,7 @@ public class RTEConfigGuiTest {
 
   @BeforeClass
   public static void setupClass() {
-    TestJMeterUtils.createJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
   }
 
   @Test

@@ -32,7 +32,7 @@
     <dependency>
       <groupId>us.abstracta</groupId>
       <artifactId>dm3270-lib</artifactId>
-      <version>0.8.1</version>
+      <version>0.9</version>
     </dependency>
 
     <dependency>
@@ -107,6 +107,12 @@
       <groupId>org.assertj</groupId>
       <artifactId>assertj-swing</artifactId>
       <version>3.8.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xmlunit</groupId>
+      <artifactId>xmlunit-assertj</artifactId>
+      <version>2.6.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -6,11 +6,11 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
-import com.blazemeter.jmeter.rte.core.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -23,6 +23,7 @@ import com.helger.commons.annotation.VisibleForTesting;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -399,15 +400,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return getLongProperty(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
   }
 
-  //TODO: This method is going to be used whenever waits are added to recorder
   public void setWaitConditions(List<WaitCondition> waitConditions) {
+    setWaitSync(false);
     for (WaitCondition waitCondition : waitConditions) {
       addWaitCondition(waitCondition);
     }
   }
-
+  
   private void addWaitCondition(WaitCondition condition) {
-
     if (condition instanceof SyncWaitCondition) {
       setWaitSync(true);
       setWaitSyncTimeout(String.valueOf(condition.getTimeoutMillis()));
@@ -467,9 +467,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   @Override
   public SampleResult sample(Entry entry) {
-    //TODO Connect action do not show response properly.
     RteSampleResult rteSampleResult = buildSampleResult();
-
     RteProtocolClient client = null;
 
     try {
@@ -478,15 +476,18 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         if (client != null) {
           disconnect(client);
         }
-
         rteSampleResult.setSuccessful(true);
         rteSampleResult.sampleEnd();
         return rteSampleResult;
       }
       if (client == null) {
         client = buildClient();
+        rteSampleResult.connectEnd();
+        if (getAction() == Action.SEND_INPUT) {
+          client.await(Collections
+              .singletonList(new SyncWaitCondition(getConnectionTimeout(), getStableTimeout())));
+        }
       }
-      rteSampleResult.connectEnd();
       RequestListener<RteProtocolClient> requestListener = new RequestListener<>(rteSampleResult,
           client);
       client.addTerminalStateListener(requestListener);
@@ -551,8 +552,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   private RteProtocolClient buildClient()
       throws RteIOException, InterruptedException, TimeoutException {
     RteProtocolClient client = protocolFactory.apply(getProtocol());
-    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout(),
-        getStableTimeout());
+    client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout());
     connections.get().put(buildConnectionId(), client);
     return client;
   }
