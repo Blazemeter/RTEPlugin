@@ -115,7 +115,7 @@ public class RTERecorderPanelIT {
     waitButtonEnabled(START_BUTTON_TEXT, false);
   }
 
-  private void waitButtonEnabled(String buttonName, boolean enable) {
+  public void waitButtonEnabled(String buttonName, boolean enable) {
     pause(new Condition("button " + buttonName + " to be " + (enable ? "enabled" : "disabled")) {
       @Override
       public boolean test() {
@@ -228,27 +228,17 @@ public class RTERecorderPanelIT {
     configureProperties();
 
     /*Text Fields*/
-    JTextComponentFixture portField = frame.textBox("portField");
-    JTextComponentFixture serverField = frame.textBox(("serverField"));
-    JTextComponentFixture connectionTimeoutField = frame.textBox(("connectionTimeout"));
-    JTextComponentFixture waitConditionsTimeoutThresholdField = frame.textBox(("waitConditionsTimeoutThreshold"));
+    defineAndSoftAssertJText("portField", PORT);
+    defineAndSoftAssertJText("serverField", SERVER);
+    defineAndSoftAssertJText("connectionTimeout", TIMEOUT);
+    defineAndSoftAssertJText("waitConditionsTimeoutThreshold", WAIT_TIMEOUT);
 
     /*ComboBoxes*/
-    JComboBoxFixture protocolComboBox = frame.comboBox("protocolComboBox");
-    JComboBoxFixture terminalTypeComboBox = frame.comboBox("terminalTypeComboBox");
+    defineAndSoftAssertJComboBox("protocolComboBox", PROTOCOL_TEXT);
+    defineAndSoftAssertJComboBox("terminalTypeComboBox", TERMINAL_TYPE_TEXT);
 
     /*RadioButton*/
-    JRadioButtonFixture sslTypeRadioButton = frame.radioButton("NONE");
-
-    softly.assertThat(portField.text()).as("portField").isEqualTo(PORT);
-    softly.assertThat(serverField.text()).as("serverField").isEqualTo(SERVER);
-    softly.assertThat(connectionTimeoutField.text()).as("connectionTimeout").isEqualTo(TIMEOUT);
-    softly.assertThat(waitConditionsTimeoutThresholdField.text()).as("waitConditionsTimeoutThreshold").isEqualTo(WAIT_TIMEOUT);
-
-    softly.assertThat(protocolComboBox.selectedItem()).as("protocolComboBox").isEqualTo(PROTOCOL_TEXT);
-    softly.assertThat(terminalTypeComboBox.selectedItem()).as("terminalTypeComboBox").isEqualTo(TERMINAL_TYPE_TEXT);
-
-    softly.assertThat(sslTypeRadioButton.isEnabled()).as("sslType_NONE").isEqualTo(true);
+    defineAndSoftAssertJRadio("NONE", true);
   }
 
   private void configureProperties(){
@@ -260,4 +250,21 @@ public class RTERecorderPanelIT {
     panel.setTerminalType(TERMINAL_TYPE);
     panel.setSSLType(SSL_TYPE);
   }
+
+  private void defineAndSoftAssertJText(String name, String value) {
+    JTextComponentFixture field = frame.textBox(name);
+    softly.assertThat(field.text()).as(name).isEqualTo(value);
+  }
+
+  private void defineAndSoftAssertJComboBox(String name, String value) {
+    JComboBoxFixture combo = frame.comboBox(name);
+    softly.assertThat(combo.selectedItem()).as(name).isEqualTo(value);
+  }
+
+  private void defineAndSoftAssertJRadio(String name, boolean value) {
+    JRadioButtonFixture sslTypeRadioButton = frame.radioButton(name);
+    softly.assertThat(sslTypeRadioButton.isEnabled()).as(name).isEqualTo(value);
+  }
+
+
 }
