@@ -78,30 +78,32 @@ public class RTERecorderPanelIT {
 
   @Test
   public void shouldNotifyStartRecordingListenerWhenStartRecording() throws Exception {
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    start.click();
+    clickButton(START_BUTTON_TEXT);
 
     verify(listener, timeout(VERIFY_TIMEOUT)).onRecordingStart();
   }
 
+  public void clickButton(String name){
+    JButtonFixture start = frame.button(name);
+    start.click();
+  }
+
   @Test
   public void shouldNotifyStopRecordingListenerWhenStopRecording(){
+    clickButton(START_BUTTON_TEXT);
+    waitButtonEnabled(STOP_BUTTON_TEXT, true);
 
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    JButtonFixture stop  = frame.button(STOP_BUTTON_TEXT);
-    start.click();
-    stop.click();
+    clickButton(STOP_BUTTON_TEXT);
 
     verify(listener, timeout(VERIFY_TIMEOUT)).onRecordingStop();
   }
 
   @Test
   public void shouldNotifyStopAndStartRecordingListenerWhenRestartRecording() throws Exception {
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    start.click();
+    clickButton(START_BUTTON_TEXT);
 
-    JButtonFixture restart = frame.button(RESTART_BUTTON_TEXT);
-    restart.click();
+    waitButtonEnabled(RESTART_BUTTON_TEXT, true);
+    clickButton(RESTART_BUTTON_TEXT);
 
     verify(listener, timeout(VERIFY_TIMEOUT)).onRecordingStop();
     verify(listener, timeout(VERIFY_TIMEOUT).times(2)).onRecordingStart();
@@ -109,8 +111,7 @@ public class RTERecorderPanelIT {
 
   @Test
   public void shouldDisableStartButtonWhenStartRecording(){
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    start.click();
+    clickButton(START_BUTTON_TEXT);
 
     waitButtonEnabled(START_BUTTON_TEXT, false);
   }
@@ -126,16 +127,14 @@ public class RTERecorderPanelIT {
 
   @Test
   public void shouldEnableStopButtonWhenStartRecording(){
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    start.click();
+    clickButton(START_BUTTON_TEXT);
 
     waitButtonEnabled(STOP_BUTTON_TEXT, true);
   }
 
   @Test
   public void shouldEnableRestartButtonWhenStartRecording(){
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    start.click();
+    clickButton(START_BUTTON_TEXT);
 
     waitButtonEnabled(RESTART_BUTTON_TEXT, true);
   }
@@ -157,30 +156,30 @@ public class RTERecorderPanelIT {
 
   @Test
   public void shouldEnableStartButtonWhenStopRecording(){
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    JButtonFixture stop = frame.button(STOP_BUTTON_TEXT);
-    start.click();
-    stop.click();
+    clickButton(START_BUTTON_TEXT);
+
+    waitButtonEnabled(STOP_BUTTON_TEXT, true);
+    clickButton(STOP_BUTTON_TEXT);
 
     waitButtonEnabled(START_BUTTON_TEXT, true);
   }
 
   @Test
   public void shouldDisableStopButtonWhenStopRecording(){
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    JButtonFixture stop = frame.button(STOP_BUTTON_TEXT);
-    start.click();
-    stop.click();
+    clickButton(START_BUTTON_TEXT);
+
+    waitButtonEnabled(STOP_BUTTON_TEXT, true);
+    clickButton(STOP_BUTTON_TEXT);
 
     waitButtonEnabled(STOP_BUTTON_TEXT, false);
   }
 
   @Test
   public void shouldDisableRestartButtonWhenStopRecording(){
-    JButtonFixture start = frame.button(START_BUTTON_TEXT);
-    JButtonFixture stop = frame.button(STOP_BUTTON_TEXT);
-    start.click();
-    stop.click();
+    clickButton(START_BUTTON_TEXT);
+
+    waitButtonEnabled(STOP_BUTTON_TEXT, true);
+    clickButton(STOP_BUTTON_TEXT);
 
     waitButtonEnabled(RESTART_BUTTON_TEXT, false);
   }
@@ -201,17 +200,15 @@ public class RTERecorderPanelIT {
   }
 
   private void settingFields(){
-    /*Text Fields*/
+
     JTextComponentFixture portField = frame.textBox("portField");
     JTextComponentFixture serverField = frame.textBox(("serverField"));
     JTextComponentFixture connectionTimeoutField = frame.textBox(("connectionTimeout"));
     JTextComponentFixture waitConditionsTimeoutThresholdField = frame.textBox(("waitConditionsTimeoutThreshold"));
 
-    /*ComboBoxes*/
     JComboBoxFixture protocolComboBox = frame.comboBox("protocolComboBox");
     JComboBoxFixture terminalTypeComboBox = frame.comboBox("terminalTypeComboBox");
 
-    /*RadioButton*/
     JRadioButtonFixture sslTypeRadioButton = frame.radioButton("NONE");
 
     portField.enterText(PORT);
@@ -227,18 +224,15 @@ public class RTERecorderPanelIT {
   public void shouldGetConfiguredFieldsWhenPropertiesAreSet(){
     configureProperties();
 
-    /*Text Fields*/
-    defineAndSoftAssertJText("portField", PORT);
-    defineAndSoftAssertJText("serverField", SERVER);
-    defineAndSoftAssertJText("connectionTimeout", TIMEOUT);
-    defineAndSoftAssertJText("waitConditionsTimeoutThreshold", WAIT_TIMEOUT);
+    softAssertJText("portField", PORT);
+    softAssertJText("serverField", SERVER);
+    softAssertJText("connectionTimeout", TIMEOUT);
+    softAssertJText("waitConditionsTimeoutThreshold", WAIT_TIMEOUT);
 
-    /*ComboBoxes*/
-    defineAndSoftAssertJComboBox("protocolComboBox", PROTOCOL_TEXT);
-    defineAndSoftAssertJComboBox("terminalTypeComboBox", TERMINAL_TYPE_TEXT);
+    softAssertJComboBox("protocolComboBox", PROTOCOL_TEXT);
+    softAssertJComboBox("terminalTypeComboBox", TERMINAL_TYPE_TEXT);
 
-    /*RadioButton*/
-    defineAndSoftAssertJRadio("NONE", true);
+    softAssertJRadio("NONE", true);
   }
 
   private void configureProperties(){
@@ -251,17 +245,17 @@ public class RTERecorderPanelIT {
     panel.setSSLType(SSL_TYPE);
   }
 
-  private void defineAndSoftAssertJText(String name, String value) {
+  private void softAssertJText(String name, String value) {
     JTextComponentFixture field = frame.textBox(name);
     softly.assertThat(field.text()).as(name).isEqualTo(value);
   }
 
-  private void defineAndSoftAssertJComboBox(String name, String value) {
+  private void softAssertJComboBox(String name, String value) {
     JComboBoxFixture combo = frame.comboBox(name);
     softly.assertThat(combo.selectedItem()).as(name).isEqualTo(value);
   }
 
-  private void defineAndSoftAssertJRadio(String name, boolean value) {
+  private void softAssertJRadio(String name, boolean value) {
     JRadioButtonFixture sslTypeRadioButton = frame.radioButton(name);
     softly.assertThat(sslTypeRadioButton.isEnabled()).as(name).isEqualTo(value);
   }
