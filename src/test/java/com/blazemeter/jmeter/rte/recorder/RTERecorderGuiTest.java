@@ -1,15 +1,12 @@
-package com.blazemeter.jmeter.rte.sampler.gui;
+package com.blazemeter.jmeter.rte.recorder;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
-import com.blazemeter.jmeter.rte.recorder.RTERecorder;
-import com.blazemeter.jmeter.rte.recorder.RTERecorderGui;
-import com.blazemeter.jmeter.rte.recorder.RTERecorderPanel;
-
-import com.blazemeter.jmeter.rte.recorder.RecordingStateListener;
 import kg.apc.emulators.TestJMeterUtils;
-import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -20,22 +17,21 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.VerificationCollector;
 
-import static org.mockito.Mockito.*;
-
 @RunWith(MockitoJUnitRunner.class)
-  public class RTERecorderGuiTest {
+public class RTERecorderGuiTest {
 
   @Rule
   public VerificationCollector collector = MockitoJUnit.collector();
 
-  private final String SERVER = "localhost";
-  private final int PORT = 23;
-  private final Protocol PROTOCOL = Protocol.TN5250;
-  private final TerminalType TERMINAL_TYPE = PROTOCOL.createProtocolClient().getDefaultTerminalType();
-  private final SSLType SSL_TYPE = SSLType.NONE;
-  private final long TIMEOUT = 5000;
+  private static final String SERVER = "localhost";
+  private static final int PORT = 23;
+  private static final Protocol PROTOCOL = Protocol.TN5250;
+  private static final TerminalType TERMINAL_TYPE = PROTOCOL.createProtocolClient()
+      .getDefaultTerminalType();
+  private static final SSLType SSL_TYPE = SSLType.NONE;
+  private static final long CONNECTION_TIMEOUT_MILLIS = 10000;
 
-  public RTERecorderGui rteRecorderGui;
+  private RTERecorderGui rteRecorderGui;
 
   @Mock
   private RTERecorder testElement;
@@ -55,22 +51,22 @@ import static org.mockito.Mockito.*;
     rteRecorderGui = new RTERecorderGui(panel);
   }
 
-  private void prepareTestElement(){
+  private void prepareTestElement() {
     when(testElement.getServer()).thenReturn(SERVER);
     when(testElement.getPort()).thenReturn(PORT);
     when(testElement.getProtocol()).thenReturn(PROTOCOL);
     when(testElement.getSSLType()).thenReturn(SSL_TYPE);
     when(testElement.getTerminalType()).thenReturn(TERMINAL_TYPE);
-    when(testElement.getConnectionTimeout()).thenReturn(TIMEOUT);
+    when(testElement.getConnectionTimeout()).thenReturn(CONNECTION_TIMEOUT_MILLIS);
   }
 
-  private void preparePanel(){
+  private void preparePanel() {
     when(panel.getServer()).thenReturn(SERVER);
     when(panel.getPort()).thenReturn(Integer.toString(PORT));
     when(panel.getProtocol()).thenReturn(PROTOCOL);
     when(panel.getSSLType()).thenReturn(SSL_TYPE);
     when(panel.getTerminalType()).thenReturn(TERMINAL_TYPE);
-    when(panel.getConnectionTimeout()).thenReturn(Long.toString(TIMEOUT));
+    when(panel.getConnectionTimeout()).thenReturn(Long.toString(CONNECTION_TIMEOUT_MILLIS));
   }
 
   @Test
@@ -101,7 +97,7 @@ import static org.mockito.Mockito.*;
     verify(panel).setProtocol(PROTOCOL);
     verify(panel).setTerminalType(TERMINAL_TYPE);
     verify(panel).setSSLType(SSL_TYPE);
-    verify(panel).setConnectionTimeout(Long.toString(TIMEOUT));
+    verify(panel).setConnectionTimeout(Long.toString(CONNECTION_TIMEOUT_MILLIS));
   }
 
   @Test
@@ -113,7 +109,7 @@ import static org.mockito.Mockito.*;
     verify(testElement).setProtocol(PROTOCOL);
     verify(testElement).setTerminalType(TERMINAL_TYPE);
     verify(testElement).setSSLType(SSL_TYPE);
-    verify(testElement).setConnectionTimeout(Long.toString(TIMEOUT));
+    verify(testElement).setConnectionTimeout(Long.toString(CONNECTION_TIMEOUT_MILLIS));
   }
 
 }
