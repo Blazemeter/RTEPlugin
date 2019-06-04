@@ -8,6 +8,7 @@ import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
+
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -87,6 +88,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
         JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
     JButton button = new JButton(JMeterUtils.getResString(resourceString));
     ImageIcon image = JMeterUtils.getImage("toolbar/" + iconSize + imageName);
+    button.setName(resourceString);
     button.setIcon(image);
     button.addActionListener(this);
     button.setActionCommand(actionCommand);

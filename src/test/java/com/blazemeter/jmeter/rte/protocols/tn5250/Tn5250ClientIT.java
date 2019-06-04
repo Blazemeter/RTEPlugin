@@ -1,15 +1,19 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
-import com.blazemeter.jmeter.rte.core.*;
+import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
@@ -272,8 +276,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     sendCredsByCoordWithSyncWait();
 
     /*
-    * When inputs are sent to client 2 changes happen: screen change and mouse moved
-    * */
+     * When inputs are sent to client 2 changes happen: screen change and mouse moved
+     * */
 
     verify(terminalEmulatorUpdater, times(2)).onTerminalStateChange();
   }
