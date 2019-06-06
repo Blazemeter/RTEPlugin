@@ -89,12 +89,17 @@ public class RecordingTargetFinderTest {
 
   @Before
   public void setup() {
-    MutableTreeNode treeNode = Mockito.mock(MutableTreeNode.class);
-    jMeterTreeNode.add(treeNode);
+    //MutableTreeNode treeNode = Mockito.mock(MutableTreeNode.class);
+    //jMeterTreeNode.add(treeNode);
   }
 
   @Test
   public void shouldGetFirstThreadGroupWhenFindTargetControllerNodeWithThreadGroups() {
+
+    //RecordingTargetFinder finder = new RecordingTargetFinder();
+
+    //finder.findTargetControllerNode();
+
     //RecordingTargetFinder recordingTargetFinder = new RecordingTargetFinder(jMeterTreeNode);
     //JMeterTreeNode targetControllerNode1 = recordingTargetFinder.findTargetControllerNode();
   }

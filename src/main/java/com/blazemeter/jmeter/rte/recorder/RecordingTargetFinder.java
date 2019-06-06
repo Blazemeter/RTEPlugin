@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import java.util.List;
-
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.protocol.http.control.RecordingController;
@@ -39,4 +38,5 @@ public class RecordingTargetFinder {
     }
     return null;
   }
+
 }

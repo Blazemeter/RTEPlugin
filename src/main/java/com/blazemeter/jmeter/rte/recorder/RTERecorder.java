@@ -52,7 +52,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient RecordingTargetFinder finder;
   private transient JMeterTreeNode samplersTargetNode;
   private transient RecordingStateListener recordingListener;
-  private transient RteProtocolClient terminalClient;
+
   private transient RteSampleResult sampleResult;
   private transient RTESampler sampler;
   private transient RequestListener requestListener;
@@ -60,15 +60,21 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient int sampleCount;
   private transient WaitConditionsRecorder waitConditionsRecorder;
 
+  //Implemented for tests
+  private transient JMeterTreeModel jMeterTreeModel;
+  private transient RteProtocolClient terminalClient;
+
+  //TODO: I need to search for a default way to build the Terminal Client
   public RTERecorder() {
-    this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()));
-    
+    this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
+        getJmeterTreeModel(), buildDefaultTerminalClient());
   }
 
-  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder) {
+  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder, JMeterTreeModel jMeterTreeModel, RteProtocolClient terminalClient) {
     terminalEmulatorSupplier = supplier;
     this.finder = finder;
-
+    this.jMeterTreeModel = jMeterTreeModel;
+    this.terminalClient = terminalClient;
   }
 
   @Override
@@ -167,36 +173,38 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   public void onRecordingStart() throws Exception {
     sampleCount = 0;
-    terminalEmulator = terminalEmulatorSupplier.get();
-
-    terminalEmulator.addTerminalEmulatorListener(this);
     samplersTargetNode = finder.findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
-    System.out.println("Llega hasta aqui");
-    // TODO add a TerminalStatusListener to terminalClient to get all changes from server and send
-    // them to terminalEmulator
-
+    //TODO: add a TerminalStatusListener to terminalClient to get all changes
+    //from server and send them to terminalEmulator
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
-    terminalClient = getProtocol().createProtocolClient();
-    System.out.println("12");
     try {
       TerminalType terminalType = getTerminalType();
       waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
           getTimeoutThresholdMillis(), RTESampler.getStableTimeout());
       waitConditionsRecorder.start();
+
       terminalClient
           .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
       sampleResult.connectEnd();
       initTerminalEmulator(terminalType);
       registerRequestListenerFor(sampleResult);
+
     } catch (TimeoutException | InterruptedException | RteIOException e) {
       LOG.error("Problem while connecting to {}", getServer(), e);
       RTESampler.updateErrorResult(e, sampleResult);
       recordPendingSample();
       throw e;
     }
+  }
+
+
+  private static RteProtocolClient buildDefaultTerminalClient(){
+    Protocol defaultProtocol = Protocol.TN5250;
+
+    return defaultProtocol.createProtocolClient();
   }
 
   private static JMeterTreeModel getJmeterTreeModel() {
@@ -221,7 +229,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private void addTestElementToTestPlan(TestElement testElement, JMeterTreeNode targetNode) {
     try {
-      JMeterTreeModel treeModel = getJmeterTreeModel();
+      //JMeterTreeModel treeModel = getJmeterTreeModel();
+      JMeterTreeModel treeModel = jMeterTreeModel;
+
       JMeterUtils.runSafe(true, () -> {
         try {
           treeModel.addComponent(testElement, targetNode);
@@ -237,8 +247,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private <T> void notifyChildren(Class<T> classFilter, Consumer<T> notificationMethod) {
-    JMeterTreeModel treeModel = getJmeterTreeModel();
-    JMeterTreeNode treeNode = treeModel.getNodeOf(this);
+    JMeterTreeNode treeNode = jMeterTreeModel.getNodeOf(this);
     if (treeNode != null) {
       Enumeration<?> kids = treeNode.children();
       while (kids.hasMoreElements()) {
@@ -289,7 +298,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private void initTerminalEmulator(TerminalType terminalType) {
-    terminalEmulator = new Xtn5250TerminalEmulator();
+    terminalEmulator = terminalEmulatorSupplier.get();
     terminalEmulator.addTerminalEmulatorListener(this);
     terminalEmulator.setKeyboardLock(true);
     terminalEmulator
