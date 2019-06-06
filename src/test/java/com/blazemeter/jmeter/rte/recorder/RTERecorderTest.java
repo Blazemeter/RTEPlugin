@@ -71,19 +71,18 @@ public class RTERecorderTest {
 
   @Mock
   private JMeterTreeNode mockedFirstTreeNodeKid;
-
   @Mock
   private JMeterTreeNode mockedSecondTreeNodeKid;
-
   @Mock
   private JMeterTreeNode mockedThirdTreeNodeKid;
-
 
   @Mock
   private TerminalEmulator mockedTerminalEmulator;
   @Mock
   private RteProtocolClient terminalClient;
 
+  @Mock
+  private RecordingStateListener mockedRecorderListener;
 
 
   @BeforeClass
@@ -213,9 +212,16 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldStopTerminalEmulatorWhenStartWithFailingTerminalClientConnect() throws Exception {
-    rteRecorder.setServer(INVALID_SERVER);
-    rteRecorder.onRecordingStart();
+  public void shouldStopTerminalEmulatorWhenStartWithFailingTerminalClientConnect() {
+
+    try {
+      doThrow(InterruptedException.class).when(terminalClient).connect(server, Integer.parseInt(port),
+          sslType, terminalType, Long.parseLong(timeout));
+      rteRecorder.onRecordingStart();
+    }
+    catch (Exception e){
+      verify(mockedTerminalEmulator).stop();
+    }
 
     verify(mockedTerminalEmulator).stop();
   }
@@ -296,11 +302,11 @@ public class RTERecorderTest {
 
   @Test
   public void shouldNotifyRecordingListenerWhenCloseTerminal() throws Exception {
+    rteRecorder.setRecordingStateListener(mockedRecorderListener);
     rteRecorder.onRecordingStart();
     rteRecorder.onCloseTerminal();
 
-    //TODO: Mock the Recording Listener
-    //TODO: Verify the listener been notified
+    verify(mockedRecorderListener).onRecordingStop();
   }
 
   @Test
@@ -326,7 +332,10 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotifySuccessfulSampleResultToChildrenSampleListenersWhenAttentionKeyAndSuccessfulResult(){
+  public void shouldNotifySuccessfulSampleResultToChildrenSampleListenersWhenAttentionKeyAndSuccessfulResult() throws Exception {
+    rteRecorder.onRecordingStart();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+
   }
 
   @Test
