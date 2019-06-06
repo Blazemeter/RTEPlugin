@@ -102,14 +102,9 @@ public class RTERecorderTest {
   private final List<Input> INPUTS = Collections.singletonList(new CoordInput(new Position(2, 1), "testusr"));
 
 
-  @BeforeClass
-  public static void prepareMocks(){
-
-  }
-
   @Before
   public void setup(){
-    //Mocking the Children of the Forest
+    //Mocking the list of Children
     when( mockedFirstTreeNodeKid.isEnabled()).thenReturn(true);
     when(mockedSecondTreeNodeKid.isEnabled()).thenReturn(true);
     when( mockedThirdTreeNodeKid.isEnabled()).thenReturn(true);
@@ -158,10 +153,17 @@ public class RTERecorderTest {
     verify(mockedTerminalEmulator).addTerminalEmulatorListener(rteRecorder);
   }
 
-  //TODO
   @Test
   public void shouldAddRteConfigToTargetControllerNodeWhenStart() throws Exception {
-    rteRecorder.onRecordingStart(); //Realmente no lo agrega porque el Node resulta null
+    rteRecorder.onRecordingStart();
+
+    /**
+     * Note to the reader: The first element on this verify must be a testElement
+     * but, since the one used is created on the fly during the onRecordStart,
+     * it can be "any", every time. The second argument is the mocked
+     * JMeterTreeNode.
+     */
+    verify(mockedJMeterTreeModel).addComponent(any(), eq(mockedJMeterTreeNode));
   }
 
   //TODO
@@ -219,8 +221,9 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldDisconnectTerminalClientWhenStartWithFailingTerminalClientConnect(){
-    //assertTrue(false);
+  public void shouldDisconnectTerminalClientWhenStartWithFailingTerminalClientConnect() throws Exception {
+    rteRecorder.onRecordingStart();
+
   }
 
   @Test
@@ -259,11 +262,20 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotifyChildrenTestStateListenersWhenCloseTerminal(){
+  public void shouldNotifyChildrenTestStateListenersWhenCloseTerminal() throws Exception {
+      rteRecorder.onRecordingStart();
+      rteRecorder.onCloseTerminal();
+
+      TestStateListener mockTestStateListener = (TestStateListener) mockedTestElementWithTestStateListener;
+      verify(mockTestStateListener).testEnded();
   }
 
   @Test
-  public void shouldRemoveEmulatorUpdaterWhenCloseTerminal(){
+  public void shouldRemoveEmulatorUpdaterWhenCloseTerminal() throws Exception {
+    rteRecorder.onRecordingStart();
+    rteRecorder.onCloseTerminal();
+
+    verify(terminalClient).removeTerminalStateListener(rteRecorder);
   }
 
   @Test
@@ -301,7 +313,7 @@ public class RTERecorderTest {
      * At the beginning when the terminal setup (initTerminalEmulator)
      * And when the attention key happens
      * */
-    verify(mockedTerminalEmulator, times(1)).setKeyboardLock(true);
+    verify(mockedTerminalEmulator, times(2)).setKeyboardLock(true);
   }
 
 
