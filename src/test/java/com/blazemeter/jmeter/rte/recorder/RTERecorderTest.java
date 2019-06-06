@@ -340,6 +340,14 @@ public class RTERecorderTest {
     rteRecorder.onRecordingStart();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
     //assertEquals(true, false);
+
+    /**
+    * There were two interactions with the Model
+     * 1st: When the Recording Starts, a new Test Element is added
+     * 2nd: When the onAttentionKey is triggered, all the pending
+     * samplers are recorded and thats when the Sampler is added
+    * */
+    verify(mockedJMeterTreeModel, times(2)).addComponent(any(), eq(mockedJMeterTreeNode));
   }
 
   @Test
