@@ -10,6 +10,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.Arrays;
@@ -18,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
 import org.assertj.swing.fixture.FrameFixture;
+import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
@@ -29,10 +35,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class Xtn5250TerminalEmulatorIT {
 
   private static final long PAUSE_TIMEOUT = 15000;
-  private static final int COLUMNS = 80;
-  private static final int ROWS = 24;
+  private static final int COLUMNS = 132;
+  private static final int ROWS = 43;
+  private static final String COPY_BUTTON = "copyButton";
+  private static final String PASTE_BUTTON = "pasteButton";
+
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
-  
+
   @Before
   public void setup() {
     xtn5250TerminalEmulator = new Xtn5250TerminalEmulator();
@@ -45,10 +54,10 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldShowTerminalEmulatorFrameWithProperlySizeWhenStart() {
-    xtn5250TerminalEmulator.setScreenSize(132, 43);
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.start();
     //xi5250Crt expected Height + StatusPanel expected height
-    int expectedHeight = 731 + 31;
+    int expectedHeight = 731 + 31 + 43;
     int expectedWidth = 1056;
     //The title bar size is depending on the OS,
     // so a threshold is added to be able to test on different OS
@@ -88,6 +97,7 @@ public class Xtn5250TerminalEmulatorIT {
   private void sendKey(int key, int row, int column, boolean keyboardLocked, String expectedScreen,
       boolean fieldIsEmpty)
       throws IOException {
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(buildScreen(fieldIsEmpty));
     FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
@@ -153,6 +163,78 @@ public class Xtn5250TerminalEmulatorIT {
   public void shouldGetProperTextWhenPressKeyOutOfField() throws IOException {
     sendKey(KeyEvent.VK_E, 1, 1, false,
         "test-screen.txt", true);
+  }
+
+  @Test
+  public void shouldCopyTestWhenClickCopyButton() throws IOException, UnsupportedFlavorException {
+    doCopy(null);
+  }
+
+  @Test
+  public void shouldCopyTestWhenPressShortcutWithControl()
+      throws IOException, UnsupportedFlavorException {
+    doCopy(KeyEvent.CTRL_MASK);
+  }
+
+  @Test
+  public void shouldCopyTestWhenPressShortcutWithCommand()
+      throws IOException, UnsupportedFlavorException {
+    doCopy(KeyEvent.META_MASK);
+  }
+
+  private void doCopy(Integer keyMask) throws IOException, UnsupportedFlavorException {
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreen(buildScreen(true));
+    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
+    frame.show();
+    try {
+      xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
+      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
+      if (keyMask == null) {
+        JButtonFixture copyButton = frame.button(COPY_BUTTON);
+        copyButton.click();
+      } else {
+        JComponentDriver driver = new JComponentDriver(frame.robot());
+        driver.pressAndReleaseKey(focusedComponent, KeyEvent.VK_C, new int[]{keyMask});
+      }
+      Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
+      String result = (String) clipboard.getContents(focusedComponent)
+          .getTransferData(DataFlavor.stringFlavor);
+      assertThat(result).isEqualTo("*****");
+    } finally {
+      frame.cleanUp();
+    }
+  }
+
+  @Test
+  public void shouldPasteTestWhenClickCopyButton() throws IOException, UnsupportedFlavorException {
+    doPaste(null);
+  }
+
+  private void doPaste(Integer keyMask) throws IOException, UnsupportedFlavorException {
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreen(buildScreen(true));
+    xtn5250TerminalEmulator.setKeyboardLock(false);
+    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
+    frame.show();
+    xtn5250TerminalEmulator.setCursor(2, 1);
+    try {
+      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
+      Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
+      StringSelection contents = new StringSelection("e");
+      clipboard.setContents(contents, contents);
+      if (keyMask == null) {
+        JButtonFixture pasteButton = frame.button(PASTE_BUTTON);
+        pasteButton.click();
+      } else {
+        JComponentDriver driver = new JComponentDriver(frame.robot());
+        driver.pressAndReleaseKey(focusedComponent, KeyEvent.VK_V, new int[]{keyMask});
+      }
+      assertThat(xtn5250TerminalEmulator.getScreen())
+          .isEqualTo(getFileContent("test-screen-press-key-on-field.txt"));
+    } finally {
+      frame.cleanUp();
+    }
   }
 
   private String getFileContent(String file) throws IOException {

@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -12,6 +13,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -22,7 +24,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 
@@ -60,7 +68,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           put(new KeyEventMap(KeyEvent.META_MASK, KeyEvent.VK_F4), AttentionKey.CLEAR);
           put(new KeyEventMap(0, KeyEvent.VK_PAUSE), AttentionKey.CLEAR);
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_ESCAPE), AttentionKey.SYSRQ);
-          put(new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_CONTROL), AttentionKey.RESET);
+          put(new KeyEventMap(0, KeyEvent.VK_CONTROL), AttentionKey.RESET);
           put(new KeyEventMap(0, KeyEvent.VK_PAGE_DOWN), AttentionKey.ROLL_UP);
           put(new KeyEventMap(0, KeyEvent.VK_PAGE_UP), AttentionKey.ROLL_DN);
           put(new KeyEventMap(KeyEvent.META_MASK, KeyEvent.VK_F1), AttentionKey.PA1);
@@ -76,11 +84,21 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
 
+  private static final ImageIcon COPY_ICON = new ImageIcon(
+      StatusPanel.class.getResource("/keyboard-locked.png"));
+  private static final ImageIcon PASTE_ICON = new ImageIcon(
+      StatusPanel.class.getResource("/keyboard-locked.png"));
+  private JButton copyButton = SwingUtils
+      .createComponent("copyButton", new JButton(COPY_ICON));
+  private JButton pasteButton = SwingUtils
+      .createComponent("pasteButton", new JButton(PASTE_ICON));
+
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private boolean stopping;
   private StatusPanel statusPanel = new StatusPanel();
-  private XI5250Crt xi5250Crt = createCustomXI5250Crt();
+  private XI5250Crt xi5250Crt = new CustomXI5250Crt();
+  private JPanel toolsPanel = createToolsPanel();
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -89,6 +107,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     xi5250Crt.setEnabled(true);
     setTitle(TITLE);
     setLayout(new BorderLayout());
+    add(toolsPanel, BorderLayout.NORTH);
     add(xi5250Crt, BorderLayout.CENTER);
     add(statusPanel, BorderLayout.SOUTH);
     addWindowListener(new WindowAdapter() {
@@ -112,53 +131,28 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       }
     });
     setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
   }
 
-  private XI5250Crt createCustomXI5250Crt() {
-    return new XI5250Crt() {
-      @Override
-      protected void processKeyEvent(KeyEvent e) {
-        synchronized (Xtn5250TerminalEmulator.this) {
-          AttentionKey attentionKey = null;
-          if (e.getID() == KeyEvent.KEY_PRESSED) {
-            attentionKey = KEY_EVENTS
-                .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-            if (attentionKey != null) {
+  private JPanel createToolsPanel() {
+    JPanel toolsPanel = new JPanel();
+    GroupLayout layout = new GroupLayout(toolsPanel);
+    layout.setAutoCreateContainerGaps(true);
+    layout.setAutoCreateGaps(true);
+    toolsPanel.setLayout(layout);
 
-              List<Input> fields = getInputFields();
-              for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-                listener.onAttentionKey(attentionKey, fields);
-              }
-            }
-          }
-          if (!locked || attentionKey != null) {
-            //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
-            // when shift mask is enabled, in this way allways delete
-            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-              e.setModifiers(KeyEvent.SHIFT_MASK);
-            }
-            super.processKeyEvent(e);
-            statusPanel
-                .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
-          }
-        }
-      }
+    layout.setHorizontalGroup(layout.createSequentialGroup()
+        .addComponent(copyButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addComponent(pasteButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+        .addComponent(copyButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(pasteButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE));
 
-      @Override
-      protected void processMouseEvent(MouseEvent e) {
-        super.processMouseEvent(e);
-        statusPanel
-            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
-      }
-
-      @Override
-      public void paintComponent(Graphics g) {
-        synchronized (Xtn5250TerminalEmulator.this) {
-          super.paintComponent(g);
-        }
-      }
-    };
+    return toolsPanel;
   }
 
   @Override
@@ -223,6 +217,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     return screen.toString();
   }
 
+  @VisibleForTesting
+  public void setSelectedArea(Rectangle rectangle) {
+    xi5250Crt.setSelectedArea(rectangle);
+  }
+
   @Override
   public void soundAlarm() {
     Toolkit.getDefaultToolkit().beep();
@@ -283,7 +282,88 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     public int hashCode() {
       return Objects.hash(modifier, specialKey);
     }
-
   }
 
+  private class CustomXI5250Crt extends XI5250Crt {
+
+    private boolean copyPaste = false;
+
+    CustomXI5250Crt() {
+      super();
+      copyButton.addActionListener(e -> {
+        doCopy();
+        xi5250Crt.requestFocus();
+      });
+      pasteButton.addActionListener(e -> {
+        doPaste();
+        xi5250Crt.requestFocus();
+      });
+    }
+
+    @Override
+    protected synchronized void processKeyEvent(KeyEvent e) {
+      AttentionKey attentionKey = null;
+      if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_C
+          && e.getModifiers() == KeyEvent.META_MASK) {
+        doCopy();
+      } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_C
+          && e.getModifiers() == KeyEvent.CTRL_MASK) {
+        doCopy();
+        copyPaste = true;
+      } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_V
+          && e.getModifiers() == KeyEvent.META_MASK && !locked) {
+        doPaste();
+      } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_V
+          && e.getModifiers() == KeyEvent.CTRL_MASK && !locked) {
+        doPaste();
+        copyPaste = true;
+      } else if (e.getID() == KeyEvent.KEY_RELEASED && e.getKeyCode() == KeyEvent.VK_CONTROL
+          && copyPaste) {
+        copyPaste = false;
+      } else if (isAnyKeyPressedOrControlKeyReleasedAndNotCopy(e)) {
+        attentionKey = KEY_EVENTS
+            .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
+        if (attentionKey != null) {
+          List<Input> fields = getInputFields();
+          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+            listener.onAttentionKey(attentionKey, fields);
+          }
+        }
+      }
+
+      if (!locked || attentionKey != null) {
+        //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
+        // when shift mask is enabled, in this way allways delete
+        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+          e.setModifiers(KeyEvent.SHIFT_MASK);
+        }
+        super.processKeyEvent(e);
+        statusPanel
+            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+      }
+    }
+
+    //This is implemented in this way because ctrl key is used in a shortcut to
+    //copy/paste and the attention key should be triggered only if have not
+    //executed a copy paste before.
+    private boolean isAnyKeyPressedOrControlKeyReleasedAndNotCopy(KeyEvent e) {
+      return (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() != KeyEvent.VK_CONTROL) || (
+          e.getID() == KeyEvent.KEY_RELEASED && e.getKeyCode() == KeyEvent.VK_CONTROL
+              && !copyPaste);
+    }
+
+    @Override
+    protected void processMouseEvent(MouseEvent e) {
+      super.processMouseEvent(e);
+      statusPanel
+          .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+      synchronized (Xtn5250TerminalEmulator.this) {
+        super.paintComponent(g);
+      }
+    }
+  }
 }

@@ -203,5 +203,4 @@ public class StatusPanel extends JPanel {
       };
     }
   }
-
 }
