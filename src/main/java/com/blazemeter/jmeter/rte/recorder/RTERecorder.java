@@ -23,6 +23,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.jmeter.config.ConfigTestElement;
@@ -60,21 +61,22 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient int sampleCount;
   private transient WaitConditionsRecorder waitConditionsRecorder;
 
-  //Implemented for tests
+  private transient Function<Protocol, RteProtocolClient> protocolFactory;
   private transient JMeterTreeModel jMeterTreeModel;
   private transient RteProtocolClient terminalClient;
 
   //TODO: I need to search for a default way to build the Terminal Client
   public RTERecorder() {
     this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
-        getJmeterTreeModel(), buildDefaultTerminalClient());
+        getJmeterTreeModel(), Protocol::createProtocolClient);
   }
 
-  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder, JMeterTreeModel jMeterTreeModel, RteProtocolClient terminalClient) {
+  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder, JMeterTreeModel jMeterTreeModel, Function<Protocol, RteProtocolClient> factory) {
     terminalEmulatorSupplier = supplier;
     this.finder = finder;
     this.jMeterTreeModel = jMeterTreeModel;
-    this.terminalClient = terminalClient;
+    this.protocolFactory = factory;
+    this.terminalClient = protocolFactory.apply(getProtocol());
   }
 
   @Override
@@ -172,14 +174,15 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   public void onRecordingStart() throws Exception {
+    LOG.debug("Start recording");
     sampleCount = 0;
     samplersTargetNode = finder.findTargetControllerNode();
     addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
-    //TODO: add a TerminalStatusListener to terminalClient to get all changes
-    //from server and send them to terminalEmulator
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
+    terminalClient = getProtocol().createProtocolClient();
+
     try {
       TerminalType terminalType = getTerminalType();
       waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
@@ -196,6 +199,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       LOG.error("Problem while connecting to {}", getServer(), e);
       RTESampler.updateErrorResult(e, sampleResult);
       recordPendingSample();
+      terminalClient.disconnect();
       throw e;
     }
   }
@@ -229,12 +233,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private void addTestElementToTestPlan(TestElement testElement, JMeterTreeNode targetNode) {
     try {
-      //JMeterTreeModel treeModel = getJmeterTreeModel();
-      JMeterTreeModel treeModel = jMeterTreeModel;
-
       JMeterUtils.runSafe(true, () -> {
         try {
-          treeModel.addComponent(testElement, targetNode);
+          jMeterTreeModel.addComponent(testElement, targetNode);
         } catch (IllegalUserActionException illegalUserAction) {
           LOG.error("Error placing sample configTestElement", illegalUserAction);
           JMeterUtils.reportErrorToUser(illegalUserAction.getMessage());
