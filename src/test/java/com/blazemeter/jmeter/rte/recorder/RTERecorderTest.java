@@ -170,8 +170,8 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotifyTerminalEmulatorUpdaterWhenStart(){
-
+  public void shouldNotifyTerminalEmulatorUpdaterWhenStart() throws Exception {
+    rteRecorder.onRecordingStart();
   }
 
   @Test
@@ -181,7 +181,8 @@ public class RTERecorderTest {
           TERMINAL_TYPE, TIMEOUT);
       rteRecorder.onRecordingStart();
     } catch (Exception e) {
-      
+      //TODO: Fix the relation with the terminal client, since, even is the Client has a dothrow
+      // The client don't throw any exception
     }
   }
 

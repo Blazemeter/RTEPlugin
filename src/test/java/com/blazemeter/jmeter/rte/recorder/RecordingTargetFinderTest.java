@@ -1,14 +1,28 @@
 //Backup RecordingTargetFinderTest
 package com.blazemeter.jmeter.rte.recorder;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
+import org.apache.jmeter.exceptions.IllegalUserActionException;
+import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
+import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.TestStateListener;
+import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.swing.tree.MutableTreeNode;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.Mockito.*;
 
 public class RecordingTargetFinderTest {
 
@@ -30,93 +44,82 @@ public class RecordingTargetFinderTest {
    *custom instance of the tree model instead of getting it from singleton and checking against that, that
    *might be cleaner.
    *
-   *Additionally remove logic which checks target != null, while, etc (that is for grouping and we are not grouping).
-   *
-   *
-   * Create a constructor of RTERecorder that receives a Supplier<TerminalEmulator> and is initialized by default to
-   *Xtn5250TerminalEmulator::new, and use it instead of the new of Xtn5250TerminalEmulator. This will allow you
-   *to provide a different supplier for tests which return mocked instances to TerminalEmulator.
-   *Provide a mocked RecordingTargetFinder in constructor which always returns the same tree
-   *node, and allows to verify elements added to it. In setup add the rte recorder to the
-   *tree node and a mocked TestStateListener and SampleListener as children of recorder
-   *in tree model, so you can verify if it is called in later test Provide a
-   *protocolFactory (as we do in RTESampler) to be able to provide mocked
-   *instances of client for verifying connect and getting expected
-   *logic (status of keyboard etc)
-   *
-   * shouldAddRecorderAsEmulatorListenerWhenStart
-   * shouldAddRteConfigToTargetControllerNodeWhenStart
-   * shouldNotifyChildrenTestStateListenersWhenStart
-   * shouldLockEmulatorKeyboardWhenStart
-   * shouldStartEmulatorWhenStart
-   * shouldConnectTerminalClientWhenStart
-   * shouldAddAEmulatorUpdaterAsTerminalStateListenerWhenStart
-   * shouldAddARequestListenerAsTerminalStateListenerWhenStart
-   * shouldStopTerminalEmulatorWhenStartWithFailingTerminalClientConnect
-   * shouldDisconnectTerminalClientWhenStartWithFailingTerminalClientConnect
-   *
-   *
-   * shouldNotifyChildrenTestStateListenersWhenStop
-   * shouldRemoveEmulatorUpdaterWhenStop
-   * shouldStopEmulatorWhenStop
-   * shouldDisconnectTerminalClientWhenStop
-   *
-   * shouldNotifyChildrenTestStateListenersWhenCloseTerminal
-   * shouldRemoveEmulatorUpdaterWhenCloseTerminal
-   * shouldStopEmulatorWhenCloseTerminal
-   * shouldDisconnectTerminalClientWhenCloseTerminal
-   * shouldNotifyRecordingListenerWhenCloseTerminal
-   *
-   * shouldLockEmulatorKeyboardWhenAttentionKey
-   * shouldResetTerminalClientAlarmWhenAttentionKey
-   * shouldNotifySuccessfulSampleResultToChildrenSampleListenersWhenAttentionKeyAndSuccessfulResult
-   * shouldNotifyFailedSampleResultToChildrenSampleListenersWhenAttentionKeyAndFailingSendingToTerminalClient
-   * (I think we have a bug here, an if is missing before RTESampler.updateSampleResultResponse)
-   *
-   * shouldAddSamplerToTargetControllerNodeWhenAttentionKey
-   * shouldRegisterRequestListenerWhenAttentionKey
-   * shouldSendInputsAndAttentionKeyToTerminalClientWhenAttentionKey
-   * shouldSetEmulatorStatusMessageWhenAttentionKeyWithFailingTerminalClientSend
    *
    */
+
+  RecordingTargetFinder finder;
+
   @Mock
-  JMeterTreeNode jMeterTreeNode;
+  private JMeterTreeModel jMeterTreeModel;
+
+  private JMeterTreeNode mockedTargetNode; //Doubt, do I need to add the @Mock?
+  @Mock
+  private JMeterTreeNode mockedSecondNode;
+  @Mock
+  private JMeterTreeNode mockedThirdNode;
+
+
+  @Mock
+  private TestElement tp;
+  @Mock
+  private TestElement wp;
 
   @BeforeClass
   public static void setupClass() {
-    //JMeterTestUtils.setupJmeterEnv();
+    JMeterTestUtils.setupJmeterEnv();
+  }
+
+  /*
+  * TODO: DELETE ME if this apporach works
+  * */
+  public void setupBackup(){
+    mockedTargetNode = mock(JMeterTreeNode.class, withSettings().extraInterfaces(AbstractThreadGroup.class));
+
+    List<JMeterTreeNode> nodes = new ArrayList<>();
+    nodes.add(mockedTargetNode);
+    nodes.add(mockedSecondNode);
+    nodes.add(mockedThirdNode);
+
+
+    when(jMeterTreeModel.getNodesOfType(AbstractThreadGroup.class)).thenReturn(nodes);
+
+    finder = new RecordingTargetFinder(jMeterTreeModel);
   }
 
   @Before
-  public void setup() {
-    //MutableTreeNode treeNode = Mockito.mock(MutableTreeNode.class);
-    //jMeterTreeNode.add(treeNode);
+  public void setup() throws IllegalUserActionException {
+    JMeterTreeModel model = new  JMeterTreeModel(tp, wp);
+    model.addComponent(tp, mockedTargetNode);
+    model.addComponent(wp, mockedSecondNode);
+    model.addComponent(tp, mockedThirdNode);
+
   }
 
   @Test
   public void shouldGetFirstThreadGroupWhenFindTargetControllerNodeWithThreadGroups() {
 
-    //RecordingTargetFinder finder = new RecordingTargetFinder();
+    JMeterTreeNode found = finder.findTargetControllerNode();
 
-    //finder.findTargetControllerNode();
-
-    //RecordingTargetFinder recordingTargetFinder = new RecordingTargetFinder(jMeterTreeNode);
-    //JMeterTreeNode targetControllerNode1 = recordingTargetFinder.findTargetControllerNode();
+    assertEquals(mockedTargetNode, found);
   }
 
   @Test
   public void shouldGetFirstRecordingControllerWhenFindTargetControllerNodeWithRecordingControllers() {
+    JMeterTreeNode targetControllerNode = finder.findTargetControllerNode();
   }
 
   @Test
   public void shouldGetRecordingControllerWhenFindTargetControllerNodeWithThreadGroupAndRecordingController() {
+    JMeterTreeNode targetControllerNode = finder.findTargetControllerNode();
   }
 
   @Test
   public void shouldGetGenericControllerWhenFindTargetControllerNodeWithRecordingControllerANdNestedGenericController() {
+    JMeterTreeNode targetControllerNode = finder.findTargetControllerNode();
   }
 
   @Test
   public void shouldThrowIllegalStateExceptionWhenFindTargetControllerNodeWithNoThreadGroupsOrRecordingControllers() {
+    JMeterTreeNode targetControllerNode = finder.findTargetControllerNode();
   }
 }
