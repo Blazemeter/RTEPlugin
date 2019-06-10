@@ -29,10 +29,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class Xtn5250TerminalEmulatorIT {
 
   private static final long PAUSE_TIMEOUT = 15000;
-  private static final int COLUMNS = 132;
-  private static final int ROWS = 43;
+  private static final int COLUMNS = 80;
+  private static final int ROWS = 24;
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
-
+  
   @Before
   public void setup() {
     xtn5250TerminalEmulator = new Xtn5250TerminalEmulator();
@@ -45,7 +45,7 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldShowTerminalEmulatorFrameWithProperlySizeWhenStart() {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(132, 43);
     xtn5250TerminalEmulator.start();
     //xi5250Crt expected Height + StatusPanel expected height
     int expectedHeight = 731 + 31;
@@ -88,7 +88,6 @@ public class Xtn5250TerminalEmulatorIT {
   private void sendKey(int key, int row, int column, boolean keyboardLocked, String expectedScreen,
       boolean fieldIsEmpty)
       throws IOException {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(buildScreen(fieldIsEmpty));
     FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
