@@ -193,6 +193,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   @Override
   public synchronized void setScreen(Screen screen) {
+    Dimension screenSize = screen.getSize();
+    setScreenSize(screenSize.width, screenSize.height);
     xi5250Crt.clear();
     xi5250Crt.removeFields();
     for (Screen.Segment s : screen.getSegments()) {
