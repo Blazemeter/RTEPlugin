@@ -8,7 +8,6 @@ import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigPanel;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
-
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,7 +21,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle;
-
 import org.apache.jmeter.gui.util.JMeterToolBar;
 import org.apache.jmeter.util.JMeterUtils;
 
@@ -83,7 +81,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   }
 
   private JButton buildButton(String resourceString, String imageName,
-                              String actionCommand) {
+      String actionCommand) {
     String iconSize = JMeterUtils.getPropDefault(JMeterToolBar.TOOLBAR_ICON_SIZE,
         JMeterToolBar.DEFAULT_TOOLBAR_ICON_SIZE);
     JButton button = new JButton(JMeterUtils.getResString(resourceString));
@@ -206,13 +204,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
         default:
           throw new UnsupportedOperationException(action);
       }
-    } catch (TimeoutException | RteIOException ex) {
-      String errorMsg = 
-          (ex instanceof TimeoutException) ? "Timeout waiting for connection end after " + 
-              getConnectionTimeout() + "ms" : "Could not connect to the server";
-      onRecordingStop();
-      JMeterUtils.reportErrorToUser(errorMsg);
-    } catch (Exception ex) {
+    } catch (UnsupportedOperationException ex) {
       LOG.error("Problem performing requested action {}", action, ex);
       JMeterUtils.reportErrorToUser(ex.getMessage());
     }
@@ -228,4 +220,18 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     updateButtonsIfRunning(false);
   }
 
+  @Override
+  public void onExceptionState(Exception e) {
+    updateButtonsIfRunning(false);
+    String errorMsg;
+    if (e instanceof TimeoutException) {
+      errorMsg = "Timeout waiting for connection end after " +
+          getConnectionTimeout() + "ms";
+    } else if (e instanceof RteIOException) {
+      errorMsg = "Could not connect to the server";
+    } else {
+      errorMsg = "Problem performing connection to the server";
+    }
+    JMeterUtils.reportErrorToUser(errorMsg);
+  }
 }

@@ -2,8 +2,10 @@ package com.blazemeter.jmeter.rte.recorder;
 
 public interface RecordingStateListener {
 
-  void onRecordingStart() throws Exception;
+  void onRecordingStart();
 
   void onRecordingStop();
+  
+  void onExceptionState(Exception e);
 
 }
