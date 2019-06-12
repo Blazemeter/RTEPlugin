@@ -51,31 +51,22 @@ public class RTERecorderTest {
 
   @Mock
   private RecordingTargetFinder finder;
-
   @Mock
   private JMeterTreeModel mockedJMeterTreeModel;
-
   @Mock
   private JMeterTreeNode mockedJMeterTreeNode;
-
   @Mock
   private JMeterTreeNode mockedFirstTreeNodeKid;
-
   @Mock
   private JMeterTreeNode mockedSecondTreeNodeKid;
-
   @Mock
   private JMeterTreeNode mockedThirdTreeNodeKid;
-
   @Mock
   private TerminalEmulator mockedTerminalEmulator;
-
   @Mock
   private TerminalEmulatorUpdater mockedTerminalEmulatorUpdater;
-
   @Mock
   private RteProtocolClient terminalClient;
-
   @Mock
   private RecordingStateListener mockedRecorderListener;
 
