@@ -21,7 +21,6 @@ public class RecordingTargetFinderTest {
 
   private JMeterTreeModel model;
   private RecordingTargetFinder finder;
-  private ThreadGroup baseThreadGroup = new ThreadGroup();
 
   @Mock
   private RecordingController firstRecordingController;
@@ -29,6 +28,8 @@ public class RecordingTargetFinderTest {
   private RecordingController secondRecordingController;
   @Mock
   private ThreadGroup firstThreadGroup;
+  @Mock
+  private ThreadGroup baseThreadGroup;
 
   @BeforeClass
   public static void setupClass() {
@@ -39,6 +40,7 @@ public class RecordingTargetFinderTest {
   public void setup() {
     when(firstRecordingController.isEnabled()).thenReturn(true);
     when(secondRecordingController.isEnabled()).thenReturn(true);
+    when(baseThreadGroup.isEnabled()).thenReturn(true);
   }
 
   @Test
