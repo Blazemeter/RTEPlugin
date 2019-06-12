@@ -71,8 +71,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
         getJmeterTreeModel(), Protocol::createProtocolClient, null);
   }
 
-  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder, JMeterTreeModel jMeterTreeModel,
-                     Function<Protocol, RteProtocolClient> factory, TerminalEmulatorUpdater terminalEmulatorUpdater) {
+  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder,
+                     JMeterTreeModel jMeterTreeModel, Function<Protocol,
+                     RteProtocolClient> factory,
+                     TerminalEmulatorUpdater terminalEmulatorUpdater) {
     terminalEmulatorSupplier = supplier;
     this.finder = finder;
     this.jMeterTreeModel = jMeterTreeModel;
@@ -205,8 +207,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     }
   }
 
-
-  private static RteProtocolClient buildDefaultTerminalClient(){
+  private static RteProtocolClient buildDefaultTerminalClient() {
     Protocol defaultProtocol = Protocol.TN5250;
 
     return defaultProtocol.createProtocolClient();
@@ -306,7 +307,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator
         .setScreenSize(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
     terminalEmulator.start();
-    terminalEmulatorUpdater = (terminalEmulatorUpdater == null ? new TerminalEmulatorUpdater(terminalEmulator, terminalClient) : terminalEmulatorUpdater);
+    terminalEmulatorUpdater = (terminalEmulatorUpdater == null ? new
+        TerminalEmulatorUpdater(terminalEmulator, terminalClient) : terminalEmulatorUpdater);
     terminalClient.addTerminalStateListener(this);
     terminalEmulatorUpdater.onTerminalStateChange();
   }
