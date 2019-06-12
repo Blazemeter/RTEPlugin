@@ -175,8 +175,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     executor = Executors.newSingleThreadExecutor();
     executor.submit(() -> {
       try {
-        terminalClient
-            .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
+        synchronized (this) {
+          terminalClient
+              .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
+          sampleResult.connectEnd();
+          initTerminalEmulator(terminalType);
+          registerRequestListenerFor(sampleResult);
+        }
       } catch (RteIOException | InterruptedException | TimeoutException e) {
         onExceptionState(e);
         RTESampler.updateErrorResult(e, sampleResult);
@@ -185,11 +190,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
         recordingListener.onExceptionState(e);
       }
     });
-    sampleResult.connectEnd();
-    initTerminalEmulator(terminalType);
-    registerRequestListenerFor(sampleResult);
-  }
 
+  }
+  
   private JMeterTreeNode findTargetControllerNode() {
     JMeterTreeNode targetNode = findFirstNodeOfType(RecordingController.class);
     if (targetNode == null) {
@@ -377,33 +380,40 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onRecordingStop() {
-    LOG.debug("Stopping recording");
-    recordPendingSample();
-    sampleResult = buildSampleResult(Action.DISCONNECT);
-    sampler = buildSampler(Action.DISCONNECT, null, null);
-    terminalEmulator.stop();
-    requestListener.stop();
-    try {
-      terminalClient.disconnect();
-    } catch (RteIOException e) {
-      LOG.error("Problem while disconnecting from server", e);
-      RTESampler.updateErrorResult(e, sampleResult);
-    } finally {
-      if (sampleResult.getResponseCode().isEmpty()) {
-        sampleResult.setSuccessful(true);
-        sampleResult.sampleEnd();
+    executor.shutdownNow();
+    synchronized (this) {
+      if (terminalEmulator != null) {
+        LOG.debug("Stopping recording");
+        recordPendingSample();
+        sampleResult = buildSampleResult(Action.DISCONNECT);
+        sampler = buildSampler(Action.DISCONNECT, null, null);
+        terminalEmulator.stop();
+        terminalEmulator = null;
+        requestListener.stop();
+        try {
+          terminalClient.disconnect();
+        } catch (RteIOException e) {
+          LOG.error("Problem while disconnecting from server", e);
+          RTESampler.updateErrorResult(e, sampleResult);
+        } finally {
+          if (sampleResult.getResponseCode().isEmpty()) {
+            sampleResult.setSuccessful(true);
+            sampleResult.sampleEnd();
+          }
+          notifySampleOccurred();
+          addTestElementToTestPlan(sampler, samplersTargetNode);
+        }
+        terminalClient.removeTerminalStateListener(this);
+        notifyChildren(TestStateListener.class, TestStateListener::testEnded);
       }
-      notifySampleOccurred();
-      addTestElementToTestPlan(sampler, samplersTargetNode);
     }
-    terminalClient.removeTerminalStateListener(this);
-    notifyChildren(TestStateListener.class, TestStateListener::testEnded);
   }
 
   @Override
   public void onExceptionState(Exception e) {
-    LOG.error("Problem while connecting to {}", getServer(), e);
-    terminalEmulator.stop();
+    if (!(e instanceof InterruptedException)) {
+      LOG.error("Problem while connecting to {}", getServer(), e);
+    }
   }
 
   @Override

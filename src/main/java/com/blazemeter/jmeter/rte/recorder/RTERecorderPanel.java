@@ -223,12 +223,18 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   @Override
   public void onExceptionState(Exception e) {
     updateButtonsIfRunning(false);
+    if (!(e instanceof InterruptedException)) {
+      reportExceptionToUser(e);
+    }
+  }
+
+  private void reportExceptionToUser(Exception e) {
     String errorMsg;
     if (e instanceof TimeoutException) {
       errorMsg = "Timeout waiting for connection end after " +
           getConnectionTimeout() + "ms";
     } else if (e instanceof RteIOException) {
-      errorMsg = 
+      errorMsg =
           "Problem while connecting to " + getServer();
     } else {
       errorMsg = "Problem performing connection to the server";
