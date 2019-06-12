@@ -10,9 +10,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RecordingTargetFinderTest {
@@ -21,13 +23,23 @@ public class RecordingTargetFinderTest {
   private RecordingTargetFinder finder;
   private ThreadGroup baseThreadGroup = new ThreadGroup();
 
+  @Mock
+  private RecordingController firstRecordingController;
+  @Mock
+  private RecordingController secondRecordingController;
+  @Mock
+  private ThreadGroup firstThreadGroup;
+
   @BeforeClass
   public static void setupClass() {
     JMeterTestUtils.setupJmeterEnv();
   }
 
   @Before
-  public void setup() {}
+  public void setup() {
+    when(firstRecordingController.isEnabled()).thenReturn(true);
+    when(secondRecordingController.isEnabled()).thenReturn(true);
+  }
 
   @Test
   public void shouldGetFirstThreadGroupWhenFindTargetControllerNodeWithThreadGroups() {
@@ -35,19 +47,13 @@ public class RecordingTargetFinderTest {
     finder = new RecordingTargetFinder(model);
     JMeterTreeNode found = finder.findTargetControllerNode();
 
-    assertEquals(ThreadGroup.class, found.getTestElement().getClass());
+    assertEquals(baseThreadGroup, found.getTestElement());
   }
-
 
   @Test
   public void shouldGetFirstRecordingControllerWhenFindTargetControllerNodeWithRecordingControllers() throws IllegalUserActionException {
     model  = new JMeterTreeModel(baseThreadGroup, null);
     JMeterTreeNode modelRoot = (JMeterTreeNode) model.getRoot();
-
-    RecordingController firstRecordingController = new RecordingController();
-    firstRecordingController.setName("First Recording Controller");
-    RecordingController secondRecordingController = new RecordingController();
-    secondRecordingController.setName("Second Recording Controller");
 
     model.addComponent(firstRecordingController, modelRoot);
     model.addComponent(secondRecordingController, modelRoot);
@@ -63,12 +69,6 @@ public class RecordingTargetFinderTest {
   public void shouldGetRecordingControllerWhenFindTargetControllerNodeWithThreadGroupAndRecordingController() throws IllegalUserActionException {
     model  = new JMeterTreeModel(baseThreadGroup, null);
     JMeterTreeNode modelRoot = (JMeterTreeNode) model.getRoot();
-
-    RecordingController firstRecordingController = new RecordingController();
-    firstRecordingController.setName("First Recording Controller");
-
-    ThreadGroup firstThreadGroup = new ThreadGroup();
-    firstThreadGroup.setName("First Thread Groud");
 
     model.addComponent(firstRecordingController, modelRoot);
     model.addComponent(firstThreadGroup, modelRoot);
