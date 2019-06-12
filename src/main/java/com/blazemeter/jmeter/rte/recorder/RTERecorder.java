@@ -68,15 +68,16 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   //TODO: I need to search for a default way to build the Terminal Client
   public RTERecorder() {
     this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
-        getJmeterTreeModel(), Protocol::createProtocolClient);
+        getJmeterTreeModel(), Protocol::createProtocolClient, null);
   }
 
-  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder, JMeterTreeModel jMeterTreeModel, Function<Protocol, RteProtocolClient> factory) {
+  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder, JMeterTreeModel jMeterTreeModel,
+                     Function<Protocol, RteProtocolClient> factory, TerminalEmulatorUpdater terminalEmulatorUpdater) {
     terminalEmulatorSupplier = supplier;
     this.finder = finder;
     this.jMeterTreeModel = jMeterTreeModel;
     this.protocolFactory = factory;
-    this.terminalClient = protocolFactory.apply(getProtocol());
+    this.terminalEmulatorUpdater = terminalEmulatorUpdater;
   }
 
   @Override
@@ -181,7 +182,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
-    terminalClient = getProtocol().createProtocolClient();
+    terminalClient = protocolFactory.apply(getProtocol());
 
     try {
       TerminalType terminalType = getTerminalType();
@@ -305,7 +306,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator
         .setScreenSize(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
     terminalEmulator.start();
-    terminalEmulatorUpdater = new TerminalEmulatorUpdater(terminalEmulator, terminalClient);
+    terminalEmulatorUpdater = (terminalEmulatorUpdater == null ? new TerminalEmulatorUpdater(terminalEmulator, terminalClient) : terminalEmulatorUpdater);
     terminalClient.addTerminalStateListener(this);
     terminalEmulatorUpdater.onTerminalStateChange();
   }
