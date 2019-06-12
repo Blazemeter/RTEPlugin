@@ -403,8 +403,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   @Override
   public void onExceptionState(Exception e) {
     LOG.error("Problem while connecting to {}", getServer(), e);
-    JMeterUtils.reportErrorToUser(
-        "Problem while connecting to " + getServer(), "Connection Error");
     terminalEmulator.stop();
   }
 

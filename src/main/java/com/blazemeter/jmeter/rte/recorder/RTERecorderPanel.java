@@ -228,10 +228,11 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
       errorMsg = "Timeout waiting for connection end after " +
           getConnectionTimeout() + "ms";
     } else if (e instanceof RteIOException) {
-      errorMsg = "Could not connect to the server";
+      errorMsg = 
+          "Problem while connecting to " + getServer();
     } else {
       errorMsg = "Problem performing connection to the server";
     }
-    JMeterUtils.reportErrorToUser(errorMsg);
+    JMeterUtils.reportErrorToUser(errorMsg, "Connection Error");
   }
 }
