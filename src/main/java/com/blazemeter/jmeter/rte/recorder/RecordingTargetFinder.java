@@ -15,13 +15,11 @@ public class RecordingTargetFinder {
   }
 
   public JMeterTreeNode findTargetControllerNode() {
-
     JMeterTreeNode targetNode = findFirstNodeOfType(RecordingController.class);
 
     if (targetNode == null) {
       targetNode = findFirstNodeOfType(AbstractThreadGroup.class);
     }
-
     if (targetNode == null) {
       throw new IllegalStateException(
           "No ThreadGroup or RecordingController was found where to add recorded samplers");
@@ -38,5 +36,4 @@ public class RecordingTargetFinder {
     }
     return null;
   }
-
 }
