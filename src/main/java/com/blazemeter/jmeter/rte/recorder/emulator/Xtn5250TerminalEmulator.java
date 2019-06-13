@@ -86,9 +86,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final int DEFAULT_FONT_SIZE = 14;
 
   private static final ImageIcon COPY_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/keyboard-locked.png"));
+      StatusPanel.class.getResource("/copy.png"));
   private static final ImageIcon PASTE_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/keyboard-locked.png"));
+      StatusPanel.class.getResource("/paste.png"));
   private JButton copyButton = SwingUtils
       .createComponent("copyButton", new JButton(COPY_ICON));
   private JButton pasteButton = SwingUtils
@@ -144,7 +144,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
+        .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(pasteButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE));
     layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
