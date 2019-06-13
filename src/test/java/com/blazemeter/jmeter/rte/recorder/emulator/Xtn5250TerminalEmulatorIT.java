@@ -11,6 +11,7 @@ import com.google.common.io.Resources;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -39,6 +40,8 @@ public class Xtn5250TerminalEmulatorIT {
   private static final int ROWS = 43;
   private static final String COPY_BUTTON = "copyButton";
   private static final String PASTE_BUTTON = "pasteButton";
+  public static final String TEST_SCREEN_FILE = "test-screen.txt";
+  public static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
 
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
 
@@ -85,13 +88,13 @@ public class Xtn5250TerminalEmulatorIT {
   public void shouldShowTheScreenExpectedWhenSetScreen() throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(buildScreen(true));
-    assertThat(xtn5250TerminalEmulator.getScreen()).isEqualTo(getFileContent("test-screen.txt"));
+    assertThat(xtn5250TerminalEmulator.getScreen()).isEqualTo(getFileContent(TEST_SCREEN_FILE));
   }
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnField() throws IOException {
     sendKey(KeyEvent.VK_E, 2, 1, false,
-        "test-screen-press-key-on-field.txt", true);
+        TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE, true);
   }
 
   private void sendKey(int key, int row, int column, boolean keyboardLocked, String expectedScreen,
@@ -125,17 +128,26 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldGetProperTextWhenPressKeyOnFieldAndKeyboardIsLocked() throws IOException {
     sendKey(KeyEvent.VK_E, 2, 1, true,
-        "test-screen.txt", true);
+        TEST_SCREEN_FILE, true);
   }
 
   @Test
   public void shouldDeleteTextWhenPressBackspaceKey() throws IOException {
     sendKey(KeyEvent.VK_BACK_SPACE, 2, 2, false,
-        "test-screen.txt", false);
+        TEST_SCREEN_FILE, false);
   }
 
   @Test
-  public void shouldCallTheListenerWhenPressAttentionKey() {
+  public void shouldCallTheListenerWhenPressAnyAttentionKey() {
+    pressAttentionKey(KeyEvent.VK_F1, AttentionKey.F1);
+  }
+
+  @Test
+  public void shouldCallTheListenerWhenPressControlAttentionKey() {
+    pressAttentionKey(KeyEvent.VK_CONTROL, AttentionKey.RESET);
+  }
+
+  private void pressAttentionKey (int key, AttentionKey expected){
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(buildScreen(true));
     TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
@@ -146,12 +158,12 @@ public class Xtn5250TerminalEmulatorIT {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
       JComponentDriver driver = new JComponentDriver(frame.robot());
       xtn5250TerminalEmulator.setCursor(2, 2);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(KeyEvent.VK_F1));
+      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key));
       pause(new Condition("Listener is called") {
         @Override
         public boolean test() {
           return terminalEmulatorListener.getAttentionKey() != null && terminalEmulatorListener
-              .getAttentionKey().equals(AttentionKey.F1);
+              .getAttentionKey().equals(expected);
         }
       }, PAUSE_TIMEOUT);
     } finally {
@@ -162,7 +174,7 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldGetProperTextWhenPressKeyOutOfField() throws IOException {
     sendKey(KeyEvent.VK_E, 1, 1, false,
-        "test-screen.txt", true);
+        TEST_SCREEN_FILE, true);
   }
 
   @Test
@@ -171,15 +183,9 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldCopyTestWhenPressShortcutWithControl()
+  public void shouldCopyTestWhenPressShortcut()
       throws IOException, UnsupportedFlavorException {
-    doCopy(KeyEvent.CTRL_MASK);
-  }
-
-  @Test
-  public void shouldCopyTestWhenPressShortcutWithCommand()
-      throws IOException, UnsupportedFlavorException {
-    doCopy(KeyEvent.META_MASK);
+    doCopy(getMenuShortcutKeyMask());
   }
 
   private void doCopy(Integer keyMask) throws IOException, UnsupportedFlavorException {
@@ -207,11 +213,20 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldPasteTestWhenClickCopyButton() throws IOException, UnsupportedFlavorException {
+  public void shouldPasteTestWhenClickPasteButton() throws IOException {
     doPaste(null);
   }
 
-  private void doPaste(Integer keyMask) throws IOException, UnsupportedFlavorException {
+  @Test
+  public void shouldPasteTestWhenPressShortcut() throws IOException {
+    doPaste(getMenuShortcutKeyMask());
+  }
+
+  private int getMenuShortcutKeyMask() {
+    return Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+  }
+
+  private void doPaste(Integer keyMask) throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(buildScreen(true));
     xtn5250TerminalEmulator.setKeyboardLock(false);
@@ -231,7 +246,7 @@ public class Xtn5250TerminalEmulatorIT {
         driver.pressAndReleaseKey(focusedComponent, KeyEvent.VK_V, new int[]{keyMask});
       }
       assertThat(xtn5250TerminalEmulator.getScreen())
-          .isEqualTo(getFileContent("test-screen-press-key-on-field.txt"));
+          .isEqualTo(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
     } finally {
       frame.cleanUp();
     }

@@ -69,6 +69,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           put(new KeyEventMap(0, KeyEvent.VK_PAUSE), AttentionKey.CLEAR);
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_ESCAPE), AttentionKey.SYSRQ);
           put(new KeyEventMap(0, KeyEvent.VK_CONTROL), AttentionKey.RESET);
+          put(new KeyEventMap(KeyEvent.CTRL_MASK, KeyEvent.VK_CONTROL), AttentionKey.RESET);
           put(new KeyEventMap(0, KeyEvent.VK_PAGE_DOWN), AttentionKey.ROLL_UP);
           put(new KeyEventMap(0, KeyEvent.VK_PAGE_UP), AttentionKey.ROLL_DN);
           put(new KeyEventMap(KeyEvent.META_MASK, KeyEvent.VK_F1), AttentionKey.PA1);
@@ -304,21 +305,17 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     protected synchronized void processKeyEvent(KeyEvent e) {
       AttentionKey attentionKey = null;
       if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_C
-          && e.getModifiers() == KeyEvent.META_MASK) {
+          && e.getModifiers() == getMenuShortcutKeyMask()) {
         doCopy();
-      } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_C
-          && e.getModifiers() == KeyEvent.CTRL_MASK) {
-        doCopy();
+        e.consume();
         copyPaste = true;
       } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_V
-          && e.getModifiers() == KeyEvent.META_MASK && !locked) {
+          && e.getModifiers() == getMenuShortcutKeyMask() && !locked) {
         doPaste();
-      } else if (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() == KeyEvent.VK_V
-          && e.getModifiers() == KeyEvent.CTRL_MASK && !locked) {
-        doPaste();
+        e.consume();
         copyPaste = true;
-      } else if (e.getID() == KeyEvent.KEY_RELEASED && e.getKeyCode() == KeyEvent.VK_CONTROL
-          && copyPaste) {
+      } else if (e.getID() == KeyEvent.KEY_RELEASED &&
+          e.getKeyCode() == getKeyCodeFromKeyMask(getMenuShortcutKeyMask()) && copyPaste) {
         copyPaste = false;
       } else if (isAnyKeyPressedOrControlKeyReleasedAndNotCopy(e)) {
         attentionKey = KEY_EVENTS
@@ -331,15 +328,30 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         }
       }
 
-      if (!locked || attentionKey != null) {
+      if ((!locked && !e.isConsumed()) || attentionKey != null) {
         //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
         // when shift mask is enabled, in this way allways delete
         if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-          e.setModifiers(KeyEvent.SHIFT_MASK);
+          super.processKeyEvent(
+              new KeyEvent(e.getComponent(), e.getID(), e.getWhen(), KeyEvent.SHIFT_MASK,
+                  e.getKeyCode(), e.getKeyChar(), e.getKeyLocation()));
+        } else {
+          super.processKeyEvent(e);
         }
-        super.processKeyEvent(e);
         statusPanel
             .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+      }
+    }
+
+    private int getMenuShortcutKeyMask() {
+      return Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+    }
+
+    private int getKeyCodeFromKeyMask(int keyMask) {
+      if (keyMask == KeyEvent.META_MASK) {
+        return KeyEvent.VK_META;
+      } else {
+        return KeyEvent.VK_CONTROL;
       }
     }
 
@@ -347,9 +359,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     //copy/paste and the attention key should be triggered only if have not
     //executed a copy paste before.
     private boolean isAnyKeyPressedOrControlKeyReleasedAndNotCopy(KeyEvent e) {
-      return (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() != KeyEvent.VK_CONTROL) || (
-          e.getID() == KeyEvent.KEY_RELEASED && e.getKeyCode() == KeyEvent.VK_CONTROL
-              && !copyPaste);
+      return (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() != getKeyCodeFromKeyMask(
+          getMenuShortcutKeyMask())) || (e.getID() == KeyEvent.KEY_RELEASED
+          && e.getKeyCode() == getKeyCodeFromKeyMask(getMenuShortcutKeyMask()) && !copyPaste);
     }
 
     @Override
