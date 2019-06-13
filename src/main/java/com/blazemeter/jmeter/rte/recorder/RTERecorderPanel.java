@@ -230,8 +230,8 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
 
   private void reportExceptionToUser(Exception e) {
     String errorMsg;
-    String myPackage = RteIOException.class.getPackage().getName();
-    if (e.getClass().getPackage().getName().equals(myPackage) || e instanceof TimeoutException) {
+    if (e.getClass().getPackage()
+        .equals(RteIOException.class.getPackage()) || e instanceof TimeoutException) {
       errorMsg = e.getMessage();
     }  else {
       errorMsg = "Unexpected error occurred - see log file or contact technical support";

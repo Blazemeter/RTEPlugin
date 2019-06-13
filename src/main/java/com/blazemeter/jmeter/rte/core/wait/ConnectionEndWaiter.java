@@ -20,7 +20,7 @@ public class ConnectionEndWaiter {
   public void await() throws InterruptedException, TimeoutException {
     if (!connected.await(timeoutMillis, TimeUnit.MILLISECONDS)) {
       throw new TimeoutException(
-          "Timeout waiting for connection end after " + timeoutMillis + " ms");
+          "Timeout waiting for connection to be established after " + timeoutMillis + " ms");
     }
   }
 

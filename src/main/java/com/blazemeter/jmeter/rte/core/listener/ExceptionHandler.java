@@ -21,7 +21,10 @@ public class ExceptionHandler {
   public synchronized void setPendingError(Throwable ex) {
     if (pendingError == null) {
       pendingError = ex;
-      listeners.forEach(l -> l.onException(ex));
+      /*  Creating a copy of listeners keys to avoid concurrent modification exception 
+       *  due to listeners potentially removing themselves on exception.
+       */ 
+      new ArrayList<>(listeners).forEach(l -> l.onException(ex));
     } else {
       LOG.error("Exception ignored in step result due to previously thrown exception", ex);
     }
@@ -39,11 +42,11 @@ public class ExceptionHandler {
     }
   }
 
-  public void removeListener(ExceptionListener listener) {
+  public synchronized void removeListener(ExceptionListener listener) {
     listeners.remove(listener);
   }
 
-  public void addListener(ExceptionListener listener) {
+  public synchronized void addListener(ExceptionListener listener) {
     listeners.add(listener);
   }
 

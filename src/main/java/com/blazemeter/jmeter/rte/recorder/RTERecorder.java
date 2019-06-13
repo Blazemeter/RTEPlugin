@@ -182,18 +182,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
           registerRequestListenerFor(sampleResult);
         }
       } catch (RteIOException | InterruptedException | TimeoutException e) {
-        try {
-          terminalClient.disconnect();
-        } catch (RteIOException ex) {
-          LOG.error("Problem while trying to shutdown connection when connecting was canceled ");
-        }
         onException(e);
         executor.shutdown();
       }
     });
 
   }
-  
+
   private JMeterTreeNode findTargetControllerNode() {
     JMeterTreeNode targetNode = findFirstNodeOfType(RecordingController.class);
     if (targetNode == null) {
@@ -412,7 +407,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onRecordingException(Exception e) {
-  
+
   }
 
   @Override
@@ -430,14 +425,35 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onException(Throwable e) {
+    
     if (!(e instanceof InterruptedException)) {
+      LOG.error(e.getMessage(), e);
       RTESampler.updateErrorResult(e, sampleResult);
       recordPendingSample();
-      if (terminalEmulator != null) {
-        terminalEmulator.stop();
+      
+      if (recordingListener != null) {
+        recordingListener.onRecordingException((Exception) e);
       }
-      recordingListener.onRecordingException((Exception) e);
-
+      
+      synchronized (this) {
+        
+        if (terminalEmulator != null) {
+          terminalClient.removeTerminalStateListener(this);
+          terminalEmulator.stop();
+          terminalEmulator = null;
+        }
+      }
+      
+      /*    
+       *     Disconnect must be at the end because if not is interrupting 
+       *     itself and is not adding sampler to test plan                
+       */
+      
+      try {
+        terminalClient.disconnect();
+      } catch (RteIOException ex) {
+        LOG.error("Problem while trying to shutdown connection", e);
+      }
     }
   }
 }
