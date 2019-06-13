@@ -122,9 +122,9 @@ public class Tn3270Client extends BaseProtocolClient {
     client = new TerminalClient(termType.getModel(), termType.getScreenDimensions());
     client.setUsesExtended3270(termType.isExtended());
     client.setConnectionTimeoutMillis((int) timeoutMillis);
-    client.setSocketFactory(getSocketFactory(sslType));
+    client.setSocketFactory(getSocketFactory(sslType, server));
     ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
-    exceptionHandler = new ExceptionHandler();
+    exceptionHandler = new ExceptionHandler(server);
     client.setConnectionListener(new com.bytezone.dm3270.ConnectionListener() {
 
       @Override
@@ -284,7 +284,7 @@ public class Tn3270Client extends BaseProtocolClient {
     }
     return ret;
   }
-  
+
   public Dimension getScreenSize() {
     ScreenDimensions dimensions = client.getScreenDimensions();
     return new Dimension(dimensions.columns, dimensions.rows);

@@ -24,12 +24,12 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   protected ExceptionHandler exceptionHandler;
   protected ScheduledExecutorService stableTimeoutExecutor;
 
-  protected SocketFactory getSocketFactory(SSLType sslType) throws RteIOException {
+  protected SocketFactory getSocketFactory(SSLType sslType, String server) throws RteIOException {
     if (sslType != null && sslType != SSLType.NONE) {
       try {
         return SSLContextFactory.buildSSLContext(sslType).getSocketFactory();
       } catch (IOException | GeneralSecurityException e) {
-        throw new RteIOException(e);
+        throw new RteIOException(e, server);
       }
     } else {
       return SocketFactory.getDefault();

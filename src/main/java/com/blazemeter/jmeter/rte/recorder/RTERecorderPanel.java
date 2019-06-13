@@ -221,7 +221,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
   }
 
   @Override
-  public void onExceptionState(Exception e) {
+  public void onRecordingException(Exception e) {
     updateButtonsIfRunning(false);
     if (!(e instanceof InterruptedException)) {
       reportExceptionToUser(e);
@@ -230,14 +230,11 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
 
   private void reportExceptionToUser(Exception e) {
     String errorMsg;
-    if (e instanceof TimeoutException) {
-      errorMsg = "Timeout waiting for connection end after " +
-          getConnectionTimeout() + "ms";
-    } else if (e instanceof RteIOException) {
-      errorMsg =
-          "Problem while connecting to " + getServer();
-    } else {
-      errorMsg = "Problem performing connection to the server";
+    String myPackage = RteIOException.class.getPackage().getName();
+    if (e.getClass().getPackage().getName().equals(myPackage) || e instanceof TimeoutException) {
+      errorMsg = e.getMessage();
+    }  else {
+      errorMsg = "Unexpected error occurred - see log file or contact technical support";
     }
     JMeterUtils.reportErrorToUser(errorMsg, "Connection Error");
   }

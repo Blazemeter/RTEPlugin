@@ -100,7 +100,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
   }
 
   @Override
-  public void onExceptionState(Exception e) {
+  public void onRecordingException(Exception e) {
     
   }
 }

@@ -6,7 +6,6 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
@@ -183,11 +182,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
           registerRequestListenerFor(sampleResult);
         }
       } catch (RteIOException | InterruptedException | TimeoutException e) {
-        onExceptionState(e);
-        RTESampler.updateErrorResult(e, sampleResult);
-        recordPendingSample();
+        try {
+          terminalClient.disconnect();
+        } catch (RteIOException ex) {
+          LOG.error("Problem while trying to shutdown connection when connecting was canceled ");
+        }
+        onException(e);
         executor.shutdown();
-        recordingListener.onExceptionState(e);
       }
     });
 
@@ -410,10 +411,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   @Override
-  public void onExceptionState(Exception e) {
-    if (!(e instanceof InterruptedException)) {
-      LOG.error("Problem while connecting to {}", getServer(), e);
-    }
+  public void onRecordingException(Exception e) {
+  
   }
 
   @Override
@@ -431,16 +430,14 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onException(Throwable e) {
-    String errorMessage =
-        (e instanceof ConnectionClosedException) ? "Connection to the server has been closed"
-            : "Communication error with the server";
-    LOG.error(errorMessage, e);
-    JMeterUtils.reportErrorToUser(errorMessage);
-    RTESampler.updateErrorResult(e, sampleResult);
-    recordPendingSample();
-    terminalEmulator.stop();
-    if (recordingListener != null) {
-      recordingListener.onRecordingStop();
+    if (!(e instanceof InterruptedException)) {
+      RTESampler.updateErrorResult(e, sampleResult);
+      recordPendingSample();
+      if (terminalEmulator != null) {
+        terminalEmulator.stop();
+      }
+      recordingListener.onRecordingException((Exception) e);
+
     }
   }
 }

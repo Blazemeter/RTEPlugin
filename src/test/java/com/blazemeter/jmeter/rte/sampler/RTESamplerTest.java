@@ -359,7 +359,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenDisconnectThrowRteIOException() throws Exception {
     connectClient();
     rteSampler.setAction(Action.DISCONNECT);
-    RteIOException e = new RteIOException(null);
+    RteIOException e = new RteIOException(null, "localhost");
     doThrow(e)
         .when(rteProtocolClientMock).disconnect();
     SampleResult result = rteSampler.sample(null);

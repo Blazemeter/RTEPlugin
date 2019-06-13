@@ -6,6 +6,6 @@ public interface RecordingStateListener {
 
   void onRecordingStop();
   
-  void onExceptionState(Exception e);
+  void onRecordingException(Exception e);
 
 }

@@ -12,6 +12,11 @@ public class ExceptionHandler {
 
   private List<ExceptionListener> listeners = new ArrayList<>();
   private Throwable pendingError;
+  private String server;
+  
+  public ExceptionHandler(String server) {
+    this.server = server;
+  }
 
   public synchronized void setPendingError(Throwable ex) {
     if (pendingError == null) {
@@ -30,7 +35,7 @@ public class ExceptionHandler {
     if (pendingError != null) {
       Throwable ret = pendingError;
       pendingError = null;
-      throw new RteIOException(ret);
+      throw new RteIOException(ret, server);
     }
   }
 
