@@ -207,12 +207,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     }
   }
 
-  private static RteProtocolClient buildDefaultTerminalClient() {
-    Protocol defaultProtocol = Protocol.TN5250;
-
-    return defaultProtocol.createProtocolClient();
-  }
-
   private static JMeterTreeModel getJmeterTreeModel() {
     return GuiPackage.getInstance().getTreeModel();
   }
