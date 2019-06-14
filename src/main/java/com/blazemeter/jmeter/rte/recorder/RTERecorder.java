@@ -6,7 +6,6 @@ import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
@@ -21,6 +20,8 @@ import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -57,6 +58,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient TerminalEmulatorUpdater terminalEmulatorUpdater;
   private transient int sampleCount;
   private transient WaitConditionsRecorder waitConditionsRecorder;
+  private transient ExecutorService executor;
 
   public RTERecorder() {
 
@@ -156,7 +158,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     setProperty(WAIT_CONDITION_TIMEOUT_THRESHOLD_MILLIS_PROPERTY, timeoutThresholdMillis);
   }
 
-  public void onRecordingStart() throws Exception {
+  public void onRecordingStart() {
     LOG.debug("Start recording");
     sampleCount = 0;
     samplersTargetNode = findTargetControllerNode();
@@ -165,22 +167,26 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
     terminalClient = getProtocol().createProtocolClient();
-    try {
-      TerminalType terminalType = getTerminalType();
-      waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
-          getTimeoutThresholdMillis(), RTESampler.getStableTimeout());
-      waitConditionsRecorder.start();
-      terminalClient
-          .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
-      sampleResult.connectEnd();
-      initTerminalEmulator(terminalType);
-      registerRequestListenerFor(sampleResult);
-    } catch (TimeoutException | InterruptedException | RteIOException e) {
-      LOG.error("Problem while connecting to {}", getServer(), e);
-      RTESampler.updateErrorResult(e, sampleResult);
-      recordPendingSample();
-      throw e;
-    }
+    TerminalType terminalType = getTerminalType();
+    waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
+        getTimeoutThresholdMillis(), RTESampler.getStableTimeout());
+    waitConditionsRecorder.start();
+    executor = Executors.newSingleThreadExecutor();
+    executor.submit(() -> {
+      try {
+        synchronized (this) {
+          terminalClient
+              .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
+          sampleResult.connectEnd();
+          initTerminalEmulator(terminalType);
+          registerRequestListenerFor(sampleResult);
+        }
+      } catch (RteIOException | InterruptedException | TimeoutException e) {
+        onException(e);
+        executor.shutdown();
+      }
+    });
+
   }
 
   private JMeterTreeNode findTargetControllerNode() {
@@ -338,14 +344,14 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       terminalClient.send(inputs, attentionKey);
     } catch (UnsupportedOperationException e) {
       String errorMsg =
-          attentionKey.name() + " Attention key not supported by Protocol " + getProtocol().name(); 
+          attentionKey.name() + " Attention key not supported by Protocol " + getProtocol().name();
       LOG.error(errorMsg, e);
       JMeterUtils.reportErrorToUser(errorMsg);
     } catch (Exception e) {
       onException(e);
     }
   }
-  
+
   private void recordPendingSample() {
     if (sampleResult.getResponseCode().isEmpty()) {
       RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
@@ -361,7 +367,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private RteSampleResult buildSendInputSampleResult(AttentionKey attentionKey,
-                                                     List<Input> inputs) {
+      List<Input> inputs) {
     RteSampleResult ret = buildSampleResult(Action.SEND_INPUT);
     ret.setInputs(inputs);
     ret.setAttentionKey(attentionKey);
@@ -370,27 +376,38 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onRecordingStop() {
-    LOG.debug("Stopping recording");
-    recordPendingSample();
-    sampleResult = buildSampleResult(Action.DISCONNECT);
-    sampler = buildSampler(Action.DISCONNECT, null, null);
-    terminalEmulator.stop();
-    requestListener.stop();
-    try {
-      terminalClient.disconnect();
-    } catch (RteIOException e) {
-      LOG.error("Problem while disconnecting from server", e);
-      RTESampler.updateErrorResult(e, sampleResult);
-    } finally {
-      if (sampleResult.getResponseCode().isEmpty()) {
-        sampleResult.setSuccessful(true);
-        sampleResult.sampleEnd();
+    executor.shutdownNow();
+    synchronized (this) {
+      if (terminalEmulator != null) {
+        LOG.debug("Stopping recording");
+        recordPendingSample();
+        sampleResult = buildSampleResult(Action.DISCONNECT);
+        sampler = buildSampler(Action.DISCONNECT, null, null);
+        terminalEmulator.stop();
+        terminalEmulator = null;
+        requestListener.stop();
+        try {
+          terminalClient.disconnect();
+        } catch (RteIOException e) {
+          LOG.error("Problem while disconnecting from server", e);
+          RTESampler.updateErrorResult(e, sampleResult);
+        } finally {
+          if (sampleResult.getResponseCode().isEmpty()) {
+            sampleResult.setSuccessful(true);
+            sampleResult.sampleEnd();
+          }
+          notifySampleOccurred();
+          addTestElementToTestPlan(sampler, samplersTargetNode);
+        }
+        terminalClient.removeTerminalStateListener(this);
+        notifyChildren(TestStateListener.class, TestStateListener::testEnded);
       }
-      notifySampleOccurred();
-      addTestElementToTestPlan(sampler, samplersTargetNode);
     }
-    terminalClient.removeTerminalStateListener(this);
-    notifyChildren(TestStateListener.class, TestStateListener::testEnded);
+  }
+
+  @Override
+  public void onRecordingException(Exception e) {
+
   }
 
   @Override
@@ -408,16 +425,35 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onException(Throwable e) {
-    String errorMessage = 
-        (e instanceof ConnectionClosedException) ? "Connection to the server has been closed" 
-            : "Communication error with the server";
-    LOG.error(errorMessage, e);
-    JMeterUtils.reportErrorToUser(errorMessage);
-    RTESampler.updateErrorResult(e, sampleResult);
-    recordPendingSample();
-    terminalEmulator.stop();
-    if (recordingListener != null) {
-      recordingListener.onRecordingStop();
+    
+    if (!(e instanceof InterruptedException)) {
+      LOG.error(e.getMessage(), e);
+      RTESampler.updateErrorResult(e, sampleResult);
+      recordPendingSample();
+      
+      if (recordingListener != null) {
+        recordingListener.onRecordingException((Exception) e);
+      }
+      
+      synchronized (this) {
+        
+        if (terminalEmulator != null) {
+          terminalClient.removeTerminalStateListener(this);
+          terminalEmulator.stop();
+          terminalEmulator = null;
+        }
+      }
+      
+      /*    
+       *     Disconnect must be at the end because if not is interrupting 
+       *     itself and is not adding sampler to test plan                
+       */
+      
+      try {
+        terminalClient.disconnect();
+      } catch (RteIOException ex) {
+        LOG.error("Problem while trying to shutdown connection", e);
+      }
     }
   }
 }

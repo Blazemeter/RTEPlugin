@@ -109,8 +109,8 @@ public class Tn5250Client extends BaseProtocolClient {
     client = new TerminalClient();
     client.setConnectionTimeoutMillis((int) timeoutMillis);
     client.setTerminalType(terminalType.getId());
-    client.setSocketFactory(getSocketFactory(sslType));
-    exceptionHandler = new ExceptionHandler();
+    client.setSocketFactory(getSocketFactory(sslType, server));
+    exceptionHandler = new ExceptionHandler(server);
     ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
     client.setExceptionHandler(new net.infordata.em.ExceptionHandler() {
 

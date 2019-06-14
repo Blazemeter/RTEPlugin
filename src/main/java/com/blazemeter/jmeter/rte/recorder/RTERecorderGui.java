@@ -89,7 +89,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
   }
 
   @Override
-  public void onRecordingStart() throws Exception {
+  public void onRecordingStart() {
     modifyTestElement(recorder);
     recorder.onRecordingStart();
   }
@@ -97,5 +97,10 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
   @Override
   public void onRecordingStop() {
     recorder.onRecordingStop();
+  }
+
+  @Override
+  public void onRecordingException(Exception e) {
+    
   }
 }
