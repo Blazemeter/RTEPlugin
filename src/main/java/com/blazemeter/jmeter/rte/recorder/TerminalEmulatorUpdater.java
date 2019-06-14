@@ -8,6 +8,11 @@ public class TerminalEmulatorUpdater {
   private final TerminalEmulator terminalEmulator;
   private final RteProtocolClient terminalClient;
 
+  public TerminalEmulatorUpdater(){
+    terminalEmulator = null;
+    terminalClient = null;
+  }
+
   public TerminalEmulatorUpdater(TerminalEmulator terminalEmulator,
       RteProtocolClient terminalClient) {
     this.terminalEmulator = terminalEmulator;

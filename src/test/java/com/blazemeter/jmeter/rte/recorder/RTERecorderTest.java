@@ -15,7 +15,6 @@ import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
-import org.apache.jmeter.visualizers.SamplerResultTab;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -51,8 +50,8 @@ public class RTERecorderTest {
   private static final List<Input> INPUTS = Collections.singletonList(new CoordInput(new Position(2, 1),
       "testusr"));
 
-  private TestElement mockedTestElementWithTestStateListener;
-  private TestElement mockedTestElementWithSamplerListener;
+  private TestElement mockedTestStateListener;
+  private TestElement mockedSamplerListener;
   private RTERecorder rteRecorder;
 
   private final String CONNECT_NAME = "bzm-RTE-CONNECT";
@@ -63,11 +62,6 @@ public class RTERecorderTest {
 
   private final String WAIT_SYNC = "true";
   private final String WAIT_SYNC_TIMEOUT = "10000";
-
-  @Mock
-  private TestStateListener mockedTestStateListener;
-  @Mock
-  private SampleListener mockedSampleListener;
 
   @Mock
   private RecordingTargetFinder finder;
@@ -107,12 +101,11 @@ public class RTERecorderTest {
   }
 
   public void initializeChildrenList(){
+    mockedTestStateListener = mock(TestElement.class, withSettings().extraInterfaces(TestStateListener.class));
+    mockedSamplerListener = mock(TestElement.class, withSettings().extraInterfaces(SampleListener.class));
 
-    mockedTestElementWithTestStateListener = mock(TestElement.class, withSettings().extraInterfaces(TestStateListener.class));
-    mockedTestElementWithSamplerListener = mock(TestElement.class, withSettings().extraInterfaces(SampleListener.class));
-
-    when(mockedFirstTreeNodeKid.getTestElement()).thenReturn(mockedTestElementWithTestStateListener);
-    when(mockedSecondTreeNodeKid.getTestElement()).thenReturn(mockedTestElementWithSamplerListener);
+    when(mockedFirstTreeNodeKid.getTestElement()).thenReturn(mockedTestStateListener);
+    when(mockedSecondTreeNodeKid.getTestElement()).thenReturn(mockedSamplerListener);
 
     when( mockedFirstTreeNodeKid.isEnabled()).thenReturn(true);
     when(mockedSecondTreeNodeKid.isEnabled()).thenReturn(true);
@@ -168,8 +161,7 @@ public class RTERecorderTest {
   public void shouldNotifyChildrenTestStateListenersWhenStart() throws Exception {
     rteRecorder.onRecordingStart();
 
-    verify((TestStateListener) mockedTestElementWithTestStateListener).testStarted();
-    //verify(mockedTestStateListener).testStarted();
+    verify((TestStateListener) mockedTestStateListener).testStarted();
   }
 
   @Test
@@ -211,12 +203,12 @@ public class RTERecorderTest {
       fail("Excepted Exception not Thrown");
     } catch (InterruptedException e) {
       ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
-      verify((SampleListener)mockedTestElementWithSamplerListener).sampleOccurred(argument.capture());
+      verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
     }
   }
 
   @Test
-    public void shouldNotifyFailedSampleResultToChildrenSampleListenersWhenAttentionKeyAndFailingSendingToTerminalClient ()
+    public void shouldNotifyFailedSampleResultToChildrenWhenAttentionKeyAndFailingSendingToTerminalClient ()
       throws Exception {
     rteRecorder.onRecordingStart();
 
@@ -225,7 +217,7 @@ public class RTERecorderTest {
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
 
-    verify((SampleListener) mockedTestElementWithSamplerListener).sampleOccurred(argument.capture());
+    verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
 
     SampleResult sampleResult = argument.getValue().getResult();
     SampleResult expected = buildBasicSampleResult(Action.CONNECT);
@@ -259,7 +251,6 @@ public class RTERecorderTest {
       * pending, in this case, an Empty Sampler is added
       * */
       verify(mockedJMeterTreeModel, times(2)).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
-
       sortAssertComponentConnect(argument.getAllValues().get(1));
     }
   }
@@ -293,7 +284,7 @@ public class RTERecorderTest {
     rteRecorder.onRecordingStart();
     rteRecorder.onRecordingStop();
 
-    verify((TestStateListener)mockedTestElementWithTestStateListener).testEnded();
+    verify((TestStateListener) mockedTestStateListener).testEnded();
   }
 
   @Test
@@ -325,7 +316,7 @@ public class RTERecorderTest {
       rteRecorder.onRecordingStart();
       rteRecorder.onCloseTerminal();
 
-      verify((TestStateListener)mockedTestElementWithTestStateListener).testEnded();
+      verify((TestStateListener) mockedTestStateListener).testEnded();
   }
 
   @Test
@@ -390,7 +381,7 @@ public class RTERecorderTest {
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
-    verify((SampleListener)mockedTestElementWithSamplerListener).sampleOccurred(argument.capture());
+    verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
 
     SampleResult expected = buildBasicSampleResult(Action.CONNECT);
     expected.setDataType("text");
@@ -424,7 +415,7 @@ public class RTERecorderTest {
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
 
-    verify( (SampleListener) mockedTestElementWithSamplerListener, times(2)).sampleOccurred(argument.capture());
+    verify( (SampleListener) mockedSamplerListener, times(2)).sampleOccurred(argument.capture());
 
     SampleResult expectedConnectSampler = buildBasicSampleResult(Action.CONNECT);
     expectedConnectSampler.setDataType("text");

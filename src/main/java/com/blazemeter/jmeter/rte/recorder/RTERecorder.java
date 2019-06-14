@@ -65,7 +65,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient JMeterTreeModel jMeterTreeModel;
   private transient RteProtocolClient terminalClient;
 
-  //TODO: I need to search for a default way to build the Terminal Client
   public RTERecorder() {
     this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
         getJmeterTreeModel(), Protocol::createProtocolClient, null);
