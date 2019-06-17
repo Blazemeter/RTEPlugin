@@ -60,8 +60,8 @@ public class RTERecorderTest {
   private final String DISCONNECT_NAME = "bzm-RTE-DISCONNECT";
   private final String DISCONNECT_ACTION = "DISCONNECT";
 
-  private final String WAIT_SYNC = "true";
   private final String WAIT_SYNC_TIMEOUT = "10000";
+  private final String INTERRUPTED_EXCEPTION_TEXT = "java.lang.InterruptedException";
 
   @Mock
   private RecordingTargetFinder finder;
@@ -141,10 +141,10 @@ public class RTERecorderTest {
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(mockedJMeterTreeModel).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
 
-    sortAssertComponentConfig(argument.getValue());
+    assertConfigSampler(argument.getValue());
   }
 
-  private void sortAssertComponentConfig(TestElement argumentValue){
+  private void assertConfigSampler(TestElement argumentValue){
     softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_PORT, "port", Integer.toString(PORT));
     softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_SSL_TYPE, "sslType", SSL_TYPE.name());
     softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_CONNECTION_TIMEOUT, "timeout", Long.toString(TIMEOUT));
@@ -204,6 +204,16 @@ public class RTERecorderTest {
     } catch (InterruptedException e) {
       ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
       verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
+
+      SampleResult connectingSample = argument.getValue().getResult();
+      SampleResult expected = buildBasicSampleResult(Action.CONNECT);
+      expected.setSuccessful(false);
+      expected.setResponseCode(INTERRUPTED_EXCEPTION_TEXT);
+      expected.setResponseMessage(null);
+      expected.setDataType("text");
+      expected.setResponseData(INTERRUPTED_EXCEPTION_TEXT+"\n", null);
+
+      assertSampleResult(expected, connectingSample);
     }
   }
 
@@ -251,7 +261,7 @@ public class RTERecorderTest {
       * pending, in this case, an Empty Sampler is added
       * */
       verify(mockedJMeterTreeModel, times(2)).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
-      sortAssertComponentConnect(argument.getAllValues().get(1));
+      assertConnectionSampler(argument.getAllValues().get(1));
     }
   }
 
@@ -404,7 +414,7 @@ public class RTERecorderTest {
     verify(mockedJMeterTreeModel, times(2)).addComponent(argument.capture(),
         eq(mockedJMeterTreeNode));
 
-    sortAssertComponentConnect(argument.getAllValues().get(1));
+    assertConnectionSampler(argument.getValue());
   }
 
   @Test
@@ -465,20 +475,20 @@ public class RTERecorderTest {
     verify(mockedJMeterTreeModel, times(3)).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
     verify(terminalClient).disconnect();
 
-    sortAssertComponentConfig(argument.getAllValues().get(0));
-    sortAssertComponentConnect(argument.getAllValues().get(1));
-    sortAssertComponentDisconnect(argument.getAllValues().get(2));
+    assertConfigSampler(argument.getAllValues().get(0));
+    assertConnectionSampler(argument.getAllValues().get(1));
+    assertDisconnectionSampler(argument.getAllValues().get(2));
   }
 
-  private void sortAssertComponentConnect(TestElement argumentValue){
+  private void assertConnectionSampler(TestElement argumentValue){
     softAssertTestElementProperty(argumentValue, RTESampler.NAME, "name", CONNECT_NAME);
-    softAssertTestElementProperty(argumentValue, "RTESampler.action", "action", CONNECT_ACTION);
+    softAssertTestElementProperty(argumentValue, RTESampler.ACTION_PROPERTY, "action", CONNECT_ACTION);
     softAssertTestElementProperty(argumentValue, "RTESampler.waitSyncTimeout", "waitSyncTimeout", WAIT_SYNC_TIMEOUT);
   }
 
-  private void sortAssertComponentDisconnect(TestElement argumentValue){
+  private void assertDisconnectionSampler(TestElement argumentValue){
     softAssertTestElementProperty(argumentValue, RTESampler.NAME, "name", DISCONNECT_NAME);
-    softAssertTestElementProperty(argumentValue, "RTESampler.action", "action", DISCONNECT_ACTION);
+    softAssertTestElementProperty(argumentValue, RTESampler.ACTION_PROPERTY, "action", DISCONNECT_ACTION);
   }
 
   @Test

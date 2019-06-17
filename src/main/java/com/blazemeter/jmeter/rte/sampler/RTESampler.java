@@ -78,11 +78,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   // jmeter.properties by adding a line like ths one:
   // "RTEConnectionConfig.stableTimeoutMillis=value"
   private static final String CONFIG_STABLE_TIMEOUT = "RTEConnectionConfig.stableTimeoutMillis";
-  private static final String ACTION_PROPERTY = "RTESampler.action";
+  @VisibleForTesting
+  public static final String ACTION_PROPERTY = "RTESampler.action";
   private static final String REUSE_CONNECTIONS_PROPERTY = "RTESampler.reuseConnections";
   private static final String ATTENTION_KEY_PROPERTY = "RTESampler.attentionKey";
   private static final String WAIT_SYNC_PROPERTY = "RTESampler.waitSync";
-  private static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
+  @VisibleForTesting
+  public static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
   private static final String WAIT_CURSOR_PROPERTY = "RTESampler.waitCursor";
   private static final String WAIT_CURSOR_ROW_PROPERTY = "RTESampler.waitCursorRow";
   private static final String WAIT_CURSOR_COLUMN_PROPERTY = "RTESampler.waitCursorColumn";
