@@ -139,15 +139,15 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldCallTheListenerWhenPressAnyAttentionKey() {
-    pressAttentionKey(KeyEvent.VK_F1, AttentionKey.F1);
+    pressAttentionKey(KeyEvent.VK_F1, 0, AttentionKey.F1);
   }
 
   @Test
   public void shouldCallTheListenerWhenPressControlAttentionKey() {
-    pressAttentionKey(KeyEvent.VK_CONTROL, AttentionKey.RESET);
+    pressAttentionKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, AttentionKey.RESET);
   }
 
-  private void pressAttentionKey (int key, AttentionKey expected){
+  private void pressAttentionKey(int key, int modifiers, AttentionKey expected) {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(buildScreen(true));
     TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
@@ -158,7 +158,7 @@ public class Xtn5250TerminalEmulatorIT {
       Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
       JComponentDriver driver = new JComponentDriver(frame.robot());
       xtn5250TerminalEmulator.setCursor(2, 2);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key));
+      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key).modifiers(modifiers));
       pause(new Condition("Listener is called") {
         @Override
         public boolean test() {
@@ -288,7 +288,7 @@ public class Xtn5250TerminalEmulatorIT {
 
     @Override
     public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
-      this.attentionKey = AttentionKey.F1;
+      this.attentionKey = attentionKey;
     }
 
     public AttentionKey getAttentionKey() {
