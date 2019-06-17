@@ -1,13 +1,44 @@
 package com.blazemeter.jmeter.rte.recorder;
 
+import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
+
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
-import com.blazemeter.jmeter.rte.core.*;
+import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.core.CoordInput;
+import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.Protocol;
+import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.RteSampleResult;
+import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
+import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
+import java.awt.Dimension;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
+import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.samplers.SampleEvent;
@@ -15,6 +46,7 @@ import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
+import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -25,43 +57,26 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-import java.util.function.Supplier;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.mockito.internal.verification.VerificationModeFactory.times;
-
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
 
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
+  private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
   private static final String SERVER = "localhost";
   private static final int PORT = 80;
   private static final Protocol PROTOCOL = Protocol.TN5250;
-  private static final TerminalType TERMINAL_TYPE = PROTOCOL.createProtocolClient().getDefaultTerminalType();
+  private static final TerminalType TERMINAL_TYPE = PROTOCOL.createProtocolClient()
+      .getDefaultTerminalType();
   private static final SSLType SSL_TYPE = SSLType.NONE;
   private static final long TIMEOUT = 10000;
-  private static final List<Input> INPUTS = Collections.singletonList(new CoordInput(new Position(2, 1),
-      "testusr"));
+  private static final List<Input> INPUTS = Collections
+      .singletonList(new CoordInput(new Position(2, 1), "testusr"));
 
   private TestElement mockedTestStateListener;
   private TestElement mockedSamplerListener;
   private RTERecorder rteRecorder;
-
-  private final String CONNECT_NAME = "bzm-RTE-CONNECT";
-  private final String CONNECT_ACTION = "CONNECT";
-
-  private final String DISCONNECT_NAME = "bzm-RTE-DISCONNECT";
-  private final String DISCONNECT_ACTION = "DISCONNECT";
-
-  private final String WAIT_SYNC_TIMEOUT = "10000";
-  private final String INTERRUPTED_EXCEPTION_TEXT = "java.lang.InterruptedException";
 
   @Mock
   private RecordingTargetFinder finder;
@@ -90,35 +105,41 @@ public class RTERecorderTest {
   }
 
   @Before
-  public void setup(){
+  public void setup() {
     initializeChildrenList();
 
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> mockedTerminalEmulator;
-    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, mockedJMeterTreeModel, p -> terminalClient,
+    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, mockedJMeterTreeModel,
+        p -> terminalClient,
         mockedTerminalEmulatorUpdater);
 
     prepareRecorder();
   }
 
-  public void initializeChildrenList(){
-    mockedTestStateListener = mock(TestElement.class, withSettings().extraInterfaces(TestStateListener.class));
-    mockedSamplerListener = mock(TestElement.class, withSettings().extraInterfaces(SampleListener.class));
+  public void initializeChildrenList() {
+    mockedTestStateListener = mock(TestElement.class,
+        withSettings().extraInterfaces(TestStateListener.class));
+    mockedSamplerListener = mock(TestElement.class,
+        withSettings().extraInterfaces(SampleListener.class));
 
     when(mockedFirstTreeNodeKid.getTestElement()).thenReturn(mockedTestStateListener);
     when(mockedSecondTreeNodeKid.getTestElement()).thenReturn(mockedSamplerListener);
 
-    when( mockedFirstTreeNodeKid.isEnabled()).thenReturn(true);
+    when(mockedFirstTreeNodeKid.isEnabled()).thenReturn(true);
     when(mockedSecondTreeNodeKid.isEnabled()).thenReturn(true);
-    when( mockedThirdTreeNodeKid.isEnabled()).thenReturn(true);
+    when(mockedThirdTreeNodeKid.isEnabled()).thenReturn(true);
 
     when(mockedJMeterTreeNode.children()).thenAnswer(a ->
-        Collections.enumeration(Arrays.asList(mockedFirstTreeNodeKid, mockedSecondTreeNodeKid, mockedThirdTreeNodeKid)));
+        Collections.enumeration(Arrays
+            .asList(mockedFirstTreeNodeKid, mockedSecondTreeNodeKid, mockedThirdTreeNodeKid)));
     when(mockedJMeterTreeModel.getNodeOf(any())).thenReturn(mockedJMeterTreeNode);
 
     when(finder.findTargetControllerNode()).thenReturn(mockedJMeterTreeNode);
+
+    when(terminalClient.getScreen()).thenReturn(TEST_SCREEN);
   }
 
-  public void prepareRecorder(){
+  public void prepareRecorder() {
     rteRecorder.setPort(Integer.toString(PORT));
     rteRecorder.setTimeoutThresholdMillis(Long.toString(TIMEOUT));
     rteRecorder.setConnectionTimeout(Long.toString(TIMEOUT));
@@ -129,244 +150,263 @@ public class RTERecorderTest {
 
   @Test
   public void shouldAddRecorderAsEmulatorListenerWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     verify(mockedTerminalEmulator).addTerminalEmulatorListener(rteRecorder);
+  }
+
+  private void connect() throws TimeoutException, InterruptedException {
+    rteRecorder.onRecordingStart();
+    rteRecorder.awaitConnected(TIMEOUT);
   }
 
   @Test
   public void shouldAddRteConfigToTargetControllerNodeWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(mockedJMeterTreeModel).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
-
-    assertConfigSampler(argument.getValue());
+    assertTestElement(buildExpectedConfig(), argument.getValue());
   }
 
-  private void assertConfigSampler(TestElement argumentValue){
-    softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_PORT, "port", Integer.toString(PORT));
-    softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_SSL_TYPE, "sslType", SSL_TYPE.name());
-    softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_CONNECTION_TIMEOUT, "timeout", Long.toString(TIMEOUT));
-    softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_PROTOCOL, "protocol", PROTOCOL.name());
-    softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_SERVER, "server", SERVER);
-    softAssertTestElementProperty(argumentValue, RTESampler.CONFIG_TERMINAL_TYPE, "terminalType", TERMINAL_TYPE.getId());
+  private ConfigTestElement buildExpectedConfig() {
+    ConfigTestElement expectedConfig = new ConfigTestElement();
+    expectedConfig.setName("bzm-RTE-config");
+    expectedConfig.setProperty(TestElement.GUI_CLASS, RTEConfigGui.class.getName());
+    expectedConfig.setProperty(RTESampler.CONFIG_SERVER, SERVER);
+    expectedConfig.setProperty(RTESampler.CONFIG_PORT, Integer.toString(PORT));
+    expectedConfig.setProperty(RTESampler.CONFIG_PROTOCOL, PROTOCOL.name());
+    expectedConfig.setProperty(RTESampler.CONFIG_SSL_TYPE, SSL_TYPE.name());
+    expectedConfig.setProperty(RTESampler.CONFIG_TERMINAL_TYPE, TERMINAL_TYPE.getId());
+    expectedConfig.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, Long.toString(TIMEOUT));
+    return expectedConfig;
   }
 
-  private void softAssertTestElementProperty(TestElement testElement, String propertyName, String nameTest,String expectedValue){
-    softly.assertThat(testElement.getProperty(propertyName).toString()).as(nameTest).isEqualTo(expectedValue);
+  private void assertTestElement(TestElement expected, TestElement actual) {
+    assertThat(buildTestElementMap(actual)).isEqualTo(buildTestElementMap(expected));
+  }
+
+  private Map<String, String> buildTestElementMap(TestElement elem) {
+    Map<String, String> ret = new HashMap<>();
+    Iterator<JMeterProperty> iter = elem.propertyIterator();
+    while (iter.hasNext()) {
+      JMeterProperty prop = iter.next();
+      ret.put(prop.getName(), prop.getStringValue());
+    }
+    return ret;
   }
 
   @Test
-  public void shouldNotifyChildrenTestStateListenersWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+  public void shouldNotifyChildrenTestStartWhenStart() throws Exception {
+    connect();
     verify((TestStateListener) mockedTestStateListener).testStarted();
   }
 
   @Test
   public void shouldLockEmulatorKeyboardWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     verify(mockedTerminalEmulator).setKeyboardLock(true);
   }
 
   @Test
   public void shouldStartTerminalEmulatorWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     verify(mockedTerminalEmulator).start();
   }
 
   @Test
   public void shouldConnectTerminalClientWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     verify(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
   }
 
   @Test
   public void shouldNotifyTerminalEmulatorUpdaterWhenTerminalStateChange() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     verify(mockedTerminalEmulatorUpdater).onTerminalStateChange();
   }
 
   @Test
   public void shouldNotifyErrorResultToChildrenWhenStartWithFailingTerminalClientConnect()
       throws Exception {
-    try {
-      doThrow(InterruptedException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
-          TERMINAL_TYPE, TIMEOUT);
+    doThrow(RteIOException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
+        TERMINAL_TYPE, TIMEOUT);
+    connect();
+    ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
+    verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
+    assertSampleResult(buildExpectedConnectionErrorResult(), argument.getValue().getResult());
+  }
 
-      rteRecorder.onRecordingStart();
-      fail("Excepted Exception not Thrown");
-    } catch (InterruptedException e) {
-      ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
-      verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
+  private SampleResult buildExpectedConnectionErrorResult() {
+    RteSampleResult expected = buildBasicSampleResult(Action.CONNECT);
+    updateErrorResult(expected);
+    return expected;
+  }
 
-      SampleResult connectingSample = argument.getValue().getResult();
-      SampleResult expected = buildBasicSampleResult(Action.CONNECT);
-      expected.setSuccessful(false);
-      expected.setResponseCode(INTERRUPTED_EXCEPTION_TEXT);
-      expected.setResponseMessage(null);
-      expected.setDataType("text");
-      expected.setResponseData(INTERRUPTED_EXCEPTION_TEXT+"\n", null);
-
-      assertSampleResult(expected, connectingSample);
-    }
+  private void updateErrorResult(RteSampleResult expected) {
+    expected.setSuccessful(false);
+    String exceptionName = RteIOException.class.getCanonicalName();
+    expected.setResponseCode(exceptionName);
+    expected.setResponseMessage(null);
+    expected.setDataType("text");
+    expected.setResponseData(exceptionName + "\n", null);
   }
 
   @Test
-    public void shouldNotifyFailedSampleResultToChildrenWhenAttentionKeyAndFailingSendingToTerminalClient ()
+  public void shouldNotifyFailedResultToChildrenWhenAttentionKeyAndFailingSendingToTerminalClient()
       throws Exception {
-    rteRecorder.onRecordingStart();
-
-    doThrow(UnsupportedOperationException.class).when(terminalClient).send(INPUTS, AttentionKey.ENTER);
+    connect();
+    doThrow(RteIOException.class).when(terminalClient).send(INPUTS, AttentionKey.ENTER);
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
+    // 1 sample due to connection, the other due to attention key
+    verify((SampleListener) mockedSamplerListener, times(2)).sampleOccurred(argument.capture());
 
-    verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
+    RteSampleResult expected = buildBasicSampleResult(Action.SEND_INPUT);
+    expected.setSampleLabel(expected.getSampleLabel() + "-1");
+    expected.setInputInhibitedRequest(false);
+    expected.setInputs(INPUTS);
+    expected.setAttentionKey(AttentionKey.ENTER);
+    updateErrorResult(expected);
+    assertSampleResult(expected, argument.getAllValues().get(1).getResult());
+  }
 
-    SampleResult sampleResult = argument.getValue().getResult();
-    SampleResult expected = buildBasicSampleResult(Action.CONNECT);
-    expected.setDataType("text");
-
-    assertSampleResult(expected, sampleResult);
+  private RteSampleResult buildBasicSampleResult(Action action) {
+    RteSampleResult base = new RteSampleResult();
+    base.setAction(action);
+    base.setSampleLabel("bzm-RTE-" + action.name());
+    base.setProtocol(Protocol.TN5250);
+    base.setTerminalType(new TerminalType("IBM-3179-2", new Dimension(80, 24)));
+    base.setServer("localhost");
+    base.setPort(80);
+    base.setSslType(SSLType.NONE);
+    base.setSuccessful(true);
+    return base;
   }
 
   @Test
   public void shouldNotifyTerminalEmulatorUpdaterWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     verify(mockedTerminalEmulatorUpdater).onTerminalStateChange();
   }
 
   @Test
   public void shouldAddConnectionSamplerWhenStartWithFailingTerminalClientConnect()
       throws Exception {
-    try {
-      doThrow(InterruptedException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
-          TERMINAL_TYPE, TIMEOUT);
-      rteRecorder.onRecordingStart();
-      fail("Excepted Exception not Thrown");
-    } catch (Exception e) {
-      ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    doThrow(RteIOException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
+        TERMINAL_TYPE, TIMEOUT);
+    connect();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
 
-      /*
-      * The first time this method is called, is then the onRecordingStart is triggered, adding the
-      * Connection Sampler
-      * The second time occurs when the connection fails and the Recorder add anything that is
-      * pending, in this case, an Empty Sampler is added
-      * */
-      verify(mockedJMeterTreeModel, times(2)).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
-      assertConnectionSampler(argument.getAllValues().get(1));
-    }
+    /*
+     * The first time this method is called, is then the onRecordingStart is triggered, adding the
+     * Connection Sampler
+     * The second time occurs when the connection fails and the Recorder add anything that is
+     * pending, in this case, an Empty Sampler is added
+     * */
+    verify(mockedJMeterTreeModel, times(2))
+        .addComponent(argument.capture(), eq(mockedJMeterTreeNode));
+    assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
   }
 
+  private RTESampler buildExpectedConnectionSampler() {
+    RTESampler sampler = buildExpectedSampler("bzm-RTE-CONNECT", Action.CONNECT);
+    sampler.setWaitSync(true);
+    sampler.setWaitSyncTimeout(String.valueOf(TIMEOUT));
+    return sampler;
+  }
 
+  private RTESampler buildExpectedSampler(String name, Action action) {
+    RTESampler sampler = new RTESampler();
+    sampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getCanonicalName());
+    sampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getCanonicalName());
+    sampler.setName(name);
+    sampler.setAction(action);
+    return sampler;
+  }
 
   @Test
   public void shouldAddARequestListenerAsTerminalStateListenerWhenStart() throws Exception {
-    rteRecorder.onRecordingStart();
-
+    connect();
     verify(terminalClient).addTerminalStateListener(any(RequestListener.class));
   }
 
-
   @Test
-  public void shouldDisconnectTerminalClientWhenStartWithFailingTerminalClientConnect() throws RteIOException {
-
-    try {
-      doThrow(InterruptedException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
-          TERMINAL_TYPE, TIMEOUT);
-      rteRecorder.onRecordingStart();
-      fail("Excepted Exception not thrown");
-    } catch (Exception e) {
-      verify(terminalClient).disconnect();
-    }
+  public void shouldDisconnectTerminalClientWhenStartWithFailingTerminalClientConnect()
+      throws Exception {
+    doThrow(RteIOException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
+        TERMINAL_TYPE, TIMEOUT);
+    connect();
+    verify(terminalClient).disconnect();
   }
 
-
   @Test
-  public void shouldNotifyChildrenTestStateListenersWhenStop() throws Exception {
-    rteRecorder.onRecordingStart();
+  public void shouldNotifyChildrenTestEndWhenStop() throws Exception {
+    connect();
     rteRecorder.onRecordingStop();
-
     verify((TestStateListener) mockedTestStateListener).testEnded();
   }
 
   @Test
   public void shouldRemoveRecorderAsEmulatorListenerWhenStop() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onRecordingStop();
-
     verify(terminalClient).removeTerminalStateListener(rteRecorder);
   }
 
   @Test
   public void shouldStopEmulatorListenerWhenStop() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onRecordingStop();
-
     verify(mockedTerminalEmulator).stop();
   }
 
   @Test
   public void shouldDisconnectTerminalClientWhenStop() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onRecordingStop();
-
     verify(terminalClient).disconnect();
   }
 
   @Test
-  public void shouldNotifyChildrenTestStateListenersWhenCloseTerminal() throws Exception {
-      rteRecorder.onRecordingStart();
-      rteRecorder.onCloseTerminal();
-
-      verify((TestStateListener) mockedTestStateListener).testEnded();
+  public void shouldNotifyChildrenTestEndWhenCloseTerminal() throws Exception {
+    connect();
+    rteRecorder.onCloseTerminal();
+    verify((TestStateListener) mockedTestStateListener).testEnded();
   }
 
   @Test
   public void shouldRemoveRecorderAsEmulatorListenerWhenCloseTerminal() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onCloseTerminal();
-
     verify(terminalClient).removeTerminalStateListener(rteRecorder);
   }
 
   @Test
   public void shouldStopEmulatorWhenCloseTerminal() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onCloseTerminal();
-
     verify(mockedTerminalEmulator).stop();
   }
 
   @Test
   public void shouldDisconnectTerminalClientWhenCloseTerminal() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onCloseTerminal();
-
     verify(terminalClient).disconnect();
   }
 
   @Test
   public void shouldNotifyRecordingListenerWhenCloseTerminal() throws Exception {
     rteRecorder.setRecordingStateListener(mockedRecorderListener);
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onCloseTerminal();
-
     verify(mockedRecorderListener).onRecordingStop();
   }
 
   @Test
   public void shouldLockEmulatorKeyboardWhenAttentionKey() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-
     /*
      * The block of the Keyboard occurs 2 times:
      * At the beginning when the terminal setup (initTerminalEmulator)
@@ -378,23 +418,21 @@ public class RTERecorderTest {
 
   @Test
   public void shouldResetTerminalClientAlarmWhenAttentionKey() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-
     verify(terminalClient).resetAlarm();
   }
 
   @Test
-  public void shouldNotifySuccessfulSampleResultToChildrenSampleListenersWhenAttentionKeyAndSuccessfulResult()
-      throws Exception {
-    rteRecorder.onRecordingStart();
+  public void shouldNotifyPendingResultToChildrenWhenAttentionKey() throws Exception {
+    connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
     verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
 
-    SampleResult expected = buildBasicSampleResult(Action.CONNECT);
-    expected.setDataType("text");
+    RteSampleResult expected = buildBasicSampleResult(Action.CONNECT);
+    expected.setScreen(TEST_SCREEN);
 
     RteSampleResult result = (RteSampleResult) argument.getAllValues().get(0).getResult();
     assertSampleResult(expected, result);
@@ -402,98 +440,69 @@ public class RTERecorderTest {
 
   @Test
   public void shouldAddSamplerToTargetControllerNodeWhenAttentionKey() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
     /*
-    * There were two interactions with the Model
-    * 1st: When the Recording Starts, a new Test Element is added
-    * 2nd: When the onAttentionKey is triggered, all the pending
-    * samplers are recorded and thats when the Sampler is added
-    */
+     * There were two interactions with the Model
+     * 1st: When the Recording Starts, a new Test Element is added
+     * 2nd: When the onAttentionKey is triggered, all the pending
+     * samplers are recorded and thats when the Sampler is added
+     */
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(mockedJMeterTreeModel, times(2)).addComponent(argument.capture(),
         eq(mockedJMeterTreeNode));
 
-    assertConnectionSampler(argument.getValue());
+    assertTestElement(buildExpectedConnectionSampler(), argument.getValue());
   }
 
   @Test
   public void shouldNotifyPendingSampleAndDisconnectSampleToSampleListenersWhenStop()
       throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onRecordingStop();
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
 
-    verify( (SampleListener) mockedSamplerListener, times(2)).sampleOccurred(argument.capture());
+    verify((SampleListener) mockedSamplerListener, times(2)).sampleOccurred(argument.capture());
 
-    SampleResult expectedConnectSampler = buildBasicSampleResult(Action.CONNECT);
-    expectedConnectSampler.setDataType("text");
+    RteSampleResult expectedConnectResult = buildBasicSampleResult(Action.CONNECT);
+    expectedConnectResult.setScreen(TEST_SCREEN);
 
-    SampleResult expectedDisconnectSampler = buildBasicSampleResult(Action.DISCONNECT);
-    ((RteSampleResult) expectedDisconnectSampler).setInputInhibitedRequest(false);
+    RteSampleResult expectedDisconnectResult = buildBasicSampleResult(Action.DISCONNECT);
+    expectedDisconnectResult.setInputInhibitedRequest(false);
 
-    SampleResult connect = argument.getAllValues().get(0).getResult();
-    SampleResult disconnect = argument.getAllValues().get(1).getResult();
-
-    assertSampleResult(expectedConnectSampler, connect);
-    assertSampleResult(disconnect, expectedDisconnectSampler);
-  }
-
-  private RteSampleResult buildBasicSampleResult(Action action) {
-    RteSampleResult base = new RteSampleResult();
-    base.setAction(action);
-    base.setSampleLabel("bzm-RTE-"+action.getLabel().toUpperCase());
-    base.setProtocol(Protocol.TN5250);
-    base.setTerminalType(new TerminalType("IBM-3179-2", new Dimension(80, 24)));
-    base.setServer("localhost");
-    base.setPort(80);
-    base.setSslType(SSLType.NONE);
-    base.setSuccessful(true);
-    return base;
-  }
-
-  private void assertSampleResult(SampleResult expected, SampleResult result) {
-    assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "requestHeaders", "samplerData",
-            "successful", "responseCode", "responseMessage", "responseHeaders", "dataType",
-            "responseDataAsString");
+    assertSampleResult(expectedConnectResult, argument.getAllValues().get(0).getResult());
+    assertSampleResult(expectedDisconnectResult, argument.getAllValues().get(1).getResult());
   }
 
   @Test
   public void shouldAddPendingSamplerAndDisconnectSamplerToTestPlanWhenStop() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onRecordingStop();
 
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     /*
-    * There are 3 interactions on the addComponent because:
-    * 1st: Corresponds to the ConfigTestElement
-    * 2nd: Corresponds to the RTESampler for the Connect
-    * 3nd: Corresponds to the RTESampler for the Disconnect
-    */
-    verify(mockedJMeterTreeModel, times(3)).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
+     * There are 3 interactions on the addComponent because:
+     * 1st: Corresponds to the ConfigTestElement
+     * 2nd: Corresponds to the RTESampler for the Connect
+     * 3nd: Corresponds to the RTESampler for the Disconnect
+     */
+    verify(mockedJMeterTreeModel, times(3))
+        .addComponent(argument.capture(), eq(mockedJMeterTreeNode));
     verify(terminalClient).disconnect();
 
-    assertConfigSampler(argument.getAllValues().get(0));
-    assertConnectionSampler(argument.getAllValues().get(1));
-    assertDisconnectionSampler(argument.getAllValues().get(2));
+    softly.assertThat(argument.getAllValues().get(0)).isEqualTo(buildExpectedConfig());
+    assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
+    assertTestElement(buildExpectedDisconnectionSampler(), argument.getAllValues().get(2));
   }
 
-  private void assertConnectionSampler(TestElement argumentValue){
-    softAssertTestElementProperty(argumentValue, RTESampler.NAME, "name", CONNECT_NAME);
-    softAssertTestElementProperty(argumentValue, RTESampler.ACTION_PROPERTY, "action", CONNECT_ACTION);
-    softAssertTestElementProperty(argumentValue, "RTESampler.waitSyncTimeout", "waitSyncTimeout", WAIT_SYNC_TIMEOUT);
-  }
-
-  private void assertDisconnectionSampler(TestElement argumentValue){
-    softAssertTestElementProperty(argumentValue, RTESampler.NAME, "name", DISCONNECT_NAME);
-    softAssertTestElementProperty(argumentValue, RTESampler.ACTION_PROPERTY, "action", DISCONNECT_ACTION);
+  private RTESampler buildExpectedDisconnectionSampler() {
+    return buildExpectedSampler("bzm-RTE-DISCONNECT", Action.DISCONNECT);
   }
 
   @Test
   public void shouldRegisterRequestListenerWhenAttentionKey() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
     /*
      * The number of interactions with this clients is 2:
@@ -509,9 +518,9 @@ public class RTERecorderTest {
 
   @Test
   public void shouldSendInputsAndAttentionKeyToTerminalClientWhenAttentionKey() throws Exception {
-    rteRecorder.onRecordingStart();
+    connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-
     verify(terminalClient).send(INPUTS, AttentionKey.ENTER);
   }
+
 }

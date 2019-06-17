@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.sampler;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,11 +18,11 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
-import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResult;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
@@ -142,13 +142,6 @@ public class RTESamplerTest {
     expected.setProtocol(Protocol.TN5250);
     expected.setTerminalType(new TerminalType("IBM-3179-2", new Dimension(80, 24)));
     return expected;
-  }
-
-  private void assertSampleResult(SampleResult result, SampleResult expected) {
-    assertThat(result)
-        .isEqualToComparingOnlyGivenFields(expected, "sampleLabel", "requestHeaders", "samplerData",
-            "successful", "responseCode", "responseMessage", "responseHeaders", "dataType",
-            "responseDataAsString");
   }
 
   @Test
@@ -359,7 +352,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenDisconnectThrowRteIOException() throws Exception {
     connectClient();
     rteSampler.setAction(Action.DISCONNECT);
-    RteIOException e = new RteIOException(null);
+    RteIOException e = new RteIOException(null, "localhost");
     doThrow(e)
         .when(rteProtocolClientMock).disconnect();
     SampleResult result = rteSampler.sample(null);
