@@ -2,27 +2,43 @@
 
 ![labs-logo](docs/blazemeter-labs-logo.png)
 
-This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing config elements and samplers.
+This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing config elements, samplers and recording controllers.
 
 Nowadays the plugin supports **IBM protocol's TN5250 and TN3270** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators with modifications ([xtn5250 fork](https://github.com/abstracta/xtn5250) and [dm3270 fork](https://github.com/abstracta/dm3270)) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
 
-People who usually work with these IBM servers interact with them, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes.
-In such regard, the sampler is designed in a way that the user can specify the position of fields on the screen and the text to set on them. Besides, the sampler allows to simulate the existing attention keys on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc.
+People who usually work with these IBM servers interact with them, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes. The plugin provides a [recording controller](), which allows the user to interact through a terminal emulator, recording every interaction (samplers) with the mainframe application. Additionally the plugin allows the user to specify the position of fields on the screen and the text to set on them, instead of using the recording functionality. Besides, the sampler allows to simulate the existing attention keys on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc.  
 
 ## Usage
 
 ### Using the plugin
+The plugin adds three different elements to JMeter:
 
-The plugin adds two different elements to JMeter:
+####A Recording Controller ([RTE-Recorder](#rte-recorder) )
+![alt text](docs/RecorderPanel.png "RTE Recorder") 
 
-A Config Element (RTE Config)
+##### Configuring the RTE Recorder
+1. Add the bzm - RTE Recorder: Test Plan → Add → Non-Test Elements → bzm - RTE Recorder
+2. Add a Recording Controller
+3. Add a View Result Tree embedded in RTE Recorder element
+
+#####Usage of RTE Recorder
+
+To start recording the user should specify the _Server_, _Port_, _Protocol_, _Terminal Type_, _SSL Type_, _Timeout_ and _Timeout Threshold_. This configurations are shared by [RTE-Config]() and well explained in the section for itself. The Timeout Threshold only belongs to RTE-Recorder and you are able to see more detail information about it and how the wait conditions works clicking → [here]().
+ ![alt_text](docs/RecordingFilledUp.png)
+Once everything is configured the user proceeds to start the recording session, pressing START button. Due to this action (supposing configurations are right) the [Terminal Emulator]() will show up. 
+
+![alt_text](docs/Emulator-Login.png)
+As the terminal emulator was showed, it means that we have connected to the mainframe application. Now we are able to interact with our client through RTE-Emulator. Every iteration will be automatically saved in samplers (_[check out everything about samplers ]()_).
+Once we have ended the flow that we want to record, we can easily close the terminal emulator or press STOP button to stop our recording.
+
+Whole manual of RTE-Recorder [here]().
+####A Config Element (RTE Config)
 
 ![alt text](docs/config.png "RTE Config GUI")
 
-and a Sampler (RTE Sampler)
+####Sampler (RTE Sampler)
 
 ![alt text](docs/send-keys.png "RTE Sampler GUI")
-
 The RTE Config element sets the parameters to be used by the sampler in order to establish a connection to the server. These parameters are:
 
 - *Server* (required). The url or ip of the IBM server.
@@ -89,9 +105,29 @@ As explained previously, the RTE Sampler has 4 types of waiters which work as sy
 - *Wait for Silent*: The client is considered to be silent when the terminal does not receive any characters from the server so, by setting the proper silent interval, the user could ensure that the server has sent all the information available to the client before continue the execution.    
 - *Wait for Text*: This waiter could be useful to check for a specific message before continue the execution. For example, it could be used to wait for a message with the confirmation that a specific process ended correctly or to check if a search returned any result before continue. 
 
+##RTE-Recorder
+RTE recorder buttons propose:
+
+- *Start*: This button allows the user to begin with the recording and to connect to the mainframe application through a terminal emulator that have showed up, once configurations are filled up. Additionally after button is pressed an RTE-Config and Connect Sampler will be added to the test plan. 
+- *Stop*: This button allows the user to stop current recording. Once this button is pressed the recording have stopped and Disconnect Sampler will be added to the test plan followed by the closure of the terminal emulator.
+- *Restart*: This button is the equivalent to press stop button and start button instantly. very helpful to optimize our time while recording flows.
+
+View Result Tree integration:
+
+As users we will be able to analise the result of every sampler that was made with the recorder, our request and also as a validation method to be sure that what we have seen in the emulator it correspond to the original package the server have sent back.
+
+![alter_text](docs/View-Result-Tree.png)
+
+RTE - Emulator:
+
+The emulator has integrated in the lower right corner a helper therefore this is more an introduction to it. This helper is going to describe every functionality with the ones the emulator count like shortcuts, copy & paste, mainframe application status, etc.
+This helper is easily accessible by clicking on the interrogation sign.
+
+![alter_text](docs/Emulator-Login.png)
+
 ## Compatibility
 
-The plugin is tested with Jmeter 3.1, 3.2, 3.3, 4.0 and 5.0 in Java 8 and 11. Code base is implemented in Java 1.8, so lower versions of JVM are not supported.
+The plugin is tested with Jmeter 3.1, 3.2, 3.3, 4.0, 5.0, 5.1, 5.1.1 in Java 8 and 11. Code base is implemented in Java 1.8, so lower versions of JVM are not supported.
 
 ## Contributing
 
@@ -100,3 +136,8 @@ If you find any issue or something that is not supported by this plugin, please 
 *Debug log level* could be enabled by configuring the Log4j 2 Configuration File (adding `<Logger name="com.blazemeter.jmeter.rte" level="debug" />`) or via JMeter menu, how to do it from both ways are explained [here](https://www.blazemeter.com/blog/how-to-configure-jmeter-logging).
 
 Otherwise you could [contribute](CONTRIBUTING.md) to the project. 
+
+
+
+
+[rte-recorder]: #rte-recorder
