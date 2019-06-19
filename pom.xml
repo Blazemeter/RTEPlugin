@@ -134,8 +134,8 @@
           <artifactId>maven-failsafe-plugin</artifactId>
           <version>2.20.1</version>
           <configuration>
-            <parallel>both</parallel>
-            <threadCount>10</threadCount>
+          <!--  <parallel>both</parallel>
+            <threadCount>10</threadCount>-->
             <useSystemClassLoader>false</useSystemClassLoader>
           </configuration>
         </plugin>
