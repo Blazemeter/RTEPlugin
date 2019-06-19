@@ -1,0 +1,13 @@
+<template isTestPlan="true">
+    <name>Recording RTE</name>
+    <fileName>/bin/templates/RTERecorder.jmx</fileName>
+    <description><![CDATA[
+        <h1>Sample RTE Recorder Sampler</h1>
+        <h2>Overview</h2>
+        This is a sample for RTE Recorder which shows how to use some of its features.
+        <br/>
+        Please select a suitable location in the tree before merging.
+        ]]>
+    </description>
+</template>
+
