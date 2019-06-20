@@ -1,12 +1,8 @@
 package com.blazemeter.jmeter.rte.recorder;
 
-import org.apache.commons.io.IOUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FileWriter;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -14,6 +10,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
+
+import org.apache.commons.io.IOUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RTETemplateRepository {
 
@@ -24,8 +25,8 @@ public class RTETemplateRepository {
     this.templatesPath = templatesPath;
   }
 
-  public void addRTETemplate(String templateName, String pathTemplateResource, String descTemplateName,
-                             String nameTemplateXML) {
+  public void addRTETemplate(String templateName, String pathTemplateResource,
+                             String descTemplateName, String nameTemplateXML) {
 
     createRTETemplate(templateName, pathTemplateResource);
     addTemplateDescription(descTemplateName, nameTemplateXML);
@@ -57,9 +58,13 @@ public class RTETemplateRepository {
         List<String> replacedLines = new ArrayList<>();
         for (String line : Files.readAllLines(Paths.get(filePath))) {
           if (line.contains("</templates>")) {
-            line = getFileFromResources(descTemplateName) + System.lineSeparator() + line;
+            String extraLine = getFileFromResources(descTemplateName) +
+                System.lineSeparator() + line;
+            replacedLines.add(extraLine);
+          } else {
+            replacedLines.add(line);
           }
-          replacedLines.add(line);
+
         }
         Files.write(Paths.get(filePath), replacedLines);
       }
