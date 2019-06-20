@@ -6,7 +6,7 @@ This project implements a JMeter plugin to **support RTE (Remote Terminal Emulat
 
 Nowadays the plugin supports **IBM protocol's TN5250 and TN3270** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators with modifications ([xtn5250 fork](https://github.com/abstracta/xtn5250) and [dm3270 fork](https://github.com/abstracta/dm3270)) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
 
-People who usually work with these IBM servers interact with them, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes. The plugin provides a [recording controller](), which allows the user to interact through a terminal emulator, recording every interaction (samplers) with the mainframe application. Additionally, the plugin allows for manual test plan creation, providing a config element for setting connection parameters and a sampler to set fields on screen and attention key to send to the mainframe application. Besides, the sampler allows to simulate the existing attention keys on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc.  
+People who usually work with these IBM servers interact with them, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes. The plugin provides a [recording controller](#a-recording-controller-rte-recorder), which allows the user to interact through a terminal emulator, recording every interaction (samplers) with the mainframe application. Additionally, the plugin allows for manual test plan creation, providing a config element for setting connection parameters and a sampler to set fields on screen and attention key to send to the mainframe application. Besides, the sampler allows to simulate the existing attention keys on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc.  
 
 ## Usage
 
@@ -26,17 +26,18 @@ The plugin adds three different elements to JMeter:
 
 ##### Usage of RTE Recorder
 
-To start recording the user should specify the _Server_, _Port_, _Protocol_, _Terminal Type_, _SSL Type_, _Timeout_ and _Timeout Threshold_. This configurations are the same ones detailed in [RTE-Config](). The Timeout Threshold only belongs to RTE-Recorder and you are able to see more detail information about it and how the wait conditions works clicking → [here](docs/wait-conditions-recording.md).
+To start recording, the user should specify the _Server_, _Port_, _Protocol_, _Terminal Type_, _SSL Type_, _Timeout_ and _Timeout Threshold_. These configurations are the same ones detailed in [RTE-Config](#a-config-element-rte-config). Details about Timeout Threshold field and how the wait conditions works can be found [here](docs/wait-conditions-recording.md).
  ![alt_text](docs/RecordingFilledUp.png)
-Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right) the [Terminal Emulator]() will show up. 
+Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the [Terminal Emulator](#rte---emulator) will show up. 
 
 ![alt_text](docs/Emulator-Login.png)
-Now we are able to interact with our client through RTE-Emulator. Every interaction will be automatically saved in samplers (_[check out everything about samplers ](README.md#sampler-(RTE-sampler))_).
-Once we have ended the flow that we want to record, we can easily close the terminal emulator or press STOP button to stop our recording.
-
+Now we are able to interact with our client through RTE-Emulator. Every interaction will be automatically saved in samplers (_[check out everything about samplers ](#sampler-rte-sampler)_).
+Once we have ended the flow that we want to record, we can easily close the terminal emulator or press STOP button to stop our recording. 
+> Approach of how would look after a recording 
+![alt_text](docs/Final-Testplan.png)
 ##### RTE recorder buttons purpose:
 
-- *Start*: This button allows the user to begin with the recording and to connect to the mainframe application through a terminal emulator, once configurations are filled up. Additionally, after button is pressed, an RTE-Config and Connect Sampler will be added to the test plan. 
+- *Start*: This button allows the user to begin with the recording and to connect to the mainframe application through a terminal emulator. Additionally, after button is pressed, an RTE-Config and Connect Sampler will be added to the test plan. 
 - *Stop*: This button allows the user to stop current recording. Once this button is pressed, the recording will be stopped and Disconnect Sampler will be added to the test plan followed by the closure of the terminal emulator.
 - *Restart*: This button is the equivalent to pressing stop and start buttons.
 - *Timeout Threshold*: This field will set the timeout which later on the [waits conditions ](docs/wait-conditions-recording.md)will use to set the proper time out for the conditions.
@@ -50,7 +51,7 @@ When a View Results Tree JMeter test element is included as a child of the RTE r
 
 ##### RTE - Emulator:
 
-If you click on the ![alter_text](src/main/resources/help.png) icon in the emulator a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc
+If you click on the ![alter_text](src/main/resources/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc
 
 #### A Config Element (RTE Config)
 
@@ -91,7 +92,7 @@ The RTE Sampler fields are:
   - *Cursor*. Waits for the cursor to appear at a specific location in the terminal window.
   - *Silent*. Waits for the connection to be silent (with no interactions) for a specified amount of time. 
   - *Text*. Waits for a screen area to match a given specified regex.
-
+###### Stable Period
 All the "waiters" use a stable timeout value (in milliseconds) which specifies the time to wait for the emulator to remain at the desired state. The default value is 1000 milliseconds, but can be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The "Wait for silent" waiter is not affected by this setting since it has an explicit field for such purpose. 
 > Warning: both Stable Timeout and Silent Interval should be shorter than Timeout value, otherwise the sampler will always return a timeout error.
 
