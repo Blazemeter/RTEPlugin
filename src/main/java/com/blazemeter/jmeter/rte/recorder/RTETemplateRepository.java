@@ -36,9 +36,6 @@ public class RTETemplateRepository {
       File dest = new File(templatesPath + templateName);
       if (!dest.exists()) {
         try (FileWriter fileWriter = new FileWriter(dest)) {
-          //File templateFile = new File(pathTemplateResource);
-          //String templateContent = Resources.toString(templateFile.toURI().toURL(), Charsets.UTF_8);
-          //fileWriter.write(templateContent);
           fileWriter.write(getFileFromResources(pathTemplateResource));
         }
       }
