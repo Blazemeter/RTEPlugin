@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.swing.timing.Pause.pause;
 
+import com.blazemeter.jmeter.rte.CloseableFrameFixture;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Screen;
@@ -23,7 +24,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
-import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
@@ -35,15 +35,16 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class Xtn5250TerminalEmulatorIT {
 
-  private static final long PAUSE_TIMEOUT = 15000;
-  private static final int COLUMNS = 132;
-  private static final int ROWS = 43;
+  private static final long PAUSE_TIMEOUT = 10000;
+  private static final int COLUMNS = 80;
+  private static final int ROWS = 24;
   private static final String COPY_BUTTON = "copyButton";
   private static final String PASTE_BUTTON = "pasteButton";
-  public static final String TEST_SCREEN_FILE = "test-screen.txt";
-  public static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
+  private static final String TEST_SCREEN_FILE = "test-screen.txt";
+  private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
 
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
+  private CloseableFrameFixture frame;
 
   @Before
   public void setup() {
@@ -57,7 +58,7 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldShowTerminalEmulatorFrameWithProperlySizeWhenStart() {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreenSize(132, 43);
     xtn5250TerminalEmulator.start();
     //xi5250Crt expected Height + StatusPanel expected height
     int expectedHeight = 731 + 31 + 43;
@@ -87,33 +88,69 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldShowTheScreenExpectedWhenSetScreen() throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(buildScreen(true));
+    xtn5250TerminalEmulator.setScreen(buildScreen(""));
     assertThat(xtn5250TerminalEmulator.getScreen()).isEqualTo(getFileContent(TEST_SCREEN_FILE));
   }
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnField() throws IOException {
-    sendKey(KeyEvent.VK_E, 2, 1, false,
-        TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE, true);
+    try {
+      setScreen("");
+      xtn5250TerminalEmulator.setKeyboardLock(false);
+      sendKey(KeyEvent.VK_E, 0, 2, 1);
+      awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
+    } finally {
+      frame.close();
+    }
   }
 
-  private void sendKey(int key, int row, int column, boolean keyboardLocked, String expectedScreen,
-      boolean fieldIsEmpty)
-      throws IOException {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(buildScreen(fieldIsEmpty));
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
-    frame.show();
+  @Test
+  public void shouldGetProperTextWhenPressKeyOnFieldAndKeyboardIsLocked() throws IOException {
     try {
-      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
-      JComponentDriver driver = new JComponentDriver(frame.robot());
-      xtn5250TerminalEmulator.setKeyboardLock(keyboardLocked);
-      xtn5250TerminalEmulator.setCursor(row, column);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key));
-      awaitTextInScreen(getFileContent(expectedScreen));
+      setScreen("");
+      xtn5250TerminalEmulator.setKeyboardLock(true);
+      sendKey(KeyEvent.VK_E, 0, 2, 1);
+      awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
     } finally {
-      frame.cleanUp();
+      frame.close();
     }
+  }
+
+  @Test
+  public void shouldDeleteTextWhenPressBackspaceKey() throws IOException {
+    try {
+      setScreen("E");
+      xtn5250TerminalEmulator.setKeyboardLock(false);
+      sendKey(KeyEvent.VK_BACK_SPACE, 0, 2, 2);
+      awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
+    } finally {
+      frame.close();
+    }
+  }
+
+  @Test
+  public void shouldGetProperTextWhenPressKeyOutOfField() throws IOException {
+    try {
+      setScreen("");
+      xtn5250TerminalEmulator.setKeyboardLock(false);
+      sendKey(KeyEvent.VK_E, 0, 1, 1);
+      awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
+    } finally {
+      frame.close();
+    }
+  }
+
+  private void setScreen(String text) {
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
+    xtn5250TerminalEmulator.setScreen(buildScreen(text));
+    frame = new CloseableFrameFixture(xtn5250TerminalEmulator);
+  }
+
+  private void sendKey(int key, int modifiers, int row, int column) {
+    Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
+    JComponentDriver driver = new JComponentDriver(frame.robot());
+    xtn5250TerminalEmulator.setCursor(row, column);
+    driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key).modifiers(modifiers));
   }
 
   private void awaitTextInScreen(String text) {
@@ -126,144 +163,131 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldGetProperTextWhenPressKeyOnFieldAndKeyboardIsLocked() throws IOException {
-    sendKey(KeyEvent.VK_E, 2, 1, true,
-        TEST_SCREEN_FILE, true);
-  }
-
-  @Test
-  public void shouldDeleteTextWhenPressBackspaceKey() throws IOException {
-    sendKey(KeyEvent.VK_BACK_SPACE, 2, 2, false,
-        TEST_SCREEN_FILE, false);
-  }
-
-  @Test
-  public void shouldCallTheListenerWhenPressAnyAttentionKey() {
-    pressAttentionKey(KeyEvent.VK_F1, 0, AttentionKey.F1);
-  }
-
-  @Test
-  public void shouldCallTheListenerWhenPressControlAttentionKey() {
-    pressAttentionKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, AttentionKey.RESET);
-  }
-
-  private void pressAttentionKey(int key, int modifiers, AttentionKey expected) {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(buildScreen(true));
-    TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
-    xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
-    frame.show();
+  public void shouldCallTheListenerWhenPressAnyAttentionKey() throws IOException {
     try {
-      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
-      JComponentDriver driver = new JComponentDriver(frame.robot());
-      xtn5250TerminalEmulator.setCursor(2, 2);
-      driver.pressAndReleaseKey(focusedComponent, KeyPressInfo.keyCode(key).modifiers(modifiers));
-      pause(new Condition("Listener is called") {
-        @Override
-        public boolean test() {
-          return terminalEmulatorListener.getAttentionKey() != null && terminalEmulatorListener
-              .getAttentionKey().equals(expected);
-        }
-      }, PAUSE_TIMEOUT);
+      setScreen("");
+      TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
+      xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
+      sendKey(KeyEvent.VK_F1, 0, 2, 2);
+      awaitListenerIsCalled(AttentionKey.F1, terminalEmulatorListener);
     } finally {
-      frame.cleanUp();
+      frame.close();
     }
   }
 
   @Test
-  public void shouldGetProperTextWhenPressKeyOutOfField() throws IOException {
-    sendKey(KeyEvent.VK_E, 1, 1, false,
-        TEST_SCREEN_FILE, true);
-  }
-
-  @Test
-  public void shouldCopyTestWhenClickCopyButton() throws IOException, UnsupportedFlavorException {
-    doCopy(null);
-  }
-
-  @Test
-  public void shouldCopyTestWhenPressShortcut()
-      throws IOException, UnsupportedFlavorException {
-    doCopy(getMenuShortcutKeyMask());
-  }
-
-  private void doCopy(Integer keyMask) throws IOException, UnsupportedFlavorException {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(buildScreen(true));
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
-    frame.show();
+  public void shouldCallTheListenerWhenPressControlAttentionKey() throws IOException {
     try {
-      xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
-      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
-      if (keyMask == null) {
-        JButtonFixture copyButton = frame.button(COPY_BUTTON);
-        copyButton.click();
-      } else {
-        JComponentDriver driver = new JComponentDriver(frame.robot());
-        driver.pressAndReleaseKey(focusedComponent, KeyEvent.VK_C, new int[]{keyMask});
+      setScreen("");
+      TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
+      xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
+      sendKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, 2, 2);
+      awaitListenerIsCalled(AttentionKey.RESET, terminalEmulatorListener);
+    } finally {
+      frame.close();
+    }
+
+  }
+
+  private void awaitListenerIsCalled(AttentionKey expected,
+      TestTerminalEmulatorListener terminalEmulatorListener) {
+    pause(new Condition("Listener is called") {
+      @Override
+      public boolean test() {
+        return terminalEmulatorListener.getAttentionKey() != null && terminalEmulatorListener
+            .getAttentionKey().equals(expected);
       }
-      Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
-      String result = (String) clipboard.getContents(focusedComponent)
-          .getTransferData(DataFlavor.stringFlavor);
-      assertThat(result).isEqualTo("*****");
+    }, PAUSE_TIMEOUT);
+  }
+
+  @Test
+  public void shouldCopyTextWhenClickCopyButton() throws IOException, UnsupportedFlavorException {
+    try {
+      setScreen("");
+      xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
+      clickButton(COPY_BUTTON);
+      assertTextIsInClipboard("*****");
     } finally {
-      frame.cleanUp();
+      frame.close();
     }
   }
 
   @Test
-  public void shouldPasteTestWhenClickPasteButton() throws IOException {
-    doPaste(null);
+  public void shouldCopyTextWhenPressShortcut()
+      throws IOException, UnsupportedFlavorException {
+    try {
+      setScreen("");
+      xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
+      sendKey(KeyEvent.VK_C, getMenuShortcutKeyMask(), 0, 0);
+      assertTextIsInClipboard("*****");
+    } finally {
+      frame.close();
+    }
+  }
+
+  private void clickButton(String name) {
+    JButtonFixture button = frame.button(name);
+    button.click();
+  }
+
+  public void assertTextIsInClipboard(String text)
+      throws IOException, UnsupportedFlavorException {
+    Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
+    Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
+    String result = (String) clipboard.getContents(focusedComponent)
+        .getTransferData(DataFlavor.stringFlavor);
+    assertThat(result).isEqualTo(text);
   }
 
   @Test
-  public void shouldPasteTestWhenPressShortcut() throws IOException {
-    doPaste(getMenuShortcutKeyMask());
+  public void shouldPasteTextWhenClickPasteButton() throws IOException {
+    try {
+      setScreen("");
+      xtn5250TerminalEmulator.setCursor(2, 1);
+      addTextToClipboard("e");
+      clickButton(PASTE_BUTTON);
+      awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
+    } finally {
+      frame.close();
+    }
+  }
+
+  @Test
+  public void shouldPasteTextWhenPressShortcut() throws IOException {
+    try {
+      setScreen("");
+      xtn5250TerminalEmulator.setCursor(2, 1);
+      addTextToClipboard("e");
+      sendKey(KeyEvent.VK_V, getMenuShortcutKeyMask(), 2, 1);
+      awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
+    } finally {
+      frame.close();
+    }
+  }
+
+  private void addTextToClipboard(String text) {
+    Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
+    Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
+    StringSelection contents = new StringSelection(text);
+    clipboard.setContents(contents, contents);
   }
 
   private int getMenuShortcutKeyMask() {
     return Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
   }
 
-  private void doPaste(Integer keyMask) throws IOException {
-    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(buildScreen(true));
-    xtn5250TerminalEmulator.setKeyboardLock(false);
-    FrameFixture frame = new FrameFixture(xtn5250TerminalEmulator);
-    frame.show();
-    xtn5250TerminalEmulator.setCursor(2, 1);
-    try {
-      Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
-      Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
-      StringSelection contents = new StringSelection("e");
-      clipboard.setContents(contents, contents);
-      if (keyMask == null) {
-        JButtonFixture pasteButton = frame.button(PASTE_BUTTON);
-        pasteButton.click();
-      } else {
-        JComponentDriver driver = new JComponentDriver(frame.robot());
-        driver.pressAndReleaseKey(focusedComponent, KeyEvent.VK_V, new int[]{keyMask});
-      }
-      assertThat(xtn5250TerminalEmulator.getScreen())
-          .isEqualTo(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
-    } finally {
-      frame.cleanUp();
-    }
-  }
-
   private String getFileContent(String file) throws IOException {
     return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
   }
 
-  private static Screen buildScreen(boolean fieldIsEmpty) {
+  private static Screen buildScreen(String text) {
     Dimension screenSize = new Dimension(80, 24);
     Screen screen = new Screen(screenSize);
     int segmentPosition = 0;
     screen.addSegment(segmentPosition,
         completeLine("*****************************************", screenSize.width));
     segmentPosition += screenSize.width;
-    screen.addField(segmentPosition, completeLine((fieldIsEmpty ? " " : "E"), screenSize.width));
+    screen.addField(segmentPosition, completeLine(text, screenSize.width));
     segmentPosition += screenSize.width;
     for (String lineText : Arrays
         .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",

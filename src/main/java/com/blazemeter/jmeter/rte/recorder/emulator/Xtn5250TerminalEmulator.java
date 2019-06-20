@@ -85,21 +85,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
 
-  private static final ImageIcon COPY_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/copy.png"));
-  private static final ImageIcon PASTE_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/paste.png"));
-  private JButton copyButton = SwingUtils
-      .createComponent("copyButton", new JButton(COPY_ICON));
-  private JButton pasteButton = SwingUtils
-      .createComponent("pasteButton", new JButton(PASTE_ICON));
+  private JButton copyButton = createIconButton("copyButton", "/copy.png");
+  private JButton pasteButton = createIconButton("pasteButton", "/paste.png");
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private boolean stopping;
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
-  private JPanel toolsPanel = createToolsPanel();
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -108,7 +101,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     xi5250Crt.setEnabled(true);
     setTitle(TITLE);
     setLayout(new BorderLayout());
-    add(toolsPanel, BorderLayout.NORTH);
+    add(createToolsPanel(), BorderLayout.NORTH);
     add(xi5250Crt, BorderLayout.CENTER);
     add(statusPanel, BorderLayout.SOUTH);
     addWindowListener(new WindowAdapter() {
@@ -132,6 +125,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       }
     });
     setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+  }
+
+  private static JButton createIconButton(String name, String iconResource) {
+    return SwingUtils.createComponent(name,
+        new JButton(new ImageIcon(StatusPanel.class.getResource(iconResource))));
   }
 
   private JPanel createToolsPanel() {
@@ -290,7 +288,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     private boolean copyPaste = false;
 
     CustomXI5250Crt() {
-      super();
       copyButton.addActionListener(e -> {
         doCopy();
         xi5250Crt.requestFocus();
