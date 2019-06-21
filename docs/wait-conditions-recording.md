@@ -9,7 +9,7 @@ To begin with the explication of how Wait Conditions works in RTE-Recorder, lets
 [Here](../README.md#waiters-usage) there is more information about Wait Conditions in general.
 
 
-##Wait conditions recording resolution  
+## Wait conditions recording resolution  
 Wait conditions recording resolution is currently determined by the following 4 cases:
  
  **Case 1**: We have connected to the server but the terminal emulator has not received any keyboard status change so, the keyboard keeps locked. In this case the plugin will add a Silent Wait condition with the period of time between the connection and the next interaction.

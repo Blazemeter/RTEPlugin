@@ -90,7 +90,8 @@ The RTE Sampler fields are:
   - *Cursor*. Waits for the cursor to appear at a specific location in the terminal window.
   - *Silent*. Waits for the connection to be silent (with no interactions) for a specified amount of time. 
   - *Text*. Waits for a screen area to match a given specified regex.
-###### Stable Period
+
+##### Stable Period
 All the "waiters" use a stable timeout value (in milliseconds) which specifies the time to wait for the emulator to remain at the desired state. The default value is 1000 milliseconds, but can be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The "Wait for silent" waiter is not affected by this setting since it has an explicit field for such purpose. 
 > Warning: both Stable Timeout and Silent Interval should be shorter than Timeout value, otherwise the sampler will always return a timeout error.
 
