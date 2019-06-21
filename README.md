@@ -28,19 +28,21 @@ The plugin adds three different elements to JMeter:
 
 To start recording, the user should specify the _Server_, _Port_, _Protocol_, _Terminal Type_, _SSL Type_, _Timeout_ and _Timeout Threshold_. These configurations are the same ones detailed in [RTE-Config](#a-config-element-rte-config). Details about Timeout Threshold field and how the wait conditions works can be found [here](docs/wait-conditions-recording.md).
  ![alt_text](docs/RecordingFilledUp.png)
-Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the [Terminal Emulator](#rte---emulator) will show up. 
+ > RTE recorder buttons purpose:
+ > - *Start*: This button allows the user to begin with the recording and to connect to the mainframe application through a terminal emulator. Additionally, after button is pressed, an RTE-Config and Connect Sampler will be added to the test plan. 
+ > - *Stop*: This button allows the user to stop current recording. Once this button is pressed, the recording will be stopped and Disconnect Sampler will be added to the test plan followed by the closure of the terminal emulator.
+ > - *Restart*: This button is the equivalent to pressing stop and start buttons.
+ > - *Timeout Threshold*: This field will set the timeout which later on the [waits conditions ](docs/wait-conditions-recording.md)will use to set the proper time out for the conditions.
+
+Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the **Terminal Emulator** will show up. 
 
 ![alt_text](docs/Emulator-Login.png)
+>If you click on the ![alter_text](src/main/resources/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc
+
 Now we are able to interact with our client through RTE-Emulator. Every interaction will be automatically saved in samplers (_[check out everything about samplers ](#sampler-rte-sampler)_).
 Once we have ended the flow that we want to record, we can easily close the terminal emulator or press STOP button to stop our recording. 
-> Approach of how would look after a recording 
-![alt_text](docs/Final-Testplan.png)
-##### RTE recorder buttons purpose:
 
-- *Start*: This button allows the user to begin with the recording and to connect to the mainframe application through a terminal emulator. Additionally, after button is pressed, an RTE-Config and Connect Sampler will be added to the test plan. 
-- *Stop*: This button allows the user to stop current recording. Once this button is pressed, the recording will be stopped and Disconnect Sampler will be added to the test plan followed by the closure of the terminal emulator.
-- *Restart*: This button is the equivalent to pressing stop and start buttons.
-- *Timeout Threshold*: This field will set the timeout which later on the [waits conditions ](docs/wait-conditions-recording.md)will use to set the proper time out for the conditions.
+![alt_text](docs/Final-Testplan.png)
 
 
 ##### Child View Results Tree integration:
@@ -48,10 +50,6 @@ Once we have ended the flow that we want to record, we can easily close the term
 When a View Results Tree JMeter test element is included as a child of the RTE recorder, then all interactions between the Terminal Emulator and the mainframe application will be showed on the View Results Tree and allow for proper analysis and validation of all information sent and received from the mainframe application.
 
 ![alter_text](docs/View-Result-Tree.png)
-
-##### RTE - Emulator:
-
-If you click on the ![alter_text](src/main/resources/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc
 
 #### A Config Element (RTE Config)
 
