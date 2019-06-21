@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.recorder;
 
 import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.swing.timing.Pause.pause;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
@@ -48,6 +49,7 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.assertj.core.api.JUnitSoftAssertions;
+import org.assertj.swing.timing.Condition;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -60,9 +62,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
 
-  @Rule
-  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
   private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
   private static final String SERVER = "localhost";
   private static final int PORT = 80;
@@ -73,7 +72,8 @@ public class RTERecorderTest {
   private static final long TIMEOUT = 10000;
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(new Position(2, 1), "testusr"));
-
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private TestElement mockedTestStateListener;
   private TestElement mockedSamplerListener;
   private RTERecorder rteRecorder;
@@ -523,4 +523,61 @@ public class RTERecorderTest {
     verify(terminalClient).send(INPUTS, AttentionKey.ENTER);
   }
 
+  @Test
+  public void shouldNotifyPanelThroughListenerWhenTimeoutWhileConnecting()
+      throws InterruptedException, TimeoutException, RteIOException {
+    TimeoutException e = new TimeoutException("Timeout Error");
+    TestRecordingStateListener listener = new TestRecordingStateListener();
+    rteRecorder.setRecordingStateListener(listener);
+    doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
+    rteRecorder.onRecordingStart();
+    pause(new Condition("Listener was call") {
+      @Override
+      public boolean test() {
+        return listener.isOnRecordingException();
+      }
+    }, 1000);
+  //wait was needed in order to wait till main thread reach onRecordingException
+  }
+
+  @Test
+  public void shouldNotifyPanelThroughListenerWhenRteIOExceptionWhileConnecting()
+      throws InterruptedException, TimeoutException, RteIOException {
+    RteIOException e = new RteIOException(new TimeoutException(), "Server");
+    TestRecordingStateListener listener = new TestRecordingStateListener();
+    rteRecorder.setRecordingStateListener(listener);
+    doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
+    rteRecorder.onRecordingStart();
+    pause(new Condition("Listener was call") {
+      @Override
+      public boolean test() {
+        return listener.isOnRecordingException();
+      }
+    }, 1000);
+  }
+
+  private static class TestRecordingStateListener implements RecordingStateListener {
+
+    private boolean onRecordingException = false;
+
+    public boolean isOnRecordingException() {
+      return onRecordingException;
+    }
+
+    @Override
+    public void onRecordingStart() {
+
+    }
+
+    @Override
+    public void onRecordingStop() {
+
+    }
+
+    @Override
+    public void onRecordingException(Exception e) {
+      onRecordingException = true;
+    }
+  }
 }
+
