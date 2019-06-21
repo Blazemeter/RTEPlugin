@@ -39,8 +39,8 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
 
     templateRepository.addRTETemplate(
         TEMPLATE_NAME,
-        "/templates/" + TEMPLATE_NAME,
-        "/templates/" + DESC_TEMPLATE_NAME,
+        "/" + TEMPLATE_NAME,
+        "/" + DESC_TEMPLATE_NAME,
         TEMPLATE_XML_NAME);
   }
 
@@ -50,19 +50,20 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
   }
 
   public String getJMeterBinDirPath() {
-    String siebelPluginPath = getClass().getProtectionDomain().getCodeSource().getLocation()
+    String rtePluginPath = getClass().getProtectionDomain().getCodeSource().getLocation()
         .getPath();
 
-    /*This is done to obtain and remove the initial `/` from the path.
-      i.e: In Windows the path would be something like `/C:`,
-      so we check if the char at position 3 is ':' and if so, we remove the initial '/'.
+    /*
+    * This is done to obtain and remove the initial `/` from the path.
+    * i.e: In Windows the path would be something like `/C:`,
+    * so we check if the char at position 3 is ':' and if so, we remove the initial '/'.
     */
-    char middleChar = siebelPluginPath.charAt(2);
+    char middleChar = rtePluginPath.charAt(2);
     if (middleChar == ':') {
-      siebelPluginPath = siebelPluginPath.substring(1);
+      rtePluginPath = rtePluginPath.substring(1);
     }
-    int index = siebelPluginPath.indexOf("/lib/ext/");
-    String binPath = siebelPluginPath.substring(0, index) + "/bin";
+    int index = rtePluginPath.indexOf("/lib/ext/");
+    String binPath = rtePluginPath.substring(0, index) + "/bin";
     return binPath;
   }
 
