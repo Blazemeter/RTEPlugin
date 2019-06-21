@@ -3,7 +3,6 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.swing.timing.Pause.pause;
 
-import com.blazemeter.jmeter.rte.CloseableFrameFixture;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Screen;
@@ -24,6 +23,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
+import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
@@ -44,7 +44,7 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
 
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
-  private CloseableFrameFixture frame;
+  private FrameFixture frame;
 
   @Before
   public void setup() {
@@ -54,6 +54,8 @@ public class Xtn5250TerminalEmulatorIT {
   @After
   public void teardown() {
     xtn5250TerminalEmulator.stop();
+    if (frame != null)
+      frame.cleanUp();
   }
 
   @Test
@@ -94,56 +96,41 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnField() throws IOException {
-    try {
-      setScreen("");
-      xtn5250TerminalEmulator.setKeyboardLock(false);
-      sendKey(KeyEvent.VK_E, 0, 2, 1);
-      awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    xtn5250TerminalEmulator.setKeyboardLock(false);
+    sendKey(KeyEvent.VK_E, 0, 2, 1);
+    awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
   }
 
   @Test
   public void shouldGetProperTextWhenPressKeyOnFieldAndKeyboardIsLocked() throws IOException {
-    try {
-      setScreen("");
-      xtn5250TerminalEmulator.setKeyboardLock(true);
-      sendKey(KeyEvent.VK_E, 0, 2, 1);
-      awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    xtn5250TerminalEmulator.setKeyboardLock(true);
+    sendKey(KeyEvent.VK_E, 0, 2, 1);
+    awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
   }
 
   @Test
   public void shouldDeleteTextWhenPressBackspaceKey() throws IOException {
-    try {
-      setScreen("E");
-      xtn5250TerminalEmulator.setKeyboardLock(false);
-      sendKey(KeyEvent.VK_BACK_SPACE, 0, 2, 2);
-      awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
-    } finally {
-      frame.close();
-    }
+    setScreen("E");
+    xtn5250TerminalEmulator.setKeyboardLock(false);
+    sendKey(KeyEvent.VK_BACK_SPACE, 0, 2, 2);
+    awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
   }
 
   @Test
   public void shouldGetProperTextWhenPressKeyOutOfField() throws IOException {
-    try {
-      setScreen("");
-      xtn5250TerminalEmulator.setKeyboardLock(false);
-      sendKey(KeyEvent.VK_E, 0, 1, 1);
-      awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    xtn5250TerminalEmulator.setKeyboardLock(false);
+    sendKey(KeyEvent.VK_E, 0, 1, 1);
+    awaitTextInScreen(getFileContent(TEST_SCREEN_FILE));
   }
 
   private void setScreen(String text) {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(buildScreen(text));
-    frame = new CloseableFrameFixture(xtn5250TerminalEmulator);
+    frame = new FrameFixture(xtn5250TerminalEmulator);
+    frame.show();
   }
 
   private void sendKey(int key, int modifiers, int row, int column) {
@@ -164,28 +151,20 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldCallTheListenerWhenPressAnyAttentionKey() throws IOException {
-    try {
-      setScreen("");
-      TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
-      xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
-      sendKey(KeyEvent.VK_F1, 0, 2, 2);
-      awaitListenerIsCalled(AttentionKey.F1, terminalEmulatorListener);
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
+    sendKey(KeyEvent.VK_F1, 0, 2, 2);
+    awaitListenerIsCalled(AttentionKey.F1, terminalEmulatorListener);
   }
 
   @Test
   public void shouldCallTheListenerWhenPressControlAttentionKey() throws IOException {
-    try {
-      setScreen("");
-      TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
-      xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
-      sendKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, 2, 2);
-      awaitListenerIsCalled(AttentionKey.RESET, terminalEmulatorListener);
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
+    sendKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, 2, 2);
+    awaitListenerIsCalled(AttentionKey.RESET, terminalEmulatorListener);
 
   }
 
@@ -202,27 +181,19 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldCopyTextWhenClickCopyButton() throws IOException, UnsupportedFlavorException {
-    try {
-      setScreen("");
-      xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
-      clickButton(COPY_BUTTON);
-      assertTextIsInClipboard("*****");
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
+    clickButton(COPY_BUTTON);
+    assertTextIsInClipboard("*****");
   }
 
   @Test
   public void shouldCopyTextWhenPressShortcut()
       throws IOException, UnsupportedFlavorException {
-    try {
-      setScreen("");
-      xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
-      sendKey(KeyEvent.VK_C, getMenuShortcutKeyMask(), 0, 0);
-      assertTextIsInClipboard("*****");
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
+    sendKey(KeyEvent.VK_C, getMenuShortcutKeyMask(), 0, 0);
+    assertTextIsInClipboard("*****");
   }
 
   private void clickButton(String name) {
@@ -230,7 +201,7 @@ public class Xtn5250TerminalEmulatorIT {
     button.click();
   }
 
-  public void assertTextIsInClipboard(String text)
+  private void assertTextIsInClipboard(String text)
       throws IOException, UnsupportedFlavorException {
     Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
     Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
@@ -241,28 +212,20 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldPasteTextWhenClickPasteButton() throws IOException {
-    try {
-      setScreen("");
-      xtn5250TerminalEmulator.setCursor(2, 1);
-      addTextToClipboard("e");
-      clickButton(PASTE_BUTTON);
-      awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    xtn5250TerminalEmulator.setCursor(2, 1);
+    addTextToClipboard("e");
+    clickButton(PASTE_BUTTON);
+    awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
   }
 
   @Test
   public void shouldPasteTextWhenPressShortcut() throws IOException {
-    try {
-      setScreen("");
-      xtn5250TerminalEmulator.setCursor(2, 1);
-      addTextToClipboard("e");
-      sendKey(KeyEvent.VK_V, getMenuShortcutKeyMask(), 2, 1);
-      awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
-    } finally {
-      frame.close();
-    }
+    setScreen("");
+    xtn5250TerminalEmulator.setCursor(2, 1);
+    addTextToClipboard("e");
+    sendKey(KeyEvent.VK_V, getMenuShortcutKeyMask(), 2, 1);
+    awaitTextInScreen(getFileContent(TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE));
   }
 
   private void addTextToClipboard(String text) {
