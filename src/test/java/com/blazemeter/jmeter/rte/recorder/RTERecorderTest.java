@@ -2,11 +2,11 @@ package com.blazemeter.jmeter.rte.recorder;
 
 import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.swing.timing.Pause.pause;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -50,11 +52,11 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.assertj.core.api.JUnitSoftAssertions;
-import org.assertj.swing.timing.Condition;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -525,78 +527,26 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotifyPanelThroughListenerWhenTimeoutWhileConnecting()
+  public void shouldNotifyRecordingStateListenerWhenTimeoutWhileConnecting()
       throws InterruptedException, TimeoutException, RteIOException {
     TimeoutException e = new TimeoutException("Timeout Error");
-    TestRecordingStateListener listener = new TestRecordingStateListener();
-    rteRecorder.setRecordingStateListener(listener);
+    rteRecorder.setRecordingStateListener(mockedRecorderListener);
     doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
     rteRecorder.onRecordingStart();
-    pause(new Condition("Listener was called") {
-      @Override
-      public boolean test() {
-        return listener.isOnRecordingException();
-      }
-    }, 1000);
-    //wait was needed in order to wait till main thread reach onRecordingException
-  }
-
-  private static class TestRecordingStateListener implements RecordingStateListener {
-
-    private boolean onRecordingException = false;
-
-    public boolean isOnRecordingException() {
-      return onRecordingException;
-    }
-
-    @Override
-    public void onRecordingStart() {
-
-    }
-
-    @Override
-    public void onRecordingStop() {
-
-    }
-
-    @Override
-    public void onRecordingException(Exception e) {
-      onRecordingException = true;
-    }
-  }
-
-  @Test
-  public void shouldNotifyPanelThroughListenerWhenRteIOExceptionWhileConnecting()
-      throws InterruptedException, TimeoutException, RteIOException {
-    RteIOException e = new RteIOException(new TimeoutException(), "Server");
-    TestRecordingStateListener listener = new TestRecordingStateListener();
-    rteRecorder.setRecordingStateListener(listener);
-    doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
-    rteRecorder.onRecordingStart();
-    pause(new Condition("Listener was called") {
-      @Override
-      public boolean test() {
-        return listener.isOnRecordingException();
-      }
-    }, 1000);
-  }
+    verify(mockedRecorderListener, timeout(1000)).onRecordingException(e);
+ }
   
   @Test
-  public void shouldThrowUnsupportedOperationExceptionWhenNotSupportedProtocolKeyIsPressed()
+  public void shouldNotifyRecordingStateListenerOfUnsupportedOperationWhenInvalidAttentionKey()
       throws TimeoutException, InterruptedException, RteIOException {
     UnsupportedOperationException exception = new UnsupportedOperationException(
         "Key not supported");
-    TestRecordingStateListener listener = new TestRecordingStateListener();
     doThrow(exception).when(terminalClient).send(new ArrayList<>(), AttentionKey.PA1);
-    rteRecorder.setRecordingStateListener(listener);
+    rteRecorder.setRecordingStateListener(mockedRecorderListener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.PA1, new ArrayList<>());
-    pause(new Condition("Listener was called") {
-      @Override
-      public boolean test() {
-        return listener.isOnRecordingException();
-      }
-    }, 5000);
+    verify(mockedRecorderListener, timeout(1000)).onRecordingException(exception);
+    verify(mockedTerminalEmulator, times(0)).stop();
   }
   
 }
