@@ -532,29 +532,13 @@ public class RTERecorderTest {
     rteRecorder.setRecordingStateListener(listener);
     doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
     rteRecorder.onRecordingStart();
-    pause(new Condition("Listener was call") {
+    pause(new Condition("Listener was called") {
       @Override
       public boolean test() {
         return listener.isOnRecordingException();
       }
     }, 1000);
     //wait was needed in order to wait till main thread reach onRecordingException
-  }
-
-  @Test
-  public void shouldNotifyPanelThroughListenerWhenRteIOExceptionWhileConnecting()
-      throws InterruptedException, TimeoutException, RteIOException {
-    RteIOException e = new RteIOException(new TimeoutException(), "Server");
-    TestRecordingStateListener listener = new TestRecordingStateListener();
-    rteRecorder.setRecordingStateListener(listener);
-    doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
-    rteRecorder.onRecordingStart();
-    pause(new Condition("Listener was call") {
-      @Override
-      public boolean test() {
-        return listener.isOnRecordingException();
-      }
-    }, 1000);
   }
 
   private static class TestRecordingStateListener implements RecordingStateListener {
@@ -580,6 +564,22 @@ public class RTERecorderTest {
       onRecordingException = true;
     }
   }
+
+  @Test
+  public void shouldNotifyPanelThroughListenerWhenRteIOExceptionWhileConnecting()
+      throws InterruptedException, TimeoutException, RteIOException {
+    RteIOException e = new RteIOException(new TimeoutException(), "Server");
+    TestRecordingStateListener listener = new TestRecordingStateListener();
+    rteRecorder.setRecordingStateListener(listener);
+    doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
+    rteRecorder.onRecordingStart();
+    pause(new Condition("Listener was called") {
+      @Override
+      public boolean test() {
+        return listener.isOnRecordingException();
+      }
+    }, 1000);
+  }
   
   @Test
   public void shouldThrowUnsupportedOperationExceptionWhenNotSupportedProtocolKeyIsPressed()
@@ -591,7 +591,7 @@ public class RTERecorderTest {
     rteRecorder.setRecordingStateListener(listener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.PA1, new ArrayList<>());
-    pause(new Condition("Listener was call") {
+    pause(new Condition("Listener was called") {
       @Override
       public boolean test() {
         return listener.isOnRecordingException();
