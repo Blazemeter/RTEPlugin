@@ -43,7 +43,6 @@ jmeter_compatibility:
     - cd target/jmeter-test
     - JMETER_VERSION=3.3 sh testJmeter.sh
     - JMETER_VERSION=4.0 sh testJmeter.sh
-    - JMETER_VERSION=4.0 JVM_VERSION=11 sh testJmeter.sh
     - JMETER_VERSION=5.0 sh testJmeter.sh
     - JMETER_VERSION=5.1 sh testJmeter.sh
     - JMETER_VERSION=5.1.1 sh testJmeter.sh
