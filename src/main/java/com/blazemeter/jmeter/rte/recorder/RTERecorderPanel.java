@@ -230,10 +230,10 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
 
   private void reportExceptionToUser(Exception e) {
     String errorMsg;
-    if (e.getClass().getPackage()
-        .equals(RteIOException.class.getPackage()) || e instanceof TimeoutException) {
+    if (e.getClass().getPackage().equals(RteIOException.class.getPackage())
+        || e instanceof TimeoutException || e instanceof UnsupportedOperationException) {
       errorMsg = e.getMessage();
-    }  else {
+    } else {
       errorMsg = "Unexpected error occurred - see log file or contact technical support";
     }
     JMeterUtils.reportErrorToUser(errorMsg, "Connection Error");

@@ -31,6 +31,7 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -537,7 +538,7 @@ public class RTERecorderTest {
         return listener.isOnRecordingException();
       }
     }, 1000);
-  //wait was needed in order to wait till main thread reach onRecordingException
+    //wait was needed in order to wait till main thread reach onRecordingException
   }
 
   @Test
@@ -579,5 +580,24 @@ public class RTERecorderTest {
       onRecordingException = true;
     }
   }
+  
+  @Test
+  public void shouldThrowUnsupportedOperationExceptionWhenNotSupportedProtocolKeyIsPressed()
+      throws TimeoutException, InterruptedException, RteIOException {
+    UnsupportedOperationException exception = new UnsupportedOperationException(
+        "Key not supported");
+    TestRecordingStateListener listener = new TestRecordingStateListener();
+    doThrow(exception).when(terminalClient).send(new ArrayList<>(), AttentionKey.PA1);
+    rteRecorder.setRecordingStateListener(listener);
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.PA1, new ArrayList<>());
+    pause(new Condition("Listener was call") {
+      @Override
+      public boolean test() {
+        return listener.isOnRecordingException();
+      }
+    }, 5000);
+  }
+  
 }
 
