@@ -45,7 +45,7 @@
   </template>
   <template isTestPlan="true">
     <name>Recording RTE</name>
-    <fileName>/bin/templates/RTETemplate.jmx</fileName>
+    <fileName>/bin/templates/RteRecordingTemplate.jmx</fileName>
     <description><![CDATA[
         <h1>Sample RTE Recorder Sampler</h1>
         <h2>Overview</h2>

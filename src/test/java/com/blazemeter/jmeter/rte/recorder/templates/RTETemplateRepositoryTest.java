@@ -21,10 +21,10 @@ public class RTETemplateRepositoryTest {
 
   private static String TEMPLATES_LIST_NAME = "templates.xml";
   private static String TEMPLATES_LIST_PATH = "/"+TEMPLATES_LIST_NAME;
-  private static String TEMPLATE_NAME = "RTETemplate.jmx";
+  private static String TEMPLATE_NAME = "RteRecordingTemplate.jmx";
   private static String TEMPLATE_PATH = "/"+TEMPLATE_NAME;
-  private static String TEMPLATE_DESCRIPTION_PATH = "/RTETemplateDescription.xml";
-  private static String EXPECTED_TEMPLATE_PATH = "/templatesRTERecorder.xml";
+  private static String TEMPLATE_DESCRIPTION_PATH = "/RteRecordingTemplateDescription.xml";
+  private static String EXPECTED_TEMPLATE_PATH = "/templatesRteRecordingTemplate.xml";
 
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();

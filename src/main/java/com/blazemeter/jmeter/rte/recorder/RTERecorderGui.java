@@ -17,9 +17,9 @@ import org.apache.jmeter.testelement.TestElement;
 public class RTERecorderGui extends LogicControllerGui implements JMeterGUIComponent,
     UnsharedComponent, RecordingStateListener {
 
-  private static final String TEMPLATE_NAME = "RTETemplate.jmx";
+  private static final String TEMPLATE_NAME = "RteRecordingTemplate.jmx";
   private static final String TEMPLATE_XML_NAME = "Recording RTE";
-  private static final String DESC_TEMPLATE_NAME = "RTETemplateDescription.xml";
+  private static final String DESC_TEMPLATE_NAME = "RteRecordingTemplateDescription.xml";
 
   private RTERecorderPanel recordingPanel;
   private RTERecorder recorder;
@@ -56,7 +56,8 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     /*
     * This is done to obtain and remove the initial `/` from the path.
     * i.e: In Windows the path would be something like `/C:`,
-    * so we check if the char at position 3 is ':' and if so, we remove the initial '/'.
+    * so we check if the char at position 3 is ':' and if
+    * so, we remove the initial '/'.
     */
     char middleChar = rtePluginPath.charAt(2);
     if (middleChar == ':') {
