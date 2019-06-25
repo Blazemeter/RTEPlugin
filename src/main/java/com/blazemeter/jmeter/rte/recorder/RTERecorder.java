@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -64,24 +65,27 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient WaitConditionsRecorder waitConditionsRecorder;
   private transient ExecutorService connectionExecutor;
 
+  private transient BiFunction<TerminalEmulator, RteProtocolClient, TerminalEmulatorUpdater>
+      emulatorUpdaterFactory;
   private transient Function<Protocol, RteProtocolClient> protocolFactory;
   private transient JMeterTreeModel jMeterTreeModel;
   private transient RteProtocolClient terminalClient;
 
   public RTERecorder() {
     this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
-        getJmeterTreeModel(), Protocol::createProtocolClient, null);
+        getJmeterTreeModel(), Protocol::createProtocolClient, TerminalEmulatorUpdater::new);
   }
 
   public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder,
-                     JMeterTreeModel jMeterTreeModel, Function<Protocol,
-                     RteProtocolClient> factory,
-                     TerminalEmulatorUpdater terminalEmulatorUpdater) {
+      JMeterTreeModel jMeterTreeModel, Function<Protocol,
+      RteProtocolClient> factory,
+      BiFunction<TerminalEmulator, RteProtocolClient, TerminalEmulatorUpdater>
+          emulatorUpdaterFactory) {
     terminalEmulatorSupplier = supplier;
     this.finder = finder;
     this.jMeterTreeModel = jMeterTreeModel;
     this.protocolFactory = factory;
-    this.terminalEmulatorUpdater = terminalEmulatorUpdater;
+    this.emulatorUpdaterFactory = emulatorUpdaterFactory;
   }
 
   @Override
@@ -314,8 +318,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator
         .setScreenSize(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
     terminalEmulator.start();
-    terminalEmulatorUpdater = (terminalEmulatorUpdater == null ? new
-        TerminalEmulatorUpdater(terminalEmulator, terminalClient) : terminalEmulatorUpdater);
+    terminalEmulatorUpdater = emulatorUpdaterFactory.apply(terminalEmulator, terminalClient);
     terminalClient.addTerminalStateListener(this);
     terminalEmulatorUpdater.onTerminalStateChange();
   }

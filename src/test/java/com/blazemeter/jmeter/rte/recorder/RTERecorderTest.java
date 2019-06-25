@@ -110,8 +110,7 @@ public class RTERecorderTest {
 
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> mockedTerminalEmulator;
     rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, mockedJMeterTreeModel,
-        p -> terminalClient,
-        mockedTerminalEmulatorUpdater);
+        p -> terminalClient, (e, c) -> mockedTerminalEmulatorUpdater);
 
     prepareRecorder();
   }
