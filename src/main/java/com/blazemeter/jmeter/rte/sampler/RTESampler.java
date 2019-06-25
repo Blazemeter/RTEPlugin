@@ -60,6 +60,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   public static final TerminalType DEFAULT_TERMINAL_TYPE = DEFAULT_PROTOCOL.createProtocolClient()
       .getDefaultTerminalType();
   public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
+
   @VisibleForTesting
   public static final String ACTION_PROPERTY = "RTESampler.action";
   @VisibleForTesting
@@ -76,7 +77,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   protected static final long DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS = 30000;
   @VisibleForTesting
   protected static final long DEFAULT_WAIT_CURSOR_TIMEOUT_MILLIS = 30000;
-
 
   //If users wants to change Stable Timeout value it should be specified in
   // jmeter.properties by adding a line like ths one:

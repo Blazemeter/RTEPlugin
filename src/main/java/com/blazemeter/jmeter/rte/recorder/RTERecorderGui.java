@@ -17,6 +17,10 @@ import org.apache.jmeter.testelement.TestElement;
 public class RTERecorderGui extends LogicControllerGui implements JMeterGUIComponent,
     UnsharedComponent, RecordingStateListener {
 
+  private static final String TEMPLATE_NAME = "RteRecordingTemplate.jmx";
+  private static final String TEMPLATE_XML_NAME = "Recording RTE";
+  private static final String DESC_TEMPLATE_NAME = "RteRecordingTemplateDescription.xml";
+
   private RTERecorderPanel recordingPanel;
   private RTERecorder recorder;
 
@@ -27,11 +31,41 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(recordingPanel, BorderLayout.CENTER);
     add(new BlazemeterLabsLogo(), BorderLayout.AFTER_LAST_LINE);
+
+    String jMeterBinDirPath = getJMeterBinDirPath();
+
+    RTETemplateRepository templateRepository = new RTETemplateRepository(
+        jMeterBinDirPath + "/templates/");
+
+    templateRepository.addRTETemplate(
+        TEMPLATE_NAME,
+        "/" + TEMPLATE_NAME,
+        "/" + DESC_TEMPLATE_NAME,
+        TEMPLATE_XML_NAME);
   }
 
   @VisibleForTesting
   public RTERecorderGui(RTERecorderPanel panel) {
     recordingPanel = panel;
+  }
+
+  public String getJMeterBinDirPath() {
+    String rtePluginPath = getClass().getProtectionDomain().getCodeSource().getLocation()
+        .getPath();
+
+    /*
+    * This is done to obtain and remove the initial `/` from the path.
+    * i.e: In Windows the path would be something like `/C:`,
+    * so we check if the char at position 3 is ':' and if
+    * so, we remove the initial '/'.
+    */
+    char middleChar = rtePluginPath.charAt(2);
+    if (middleChar == ':') {
+      rtePluginPath = rtePluginPath.substring(1);
+    }
+    int index = rtePluginPath.indexOf("/lib/ext/");
+    String binPath = rtePluginPath.substring(0, index) + "/bin";
+    return binPath;
   }
 
   @Override
@@ -84,7 +118,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
       recordingPanel.setSSLType(recorder.getSSLType());
       recordingPanel.setConnectionTimeout(String.valueOf(recorder.getConnectionTimeout()));
       recordingPanel.setWaitConditionsTimeoutThresholdMillis(String.valueOf(recorder
-              .getTimeoutThresholdMillis()));
+          .getTimeoutThresholdMillis()));
     }
   }
 
@@ -101,6 +135,6 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
 
   @Override
   public void onRecordingException(Exception e) {
-    
+
   }
 }
