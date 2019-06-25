@@ -38,8 +38,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -56,7 +54,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -77,6 +74,7 @@ public class RTERecorderTest {
       .singletonList(new CoordInput(new Position(2, 1), "testusr"));
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+  private Exception exception;
   private TestElement mockedTestStateListener;
   private TestElement mockedSamplerListener;
   private RTERecorder rteRecorder;
@@ -527,27 +525,79 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotifyRecordingStateListenerWhenTimeoutWhileConnecting()
+  public void shouldNotifyRecordingStateListenerWhenExceptionWhileConnecting()
       throws InterruptedException, TimeoutException, RteIOException {
     TimeoutException e = new TimeoutException("Timeout Error");
-    rteRecorder.setRecordingStateListener(mockedRecorderListener);
     doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
-    rteRecorder.onRecordingStart();
+    rteRecorder.setRecordingStateListener(mockedRecorderListener);
+    connect();
     verify(mockedRecorderListener, timeout(1000)).onRecordingException(e);
- }
-  
+
+  }
+
   @Test
   public void shouldNotifyRecordingStateListenerOfUnsupportedOperationWhenInvalidAttentionKey()
       throws TimeoutException, InterruptedException, RteIOException {
-    UnsupportedOperationException exception = new UnsupportedOperationException(
-        "Key not supported");
+    buildExceptionToThrow(new UnsupportedOperationException());
     doThrow(exception).when(terminalClient).send(new ArrayList<>(), AttentionKey.PA1);
-    rteRecorder.setRecordingStateListener(mockedRecorderListener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.PA1, new ArrayList<>());
     verify(mockedRecorderListener, timeout(1000)).onRecordingException(exception);
+  }
+
+  @Test
+  public void shouldNotStopRecordingWhenInvalidAttentionKey()
+      throws TimeoutException, InterruptedException, RteIOException {
+    buildExceptionToThrow(new UnsupportedOperationException());
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.PA1, new ArrayList<>());
     verify(mockedTerminalEmulator, times(0)).stop();
   }
+
+  @Test
+  public void shouldNotDisconnectWhenInvalidAttentionKey()
+      throws TimeoutException, InterruptedException, RteIOException {
+    buildExceptionToThrow(new UnsupportedOperationException());
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+    verify(terminalClient, times(0)).disconnect();
+  }
+
+  @Test
+  public void shouldNotifyRecordingStateListenerOfExceptionWhenOnAttentionKey()
+      throws RteIOException, TimeoutException, InterruptedException {
+    buildExceptionToThrow();
+    rteRecorder.setRecordingStateListener(mockedRecorderListener);
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+    verify(mockedRecorderListener, timeout(1000)).onRecordingException(exception);
+  }
+
+  @Test
+  public void shouldStopEmulatorWhenExceptionOnAttentionKey()
+      throws RteIOException, TimeoutException, InterruptedException {
+    buildExceptionToThrow();
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+    verify(mockedTerminalEmulator).stop();
+  }
+
+  @Test
+  public void shouldDisconnectWhenExceptionOnAttentionKey()
+      throws RteIOException, TimeoutException, InterruptedException {
+    buildExceptionToThrow();
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+    verify(terminalClient).disconnect();
+  }
+
+  private void buildExceptionToThrow() throws RteIOException {
+    buildExceptionToThrow(new RteIOException(null, SERVER));
+  }
   
+  private void buildExceptionToThrow(Exception e) throws RteIOException {
+    exception = e;
+    doThrow(exception).when(terminalClient).send(any(), any());
+  }
 }
 
