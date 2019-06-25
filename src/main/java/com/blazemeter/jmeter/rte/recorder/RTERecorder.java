@@ -341,11 +341,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     try {
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
-    } catch (UnsupportedOperationException e) {
-      String errorMsg =
-          attentionKey.name() + " Attention key not supported by Protocol " + getProtocol().name();
-      LOG.error(errorMsg, e);
-      JMeterUtils.reportErrorToUser(errorMsg);
     } catch (Exception e) {
       onException(e);
     }
@@ -433,25 +428,27 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       if (recordingListener != null) {
         recordingListener.onRecordingException((Exception) e);
       }
+      
+      if (!(e instanceof UnsupportedOperationException)) {
+        synchronized (this) {
 
-      synchronized (this) {
-
-        if (terminalEmulator != null) {
-          terminalClient.removeTerminalStateListener(this);
-          terminalEmulator.stop();
-          terminalEmulator = null;
+          if (terminalEmulator != null) {
+            terminalClient.removeTerminalStateListener(this);
+            terminalEmulator.stop();
+            terminalEmulator = null;
+          }
         }
-      }
 
-      /*
-       *     Disconnect must be at the end because if not is interrupting
-       *     itself and is not adding sampler to test plan
-       */
+        /*
+         *     Disconnect must be at the end because if not is interrupting
+         *     itself and is not adding sampler to test plan
+         */
 
-      try {
-        terminalClient.disconnect();
-      } catch (RteIOException ex) {
-        LOG.error("Problem while trying to shutdown connection", e);
+        try {
+          terminalClient.disconnect();
+        } catch (RteIOException ex) {
+          LOG.error("Problem while trying to shutdown connection", e);
+        }
       }
     }
   }
