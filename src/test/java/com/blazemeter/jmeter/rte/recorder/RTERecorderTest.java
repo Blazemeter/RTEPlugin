@@ -3,6 +3,9 @@ package com.blazemeter.jmeter.rte.recorder;
 import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -30,16 +33,12 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.awt.Dimension;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -526,16 +525,27 @@ public class RTERecorderTest {
     verify(terminalClient).send(INPUTS, AttentionKey.ENTER);
   }
 
-  @Test(timeout = 5000)
-  public void shouldConnectWithTimeoutShowingSynchronized() throws TimeoutException, InterruptedException{
-    connect();
+  @Test(timeout = TIMEOUT)
+  public void shouldConnectWithoutBlockingThreadWhenConnect()
+      throws TimeoutException, InterruptedException, RteIOException {
+    setupLongConnectingTerminalClient();
+    rteRecorder.onRecordingStart();
   }
-  
-  @Test(timeout = 5000)
-  public void shouldStopWhileConnecting() throws Exception{
-    connect();
+
+  private void setupLongConnectingTerminalClient()
+      throws RteIOException, InterruptedException, TimeoutException {
+    doAnswer(args -> {
+      Thread.sleep(TIMEOUT * 2);
+      return null;
+    }).when(terminalClient).connect(any(), anyInt(), any(), any(), anyLong());
+  }
+
+  @Test(timeout = TIMEOUT)
+  public void shouldStopConnectingWhenStopWhileConnecting() throws Exception {
+    setupLongConnectingTerminalClient();
+    rteRecorder.onRecordingStart();
     rteRecorder.onRecordingStop();
-    rteRecorder.awaitConnected(10000);
+    rteRecorder.awaitConnected(TIMEOUT);
   }
-  
+
 }
