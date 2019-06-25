@@ -3,6 +3,9 @@ package com.blazemeter.jmeter.rte.recorder;
 import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -488,7 +491,6 @@ public class RTERecorderTest {
      */
     verify(mockedJMeterTreeModel, times(3))
         .addComponent(argument.capture(), eq(mockedJMeterTreeNode));
-    verify(terminalClient).disconnect();
 
     softly.assertThat(argument.getAllValues().get(0)).isEqualTo(buildExpectedConfig());
     assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
@@ -520,6 +522,29 @@ public class RTERecorderTest {
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
     verify(terminalClient).send(INPUTS, AttentionKey.ENTER);
+  }
+
+  @Test(timeout = TIMEOUT)
+  public void shouldConnectWithoutBlockingThreadWhenConnect()
+      throws TimeoutException, InterruptedException, RteIOException {
+    setupLongConnectingTerminalClient();
+    rteRecorder.onRecordingStart();
+  }
+
+  private void setupLongConnectingTerminalClient()
+      throws RteIOException, InterruptedException, TimeoutException {
+    doAnswer(args -> {
+      Thread.sleep(TIMEOUT * 2);
+      return null;
+    }).when(terminalClient).connect(any(), anyInt(), any(), any(), anyLong());
+  }
+
+  @Test(timeout = TIMEOUT)
+  public void shouldStopConnectingWhenStopWhileConnecting() throws Exception {
+    setupLongConnectingTerminalClient();
+    rteRecorder.onRecordingStart();
+    rteRecorder.onRecordingStop();
+    rteRecorder.awaitConnected(TIMEOUT);
   }
 
 }
