@@ -30,12 +30,16 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -489,7 +493,6 @@ public class RTERecorderTest {
      */
     verify(mockedJMeterTreeModel, times(3))
         .addComponent(argument.capture(), eq(mockedJMeterTreeNode));
-    verify(terminalClient).disconnect();
 
     softly.assertThat(argument.getAllValues().get(0)).isEqualTo(buildExpectedConfig());
     assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
@@ -523,4 +526,16 @@ public class RTERecorderTest {
     verify(terminalClient).send(INPUTS, AttentionKey.ENTER);
   }
 
+  @Test(timeout = 5000)
+  public void shouldConnectWithTimeoutShowingSynchronized() throws TimeoutException, InterruptedException{
+    connect();
+  }
+  
+  @Test(timeout = 5000)
+  public void shouldStopWhileConnecting() throws Exception{
+    connect();
+    rteRecorder.onRecordingStop();
+    rteRecorder.awaitConnected(10000);
+  }
+  
 }
