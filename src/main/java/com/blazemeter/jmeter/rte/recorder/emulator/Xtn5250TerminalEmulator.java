@@ -25,12 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 
@@ -85,8 +82,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
 
-  private JButton copyButton = createIconButton("copyButton", "/copy.png");
-  private JButton pasteButton = createIconButton("pasteButton", "/paste.png");
+  private JButton copyButton = createIconButton("copyButton", "copy.png");
+  private JButton pasteButton = createIconButton("pasteButton", "paste.png");
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
@@ -128,28 +125,20 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   private static JButton createIconButton(String name, String iconResource) {
-    return SwingUtils.createComponent(name,
-        new JButton(new ImageIcon(StatusPanel.class.getResource(iconResource))));
+    return SwingUtils.createComponent(name, new ThemedIconButton(iconResource));
   }
 
   private JPanel createToolsPanel() {
     JPanel toolsPanel = new JPanel();
     GroupLayout layout = new GroupLayout(toolsPanel);
-    layout.setAutoCreateContainerGaps(true);
-    layout.setAutoCreateGaps(true);
     toolsPanel.setLayout(layout);
 
     layout.setHorizontalGroup(layout.createSequentialGroup()
-        .addComponent(copyButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(pasteButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE));
-    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
-        .addComponent(copyButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(pasteButton, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE));
+        .addComponent(copyButton)
+        .addComponent(pasteButton));
+    layout.setVerticalGroup(layout.createParallelGroup()
+        .addComponent(copyButton)
+        .addComponent(pasteButton));
 
     return toolsPanel;
   }

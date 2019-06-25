@@ -8,13 +8,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import javax.swing.ImageIcon;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.fixture.FrameFixture;
 import org.junit.After;
@@ -39,13 +36,10 @@ public class AlarmLabelIT {
 
   private TestScheduledExecutorService executorService;
 
-  @Mock
-  private ImageIcon icon;
-
   @Before
   public void setup() {
     executorService = new TestScheduledExecutorService(future);
-    alarmLabel = new AlarmLabel(icon, executorService);
+    alarmLabel = new AlarmLabel(executorService);
     frame = showInFrame(alarmLabel);
   }
 
@@ -97,7 +91,7 @@ public class AlarmLabelIT {
     private Runnable command;
     private ScheduledFuture future;
 
-    TestScheduledExecutorService(ScheduledFuture future) {
+    private TestScheduledExecutorService(ScheduledFuture future) {
       this.future = future;
     }
 
@@ -107,7 +101,7 @@ public class AlarmLabelIT {
       return null;
     }
 
-    void tock() {
+    private void tock() {
       command.run();
     }
 
@@ -149,7 +143,7 @@ public class AlarmLabelIT {
     }
 
     @Override
-    public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+    public boolean awaitTermination(long timeout, TimeUnit unit) {
       return false;
     }
 
@@ -169,26 +163,23 @@ public class AlarmLabelIT {
     }
 
     @Override
-    public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
-        throws InterruptedException {
+    public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
       return null;
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout,
-        TimeUnit unit) throws InterruptedException {
+        TimeUnit unit) {
       return null;
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
-        throws InterruptedException, ExecutionException {
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks) {
       return null;
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
-        throws InterruptedException, ExecutionException, TimeoutException {
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) {
       return null;
     }
 

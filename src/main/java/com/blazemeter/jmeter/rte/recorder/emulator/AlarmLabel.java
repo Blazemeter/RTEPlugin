@@ -1,14 +1,13 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
+import com.blazemeter.jmeter.rte.sampler.gui.ThemedIconLabel;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 
-class AlarmLabel extends JLabel {
+public class AlarmLabel extends ThemedIconLabel {
 
   private static final int ALARM_ITERATION = 10;
   private static final int BLINK_TIME_PERIOD_MILLIS = 500;
@@ -16,13 +15,13 @@ class AlarmLabel extends JLabel {
   private ScheduledFuture future;
   private int counter;
 
-  AlarmLabel(ImageIcon icon) {
-    this(icon, Executors.newSingleThreadScheduledExecutor());
+  public AlarmLabel() {
+    this(Executors.newSingleThreadScheduledExecutor());
   }
 
   @VisibleForTesting
-  AlarmLabel(ImageIcon icon, ScheduledExecutorService executor) {
-    super(icon);
+  public AlarmLabel(ScheduledExecutorService executor) {
+    super("alarm.png");
     setVisible(false);
     alarmExecutor = executor;
   }

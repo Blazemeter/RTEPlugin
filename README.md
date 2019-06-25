@@ -1,6 +1,6 @@
 # JMeter-RTE-plugin
 
-![labs-logo](docs/blazemeter-labs-logo.png)
+![labs-logo](docs/light-theme/blazemeter-labs-logo.png)
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing a recorder for automatic test plan creation, and config and sampler for protocol interactions.
 
