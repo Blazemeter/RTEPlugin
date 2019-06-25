@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -70,6 +71,7 @@ public class RTERecorderTest {
       .getDefaultTerminalType();
   private static final SSLType SSL_TYPE = SSLType.NONE;
   private static final long TIMEOUT = 10000;
+  private static final long THREAD_TIMEOUT = 1000;
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(new Position(2, 1), "testusr"));
   @Rule
@@ -531,18 +533,19 @@ public class RTERecorderTest {
     doThrow(e).when(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
     rteRecorder.setRecordingStateListener(mockedRecorderListener);
     connect();
-    verify(mockedRecorderListener, timeout(1000)).onRecordingException(e);
+    verify(mockedRecorderListener, timeout(THREAD_TIMEOUT)).onRecordingException(e);
 
   }
 
   @Test
   public void shouldNotifyRecordingStateListenerOfUnsupportedOperationWhenInvalidAttentionKey()
       throws TimeoutException, InterruptedException, RteIOException {
-    buildExceptionToThrow(new UnsupportedOperationException());
+    exception = new UnsupportedOperationException();
     doThrow(exception).when(terminalClient).send(new ArrayList<>(), AttentionKey.PA1);
+    rteRecorder.setRecordingStateListener(mockedRecorderListener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.PA1, new ArrayList<>());
-    verify(mockedRecorderListener, timeout(1000)).onRecordingException(exception);
+    verify(mockedRecorderListener, timeout(THREAD_TIMEOUT)).onRecordingException(exception);
   }
 
   @Test
@@ -551,7 +554,7 @@ public class RTERecorderTest {
     buildExceptionToThrow(new UnsupportedOperationException());
     connect();
     rteRecorder.onAttentionKey(AttentionKey.PA1, new ArrayList<>());
-    verify(mockedTerminalEmulator, times(0)).stop();
+    verify(mockedTerminalEmulator, never()).stop();
   }
 
   @Test
@@ -560,23 +563,23 @@ public class RTERecorderTest {
     buildExceptionToThrow(new UnsupportedOperationException());
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
-    verify(terminalClient, times(0)).disconnect();
+    verify(terminalClient, never()).disconnect();
   }
 
   @Test
   public void shouldNotifyRecordingStateListenerOfExceptionWhenOnAttentionKey()
       throws RteIOException, TimeoutException, InterruptedException {
-    buildExceptionToThrow();
+    buildRteIOExceptionToThrow();
     rteRecorder.setRecordingStateListener(mockedRecorderListener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
-    verify(mockedRecorderListener, timeout(1000)).onRecordingException(exception);
+    verify(mockedRecorderListener, timeout(THREAD_TIMEOUT)).onRecordingException(exception);
   }
 
   @Test
   public void shouldStopEmulatorWhenExceptionOnAttentionKey()
       throws RteIOException, TimeoutException, InterruptedException {
-    buildExceptionToThrow();
+    buildRteIOExceptionToThrow();
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
     verify(mockedTerminalEmulator).stop();
@@ -585,13 +588,13 @@ public class RTERecorderTest {
   @Test
   public void shouldDisconnectWhenExceptionOnAttentionKey()
       throws RteIOException, TimeoutException, InterruptedException {
-    buildExceptionToThrow();
+    buildRteIOExceptionToThrow();
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
     verify(terminalClient).disconnect();
   }
 
-  private void buildExceptionToThrow() throws RteIOException {
+  private void buildRteIOExceptionToThrow() throws RteIOException {
     buildExceptionToThrow(new RteIOException(null, SERVER));
   }
   
