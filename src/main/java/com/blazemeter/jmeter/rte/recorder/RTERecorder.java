@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -60,32 +59,26 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient RteSampleResult sampleResult;
   private transient RTESampler sampler;
   private transient RequestListener requestListener;
-  private transient TerminalEmulatorUpdater terminalEmulatorUpdater;
   private transient int sampleCount;
   private transient WaitConditionsRecorder waitConditionsRecorder;
   private transient ExecutorService connectionExecutor;
 
-  private transient BiFunction<TerminalEmulator, RteProtocolClient, TerminalEmulatorUpdater>
-      emulatorUpdaterFactory;
   private transient Function<Protocol, RteProtocolClient> protocolFactory;
   private transient JMeterTreeModel jMeterTreeModel;
   private transient RteProtocolClient terminalClient;
 
   public RTERecorder() {
     this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
-        getJmeterTreeModel(), Protocol::createProtocolClient, TerminalEmulatorUpdater::new);
+        getJmeterTreeModel(), Protocol::createProtocolClient);
   }
 
   public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder,
       JMeterTreeModel jMeterTreeModel, Function<Protocol,
-      RteProtocolClient> factory,
-      BiFunction<TerminalEmulator, RteProtocolClient, TerminalEmulatorUpdater>
-          emulatorUpdaterFactory) {
+      RteProtocolClient> factory) {
     terminalEmulatorSupplier = supplier;
     this.finder = finder;
     this.jMeterTreeModel = jMeterTreeModel;
     this.protocolFactory = factory;
-    this.emulatorUpdaterFactory = emulatorUpdaterFactory;
   }
 
   @Override
@@ -208,7 +201,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
           initTerminalEmulator(terminalType);
           registerRequestListenerFor(sampleResult);
         }
-      } catch (RteIOException | InterruptedException | TimeoutException e) {
+      } catch (Exception e) {
         onException(e);
       } finally {
         executor.shutdown();
@@ -318,9 +311,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator
         .setScreenSize(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
     terminalEmulator.start();
-    terminalEmulatorUpdater = emulatorUpdaterFactory.apply(terminalEmulator, terminalClient);
     terminalClient.addTerminalStateListener(this);
-    terminalEmulatorUpdater.onTerminalStateChange();
+    onTerminalStateChange();
   }
 
   private void registerRequestListenerFor(SampleResult sampleResult) {
@@ -370,10 +362,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onRecordingStop() {
+    LOG.debug("Stopping recording");
     connectionExecutor.shutdownNow();
     synchronized (this) {
       if (terminalEmulator != null) {
-        LOG.debug("Stopping recording");
         recordPendingSample();
         sampleResult = buildSampleResult(Action.DISCONNECT);
         sampler = buildSampler(Action.DISCONNECT, null, null);
@@ -414,7 +406,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onTerminalStateChange() {
-    terminalEmulatorUpdater.onTerminalStateChange();
+    terminalEmulator.setScreen(terminalClient.getScreen());
+    terminalClient.getCursorPosition().ifPresent(cursorPosition -> terminalEmulator
+        .setCursor(cursorPosition.getRow(), cursorPosition.getColumn()));
+    terminalEmulator.setKeyboardLock(terminalClient.isInputInhibited());
+    if (terminalClient.isAlarmOn()) {
+      terminalEmulator.soundAlarm();
+    }
   }
 
   @Override

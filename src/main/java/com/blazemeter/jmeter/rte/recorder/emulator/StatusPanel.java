@@ -1,57 +1,34 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
-
-import java.awt.CardLayout;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Toolkit;
+import com.blazemeter.jmeter.rte.sampler.gui.ThemedIconLabel;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class StatusPanel extends JPanel {
 
-  private static final Logger LOG = LoggerFactory.getLogger(StatusPanel.class);
-
-  private static final ImageIcon ALARM_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/alarm.png"));
-  private static final ImageIcon KEYBOARD_LOCKED_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/keyboard-locked.png"));
-  private static final ImageIcon KEYBOARD_UNLOCKED_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/keyboard-unlocked.png"));
-  private static final ImageIcon HELP_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/help.png"));
+  private static final String KEYBOARD_LOCKED_RESOURCE_NAME = "keyboard-locked.png";
+  private static final String KEYBOARD_UNLOCKED_RESOURCE_NAME = "keyboard-unlocked.png";
 
   private JLabel positionLabel = SwingUtils
       .createComponent("positionLabel", new JLabel("row: 00 / column: 00"));
   private JLabel messageLabel = SwingUtils
       .createComponent("messageLabel", new JLabel(""));
   private AlarmLabel alarmLabel = SwingUtils
-      .createComponent("alarmLabel", new AlarmLabel(ALARM_ICON));
-  private JLabel keyboardLabel = SwingUtils
-      .createComponent("keyboardLabel", new JLabel(KEYBOARD_UNLOCKED_ICON));
-  private JLabel helpLabel = SwingUtils
-      .createComponent("helpLabel", new JLabel(HELP_ICON));
+      .createComponent("alarmLabel", new AlarmLabel());
+  private ThemedIconLabel keyboardLabel = SwingUtils
+      .createComponent("keyboardLabel", new ThemedIconLabel(KEYBOARD_LOCKED_RESOURCE_NAME));
 
   private HelpFrame helpFrame;
 
   public StatusPanel() {
+    JLabel helpLabel = SwingUtils
+        .createComponent("helpLabel", new ThemedIconLabel("help.png"));
     helpLabel.addMouseListener(buildShowHelpOnMouseClickListener());
 
     GroupLayout layout = new GroupLayout(this);
@@ -96,10 +73,7 @@ public class StatusPanel extends JPanel {
         if (helpFrame == null) {
           helpFrame = new HelpFrame();
         }
-        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        helpFrame.setSize((int) screen.getWidth() / 3, (int) screen.getHeight() / 2);
-        helpFrame.setVisible(true);
-        helpFrame.requestFocus();
+        helpFrame.open();
       }
 
       @Override
@@ -136,71 +110,15 @@ public class StatusPanel extends JPanel {
   }
 
   public void setKeyboardStatus(boolean locked) {
-    if (locked) {
-      this.keyboardLabel.setIcon(KEYBOARD_LOCKED_ICON);
-    } else {
-      this.keyboardLabel.setIcon(KEYBOARD_UNLOCKED_ICON);
-    }
+    keyboardLabel.setIconResourceName(
+        locked ? KEYBOARD_LOCKED_RESOURCE_NAME : KEYBOARD_UNLOCKED_RESOURCE_NAME);
   }
 
   public void dispose() {
     alarmLabel.shutdown();
     if (helpFrame != null) {
-      helpFrame.dispose();
+      helpFrame.close();
     }
   }
-  
-  private static class HelpFrame extends JFrame {
 
-    private static final String HELP_FRAME_TITLE = "Help";
-
-    private HelpFrame() {
-      setTitle(HELP_FRAME_TITLE);
-      setName("helpFrame");
-      setLayout(new CardLayout());
-      setLayout(new CardLayout(10, 10));
-      JTextPane textPane = new JTextPane();
-      textPane.setContentType("text/html");
-      textPane.setText(buildHelpHtml());
-      textPane.setCaretPosition(0);
-      textPane.setEditable(false);
-      textPane.setOpaque(false);
-      textPane.addHyperlinkListener(buildOpenBrowserLinkListener());
-      JScrollPane scrollPane = new JScrollPane(textPane);
-      add(scrollPane);
-      setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-      pack();
-    }
-
-    private String buildHelpHtml() {
-      try {
-        String helpHtmlPath = "/recorder-help.html";
-        String helpHtml = IOUtils
-            .toString(HelpFrame.class.getResourceAsStream(helpHtmlPath), "UTF-8");
-        return helpHtml.replace("{{resourcesPath}}", getBaseResourcesPath(helpHtmlPath));
-      } catch (IOException e) {
-        LOG.error("Error when loading help panel", e);
-        return "PROBLEM LOADING HELP!, check logs.";
-      }
-    }
-
-    private String getBaseResourcesPath(String helpHtmlPath) {
-      String helpHtmlFullResourcePath = HelpFrame.class.getResource(helpHtmlPath).toString();
-      return helpHtmlFullResourcePath
-          .substring(0, helpHtmlFullResourcePath.length() - helpHtmlPath.length());
-    }
-
-    private HyperlinkListener buildOpenBrowserLinkListener() {
-      return event -> {
-        if (HyperlinkEvent.EventType.ACTIVATED.equals(event.getEventType())) {
-          Desktop desktop = Desktop.getDesktop();
-          try {
-            desktop.browse(event.getURL().toURI());
-          } catch (IOException | URISyntaxException exception) {
-            LOG.error("Problem when accessing repository", exception);
-          }
-        }
-      };
-    }
-  }
 }

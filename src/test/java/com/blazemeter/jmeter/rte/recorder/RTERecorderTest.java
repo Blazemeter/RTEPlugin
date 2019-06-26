@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -73,34 +74,28 @@ public class RTERecorderTest {
       .getDefaultTerminalType();
   private static final SSLType SSL_TYPE = SSLType.NONE;
   private static final long TIMEOUT = 10000;
+  private static final Position CURSOR_POSITION = new Position(2, 1);
   private static final List<Input> INPUTS = Collections
-      .singletonList(new CoordInput(new Position(2, 1), "testusr"));
+      .singletonList(new CoordInput(CURSOR_POSITION, "testusr"));
+
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
-  private TestElement mockedTestStateListener;
-  private TestElement mockedSamplerListener;
+  private TestElement testStateListener;
+  private TestElement samplerListener;
   private RTERecorder rteRecorder;
 
   @Mock
   private RecordingTargetFinder finder;
   @Mock
-  private JMeterTreeModel mockedJMeterTreeModel;
+  private JMeterTreeModel treeModel;
   @Mock
-  private JMeterTreeNode mockedJMeterTreeNode;
+  private JMeterTreeNode treeNode;
   @Mock
-  private JMeterTreeNode mockedFirstTreeNodeKid;
-  @Mock
-  private JMeterTreeNode mockedSecondTreeNodeKid;
-  @Mock
-  private JMeterTreeNode mockedThirdTreeNodeKid;
-  @Mock
-  private TerminalEmulator mockedTerminalEmulator;
-  @Mock
-  private TerminalEmulatorUpdater mockedTerminalEmulatorUpdater;
+  private TerminalEmulator terminalEmulator;
   @Mock
   private RteProtocolClient terminalClient;
   @Mock
-  private RecordingStateListener mockedRecorderListener;
+  private RecordingStateListener recorderListener;
 
   @BeforeClass
   public static void setupClass() {
@@ -109,39 +104,45 @@ public class RTERecorderTest {
 
   @Before
   public void setup() {
-    initializeChildrenList();
+    setupTreeModel();
+    when(finder.findTargetControllerNode()).thenReturn(treeNode);
+    setupTerminalClient();
 
-    Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> mockedTerminalEmulator;
-    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, mockedJMeterTreeModel,
-        p -> terminalClient, (e, c) -> mockedTerminalEmulatorUpdater);
+    Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> terminalEmulator;
+    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, treeModel,
+        p -> terminalClient);
 
-    prepareRecorder();
+    setupRecorder();
   }
 
-  public void initializeChildrenList() {
-    mockedTestStateListener = mock(TestElement.class,
-        withSettings().extraInterfaces(TestStateListener.class));
-    mockedSamplerListener = mock(TestElement.class,
-        withSettings().extraInterfaces(SampleListener.class));
+  public void setupTreeModel() {
+    testStateListener = buildTestElementMock(TestStateListener.class);
+    samplerListener = buildTestElementMock(SampleListener.class);
+    JMeterTreeNode testStateListenerTreeNode = buildTestElementTreeNode(testStateListener);
+    JMeterTreeNode samplerListenerTreeNode = buildTestElementTreeNode(samplerListener);
+    when(treeNode.children()).thenAnswer(a ->
+        Collections.enumeration(Arrays.asList(testStateListenerTreeNode, samplerListenerTreeNode)));
+    when(treeModel.getNodeOf(any())).thenReturn(treeNode);
+  }
 
-    when(mockedFirstTreeNodeKid.getTestElement()).thenReturn(mockedTestStateListener);
-    when(mockedSecondTreeNodeKid.getTestElement()).thenReturn(mockedSamplerListener);
+  private TestElement buildTestElementMock(Class<?> extraInterface) {
+    return mock(TestElement.class, withSettings().extraInterfaces(extraInterface));
+  }
 
-    when(mockedFirstTreeNodeKid.isEnabled()).thenReturn(true);
-    when(mockedSecondTreeNodeKid.isEnabled()).thenReturn(true);
-    when(mockedThirdTreeNodeKid.isEnabled()).thenReturn(true);
+  private JMeterTreeNode buildTestElementTreeNode(TestElement testStateListener) {
+    JMeterTreeNode testStateListenerTreeNode = mock(JMeterTreeNode.class);
+    when(testStateListenerTreeNode.getTestElement()).thenReturn(testStateListener);
+    when(testStateListenerTreeNode.isEnabled()).thenReturn(true);
+    return testStateListenerTreeNode;
+  }
 
-    when(mockedJMeterTreeNode.children()).thenAnswer(a ->
-        Collections.enumeration(Arrays
-            .asList(mockedFirstTreeNodeKid, mockedSecondTreeNodeKid, mockedThirdTreeNodeKid)));
-    when(mockedJMeterTreeModel.getNodeOf(any())).thenReturn(mockedJMeterTreeNode);
-
-    when(finder.findTargetControllerNode()).thenReturn(mockedJMeterTreeNode);
-
+  private void setupTerminalClient() {
     when(terminalClient.getScreen()).thenReturn(TEST_SCREEN);
+    when(terminalClient.getCursorPosition()).thenReturn(Optional.of(CURSOR_POSITION));
+    when(terminalClient.isAlarmOn()).thenReturn(true);
   }
 
-  public void prepareRecorder() {
+  public void setupRecorder() {
     rteRecorder.setPort(Integer.toString(PORT));
     rteRecorder.setTimeoutThresholdMillis(Long.toString(TIMEOUT));
     rteRecorder.setConnectionTimeout(Long.toString(TIMEOUT));
@@ -153,7 +154,7 @@ public class RTERecorderTest {
   @Test
   public void shouldAddRecorderAsEmulatorListenerWhenStart() throws Exception {
     connect();
-    verify(mockedTerminalEmulator).addTerminalEmulatorListener(rteRecorder);
+    verify(terminalEmulator).addTerminalEmulatorListener(rteRecorder);
   }
 
   private void connect() throws TimeoutException, InterruptedException {
@@ -165,7 +166,7 @@ public class RTERecorderTest {
   public void shouldAddRteConfigToTargetControllerNodeWhenStart() throws Exception {
     connect();
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
-    verify(mockedJMeterTreeModel).addComponent(argument.capture(), eq(mockedJMeterTreeNode));
+    verify(treeModel).addComponent(argument.capture(), eq(treeNode));
     assertTestElement(buildExpectedConfig(), argument.getValue());
   }
 
@@ -199,19 +200,19 @@ public class RTERecorderTest {
   @Test
   public void shouldNotifyChildrenTestStartWhenStart() throws Exception {
     connect();
-    verify((TestStateListener) mockedTestStateListener).testStarted();
+    verify((TestStateListener) testStateListener).testStarted();
   }
 
   @Test
   public void shouldLockEmulatorKeyboardWhenStart() throws Exception {
     connect();
-    verify(mockedTerminalEmulator).setKeyboardLock(true);
+    verify(terminalEmulator).setKeyboardLock(true);
   }
 
   @Test
   public void shouldStartTerminalEmulatorWhenStart() throws Exception {
     connect();
-    verify(mockedTerminalEmulator).start();
+    verify(terminalEmulator).start();
   }
 
   @Test
@@ -221,9 +222,27 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotifyTerminalEmulatorUpdaterWhenTerminalStateChange() throws Exception {
+  public void shouldSetEmulatorScreenWhenTerminalStateChange() throws Exception {
     connect();
-    verify(mockedTerminalEmulatorUpdater).onTerminalStateChange();
+    verify(terminalEmulator).setScreen(TEST_SCREEN);
+  }
+
+  @Test
+  public void shouldSetEmulatorKeyboardLockWhenTerminalStateChange() throws Exception {
+    connect();
+    verify(terminalEmulator).setKeyboardLock(false);
+  }
+
+  @Test
+  public void shouldSoundEmulatorAlarmWhenTerminalStateChange() throws Exception {
+    connect();
+    verify(terminalEmulator).soundAlarm();
+  }
+
+  @Test
+  public void shouldSetEmulatorCursorWhenTerminalStateChange() throws Exception {
+    connect();
+    verify(terminalEmulator).setCursor(CURSOR_POSITION.getRow(), CURSOR_POSITION.getColumn());
   }
 
   @Test
@@ -233,7 +252,7 @@ public class RTERecorderTest {
         TERMINAL_TYPE, TIMEOUT);
     connect();
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
-    verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
+    verify((SampleListener) samplerListener).sampleOccurred(argument.capture());
     assertSampleResult(buildExpectedConnectionErrorResult(), argument.getValue().getResult());
   }
 
@@ -261,7 +280,7 @@ public class RTERecorderTest {
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
     // 1 sample due to connection, the other due to attention key
-    verify((SampleListener) mockedSamplerListener, times(2)).sampleOccurred(argument.capture());
+    verify((SampleListener) samplerListener, times(2)).sampleOccurred(argument.capture());
 
     RteSampleResult expected = buildBasicSampleResult(Action.SEND_INPUT);
     expected.setSampleLabel(expected.getSampleLabel() + "-1");
@@ -286,9 +305,27 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotifyTerminalEmulatorUpdaterWhenStart() throws Exception {
+  public void shouldSetEmulatorScreenWhenStart() throws Exception {
     connect();
-    verify(mockedTerminalEmulatorUpdater).onTerminalStateChange();
+    verify(terminalEmulator).setScreen(TEST_SCREEN);
+  }
+
+  @Test
+  public void shouldSetEmulatorCursorWhenStart() throws Exception {
+    connect();
+    verify(terminalEmulator).setCursor(CURSOR_POSITION.getRow(), CURSOR_POSITION.getColumn());
+  }
+
+  @Test
+  public void shouldSetEmulatorKeyboardLockWhenStart() throws Exception {
+    connect();
+    verify(terminalEmulator).setKeyboardLock(false);
+  }
+
+  @Test
+  public void shouldSoundEmulatorAlarmWhenStart() throws Exception {
+    connect();
+    verify(terminalEmulator).soundAlarm();
   }
 
   @Test
@@ -305,8 +342,8 @@ public class RTERecorderTest {
      * The second time occurs when the connection fails and the Recorder add anything that is
      * pending, in this case, an Empty Sampler is added
      * */
-    verify(mockedJMeterTreeModel, times(2))
-        .addComponent(argument.capture(), eq(mockedJMeterTreeNode));
+    verify(treeModel, times(2))
+        .addComponent(argument.capture(), eq(treeNode));
     assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
   }
 
@@ -345,7 +382,7 @@ public class RTERecorderTest {
   public void shouldNotifyChildrenTestEndWhenStop() throws Exception {
     connect();
     rteRecorder.onRecordingStop();
-    verify((TestStateListener) mockedTestStateListener).testEnded();
+    verify((TestStateListener) testStateListener).testEnded();
   }
 
   @Test
@@ -359,7 +396,7 @@ public class RTERecorderTest {
   public void shouldStopEmulatorListenerWhenStop() throws Exception {
     connect();
     rteRecorder.onRecordingStop();
-    verify(mockedTerminalEmulator).stop();
+    verify(terminalEmulator).stop();
   }
 
   @Test
@@ -373,7 +410,7 @@ public class RTERecorderTest {
   public void shouldNotifyChildrenTestEndWhenCloseTerminal() throws Exception {
     connect();
     rteRecorder.onCloseTerminal();
-    verify((TestStateListener) mockedTestStateListener).testEnded();
+    verify((TestStateListener) testStateListener).testEnded();
   }
 
   @Test
@@ -387,7 +424,7 @@ public class RTERecorderTest {
   public void shouldStopEmulatorWhenCloseTerminal() throws Exception {
     connect();
     rteRecorder.onCloseTerminal();
-    verify(mockedTerminalEmulator).stop();
+    verify(terminalEmulator).stop();
   }
 
   @Test
@@ -399,10 +436,10 @@ public class RTERecorderTest {
 
   @Test
   public void shouldNotifyRecordingListenerWhenCloseTerminal() throws Exception {
-    rteRecorder.setRecordingStateListener(mockedRecorderListener);
+    rteRecorder.setRecordingStateListener(recorderListener);
     connect();
     rteRecorder.onCloseTerminal();
-    verify(mockedRecorderListener).onRecordingStop();
+    verify(recorderListener).onRecordingStop();
   }
 
   @Test
@@ -414,7 +451,7 @@ public class RTERecorderTest {
      * At the beginning when the terminal setup (initTerminalEmulator)
      * And when the attention key happens
      * */
-    verify(mockedTerminalEmulator, times(2)).setKeyboardLock(true);
+    verify(terminalEmulator, times(2)).setKeyboardLock(true);
   }
 
 
@@ -431,10 +468,12 @@ public class RTERecorderTest {
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
-    verify((SampleListener) mockedSamplerListener).sampleOccurred(argument.capture());
+    verify((SampleListener) samplerListener).sampleOccurred(argument.capture());
 
     RteSampleResult expected = buildBasicSampleResult(Action.CONNECT);
     expected.setScreen(TEST_SCREEN);
+    expected.setCursorPosition(CURSOR_POSITION);
+    expected.setSoundedAlarm(true);
 
     RteSampleResult result = (RteSampleResult) argument.getAllValues().get(0).getResult();
     assertSampleResult(expected, result);
@@ -451,8 +490,8 @@ public class RTERecorderTest {
      * samplers are recorded and thats when the Sampler is added
      */
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
-    verify(mockedJMeterTreeModel, times(2)).addComponent(argument.capture(),
-        eq(mockedJMeterTreeNode));
+    verify(treeModel, times(2)).addComponent(argument.capture(),
+        eq(treeNode));
 
     assertTestElement(buildExpectedConnectionSampler(), argument.getValue());
   }
@@ -465,10 +504,12 @@ public class RTERecorderTest {
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
 
-    verify((SampleListener) mockedSamplerListener, times(2)).sampleOccurred(argument.capture());
+    verify((SampleListener) samplerListener, times(2)).sampleOccurred(argument.capture());
 
     RteSampleResult expectedConnectResult = buildBasicSampleResult(Action.CONNECT);
     expectedConnectResult.setScreen(TEST_SCREEN);
+    expectedConnectResult.setCursorPosition(CURSOR_POSITION);
+    expectedConnectResult.setSoundedAlarm(true);
 
     RteSampleResult expectedDisconnectResult = buildBasicSampleResult(Action.DISCONNECT);
     expectedDisconnectResult.setInputInhibitedRequest(false);
@@ -489,8 +530,8 @@ public class RTERecorderTest {
      * 2nd: Corresponds to the RTESampler for the Connect
      * 3nd: Corresponds to the RTESampler for the Disconnect
      */
-    verify(mockedJMeterTreeModel, times(3))
-        .addComponent(argument.capture(), eq(mockedJMeterTreeNode));
+    verify(treeModel, times(3))
+        .addComponent(argument.capture(), eq(treeNode));
 
     softly.assertThat(argument.getAllValues().get(0)).isEqualTo(buildExpectedConfig());
     assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
@@ -529,9 +570,9 @@ public class RTERecorderTest {
       throws InterruptedException, TimeoutException, RteIOException {
     TimeoutException e = new TimeoutException("Timeout Error");
     doThrow(e).when(terminalClient).connect(any(), anyInt(), any(), any(), anyLong());
-    rteRecorder.setRecordingStateListener(mockedRecorderListener);
+    rteRecorder.setRecordingStateListener(recorderListener);
     connect();
-    verify(mockedRecorderListener, timeout(TIMEOUT)).onRecordingException(e);
+    verify(recorderListener, timeout(TIMEOUT)).onRecordingException(e);
 
   }
 
@@ -540,10 +581,10 @@ public class RTERecorderTest {
       throws TimeoutException, InterruptedException, RteIOException {
     Exception exception = new UnsupportedOperationException();
     setupExceptionOnAttentionKey(exception);
-    rteRecorder.setRecordingStateListener(mockedRecorderListener);
+    rteRecorder.setRecordingStateListener(recorderListener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-    verify(mockedRecorderListener, timeout(TIMEOUT)).onRecordingException(exception);
+    verify(recorderListener, timeout(TIMEOUT)).onRecordingException(exception);
   }
 
   private void setupExceptionOnAttentionKey(Exception exception) throws RteIOException {
@@ -556,7 +597,7 @@ public class RTERecorderTest {
     setupExceptionOnAttentionKey(new UnsupportedOperationException());
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-    verify(mockedTerminalEmulator, never()).stop();
+    verify(terminalEmulator, never()).stop();
   }
 
   @Test
@@ -574,10 +615,10 @@ public class RTERecorderTest {
     setupExceptionOnTerminalClientSend();
     RteIOException exception = new RteIOException(null, SERVER);
     doThrow(exception).when(terminalClient).send(any(), any());
-    rteRecorder.setRecordingStateListener(mockedRecorderListener);
+    rteRecorder.setRecordingStateListener(recorderListener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-    verify(mockedRecorderListener, timeout(TIMEOUT)).onRecordingException(exception);
+    verify(recorderListener, timeout(TIMEOUT)).onRecordingException(exception);
   }
 
   private void setupExceptionOnTerminalClientSend() throws RteIOException {
@@ -590,7 +631,7 @@ public class RTERecorderTest {
     setupExceptionOnTerminalClientSend();
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-    verify(mockedTerminalEmulator).stop();
+    verify(terminalEmulator).stop();
   }
 
   @Test

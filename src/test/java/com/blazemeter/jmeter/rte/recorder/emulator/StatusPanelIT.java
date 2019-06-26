@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 
+import com.blazemeter.jmeter.rte.sampler.gui.ThemedIcon;
 import java.awt.Frame;
 import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
@@ -19,23 +20,22 @@ import org.junit.Test;
 public class StatusPanelIT {
 
   private static final long HELP_FRAME_VISIBLE_TIMEOUT_MILLIS = 1000;
-  private FrameFixture frame;
-  private StatusPanel statusPanel;
-
-  @Rule
-  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
-
   private static final String POSITION_LABEL = "positionLabel";
   private static final String MESSAGE_LABEL = "messageLabel";
   private static final String KEYBOARD_LABEL = "keyboardLabel";
   private static final String HELP_LABEL = "helpLabel";
   private static final String HELP_FRAME = "helpFrame";
   private static final String EXPECTED_POSITION_TEXT = "row: 66 / column: 66";
-  private static final ImageIcon KEYBOARD_LOCKED_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/keyboard-locked.png"));
-  private static final ImageIcon KEYBOARD_UNLOCKED_ICON = new ImageIcon(
-      StatusPanel.class.getResource("/keyboard-unlocked.png"));
+  private static final ImageIcon KEYBOARD_LOCKED_ICON = ThemedIcon
+      .fromResourceName("keyboard-locked.png");
+  private static final ImageIcon KEYBOARD_UNLOCKED_ICON = ThemedIcon
+      .fromResourceName("keyboard-unlocked.png");
 
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
+  private FrameFixture frame;
+  private StatusPanel statusPanel;
 
   @Before
   public void setup() {

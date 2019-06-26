@@ -101,9 +101,7 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
 
   private JPanel buildTimeThresholdPanel() {
     JPanel panel = SwingUtils.createComponent("timeThresholdPanel", new JPanel());
-    panel
-        .setBorder(BorderFactory.createTitledBorder(JMeterUtils.getResString(
-            "", "Wait conditions")));
+    panel.setBorder(BorderFactory.createTitledBorder("Wait conditions"));
     GroupLayout layout = new GroupLayout(panel);
     layout.setAutoCreateContainerGaps(true);
     panel.setLayout(layout);
