@@ -4,28 +4,32 @@ skinparam monochrome true
 hide empty members
 
 package org.apache.jmeter.* {
-    abstract class AbstractConfigGui
-
-    abstract class AbstractSamplerGui
-
-    abstract class AbstractSampler
-}
-
+     abstract class AbstractConfigGui
+ 
+     abstract class AbstractSamplerGui
+ 
+     abstract class AbstractSampler
+     
+     class GenericController
+ }
+             
 package com.blazemeter.jmeter.rte {
-
-    class RteConfigGui extends AbstractConfigGui {
-    }
-    RteSamplerGui ..> RteSampler
-
-    class RteSamplerGui extends AbstractSamplerGui {
-    }
-    RteConfigGui ..> RteSampler
-
-    class RteSampler extends AbstractSampler {
-        long delayMs
-        boolean disconnect
-    }
-
+    
+     package sampler {
+        class RteConfigGui extends AbstractConfigGui {
+        }
+        RteSamplerGui ..> RteSampler
+    
+        class RteSamplerGui extends AbstractSamplerGui {
+        }
+        RteConfigGui ..> RteSampler
+    
+        class RteSampler extends AbstractSampler {
+            long delayMs
+            boolean disconnect
+        }
+      }
+      
     package core {
         RteSampler --> RteProtocolClient
         interface RteProtocolClient {
@@ -87,30 +91,112 @@ package com.blazemeter.jmeter.rte {
         }
 
     }
-
+    
     package protocols {
         package tn5250 {
             package tn5250.listeners {
                 class Tn5250RequestListener extends RequestListener
+                
                 abstract class Tn5250ConditionWaiter extends ConditionWaiter
+                
+                class Tn5250TerminalStateListenerProxy
             }
+            
             class Tn5250Client implements RteProtocolClient {
             }
+            
         }
 
         package tn3270 {
             package tn3270.listeners {
                 class Tn3270RequestListener extends RequestListener
                 abstract class Tn3270ConditionWaiter extends ConditionWaiter
+                class Tn3270TerminalStateListenerProxy
             }
-
+            
             class Tn3270Client implements RteProtocolClient {
             }
         }
+        
+    }
+    
+    RteProtocolClient ..> RequestListener
 
+    package recorder { 
+        package emulator {
+           class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator{
+           Map<KeyEventMap, AttentionKey> KEY_EVENTS
+           StatusPanel statusPanel
+           XI5250Crt xi5250Crt
+           }
+           
+           interface TerminalEmulator{
+           void start()
+           void stop()
+           void setCursor()
+           void setScreenSize()
+           setKeyboardLock()
+           soundAlarm()
+           }
+           
+           interface TerminalEmulatorListener{
+           onCloseTerminal()
+           onAttentionKey()
+           }
+  
+          }
+             
+        interface RecordingStateListener{
+        void onRecordingStart()
+        void onRecordingStop()
+        void onRecordingException()
+        }
+        
+        interface RecordingStateListener{
+        void onTerminalStateChange()
+        }
+        
+        class RTERecorder extends GenericController implements TerminalEmulatorListener, RecordingStateListener, TerminalStateListener{
+        int SampleCount
+        }
+        
+        class RTERecorderPanel implements RecordingStateListener
+        
+        class RTERecorderGui implements RecordingStateListener{
+        }
+       
+        package wait {
+            class WaitConditionRecorder implements RecordingStateListener {
+            long maxStablePeriod
+            long stablePeriodThresholdMillis
+            instant startTime
+            instant lastStatusChangeTime
+            }
+            
+            abstract class SyncWaitRecorder extends WaitConditionRecorder{
+            long stablePeriodMillis
+            boolean lastInputInhibited
+            boolean hasUnlockedKeyboard
+            } 
+            
+            abstract class SilentWaitRecorder extends WaitConditionRecorder
+            
+            class WaitConditionsRecorder{
+            long stablePeriodMillis
+            }
+            
+            WaitConditionsRecorder " " -- " " SyncWaitRecorder 
+            WaitConditionsRecorder " " -- " " SilentWaitRecorder 
+             
+            } 
     }
 
-}
-RteProtocolClient ..> RequestListener
+       RTERecorderGui " " -- " " RTERecorderPanel
+       RTERecorderGui " " -- " " RTERecorder
+       RTERecorder " " -- " " RteSampler
+       RTERecorder " " -- " " TerminalEmulator
+       RTERecorder " " -- " " RteProtocolClient
+       WaitConditionRecorder " " -- " " RteProtocolClient
+       RTERecorder " " -- " " WaitConditionsRecorder
 
 @enduml
