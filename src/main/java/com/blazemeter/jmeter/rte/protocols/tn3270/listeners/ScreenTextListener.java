@@ -62,6 +62,7 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     }
   }
 
+  @Override
   public void stop() {
     super.stop();
     client.removeCursorMoveListener(this);

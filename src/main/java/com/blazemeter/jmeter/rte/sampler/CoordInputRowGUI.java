@@ -37,6 +37,7 @@ public class CoordInputRowGUI extends InputTestElement {
     setProperty(new StringProperty(COLUMN, column));
   }
 
+  @Override
   public Input toInput() {
     return new CoordInput(new Position(Integer.parseInt(getRow()), Integer.parseInt(getColumn())),
         getInput());

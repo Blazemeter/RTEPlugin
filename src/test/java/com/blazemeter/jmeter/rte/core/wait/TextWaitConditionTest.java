@@ -57,7 +57,7 @@ public class TextWaitConditionTest {
   }
 
   @Test
-  public void shouldMatchScreenWhenMatchedMultilineRegex() throws Exception {
+  public void shouldMatchScreenWhenMatchedMultiLineRegex() throws Exception {
     assertThat(buildCondition("Welcome.*\\n.*awesome", Area.fromTopLeftBottomRight(2, 1, 3, 10))
         .matchesScreen(screen))
         .isTrue();

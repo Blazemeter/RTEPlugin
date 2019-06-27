@@ -131,7 +131,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   public SSLType getSSLType() {
     return SSLType.valueOf((
-        getPropertyAsString(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name())));
+        getPropertyAsString(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSL_TYPE.name())));
   }
 
   public void setSSLType(SSLType sslType) {
@@ -175,6 +175,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     setProperty(WAIT_CONDITION_TIMEOUT_THRESHOLD_MILLIS_PROPERTY, timeoutThresholdMillis);
   }
 
+  @Override
   public void onRecordingStart() {
     LOG.debug("Start recording");
     sampleCount = 0;

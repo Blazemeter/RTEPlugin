@@ -56,10 +56,10 @@ public class AlarmLabelIT {
     result.add(alarmLabel.isVisible());
     alarmLabel.soundAlarm();
     for (int i = 0; i < 10; i++) {
-      executorService.tock();
+      executorService.tick();
       result.add(alarmLabel.isVisible());
     }
-    executorService.tock();
+    executorService.tick();
     result.add(alarmLabel.isVisible());
     assertThat(result).isEqualTo(expected);
   }
@@ -73,15 +73,15 @@ public class AlarmLabelIT {
     result.add(alarmLabel.isVisible());
     alarmLabel.soundAlarm();
     for (int i = 0; i < 2; i++) {
-      executorService.tock();
+      executorService.tick();
       result.add(alarmLabel.isVisible());
     }
     alarmLabel.soundAlarm();
     for (int i = 0; i < 10; i++) {
-      executorService.tock();
+      executorService.tick();
       result.add(alarmLabel.isVisible());
     }
-    executorService.tock();
+    executorService.tick();
     result.add(alarmLabel.isVisible());
     assertThat(result).isEqualTo(expected);
   }
@@ -101,7 +101,7 @@ public class AlarmLabelIT {
       return null;
     }
 
-    private void tock() {
+    private void tick() {
       command.run();
     }
 

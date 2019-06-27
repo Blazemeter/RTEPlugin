@@ -104,7 +104,7 @@ public class Tn5250Client extends BaseProtocolClient {
     /*
      we need create terminalClient instance on connect instead of 
      constructor to avoid leaving keyboard thread running when 
-     instance of this class is created for getting supported terminal types in jmeter
+     instance of this class is created for getting supported terminal types in JMeter
     */
     client = new TerminalClient();
     client.setConnectionTimeoutMillis((int) timeoutMillis);
@@ -221,6 +221,7 @@ public class Tn5250Client extends BaseProtocolClient {
     exceptionHandler.addListener(listener);
   }
 
+  @Override
   public void removeTerminalStateListener(TerminalStateListener listener) {
     Tn5250TerminalStateListenerProxy proxy = listenersProxies.remove(listener);
     if (client != null) {
@@ -255,7 +256,7 @@ public class Tn5250Client extends BaseProtocolClient {
 
   @Override
   public boolean isInputInhibited() {
-    return client == null ? true : client.isKeyboardLocked();
+    return client == null || client.isKeyboardLocked();
   }
 
   @Override

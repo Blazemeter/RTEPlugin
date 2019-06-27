@@ -21,7 +21,6 @@ public class StatusPanelIT {
 
   private static final long HELP_FRAME_VISIBLE_TIMEOUT_MILLIS = 1000;
   private static final String POSITION_LABEL = "positionLabel";
-  private static final String MESSAGE_LABEL = "messageLabel";
   private static final String KEYBOARD_LABEL = "keyboardLabel";
   private static final String HELP_LABEL = "helpLabel";
   private static final String HELP_FRAME = "helpFrame";
@@ -99,10 +98,4 @@ public class StatusPanelIT {
 
   }
 
-  @Test
-  public void shouldShowMessageSetWhenMessageIsSet() {
-    String message = "Test Message";
-    statusPanel.setStatusMessage(message);
-    assertThat(frame.label(MESSAGE_LABEL).text()).isEqualTo(message);
-  }
 }

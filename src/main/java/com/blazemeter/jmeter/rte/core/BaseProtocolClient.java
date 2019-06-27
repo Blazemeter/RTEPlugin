@@ -64,6 +64,7 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
 
   protected abstract ConditionWaiter buildWaiter(WaitCondition waitCondition);
 
+  @Override
   public void disconnect() throws RteIOException {
     if (stableTimeoutExecutor == null) {
       return;

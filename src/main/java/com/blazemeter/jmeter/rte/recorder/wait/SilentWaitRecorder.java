@@ -4,7 +4,6 @@ import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.helger.commons.annotation.VisibleForTesting;
-
 import java.time.Clock;
 import java.util.Optional;
 

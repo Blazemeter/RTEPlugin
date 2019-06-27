@@ -54,8 +54,9 @@ public class Xtn5250TerminalEmulatorIT {
   @After
   public void teardown() {
     xtn5250TerminalEmulator.stop();
-    if (frame != null)
+    if (frame != null) {
       frame.cleanUp();
+    }
   }
 
   @Test
@@ -150,7 +151,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldCallTheListenerWhenPressAnyAttentionKey() throws IOException {
+  public void shouldCallTheListenerWhenPressAnyAttentionKey() {
     setScreen("");
     TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
     xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
@@ -159,7 +160,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldCallTheListenerWhenPressControlAttentionKey() throws IOException {
+  public void shouldCallTheListenerWhenPressControlAttentionKey() {
     setScreen("");
     TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
     xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
@@ -201,8 +202,7 @@ public class Xtn5250TerminalEmulatorIT {
     button.click();
   }
 
-  private void assertTextIsInClipboard(String text)
-      throws IOException, UnsupportedFlavorException {
+  private void assertTextIsInClipboard(String text) throws IOException, UnsupportedFlavorException {
     Component focusedComponent = frame.robot().finder().find(Component::isFocusOwner);
     Clipboard clipboard = focusedComponent.getToolkit().getSystemClipboard();
     String result = (String) clipboard.getContents(focusedComponent)

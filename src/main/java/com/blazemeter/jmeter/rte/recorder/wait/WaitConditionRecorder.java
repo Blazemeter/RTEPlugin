@@ -37,6 +37,7 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
     this.clock = clock;
   }
 
+  @Override
   public void onTerminalStateChange() {
     Instant currentTime = clock.instant();
     if (lastStatusChangeTime != null &&

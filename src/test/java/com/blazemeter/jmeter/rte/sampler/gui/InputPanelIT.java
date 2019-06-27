@@ -12,8 +12,9 @@ import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.sampler.InputTestElement;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
 import com.blazemeter.jmeter.rte.sampler.gui.InputPanel.FieldPanel;
-
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -24,8 +25,6 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.swing.JTable;
 import javax.swing.text.JTextComponent;
-
-import kg.apc.emulators.TestJMeterUtils;
 import org.assertj.swing.core.Robot;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.driver.AbstractJTableCellWriter;

@@ -2,7 +2,6 @@ package com.blazemeter.jmeter.rte.recorder;
 
 import java.io.File;
 import java.io.FileWriter;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -10,9 +9,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-
 import org.apache.commons.io.IOUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +31,9 @@ public class RTETemplateRepository {
 
   private void createRTETemplate(String templateName, String pathTemplateResource) {
     try {
-      File dest = new File(templatesPath + templateName);
-      if (!dest.exists()) {
-        try (FileWriter fileWriter = new FileWriter(dest)) {
+      File destination = new File(templatesPath + templateName);
+      if (!destination.exists()) {
+        try (FileWriter fileWriter = new FileWriter(destination)) {
           fileWriter.write(getFileFromResources(pathTemplateResource));
         }
       }

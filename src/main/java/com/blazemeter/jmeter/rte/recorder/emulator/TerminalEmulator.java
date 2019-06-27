@@ -14,8 +14,6 @@ public interface TerminalEmulator {
 
   void soundAlarm();
 
-  void setStatusMessage(String message);
-
   void setKeyboardLock(boolean lock);
 
   void setScreenSize(int columns, int rows);

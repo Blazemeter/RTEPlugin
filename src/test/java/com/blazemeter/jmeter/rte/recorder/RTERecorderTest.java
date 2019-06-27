@@ -487,7 +487,7 @@ public class RTERecorderTest {
      * There were two interactions with the Model
      * 1st: When the Recording Starts, a new Test Element is added
      * 2nd: When the onAttentionKey is triggered, all the pending
-     * samplers are recorded and thats when the Sampler is added
+     * samplers are recorded and that is when the Sampler is added
      */
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(treeModel, times(2)).addComponent(argument.capture(),
