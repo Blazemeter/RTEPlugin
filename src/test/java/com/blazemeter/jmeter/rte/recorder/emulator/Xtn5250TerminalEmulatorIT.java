@@ -6,6 +6,7 @@ import static org.assertj.swing.timing.Pause.pause;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.awt.Component;
@@ -42,33 +43,12 @@ public class Xtn5250TerminalEmulatorIT {
   private static final int ROWS = 24;
   private static final String COPY_BUTTON = "copyButton";
   private static final String PASTE_BUTTON = "pasteButton";
+  private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
   private static final String TEST_SCREEN_FILE = "test-screen.txt";
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
 
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
   private FrameFixture frame;
-
-  private static Screen buildScreen(String text) {
-    Dimension screenSize = new Dimension(80, 24);
-    Screen screen = new Screen(screenSize);
-    int segmentPosition = 0;
-    screen.addSegment(segmentPosition,
-        completeLine("*****************************************", screenSize.width));
-    segmentPosition += screenSize.width;
-    screen.addField(segmentPosition, completeLine(text, screenSize.width));
-    segmentPosition += screenSize.width;
-    for (String lineText : Arrays
-        .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
-            "*****************************************")) {
-      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width));
-      segmentPosition += screenSize.width;
-    }
-    return screen;
-  }
-
-  private static String completeLine(String baseLine, int width) {
-    return baseLine + StringUtils.repeat(' ', width - baseLine.length());
-  }
 
   private Set<AttentionKey> buildSupportedAttentionKeys() {
     return new HashSet<AttentionKey>() {{
@@ -281,9 +261,73 @@ public class Xtn5250TerminalEmulatorIT {
     return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
   }
 
+  private static Screen buildScreen(String text) {
+    Dimension screenSize = new Dimension(80, 24);
+    Screen screen = new Screen(screenSize);
+    int segmentPosition = 0;
+    screen.addSegment(segmentPosition,
+        completeLine("*****************************************", screenSize.width));
+    segmentPosition += screenSize.width;
+    screen.addField(segmentPosition, completeLine(text, screenSize.width));
+    segmentPosition += screenSize.width;
+    for (String lineText : Arrays
+        .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
+            "*****************************************")) {
+      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width));
+      segmentPosition += screenSize.width;
+    }
+    return screen;
+  }
+
+  @Test
+  public void shouldCallTheListenerWhenPressWaitForTextButton()
+      throws IOException, UnsupportedFlavorException {
+    setScreen("");
+    TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(1, 0, 5, 4));
+    clickButton(WAIT_FOR_TEXT_BUTTON);
+    awaitOnWaitForTextIsCalled(Area.fromTopLeftBottomRight(2, 1, 6, 4),
+        "*****\n"
+            + "     \n"
+            + "EXTO \n"
+            + "EXTO ",
+        terminalEmulatorListener);
+  }
+
+  private void awaitOnWaitForTextIsCalled(Area area, String text,
+      TestTerminalEmulatorListener terminalEmulatorListener) {
+    pause(new Condition("Listener is called") {
+      @Override
+      public boolean test() {
+        return terminalEmulatorListener.getArea().equals(area) && terminalEmulatorListener.getText()
+            .equals(text);
+      }
+    }, PAUSE_TIMEOUT);
+  }
+
+  private static String completeLine(String baseLine, int width) {
+    return baseLine + StringUtils.repeat(' ', width - baseLine.length());
+  }
+
   private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {
 
     private AttentionKey attentionKey = null;
+    private String text;
+    private Area area;
+
+
+    public AttentionKey getAttentionKey() {
+      return attentionKey;
+    }
+
+    public String getText() {
+      return text;
+    }
+
+    public Area getArea() {
+      return area;
+    }
 
     @Override
     public void onCloseTerminal() {
@@ -294,8 +338,10 @@ public class Xtn5250TerminalEmulatorIT {
       this.attentionKey = attentionKey;
     }
 
-    public AttentionKey getAttentionKey() {
-      return attentionKey;
+    @Override
+    public void onWaitForText(Area area, String text) {
+      this.area = area;
+      this.text = text;
     }
 
   }

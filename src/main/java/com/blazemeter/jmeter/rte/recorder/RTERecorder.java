@@ -10,6 +10,7 @@ import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulatorListener;
 import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulator;
@@ -338,6 +339,11 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     } catch (Exception e) {
       onException(e); 
     }
+  }
+
+  @Override
+  public void onWaitForText(Area area, String text) {
+    
   }
 
   private void recordPendingSample() {

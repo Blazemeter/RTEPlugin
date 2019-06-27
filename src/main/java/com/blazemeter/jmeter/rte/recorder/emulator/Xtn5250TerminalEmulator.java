@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
@@ -85,6 +86,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   private JButton copyButton = createIconButton("copyButton", "copy.png");
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
+  private JButton waitForTextButton = createIconButton("waitForTextButton", "paste.png");
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
@@ -137,12 +139,47 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton)
-        .addComponent(pasteButton));
+        .addComponent(pasteButton)
+        .addComponent(waitForTextButton));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(copyButton)
-        .addComponent(pasteButton));
+        .addComponent(pasteButton)
+        .addComponent(waitForTextButton));
+
+    waitForTextButton.addActionListener(e -> {
+      //int top, int left, int bottom, int right
+      Area area = Area
+          .fromTopLeftBottomRight(xi5250Crt.getSelectedArea().x, xi5250Crt.getSelectedArea().y,
+              xi5250Crt.getSelectedArea().x + xi5250Crt.getSelectedArea().width,
+              xi5250Crt.getSelectedArea().y + xi5250Crt.getSelectedArea().height);
+
+      for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+        listener.onWaitForText(area, getTextSelected());
+      }
+    });
 
     return toolsPanel;
+  }
+
+  private String getTextSelected() {
+    StringBuilder strBuf = new StringBuilder();
+    for (int r = xi5250Crt.getSelectedArea().y;
+        r < (xi5250Crt.getSelectedArea().y + xi5250Crt.getSelectedArea().height); r++) {
+      strBuf.append(
+          xi5250Crt.getString(xi5250Crt.getSelectedArea().x, r, xi5250Crt.getSelectedArea().width));
+
+      if (r < (xi5250Crt.getSelectedArea().y + xi5250Crt.getSelectedArea().height - 1)) {
+        strBuf.append("\n");
+      }
+    }
+
+    for (int i = 0; i < strBuf.length(); i++) {
+      if (strBuf.charAt(i) < ' ' && strBuf.charAt(i) != '\n') {
+        strBuf.setCharAt(i, ' ');
+      }
+    }
+
+    return new String(strBuf);
   }
 
   @Override
@@ -284,7 +321,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   private class CustomXI5250Crt extends XI5250Crt {
-    
+
     private boolean copyPaste = false;
 
     private CustomXI5250Crt() {
