@@ -25,7 +25,6 @@ package com.blazemeter.jmeter.rte {
         RteConfigGui ..> RteSampler
     
         class RteSampler extends AbstractSampler {
-            long delayMs
             boolean disconnect
         }
       }
@@ -88,6 +87,9 @@ package com.blazemeter.jmeter.rte {
             }
             abstract class RequestListener{
             }
+            interface TerminalStateListener{
+                void onTerminalStateChange()
+            }
         }
 
     }
@@ -99,7 +101,6 @@ package com.blazemeter.jmeter.rte {
                 
                 abstract class Tn5250ConditionWaiter extends ConditionWaiter
                 
-                class Tn5250TerminalStateListenerProxy
             }
             
             class Tn5250Client implements RteProtocolClient {
@@ -111,7 +112,6 @@ package com.blazemeter.jmeter.rte {
             package tn3270.listeners {
                 class Tn3270RequestListener extends RequestListener
                 abstract class Tn3270ConditionWaiter extends ConditionWaiter
-                class Tn3270TerminalStateListenerProxy
             }
             
             class Tn3270Client implements RteProtocolClient {
@@ -119,29 +119,25 @@ package com.blazemeter.jmeter.rte {
         }
         
     }
-    
-    RteProtocolClient ..> RequestListener
 
     package recorder { 
         package emulator {
-           class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator{
-           Map<KeyEventMap, AttentionKey> KEY_EVENTS
-           StatusPanel statusPanel
-           XI5250Crt xi5250Crt
-           }
+           class Xtn5250TerminalEmulator implements TerminalEmulator
            
            interface TerminalEmulator{
            void start()
            void stop()
-           void setCursor()
-           void setScreenSize()
-           setKeyboardLock()
-           soundAlarm()
+           void setCursor(int row, int col)
+           void setScreenSize(int columns, int rows)
+           void setKeyboardLock(boolean lock)
+           void soundAlarm()
+           void setScreen(Screen screen)
+           void addTerminalEmulatorListener
            }
            
            interface TerminalEmulatorListener{
-           onCloseTerminal()
-           onAttentionKey()
+           void onCloseTerminal()
+           void onAttentionKey(AttentionKey attentionKey, List<Input> inputs)
            }
   
           }
@@ -149,54 +145,42 @@ package com.blazemeter.jmeter.rte {
         interface RecordingStateListener{
         void onRecordingStart()
         void onRecordingStop()
-        void onRecordingException()
-        }
-        
-        interface RecordingStateListener{
-        void onTerminalStateChange()
+        void onRecordingException(Exception e)
         }
         
         class RTERecorder extends GenericController implements TerminalEmulatorListener, RecordingStateListener, TerminalStateListener{
-        int SampleCount
         }
-        
-        class RTERecorderPanel implements RecordingStateListener
-        
+                
         class RTERecorderGui implements RecordingStateListener{
         }
        
         package wait {
-            class WaitConditionRecorder implements RecordingStateListener {
+            abstract class WaitConditionRecorder implements RecordingStateListener {
             long maxStablePeriod
             long stablePeriodThresholdMillis
-            instant startTime
-            instant lastStatusChangeTime
             }
             
-            abstract class SyncWaitRecorder extends WaitConditionRecorder{
+            class SyncWaitRecorder extends WaitConditionRecorder{
             long stablePeriodMillis
-            boolean lastInputInhibited
-            boolean hasUnlockedKeyboard
             } 
             
-            abstract class SilentWaitRecorder extends WaitConditionRecorder
+            class SilentWaitRecorder extends WaitConditionRecorder
             
             class WaitConditionsRecorder{
             long stablePeriodMillis
             }
             
-            WaitConditionsRecorder " " -- " " SyncWaitRecorder 
-            WaitConditionsRecorder " " -- " " SilentWaitRecorder 
+            WaitConditionsRecorder "1" -- "1" SyncWaitRecorder 
+            WaitConditionsRecorder "1" -- "1" SilentWaitRecorder 
              
             } 
     }
-
-       RTERecorderGui " " -- " " RTERecorderPanel
-       RTERecorderGui " " -- " " RTERecorder
-       RTERecorder " " -- " " RteSampler
-       RTERecorder " " -- " " TerminalEmulator
-       RTERecorder " " -- " " RteProtocolClient
-       WaitConditionRecorder " " -- " " RteProtocolClient
-       RTERecorder " " -- " " WaitConditionsRecorder
+ 
+       RTERecorderGui "1" <-- "1" RTERecorder
+       RTERecorder "1" <-- "1" RteSampler
+       RTERecorder "1" <-- "1" TerminalEmulator
+       RTERecorder "1" <-- "1" RteProtocolClient
+       WaitConditionRecorder "1" <-- "1" RteProtocolClient
+       RTERecorder "1" <-- "1" WaitConditionsRecorder
 
 @enduml
