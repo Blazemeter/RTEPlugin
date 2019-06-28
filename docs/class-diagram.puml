@@ -137,8 +137,8 @@ package com.blazemeter.jmeter.rte {
                     long stablePeriodMillis
                     }
                     
-                    WaitConditionsRecorder "1" <-- "1" SyncWaitRecorder 
-                    WaitConditionsRecorder "1" <-- "1" SilentWaitRecorder 
+                    WaitConditionsRecorder "1" --> "1" SyncWaitRecorder 
+                    WaitConditionsRecorder "1" --> "1" SilentWaitRecorder 
                      
                     } 
                     
@@ -177,10 +177,10 @@ package com.blazemeter.jmeter.rte {
     }
  
        RecordingStateListener "1" <-- "1" RTERecorder
-       RTERecorderGui "1" --> "1" RTETemplateRepository 
+       RTERecorderGui "1" ..> "1" RTETemplateRepository 
        RTERecorderGui "1" --> "1" RTERecorder
        RTERecorder "0..1" --> "0..1" RteSampler
        RTERecorder "0..1" --> "0..1" TerminalEmulator
-       RTERecorder "1" --> "1" WaitConditionsRecorder
+       RTERecorder "1" <-- "1" WaitConditionsRecorder
       
 @enduml
