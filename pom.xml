@@ -16,6 +16,13 @@
     <jmeter.version>3.1</jmeter.version>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
+
   <scm>
     <connection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git</connection>
     <developerConnection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git
@@ -24,15 +31,16 @@
   </scm>
 
   <dependencies>
+
     <dependency>
-      <groupId>us.abstracta</groupId>
+      <groupId>com.github.blazemeter</groupId>
       <artifactId>xtn5250</artifactId>
-      <version>2.2</version>
+      <version>3.0</version>
     </dependency>
     <dependency>
-      <groupId>us.abstracta</groupId>
-      <artifactId>dm3270-lib</artifactId>
-      <version>0.9</version>
+      <groupId>com.github.blazemeter</groupId>
+      <artifactId>dm3270</artifactId>
+      <version>0.10-lib</version>
     </dependency>
 
     <dependency>
@@ -222,7 +230,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270-lib
+                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270-lib,pcap4j-core
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>

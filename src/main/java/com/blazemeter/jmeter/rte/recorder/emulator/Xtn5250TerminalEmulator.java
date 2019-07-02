@@ -231,8 +231,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
-            f.getTrimmedString()));
+        fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), f.getString()));
       }
     }
     return fields;

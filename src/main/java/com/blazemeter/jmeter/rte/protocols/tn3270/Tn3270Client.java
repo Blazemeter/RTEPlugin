@@ -251,7 +251,8 @@ public class Tn3270Client extends BaseProtocolClient {
     Dimension size = getScreenSize();
     Screen ret = new Screen(size);
     int lastNonBlankPosition = screenText.length() - 1;
-    while (lastNonBlankPosition >= 0 && screenText.charAt(lastNonBlankPosition) == ' ') {
+    while (lastNonBlankPosition >= 0 && (screenText.charAt(lastNonBlankPosition) == ' '
+        || screenText.charAt(lastNonBlankPosition) == '\u0000')) {
       lastNonBlankPosition--;
     }
     int segmentEndPosition = lastNonBlankPosition + 1;
