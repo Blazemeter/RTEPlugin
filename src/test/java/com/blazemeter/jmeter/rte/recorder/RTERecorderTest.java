@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
@@ -35,6 +36,7 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,6 +47,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.jmeter.config.ConfigTestElement;
+import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.samplers.SampleEvent;
@@ -248,8 +251,7 @@ public class RTERecorderTest {
   @Test
   public void shouldNotifyErrorResultToChildrenWhenStartWithFailingTerminalClientConnect()
       throws Exception {
-    doThrow(RteIOException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
-        TERMINAL_TYPE, TIMEOUT);
+    doThrow(RteIOException.class).when(terminalClient).connect(anyString(), anyInt(), any(), any(),anyLong());
     connect();
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
     verify((SampleListener) samplerListener).sampleOccurred(argument.capture());
@@ -258,6 +260,9 @@ public class RTERecorderTest {
 
   private SampleResult buildExpectedConnectionErrorResult() {
     RteSampleResult expected = buildBasicSampleResult(Action.CONNECT);
+    expected.setInputInhibitedResponse(false);
+    expected.setCursorPosition(new Position(2, 1));
+    expected.setSoundedAlarm(true);
     updateErrorResult(expected);
     return expected;
   }
@@ -269,26 +274,6 @@ public class RTERecorderTest {
     expected.setResponseMessage(null);
     expected.setDataType("text");
     expected.setResponseData(exceptionName + "\n", null);
-  }
-
-  @Test
-  public void shouldNotifyFailedResultToChildrenWhenAttentionKeyAndFailingSendingToTerminalClient()
-      throws Exception {
-    connect();
-    doThrow(RteIOException.class).when(terminalClient).send(INPUTS, AttentionKey.ENTER);
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-
-    ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
-    // 1 sample due to connection, the other due to attention key
-    verify((SampleListener) samplerListener, times(2)).sampleOccurred(argument.capture());
-
-    RteSampleResult expected = buildBasicSampleResult(Action.SEND_INPUT);
-    expected.setSampleLabel(expected.getSampleLabel() + "-1");
-    expected.setInputInhibitedRequest(false);
-    expected.setInputs(INPUTS);
-    expected.setAttentionKey(AttentionKey.ENTER);
-    updateErrorResult(expected);
-    assertSampleResult(expected, argument.getAllValues().get(1).getResult());
   }
 
   private RteSampleResult buildBasicSampleResult(Action action) {
@@ -665,6 +650,16 @@ public class RTERecorderTest {
     rteRecorder.onRecordingStop();
     rteRecorder.awaitConnected(TIMEOUT);
   }
-
+  
+  @Test 
+  public void shouldNotAddSamplerToTestPlanWhenUnsupportedAttentionKey()
+      throws TimeoutException, InterruptedException, IllegalUserActionException, RteIOException {
+    doThrow(new UnsupportedOperationException()).when(terminalClient).send(any(), any());
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+    // There are 2 iterations in addComponent() when adding TestPlan and ConfigElement
+    verify(treeModel, times(2))
+        .addComponent(any(), eq(treeNode));
+  }
 }
 

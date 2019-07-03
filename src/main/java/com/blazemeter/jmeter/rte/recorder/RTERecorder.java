@@ -81,6 +81,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     this.protocolFactory = factory;
   }
 
+  private static JMeterTreeModel getJmeterTreeModel() {
+    return GuiPackage.getInstance().getTreeModel();
+  }
+
   @Override
   public String getName() {
     return getPropertyAsString(TestElement.NAME);
@@ -216,10 +220,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     if (!connectionExecutor.awaitTermination(timeout, TimeUnit.MILLISECONDS)) {
       throw new TimeoutException("Timeout waiting for connection to end after " + timeout + "ms");
     }
-  }
-
-  private static JMeterTreeModel getJmeterTreeModel() {
-    return GuiPackage.getInstance().getTreeModel();
   }
 
   private ConfigTestElement buildRteConfigElement() {
@@ -418,37 +418,40 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onException(Throwable e) {
+    if (e instanceof InterruptedException) {
+      return;
+    }
 
-    if (!(e instanceof InterruptedException)) {
-      LOG.error(e.getMessage(), e);
-      RTESampler.updateErrorResult(e, sampleResult);
-      recordPendingSample();
+    LOG.error(e.getMessage(), e);
 
-      if (recordingListener != null) {
-        recordingListener.onRecordingException((Exception) e);
+    if (recordingListener != null) {
+      recordingListener.onRecordingException((Exception) e);
+    }
+
+    if (e instanceof UnsupportedOperationException) {
+      return;
+    }
+
+    recordPendingSample();
+    RTESampler.updateErrorResult(e, sampleResult);
+    synchronized (this) {
+
+      if (terminalEmulator != null) {
+        terminalClient.removeTerminalStateListener(this);
+        terminalEmulator.stop();
+        terminalEmulator = null;
       }
-      
-      if (!(e instanceof UnsupportedOperationException)) {
-        synchronized (this) {
+    }
 
-          if (terminalEmulator != null) {
-            terminalClient.removeTerminalStateListener(this);
-            terminalEmulator.stop();
-            terminalEmulator = null;
-          }
-        }
+    /*
+     *     Disconnect must be at the end because if not is interrupting
+     *     itself and is not adding sampler to test plan
+     */
 
-        /*
-         *     Disconnect must be at the end because if not is interrupting
-         *     itself and is not adding sampler to test plan
-         */
-
-        try {
-          terminalClient.disconnect();
-        } catch (RteIOException ex) {
-          LOG.error("Problem while trying to shutdown connection", e);
-        }
-      }
+    try {
+      terminalClient.disconnect();
+    } catch (RteIOException ex) {
+      LOG.error("Problem while trying to shutdown connection", e);
     }
   }
 }
