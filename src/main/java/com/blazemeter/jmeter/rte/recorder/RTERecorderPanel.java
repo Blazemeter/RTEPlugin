@@ -220,9 +220,11 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
 
   @Override
   public void onRecordingException(Exception e) {
-    updateButtonsIfRunning(false);
     if (!(e instanceof InterruptedException)) {
       reportExceptionToUser(e);
+      if (!(e instanceof UnsupportedOperationException)) {
+        updateButtonsIfRunning(false);
+      }
     }
   }
 
