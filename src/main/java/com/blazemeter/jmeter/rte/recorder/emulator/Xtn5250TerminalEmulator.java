@@ -20,6 +20,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private boolean stopping;
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
-
+  private EnumMap<AttentionKey, Byte> supportedAttentionKeys;
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
     xi5250Crt.setDefBackground(BACKGROUND);
@@ -227,6 +228,16 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     terminalEmulatorListeners.add(terminalEmulatorListener);
   }
 
+  @Override
+  public void setSupportedAttentionKeys(EnumMap<AttentionKey, Byte> supportedAttentionKeys) {
+  this.supportedAttentionKeys = supportedAttentionKeys;
+  }
+
+  public boolean isAttentionKeyValid(AttentionKey attentionKey) {
+    if (attentionKey != null) {
+      
+    } 
+  } 
   private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
@@ -241,7 +252,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
     private final int modifier;
     private final int specialKey;
-
     KeyEventMap(int modifier, int specialKey) {
       this.modifier = modifier;
       this.specialKey = specialKey;
@@ -300,27 +310,32 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       } else if (isAnyKeyPressedOrControlKeyReleasedAndNotCopy(e)) {
         attentionKey = KEY_EVENTS
             .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-        if (attentionKey != null) {
-          List<Input> fields = getInputFields();
-          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-            listener.onAttentionKey(attentionKey, fields);
-          }
-        }
-      }
+        if (isAttentionKeyValid(attentionKey)) {
+            List<Input> fields = getInputFields();
+            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+              listener.onAttentionKey(attentionKey, fields);
+            }
 
-      if ((!locked && !e.isConsumed()) || attentionKey != null) {
-        //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
-        // when shift mask is enabled, in this way always delete
-        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-          super.processKeyEvent(
-              new KeyEvent(e.getComponent(), e.getID(), e.getWhen(), KeyEvent.SHIFT_MASK,
-                  e.getKeyCode(), e.getKeyChar(), e.getKeyLocation()));
+          if ((!locked && !e.isConsumed()) || attentionKey != null) {
+            //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
+            // when shift mask is enabled, in this way always delete
+            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+              super.processKeyEvent(
+                  new KeyEvent(e.getComponent(), e.getID(), e.getWhen(), KeyEvent.SHIFT_MASK,
+                      e.getKeyCode(), e.getKeyChar(), e.getKeyLocation()));
+            } else {
+              super.processKeyEvent(e);
+            }
+            statusPanel
+                .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+          }
+          
         } else {
-          super.processKeyEvent(e);
+          System.out.println("Key not supported");
         }
-        statusPanel
-            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
+        
       }
+      
     }
 
     private int getMenuShortcutKeyMask() {

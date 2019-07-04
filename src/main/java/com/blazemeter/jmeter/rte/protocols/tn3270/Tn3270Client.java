@@ -308,6 +308,11 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
+  public EnumMap<AttentionKey, Byte> getSupportedAttentionKeys() {
+    return buildAIdCommandsKeysMapping();
+  }
+
+  @Override
   public boolean isAlarmOn() {
     return client.isAlarmOn();
   }

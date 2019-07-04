@@ -1,6 +1,9 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
+import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Screen;
+import java.util.EnumMap;
+import java.util.Map;
 
 public interface TerminalEmulator {
 
@@ -20,4 +23,5 @@ public interface TerminalEmulator {
 
   void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener);
 
+  void setSupportedAttentionKeys(EnumMap<AttentionKey, Byte> supportedAttentionKeys);
 }
