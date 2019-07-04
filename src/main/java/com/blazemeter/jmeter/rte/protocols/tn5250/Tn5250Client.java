@@ -36,6 +36,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
@@ -273,6 +274,13 @@ public class Tn5250Client extends BaseProtocolClient {
   @Override
   public boolean resetAlarm() {
     return client.resetAlarm();
+  }
+
+  @Override
+  public AttentionKey[] getSupportedAttentionKeys() {
+    Set<AttentionKey> attentionKeySet = KEY_EVENTS.keySet();
+    AttentionKey[] attList = attentionKeySet.toArray(new AttentionKey[attentionKeySet.size()]);
+    return attList;
   }
 
   public void addEmulatorListener(XI5250EmulatorListener listener) {

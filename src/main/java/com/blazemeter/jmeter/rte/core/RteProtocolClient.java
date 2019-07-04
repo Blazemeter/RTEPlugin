@@ -4,7 +4,6 @@ import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
@@ -54,5 +53,5 @@ public interface RteProtocolClient {
 
   void disconnect() throws RteIOException;
 
-  EnumMap<AttentionKey, Byte> getSupportedAttentionKeys();
+  AttentionKey[] getSupportedAttentionKeys();
 }
