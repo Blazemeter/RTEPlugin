@@ -1,6 +1,6 @@
 # JMeter-RTE-plugin
 
-![labs-logo](docs/light-theme/blazemeter-labs-logo.png)
+![labs-logo](src/main/resources/light-theme/blazemeter-labs-logo.png)
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing a recorder for automatic test plan creation, and config and sampler for protocol interactions.
 
@@ -17,11 +17,12 @@ The plugin adds three different elements to JMeter:
 ![alt text](docs/RecorderPanel.png "RTE Recorder") 
 
 ##### Configuring the RTE Recorder
-1. Add the bzm - RTE Recorder: Test Plan → Add → Non-Test Elements → bzm - RTE Recorder
-2. Add a Recording Controller
-3. Add a View Result Tree embedded in RTE Recorder element.
+First all is necessary to add a template which is going to contain all the elements required to begin with recording.
+1. Files ->
+2. Templates ->
+3. Select _Recording RTE_
 
-![alt_text](docs/RecorderTemplate.png)
+![alt_text](docs/template-animation.gif)
 
 
 ##### Usage of RTE Recorder
@@ -37,7 +38,7 @@ To start recording, the user should specify the _Server_, _Port_, _Protocol_, _T
 Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the **Terminal Emulator** will show up. 
 
 ![alt_text](docs/Emulator-Login.png)
->If you click on the ![alter_text](src/main/resources/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc
+>If you click on the ![alter_text](src/main/resources/dark-theme/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc
 
 Now we are able to interact with our client through RTE-Emulator. Every interaction will be automatically saved in samplers (_[check out everything about samplers ](#sampler-rte-sampler)_).
 Once we have ended the flow that we want to record, we can easily close the terminal emulator or press STOP button to stop our recording. 
