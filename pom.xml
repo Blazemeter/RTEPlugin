@@ -230,7 +230,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270-lib,pcap4j-core
+                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270,pcap4j-core
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>
