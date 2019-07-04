@@ -2,10 +2,8 @@ package com.blazemeter.jmeter.rte.core;
 
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.Action;
-
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.apache.jmeter.samplers.SampleResult;
 
 public class RteSampleResult extends SampleResult {

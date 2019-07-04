@@ -70,7 +70,7 @@ public class RTERecorderGuiTest {
   }
 
   @Test
-  public void shouldNotifyRecorderOnRecordingStartWhenOnRecordingStart() throws Exception {
+  public void shouldNotifyRecorderOnRecordingStartWhenOnRecordingStart() {
     rteRecorderGui.configure(testElement);
     rteRecorderGui.modifyTestElement(testElement);
     rteRecorderGui.onRecordingStart();
@@ -79,7 +79,7 @@ public class RTERecorderGuiTest {
   }
 
   @Test
-  public void shouldNotifyRecorderWhenOnRecordingStop() throws Exception {
+  public void shouldNotifyRecorderWhenOnRecordingStop() {
     rteRecorderGui.configure(testElement);
     rteRecorderGui.modifyTestElement(testElement);
     rteRecorderGui.onRecordingStart();

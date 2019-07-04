@@ -20,6 +20,7 @@ public class RequestListener<T extends RteProtocolClient> implements TerminalSta
     lastResponseTime = result.currentTimeInMillis();
   }
 
+  @Override
   public void onTerminalStateChange() {
     if (!receivedFirstResponse) {
       receivedFirstResponse = true;

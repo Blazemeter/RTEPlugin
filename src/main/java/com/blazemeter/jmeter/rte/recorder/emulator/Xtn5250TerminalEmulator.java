@@ -217,11 +217,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   @Override
-  public void setStatusMessage(String message) {
-    this.statusPanel.setStatusMessage(message);
-  }
-
-  @Override
   public void setKeyboardLock(boolean lock) {
     this.locked = lock;
     this.statusPanel.setKeyboardStatus(lock);
@@ -236,8 +231,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
-            f.getTrimmedString()));
+        fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), f.getString()));
       }
     }
     return fields;
@@ -276,7 +270,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
     private boolean copyPaste = false;
 
-    CustomXI5250Crt() {
+    private CustomXI5250Crt() {
       copyButton.addActionListener(e -> {
         doCopy();
         xi5250Crt.requestFocus();
@@ -316,7 +310,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
       if ((!locked && !e.isConsumed()) || attentionKey != null) {
         //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
-        // when shift mask is enabled, in this way allways delete
+        // when shift mask is enabled, in this way always delete
         if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
           super.processKeyEvent(
               new KeyEvent(e.getComponent(), e.getID(), e.getWhen(), KeyEvent.SHIFT_MASK,

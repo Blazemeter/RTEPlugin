@@ -3,7 +3,6 @@ package com.blazemeter.jmeter.rte.recorder.wait;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.helger.commons.annotation.VisibleForTesting;
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;

@@ -7,7 +7,6 @@ import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.google.common.base.Stopwatch;
-import java.awt.Dimension;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;

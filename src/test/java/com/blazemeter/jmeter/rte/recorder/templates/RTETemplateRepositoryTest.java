@@ -1,6 +1,12 @@
 package com.blazemeter.jmeter.rte.recorder.templates;
 
+import static jodd.io.FileUtil.copyFile;
+
 import com.blazemeter.jmeter.rte.recorder.RTETemplateRepository;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
@@ -9,28 +15,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import static jodd.io.FileUtil.copyFile;
-
 public class RTETemplateRepositoryTest {
 
-  private RTETemplateRepository rteTemplateRepository;
-
   private static String TEMPLATES_LIST_NAME = "templates.xml";
-  private static String TEMPLATES_LIST_PATH = "/"+TEMPLATES_LIST_NAME;
+  private static String TEMPLATES_LIST_PATH = "/" + TEMPLATES_LIST_NAME;
   private static String TEMPLATE_NAME = "RteRecordingTemplate.jmx";
-  private static String TEMPLATE_PATH = "/"+TEMPLATE_NAME;
+  private static String TEMPLATE_PATH = "/" + TEMPLATE_NAME;
   private static String TEMPLATE_DESCRIPTION_PATH = "/RteRecordingTemplateDescription.xml";
-  private static String EXPECTED_TEMPLATE_PATH = "/templatesRteRecordingTemplate.xml";
 
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
+  private RTETemplateRepository rteTemplateRepository;
 
   @Before
   public void setup() throws IOException {
@@ -52,8 +51,11 @@ public class RTETemplateRepositoryTest {
     File resultTemplate = new File(tempFolder.getRoot().getPath() + TEMPLATE_PATH);
     File resultTemplatesList = new File(tempFolder.getRoot().getPath() + TEMPLATES_LIST_PATH);
 
-    softly.assertThat(FileUtils.readFileToString(resultTemplate, "utf-8")).isEqualToNormalizingWhitespace(getFileFromResources(TEMPLATE_PATH));
-    softly.assertThat(FileUtils.readFileToString(resultTemplatesList, "utf-8")).isEqualToNormalizingWhitespace(getFileFromResources(EXPECTED_TEMPLATE_PATH));
+    softly.assertThat(FileUtils.readFileToString(resultTemplate, "utf-8"))
+        .isEqualToNormalizingWhitespace(getFileFromResources(TEMPLATE_PATH));
+    String EXPECTED_TEMPLATE_PATH = "/templatesRteRecordingTemplate.xml";
+    softly.assertThat(FileUtils.readFileToString(resultTemplatesList, "utf-8"))
+        .isEqualToNormalizingWhitespace(getFileFromResources(EXPECTED_TEMPLATE_PATH));
   }
 
   private String getFileFromResources(String fileName) throws IOException {
@@ -81,4 +83,5 @@ public class RTETemplateRepositoryTest {
     softly.assertThat(lastModifiedResult == lastModifiedExpected);
     assertion();
   }
+
 }

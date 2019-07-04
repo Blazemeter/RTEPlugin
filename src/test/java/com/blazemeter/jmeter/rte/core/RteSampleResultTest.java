@@ -12,7 +12,7 @@ import org.junit.Test;
 public class RteSampleResultTest {
 
   private static final Position CURSOR_POSITION = new Position(1, 1);
-  private static final String EXPECTED_HEADERS_REPONSE = "Input-inhibited: true\n" +
+  private static final String EXPECTED_HEADERS_RESPONSE = "Input-inhibited: true\n" +
       "Cursor-position: 1,1";
   private static final String EXPECTED_HEADERS = "Server: Test Server\n" +
       "Port: 2123\n" +
@@ -77,7 +77,7 @@ public class RteSampleResultTest {
     RteSampleResult rteSampleResult = buildBasicRTESampleResult();
     rteSampleResult.setInputInhibitedResponse(true);
 
-    String expectedResponseHeaders = EXPECTED_HEADERS_REPONSE + "\n" +
+    String expectedResponseHeaders = EXPECTED_HEADERS_RESPONSE + "\n" +
         "Sound-Alarm: true";
     assertThat(rteSampleResult.getResponseHeaders()).isEqualTo(expectedResponseHeaders);
   }
@@ -95,7 +95,7 @@ public class RteSampleResultTest {
     rteSampleResult.setSoundedAlarm(false);
     rteSampleResult.setInputInhibitedResponse(true);
 
-    assertThat(rteSampleResult.getResponseHeaders()).isEqualTo(EXPECTED_HEADERS_REPONSE);
+    assertThat(rteSampleResult.getResponseHeaders()).isEqualTo(EXPECTED_HEADERS_RESPONSE);
   }
 
   @Test

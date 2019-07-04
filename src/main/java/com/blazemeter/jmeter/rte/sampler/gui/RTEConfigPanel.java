@@ -226,7 +226,7 @@ public class RTEConfigPanel extends JPanel {
     if (sslTypeRadios.containsKey(ssl)) {
       sslTypeRadios.get(ssl).setSelected(true);
     } else {
-      sslTypeRadios.get(RTESampler.DEFAULT_SSLTYPE).setSelected(true);
+      sslTypeRadios.get(RTESampler.DEFAULT_SSL_TYPE).setSelected(true);
     }
   }
 

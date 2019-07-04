@@ -13,6 +13,7 @@ public class Tn3270TerminalType extends TerminalType {
   private transient ScreenDimensions screenDimensions;
 
   // Provided for proper deserialization of sample results
+  @SuppressWarnings("unused")
   public Tn3270TerminalType() {
   }
 

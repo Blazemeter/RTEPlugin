@@ -50,18 +50,8 @@ public class SSLContextFactory {
     return System.getProperty(TRUST_STORE_PROPERTY);
   }
 
-  @VisibleForTesting
-  public static void setTrustStore(String trustStore) {
-    System.setProperty(TRUST_STORE_PROPERTY, trustStore);
-  }
-
   private static String getTrustStorePassword() {
     return System.getProperty(TRUST_STORE_PASSWORD_PROPERTY);
-  }
-
-  @VisibleForTesting
-  public static void setTrustStorePassword(String trustStorePassword) {
-    System.setProperty(TRUST_STORE_PASSWORD_PROPERTY, trustStorePassword);
   }
 
   public static SSLContext buildSSLContext(SSLType sslType)

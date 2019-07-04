@@ -5,10 +5,8 @@ import com.blazemeter.jmeter.rte.sampler.gui.ThemedIconLabel;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 
 public class StatusPanel extends JPanel {
 
@@ -17,8 +15,6 @@ public class StatusPanel extends JPanel {
 
   private JLabel positionLabel = SwingUtils
       .createComponent("positionLabel", new JLabel("row: 00 / column: 00"));
-  private JLabel messageLabel = SwingUtils
-      .createComponent("messageLabel", new JLabel(""));
   private AlarmLabel alarmLabel = SwingUtils
       .createComponent("alarmLabel", new AlarmLabel());
   private ThemedIconLabel keyboardLabel = SwingUtils
@@ -36,34 +32,17 @@ public class StatusPanel extends JPanel {
     layout.setAutoCreateGaps(true);
     setLayout(layout);
 
-    int messageLabelWidth = 133;
-    int alarmLabelWidth = 16;
-    int keyboardLabelWidth = 22;
-    int helpLabelWidth = 19;
-
     layout.setHorizontalGroup(layout.createSequentialGroup()
-        .addComponent(positionLabel, messageLabelWidth, messageLabelWidth,
-            messageLabelWidth)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(messageLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+        .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(alarmLabel, alarmLabelWidth, alarmLabelWidth, alarmLabelWidth)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(keyboardLabel, keyboardLabelWidth, keyboardLabelWidth, keyboardLabelWidth)
-        .addPreferredGap(ComponentPlacement.UNRELATED)
-        .addComponent(helpLabel, helpLabelWidth, helpLabelWidth, helpLabelWidth));
-    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
-        .addComponent(positionLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(messageLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(alarmLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(keyboardLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
-        .addComponent(helpLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE));
+        .addComponent(alarmLabel)
+        .addComponent(keyboardLabel)
+        .addComponent(helpLabel));
+    layout.setVerticalGroup(layout.createParallelGroup()
+        .addComponent(positionLabel)
+        .addComponent(alarmLabel)
+        .addComponent(keyboardLabel)
+        .addComponent(helpLabel));
   }
 
   private MouseListener buildShowHelpOnMouseClickListener() {
@@ -97,11 +76,6 @@ public class StatusPanel extends JPanel {
 
   public void updateStatusBarCursorPosition(int row, int col) {
     this.positionLabel.setText("row: " + row + " / column: " + col);
-    repaint();
-  }
-
-  public void setStatusMessage(String message) {
-    this.messageLabel.setText(message);
     repaint();
   }
 

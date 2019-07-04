@@ -35,8 +35,10 @@ import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
 
-
 public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
+
+  private static final String TEST_USERNAME = "TESTUSR";
+  private static final String TEST_PASSWORD = "TESTPSW";
 
   @Override
   protected Tn5250Client buildClient() {
@@ -111,8 +113,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   private List<Input> buildCredsFieldsByCoord() {
     return Arrays.asList(
-        new CoordInput(new Position(6, 53), "TESTUSR"),
-        new CoordInput(new Position(7, 53), "TESTPSW"));
+        new CoordInput(new Position(6, 53), TEST_USERNAME),
+        new CoordInput(new Position(7, 53), TEST_PASSWORD));
   }
 
   @Test
@@ -131,8 +133,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   private List<Input> buildCredsFieldsByLabel() {
     return Arrays.asList(
-        new LabelInput("User", "TESTUSR"),
-        new LabelInput("Password", "TESTPSW"));
+        new LabelInput("User", TEST_USERNAME),
+        new LabelInput("Password", TEST_PASSWORD));
   }
 
   @Test(expected = InvalidFieldPositionException.class)
@@ -141,7 +143,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-        new CoordInput(new Position(7, 1), "TESTUSR"));
+        new CoordInput(new Position(7, 1), TEST_USERNAME));
     client.send(input, AttentionKey.ENTER);
   }
 
@@ -151,7 +153,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-        new LabelInput("Usr", "TESTUSR"));
+        new LabelInput("Usr", TEST_USERNAME));
     client.send(input, AttentionKey.ENTER);
   }
 

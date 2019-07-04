@@ -1,13 +1,10 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import com.blazemeter.jmeter.rte.sampler.gui.BlazemeterLabsLogo;
-
 import com.helger.commons.annotation.VisibleForTesting;
-
 import java.awt.BorderLayout;
 import java.util.Collection;
 import java.util.Collections;
-
 import org.apache.jmeter.control.gui.LogicControllerGui;
 import org.apache.jmeter.gui.JMeterGUIComponent;
 import org.apache.jmeter.gui.UnsharedComponent;
@@ -49,7 +46,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     recordingPanel = panel;
   }
 
-  public String getJMeterBinDirPath() {
+  private String getJMeterBinDirPath() {
     String rtePluginPath = getClass().getProtectionDomain().getCodeSource().getLocation()
         .getPath();
 
@@ -64,8 +61,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
       rtePluginPath = rtePluginPath.substring(1);
     }
     int index = rtePluginPath.indexOf("/lib/ext/");
-    String binPath = rtePluginPath.substring(0, index) + "/bin";
-    return binPath;
+    return rtePluginPath.substring(0, index) + "/bin";
   }
 
   @Override

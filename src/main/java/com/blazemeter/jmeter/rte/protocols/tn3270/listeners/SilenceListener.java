@@ -47,6 +47,7 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
     handleReceivedEvent("screenChanged");
   }
 
+  @Override
   public void stop() {
     super.stop();
     client.removeCursorMoveListener(this);

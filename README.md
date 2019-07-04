@@ -1,6 +1,6 @@
 # JMeter-RTE-plugin
 
-![labs-logo](src/main/resources/light-theme/blazemeter-labs-logo.png)
+![labs-logo](docs/blazemeter-labs-logo.png)
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing a recorder for automatic test plan creation, and config and sampler for protocol interactions.
 
@@ -18,9 +18,7 @@ The plugin adds three different elements to JMeter:
 
 ##### Configuring the RTE Recorder
 First all is necessary to add a template which is going to contain all the elements required to begin with recording.
-1. Files ->
-2. Templates ->
-3. Select _Recording RTE_
+Go to Files -> Templates -> and select _Recording RTE_
 
 ![alt_text](docs/template-animation.gif)
 
@@ -62,7 +60,7 @@ The RTE Config element sets the parameters to be used by the sampler in order to
 - *Port*. The port number to connect, default value is 23.
 - *Protocol* (required). The protocol to use in the communication. If the server is an AS400 or iSeries it typically uses TN5250, on the other hand, if it's a mainframe system it uses TN3270.
 - *Terminal Type*. The terminal type to emulate from the client. If the server does not supports the chosen one, it will use the default value for the protocol.
-- *SSL Type*. The SSL protocol to use if it's required by the server. The keystore file and password can be specified in *system.properties* file by adding the lines `javax.net.ssl.keyStore=</keystore_path/file.keystore>`, `javax.net.ssl.keyStorePassword=<changeit>`. The truststore file can be specifed in same file with `javax.net.ssl.trustStore=</keystore_path/file.keystore>`.  
+- *SSL Type*. The SSL protocol to use if it's required by the server. The keystore file and password can be specified in *system.properties* file by adding the lines `javax.net.ssl.keyStore=</keystore_path/file.keystore>`, `javax.net.ssl.keyStorePassword=<changeit>`. The truststore file can be specified in same file with `javax.net.ssl.trustStore=</keystore_path/file.keystore>`.  
 - *Timeout*. The maximum time to wait to establish the connection by the sampler. This time takes into account the time until the client receives a response screen from the server. 
 
 If more than one RTE Config element is used at the same level of the Test Plan, JMeter will take the value of the first one. On the other hand, if there are more than one RTE Config used but in different levels, JMeter will use the "closest" (according to test plan tree levels) Config element for each sampler.

@@ -59,11 +59,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   public static final Protocol DEFAULT_PROTOCOL = Protocol.TN5250;
   public static final TerminalType DEFAULT_TERMINAL_TYPE = DEFAULT_PROTOCOL.createProtocolClient()
       .getDefaultTerminalType();
-  public static final SSLType DEFAULT_SSLTYPE = SSLType.NONE;
+  public static final SSLType DEFAULT_SSL_TYPE = SSLType.NONE;
 
   @VisibleForTesting
+  @SuppressWarnings("WeakerAccess")
   public static final String ACTION_PROPERTY = "RTESampler.action";
   @VisibleForTesting
+  @SuppressWarnings("WeakerAccess")
   public static final String WAIT_SYNC_TIMEOUT_PROPERTY = "RTESampler.waitSyncTimeout";
   @VisibleForTesting
   protected static final long DEFAULT_STABLE_TIMEOUT_MILLIS = 1000;
@@ -140,7 +142,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   /*
-  Jmeter properties method which receive a default (e.g: getPropertyAsInt(String, int)) apply such
+  JMeter properties method which receive a default (e.g: getPropertyAsInt(String, int)) apply such
   default only when the property is null, but if the property is invalid or has been specified to
   an empty string for example it returns 0. Since this is not the expected behavior for property
   defaults (expected that if the value is not valid in any way then use default one) we use this

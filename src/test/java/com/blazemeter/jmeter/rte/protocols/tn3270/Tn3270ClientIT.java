@@ -51,7 +51,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildExpectedWelcomeScreen());
   }
 
   private Screen buildExpectedWelcomeScreen() throws IOException {
@@ -73,7 +74,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
     awaitSync();
-    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildExpectedWelcomeScreen());
   }
 
   private void awaitSync() throws InterruptedException, TimeoutException, RteIOException {
@@ -113,7 +115,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     sendUsernameWithSyncWait();
-    assertThat(client.getScreen()).isEqualTo(buildScreenFromHtmlFile("user-menu-screen.html"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildScreenFromHtmlFile("user-menu-screen.html"));
   }
 
   private void sendUsernameWithSyncWait() throws Exception {
@@ -131,7 +134,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     sendUsernameWithSyncWait();
     sendPasswordByLabelWithSyncWait();
-    assertThat(client.getScreen()).isEqualTo(buildLoginSuccessScreen());
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildLoginSuccessScreen());
   }
 
   private Screen buildLoginSuccessScreen() throws IOException {
@@ -242,7 +246,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     sendUsernameWithSyncWait();
     client.disconnect();
     connectToVirtualService();
-    assertThat(client.getScreen()).isEqualTo(buildExpectedWelcomeScreen());
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildExpectedWelcomeScreen());
   }
 
   @Test
@@ -265,7 +270,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldGetWelcomeScreenWhenSscpLuLogin() throws Exception {
     loadFlow("sscplu-login.yml");
     connectExtendedProtocolClientToVirtualService();
-    assertThat(client.getScreen())
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
         .isEqualTo(buildScreenFromHtmlFile("sscplu-welcome-screen.html"));
   }
 
@@ -283,12 +288,12 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     client.send(Collections.singletonList(new CoordInput(new Position(20, 48), "testusr")),
         AttentionKey.ENTER);
     awaitSync();
-    assertThat(client.getScreen())
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
         .isEqualTo(buildScreenFromHtmlFile("login-without-fields-screen.html"));
   }
 
   @Test
-  public void shouldNotifyAddedListenerWhenTerminalStateChanges() throws Exception{
+  public void shouldNotifyAddedListenerWhenTerminalStateChanges() throws Exception {
     TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
     loadLoginFlow();
     connectToVirtualService();
@@ -304,7 +309,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   @Test
-  public void shouldNotNotifyRemovedListenerWhenTerminalStateChanges() throws Exception{
+  public void shouldNotNotifyRemovedListenerWhenTerminalStateChanges() throws Exception {
     TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
     loadLoginFlow();
     connectToVirtualService();

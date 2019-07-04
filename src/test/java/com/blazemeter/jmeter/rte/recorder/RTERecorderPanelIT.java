@@ -72,7 +72,7 @@ public class RTERecorderPanelIT {
   }
 
   @Test
-  public void shouldNotifyStartRecordingListenerWhenStartRecording() throws Exception {
+  public void shouldNotifyStartRecordingListenerWhenStartRecording() {
     clickButton(START_BUTTON_TEXT);
     verify(listener, timeout(VERIFY_TIMEOUT_MILLIS)).onRecordingStart();
   }
@@ -91,7 +91,7 @@ public class RTERecorderPanelIT {
   }
 
   @Test
-  public void shouldNotifyStopAndStartRecordingListenerWhenRestartRecording() throws Exception {
+  public void shouldNotifyStopAndStartRecordingListenerWhenRestartRecording() {
     clickButton(START_BUTTON_TEXT);
     waitButtonEnabled(RESTART_BUTTON_TEXT, true);
     clickButton(RESTART_BUTTON_TEXT);
