@@ -99,7 +99,7 @@ public class StatusPanel extends JPanel {
     }
   }
 
-  public void setStateMessageUpdate(String message) {
+  public void setStatusMessage(String message) {
     this.messageLabel.setText(message);
   }
 }

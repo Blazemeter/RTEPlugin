@@ -309,9 +309,8 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public AttentionKey[] getSupportedAttentionKeys() {
-    Set<AttentionKey> attentionKeySet = AID_COMMANDS.keySet();
-    return attentionKeySet.toArray(new AttentionKey[attentionKeySet.size()]);
+  public Set<AttentionKey> getSupportedAttentionKeys() {
+    return AID_COMMANDS.keySet();
   }
   
   @Override

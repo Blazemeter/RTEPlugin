@@ -277,10 +277,9 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public AttentionKey[] getSupportedAttentionKeys() {
-    Set<AttentionKey> attentionKeySet = KEY_EVENTS.keySet();
-    AttentionKey[] attList = attentionKeySet.toArray(new AttentionKey[attentionKeySet.size()]);
-    return attList;
+  public Set<AttentionKey> getSupportedAttentionKeys() {
+    return KEY_EVENTS.keySet();
+
   }
 
   public void addEmulatorListener(XI5250EmulatorListener listener) {

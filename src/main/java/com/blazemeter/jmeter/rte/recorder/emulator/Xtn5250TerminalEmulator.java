@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -90,7 +91,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private boolean stopping;
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
-  private AttentionKey[] supportedAttentionKeys;
+  private Set<AttentionKey> supportedAttentionKeys;
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -229,24 +230,19 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   @Override
-  public void setSupportedAttentionKeys(AttentionKey[] supportedAttentionKeys) {
+  public void setSupportedAttentionKeys(Set<AttentionKey> supportedAttentionKeys) {
     this.supportedAttentionKeys = supportedAttentionKeys;
   }
 
   @Override
-  public void setStateMessageUpdate(String message) {
-    this.statusPanel.setStateMessageUpdate(message);
+  public void setStatusMessage(String message) {
+    this.statusPanel.setStatusMessage(message);
   }
 
   public boolean isAttentionKeyValid(AttentionKey attentionKey) {
-    for (AttentionKey at : supportedAttentionKeys) {
-      if (at.equals(attentionKey)) {
-        return true;
-      }
-    }
-    return false;
+    return supportedAttentionKeys.contains(attentionKey);
   }
-
+  
   private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
@@ -327,7 +323,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener.onAttentionKey(attentionKey, fields);
             }
           } else {
-            setStateMessageUpdate("Attention key not supported");
+            setStatusMessage(attentionKey + "is not supported for the selected protocol");
           }
         }
         if ((!locked && !e.isConsumed()) || attentionKey != null) {

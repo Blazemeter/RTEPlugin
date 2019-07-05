@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 public interface RteProtocolClient {
@@ -53,5 +54,5 @@ public interface RteProtocolClient {
 
   void disconnect() throws RteIOException;
 
-  AttentionKey[] getSupportedAttentionKeys();
+  Set<AttentionKey> getSupportedAttentionKeys();
 }
