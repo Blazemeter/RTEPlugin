@@ -19,8 +19,8 @@ public class StatusPanel extends JPanel {
       .createComponent("alarmLabel", new AlarmLabel());
   private ThemedIconLabel keyboardLabel = SwingUtils
       .createComponent("keyboardLabel", new ThemedIconLabel(KEYBOARD_LOCKED_RESOURCE_NAME));
-  private JLabel messageLabel = SwingUtils
-      .createComponent("messageLabel", new JLabel(""));
+  private MessageLabel messageLabel = SwingUtils
+      .createComponent("messageLabel", new MessageLabel());
 
   private HelpFrame helpFrame;
 
@@ -93,6 +93,7 @@ public class StatusPanel extends JPanel {
   }
 
   public void dispose() {
+    messageLabel.shutdown();
     alarmLabel.shutdown();
     if (helpFrame != null) {
       helpFrame.close();
@@ -100,6 +101,7 @@ public class StatusPanel extends JPanel {
   }
 
   public void setStatusMessage(String message) {
-    this.messageLabel.setText(message);
+    messageLabel.showMessage(message);
+    this.messageLabel.setFont(this.messageLabel.getFont().deriveFont(10.0F));
   }
 }

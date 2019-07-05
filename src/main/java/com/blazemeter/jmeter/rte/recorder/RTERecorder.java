@@ -311,8 +311,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator.setKeyboardLock(true);
     terminalEmulator
         .setScreenSize(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
-    terminalEmulator.start();
     terminalEmulator.setSupportedAttentionKeys(terminalClient.getSupportedAttentionKeys());
+    terminalEmulator.start();
     terminalClient.addTerminalStateListener(this);
     onTerminalStateChange();
   }

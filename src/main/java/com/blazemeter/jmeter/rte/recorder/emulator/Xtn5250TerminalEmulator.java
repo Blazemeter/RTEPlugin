@@ -237,12 +237,13 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   @Override
   public void setStatusMessage(String message) {
     this.statusPanel.setStatusMessage(message);
+
   }
 
-  public boolean isAttentionKeyValid(AttentionKey attentionKey) {
+  private boolean isAttentionKeyValid(AttentionKey attentionKey) {
     return supportedAttentionKeys.contains(attentionKey);
   }
-  
+
   private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
@@ -316,30 +317,30 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       } else if (isAnyKeyPressedOrControlKeyReleasedAndNotCopy(e)) {
         attentionKey = KEY_EVENTS
             .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-        if (attentionKey != null) {
-          if (isAttentionKeyValid(attentionKey)) {
-            List<Input> fields = getInputFields();
-            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-              listener.onAttentionKey(attentionKey, fields);
-            }
-          } else {
-            setStatusMessage(attentionKey + "is not supported for the selected protocol");
+      }
+      if (attentionKey != null) {
+        if (isAttentionKeyValid(attentionKey)) {
+          List<Input> fields = getInputFields();
+          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+            listener.onAttentionKey(attentionKey, fields);
           }
+        } else {
+          setStatusMessage(attentionKey + " not supported for this emulator protocol");
         }
-        if ((!locked && !e.isConsumed()) || attentionKey != null) {
-          //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
-          // when shift mask is enabled, in this way always delete
-          if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-            super.processKeyEvent(
-                new KeyEvent(e.getComponent(), e.getID(), e.getWhen(), KeyEvent.SHIFT_MASK,
-                    e.getKeyCode(), e.getKeyChar(), e.getKeyLocation()));
-          } else {
-            super.processKeyEvent(e);
-          }
-          statusPanel
-              .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
-        }
+      }
 
+      if ((!locked && !e.isConsumed()) || attentionKey != null) {
+        //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
+        // when shift mask is enabled, in this way always delete
+        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+          super.processKeyEvent(
+              new KeyEvent(e.getComponent(), e.getID(), e.getWhen(), KeyEvent.SHIFT_MASK,
+                  e.getKeyCode(), e.getKeyChar(), e.getKeyLocation()));
+        } else {
+          super.processKeyEvent(e);
+        }
+        statusPanel
+            .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
       }
 
     }

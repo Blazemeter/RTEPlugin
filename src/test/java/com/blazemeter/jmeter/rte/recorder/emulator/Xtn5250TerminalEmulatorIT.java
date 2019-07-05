@@ -46,9 +46,23 @@ public class Xtn5250TerminalEmulatorIT {
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
   private FrameFixture frame;
 
+  private Set<AttentionKey> buildSupportedAttentionKeys() {
+    return new HashSet<AttentionKey>(){{
+      add(AttentionKey.ENTER);
+      add(AttentionKey.F1);
+      add(AttentionKey.CLEAR);
+      add(AttentionKey.PA1);
+      add(AttentionKey.RESET);
+      add(AttentionKey.ROLL_UP);
+    }};
+     
+  }
+
   @Before
   public void setup() {
     xtn5250TerminalEmulator = new Xtn5250TerminalEmulator();
+    xtn5250TerminalEmulator.setSupportedAttentionKeys(buildSupportedAttentionKeys());
+  
   }
 
   @After
