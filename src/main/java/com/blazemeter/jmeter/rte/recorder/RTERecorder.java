@@ -336,7 +336,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
     } catch (Exception e) {
-      onException(e);
+      e.printStackTrace();
     }
   }
 
@@ -427,10 +427,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
     if (recordingListener != null) {
       recordingListener.onRecordingException((Exception) e);
-    }
-
-    if (e instanceof UnsupportedOperationException) {
-      return;
     }
 
     recordPendingSample();
