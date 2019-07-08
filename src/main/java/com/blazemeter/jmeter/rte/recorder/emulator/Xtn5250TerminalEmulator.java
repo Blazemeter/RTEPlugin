@@ -317,18 +317,19 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       } else if (isAnyKeyPressedOrControlKeyReleasedAndNotCopy(e)) {
         attentionKey = KEY_EVENTS
             .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
-      }
-      if (attentionKey != null) {
-        if (isAttentionKeyValid(attentionKey)) {
-          List<Input> fields = getInputFields();
-          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-            listener.onAttentionKey(attentionKey, fields);
+
+        if (attentionKey != null) {
+          if (isAttentionKeyValid(attentionKey)) {
+            List<Input> fields = getInputFields();
+            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+              listener.onAttentionKey(attentionKey, fields);
+            }
+          } else {
+            setStatusMessage(attentionKey + " not supported for this emulator protocol");
+            e.consume();
           }
-        } else {
-          setStatusMessage(attentionKey + " not supported for this emulator protocol");
         }
       }
-
       if ((!locked && !e.isConsumed()) || attentionKey != null) {
         //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
         // when shift mask is enabled, in this way always delete

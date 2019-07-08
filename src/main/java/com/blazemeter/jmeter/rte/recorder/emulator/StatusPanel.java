@@ -102,6 +102,5 @@ public class StatusPanel extends JPanel {
 
   public void setStatusMessage(String message) {
     messageLabel.showMessage(message);
-    this.messageLabel.setFont(this.messageLabel.getFont().deriveFont(10.0F));
   }
 }

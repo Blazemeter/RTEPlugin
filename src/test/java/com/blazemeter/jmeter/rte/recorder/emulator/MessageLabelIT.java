@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 
-import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,6 +25,7 @@ public class MessageLabelIT {
   private static final String TEST_MESSAGE = "Test Message";
   private FrameFixture frame;
   private MessageLabel messageLabel;
+
   @Before
   public void setup() {
     messageLabel = new MessageLabel();
@@ -70,26 +70,26 @@ public class MessageLabelIT {
     List<Boolean> expected = Arrays
         .asList(true, true);
     List<Boolean> result = new ArrayList<>();
-    
+
     Callable<Void> firstShowMessage = () -> {
       messageLabel.showMessage(TEST_MESSAGE);
       result.add(messageLabel.getText().equals(TEST_MESSAGE));
       wait(100);
       return null;
     };
-    
+
     Callable<Void> secondShowMessage = () -> {
       messageLabel.showMessage(TEST_MESSAGE + "1");
       result.add(messageLabel.getText().equals(TEST_MESSAGE + "1"));
       return null;
     };
-    
+
     List<Callable<Void>> taskList = new ArrayList<>();
     taskList.add(firstShowMessage);
     taskList.add(secondShowMessage);
     ExecutorService executor = Executors.newSingleThreadExecutor();
     executor.invokeAll(taskList);
-    
+
     assertThat(result).isEqualTo(expected);
   }
 }

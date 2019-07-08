@@ -15,6 +15,7 @@ public class MessageLabel extends JLabel {
   public MessageLabel() {
     setVisible(false);
     messageExecutor = Executors.newSingleThreadScheduledExecutor();
+    this.setFont(this.getFont().deriveFont(10.0F));
   }
 
   public synchronized void showMessage(String message) {
