@@ -336,7 +336,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
     } catch (Exception e) {
-      e.printStackTrace();
+      onException(e); 
     }
   }
 

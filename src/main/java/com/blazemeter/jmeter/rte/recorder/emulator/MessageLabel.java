@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
+import com.helger.commons.annotation.VisibleForTesting;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -13,8 +14,13 @@ public class MessageLabel extends JLabel {
   private ScheduledFuture future;
 
   public MessageLabel() {
+    this(Executors.newSingleThreadScheduledExecutor());
+  }
+  
+  @VisibleForTesting
+  public MessageLabel(ScheduledExecutorService scheduledExecutorService){
     setVisible(false);
-    messageExecutor = Executors.newSingleThreadScheduledExecutor();
+    messageExecutor = scheduledExecutorService;
     this.setFont(this.getFont().deriveFont(10.0F));
   }
 

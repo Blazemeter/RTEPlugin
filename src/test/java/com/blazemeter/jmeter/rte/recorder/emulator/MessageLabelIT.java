@@ -10,12 +10,15 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -25,10 +28,16 @@ public class MessageLabelIT {
   private static final String TEST_MESSAGE = "Test Message";
   private FrameFixture frame;
   private MessageLabel messageLabel;
+  private ScheduledExecutorServiceTest executorService;
 
+  @Mock
+  private ScheduledFuture future;
+
+  
   @Before
   public void setup() {
-    messageLabel = new MessageLabel();
+    executorService = new ScheduledExecutorServiceTest(future);
+    messageLabel = new MessageLabel(executorService);
     frame = showInFrame(messageLabel);
   }
 
@@ -50,6 +59,7 @@ public class MessageLabelIT {
     List<Boolean> result = new ArrayList<>();
     result.add(messageLabel.isVisible());
     messageLabel.showMessage(TEST_MESSAGE);
+//    executorService.tick();
     result.add(messageLabel.isVisible());
     awaitForTextToAppear();
     result.add(messageLabel.isVisible());
@@ -74,7 +84,6 @@ public class MessageLabelIT {
     Callable<Void> firstShowMessage = () -> {
       messageLabel.showMessage(TEST_MESSAGE);
       result.add(messageLabel.getText().equals(TEST_MESSAGE));
-      wait(100);
       return null;
     };
 

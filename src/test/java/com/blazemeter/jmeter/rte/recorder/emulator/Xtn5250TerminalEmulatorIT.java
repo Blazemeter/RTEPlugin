@@ -299,5 +299,12 @@ public class Xtn5250TerminalEmulatorIT {
     }
 
   }
+@Test
+  public void shouldNotifySetMessageWhileUnsupportedOperation(){
+  setScreen("");
+  sendKey(KeyEvent.VK_ESCAPE, 0, 2, 2);
+  
+
+}
 
 }
