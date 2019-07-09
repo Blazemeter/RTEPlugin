@@ -311,6 +311,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator.setKeyboardLock(true);
     terminalEmulator
         .setScreenSize(terminalType.getScreenSize().width, terminalType.getScreenSize().height);
+    terminalEmulator.setSupportedAttentionKeys(terminalClient.getSupportedAttentionKeys());
     terminalEmulator.start();
     terminalClient.addTerminalStateListener(this);
     onTerminalStateChange();
@@ -335,7 +336,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
     } catch (Exception e) {
-      onException(e);
+      onException(e); 
     }
   }
 
@@ -426,10 +427,6 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
     if (recordingListener != null) {
       recordingListener.onRecordingException((Exception) e);
-    }
-
-    if (e instanceof UnsupportedOperationException) {
-      return;
     }
 
     recordPendingSample();

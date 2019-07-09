@@ -19,7 +19,9 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
@@ -46,9 +48,45 @@ public class Xtn5250TerminalEmulatorIT {
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
   private FrameFixture frame;
 
+  private static Screen buildScreen(String text) {
+    Dimension screenSize = new Dimension(80, 24);
+    Screen screen = new Screen(screenSize);
+    int segmentPosition = 0;
+    screen.addSegment(segmentPosition,
+        completeLine("*****************************************", screenSize.width));
+    segmentPosition += screenSize.width;
+    screen.addField(segmentPosition, completeLine(text, screenSize.width));
+    segmentPosition += screenSize.width;
+    for (String lineText : Arrays
+        .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
+            "*****************************************")) {
+      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width));
+      segmentPosition += screenSize.width;
+    }
+    return screen;
+  }
+
+  private static String completeLine(String baseLine, int width) {
+    return baseLine + StringUtils.repeat(' ', width - baseLine.length());
+  }
+
+  private Set<AttentionKey> buildSupportedAttentionKeys() {
+    return new HashSet<AttentionKey>() {{
+      add(AttentionKey.ENTER);
+      add(AttentionKey.F1);
+      add(AttentionKey.CLEAR);
+      add(AttentionKey.PA1);
+      add(AttentionKey.RESET);
+      add(AttentionKey.ROLL_UP);
+    }};
+
+  }
+
   @Before
   public void setup() {
     xtn5250TerminalEmulator = new Xtn5250TerminalEmulator();
+    xtn5250TerminalEmulator.setSupportedAttentionKeys(buildSupportedAttentionKeys());
+
   }
 
   @After
@@ -241,28 +279,6 @@ public class Xtn5250TerminalEmulatorIT {
 
   private String getFileContent(String file) throws IOException {
     return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
-  }
-
-  private static Screen buildScreen(String text) {
-    Dimension screenSize = new Dimension(80, 24);
-    Screen screen = new Screen(screenSize);
-    int segmentPosition = 0;
-    screen.addSegment(segmentPosition,
-        completeLine("*****************************************", screenSize.width));
-    segmentPosition += screenSize.width;
-    screen.addField(segmentPosition, completeLine(text, screenSize.width));
-    segmentPosition += screenSize.width;
-    for (String lineText : Arrays
-        .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
-            "*****************************************")) {
-      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width));
-      segmentPosition += screenSize.width;
-    }
-    return screen;
-  }
-
-  private static String completeLine(String baseLine, int width) {
-    return baseLine + StringUtils.repeat(' ', width - baseLine.length());
   }
 
   private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {

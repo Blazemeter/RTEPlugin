@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -90,6 +91,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private boolean stopping;
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
+  private Set<AttentionKey> supportedAttentionKeys;
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -173,6 +175,18 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     this.statusPanel.updateStatusBarCursorPosition(row, col);
   }
 
+  @VisibleForTesting
+  public String getScreen() {
+    int height = xi5250Crt.getCrtSize().height;
+    int width = xi5250Crt.getCrtSize().width;
+    StringBuilder screen = new StringBuilder();
+    for (int i = 0; i < height; i++) {
+      screen.append(xi5250Crt.getString(0, i, width).replaceAll("[\\x00-\\x19]", " "));
+      screen.append("\n");
+    }
+    return screen.toString();
+  }
+
   @Override
   public synchronized void setScreen(Screen screen) {
     Dimension screenSize = screen.getSize();
@@ -191,18 +205,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       }
     }
     xi5250Crt.initAllFields();
-  }
-
-  @VisibleForTesting
-  public String getScreen() {
-    int height = xi5250Crt.getCrtSize().height;
-    int width = xi5250Crt.getCrtSize().width;
-    StringBuilder screen = new StringBuilder();
-    for (int i = 0; i < height; i++) {
-      screen.append(xi5250Crt.getString(0, i, width).replaceAll("[\\x00-\\x19]", " "));
-      screen.append("\n");
-    }
-    return screen.toString();
   }
 
   @VisibleForTesting
@@ -225,6 +227,21 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   @Override
   public void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener) {
     terminalEmulatorListeners.add(terminalEmulatorListener);
+  }
+
+  @Override
+  public void setSupportedAttentionKeys(Set<AttentionKey> supportedAttentionKeys) {
+    this.supportedAttentionKeys = supportedAttentionKeys;
+  }
+
+  @Override
+  public void setStatusMessage(String message) {
+    this.statusPanel.setStatusMessage(message);
+
+  }
+
+  private boolean isAttentionKeyValid(AttentionKey attentionKey) {
+    return supportedAttentionKeys.contains(attentionKey);
   }
 
   private List<Input> getInputFields() {
@@ -267,7 +284,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   private class CustomXI5250Crt extends XI5250Crt {
-
+    
     private boolean copyPaste = false;
 
     private CustomXI5250Crt() {
@@ -300,14 +317,19 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       } else if (isAnyKeyPressedOrControlKeyReleasedAndNotCopy(e)) {
         attentionKey = KEY_EVENTS
             .get(new KeyEventMap(e.getModifiers(), e.getKeyCode()));
+
         if (attentionKey != null) {
-          List<Input> fields = getInputFields();
-          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-            listener.onAttentionKey(attentionKey, fields);
+          if (isAttentionKeyValid(attentionKey)) {
+            List<Input> fields = getInputFields();
+            for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+              listener.onAttentionKey(attentionKey, fields);
+            }
+          } else {
+            setStatusMessage(attentionKey + " not supported for this emulator protocol");
+            e.consume();
           }
         }
       }
-
       if ((!locked && !e.isConsumed()) || attentionKey != null) {
         //By default XI5250Crt only move the cursor when the backspace key is pressed and delete
         // when shift mask is enabled, in this way always delete
@@ -321,6 +343,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         statusPanel
             .updateStatusBarCursorPosition(this.getCursorRow() + 1, this.getCursorCol() + 1);
       }
+
     }
 
     private int getMenuShortcutKeyMask() {

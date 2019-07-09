@@ -19,6 +19,8 @@ public class StatusPanel extends JPanel {
       .createComponent("alarmLabel", new AlarmLabel());
   private ThemedIconLabel keyboardLabel = SwingUtils
       .createComponent("keyboardLabel", new ThemedIconLabel(KEYBOARD_LOCKED_RESOURCE_NAME));
+  private MessageLabel messageLabel = SwingUtils
+      .createComponent("messageLabel", new MessageLabel());
 
   private HelpFrame helpFrame;
 
@@ -35,11 +37,13 @@ public class StatusPanel extends JPanel {
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
+        .addComponent(messageLabel)
         .addComponent(alarmLabel)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(positionLabel)
+        .addComponent(messageLabel)
         .addComponent(alarmLabel)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
@@ -89,10 +93,14 @@ public class StatusPanel extends JPanel {
   }
 
   public void dispose() {
+    messageLabel.shutdown();
     alarmLabel.shutdown();
     if (helpFrame != null) {
       helpFrame.close();
     }
   }
 
+  public void setStatusMessage(String message) {
+    messageLabel.showMessage(message);
+  }
 }

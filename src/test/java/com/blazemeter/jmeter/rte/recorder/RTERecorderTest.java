@@ -10,7 +10,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,7 +35,6 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.awt.Dimension;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,7 +45,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import org.apache.jmeter.config.ConfigTestElement;
-import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.samplers.SampleEvent;
@@ -251,7 +248,8 @@ public class RTERecorderTest {
   @Test
   public void shouldNotifyErrorResultToChildrenWhenStartWithFailingTerminalClientConnect()
       throws Exception {
-    doThrow(RteIOException.class).when(terminalClient).connect(anyString(), anyInt(), any(), any(),anyLong());
+    doThrow(RteIOException.class).when(terminalClient)
+        .connect(anyString(), anyInt(), any(), any(), anyLong());
     connect();
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
     verify((SampleListener) samplerListener).sampleOccurred(argument.capture());
@@ -577,24 +575,6 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldNotStopRecordingWhenUnsupportedOperationOnAttentionKey()
-      throws TimeoutException, InterruptedException, RteIOException {
-    setupExceptionOnAttentionKey(new UnsupportedOperationException());
-    connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-    verify(terminalEmulator, never()).stop();
-  }
-
-  @Test
-  public void shouldNotDisconnectWhenUnsupportedOperationOnAttentionKey()
-      throws TimeoutException, InterruptedException, RteIOException {
-    setupExceptionOnAttentionKey(new UnsupportedOperationException());
-    connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
-    verify(terminalClient, never()).disconnect();
-  }
-
-  @Test
   public void shouldNotifyRecordingStateListenerOfExceptionWhenOnAttentionKey()
       throws RteIOException, TimeoutException, InterruptedException {
     setupExceptionOnTerminalClientSend();
@@ -649,17 +629,6 @@ public class RTERecorderTest {
     rteRecorder.onRecordingStart();
     rteRecorder.onRecordingStop();
     rteRecorder.awaitConnected(TIMEOUT);
-  }
-  
-  @Test 
-  public void shouldNotAddSamplerToTestPlanWhenUnsupportedAttentionKey()
-      throws TimeoutException, InterruptedException, IllegalUserActionException, RteIOException {
-    doThrow(new UnsupportedOperationException()).when(terminalClient).send(any(), any());
-    connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
-    // There are 2 iterations in addComponent() when adding TestPlan and ConfigElement
-    verify(treeModel, times(2))
-        .addComponent(any(), eq(treeNode));
   }
 }
 

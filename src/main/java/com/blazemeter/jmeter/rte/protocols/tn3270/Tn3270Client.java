@@ -41,6 +41,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
@@ -307,6 +308,11 @@ public class Tn3270Client extends BaseProtocolClient {
     return client.resetAlarm();
   }
 
+  @Override
+  public Set<AttentionKey> getSupportedAttentionKeys() {
+    return AID_COMMANDS.keySet();
+  }
+  
   @Override
   public boolean isAlarmOn() {
     return client.isAlarmOn();

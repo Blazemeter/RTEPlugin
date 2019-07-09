@@ -1,6 +1,8 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
+import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Screen;
+import java.util.Set;
 
 public interface TerminalEmulator {
 
@@ -20,4 +22,7 @@ public interface TerminalEmulator {
 
   void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener);
 
+  void setSupportedAttentionKeys(Set<AttentionKey> supportedAttentionKeys);
+  
+  void setStatusMessage(String message);
 }
