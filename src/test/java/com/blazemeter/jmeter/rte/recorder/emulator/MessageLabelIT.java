@@ -43,7 +43,7 @@ public class MessageLabelIT {
   }
 
   @Test
-  public void shouldAppearMessage() {
+  public void shouldAppearMessageWhenShowMessage() {
     messageLabel.showMessage(TEST_MESSAGE);
     assertThat(messageLabel.getText()).isEqualTo(TEST_MESSAGE);
   }
@@ -62,7 +62,7 @@ public class MessageLabelIT {
   }
 
   @Test
-  public void shouldStartNewMessageLabelWhenStart() {
+  public void shouldOverwriteShownMessageWhenNewShowMessage() {
     List<Boolean> expected = Arrays
         .asList(false, true, false, true, false);
     List<Boolean> result = new ArrayList<>();
