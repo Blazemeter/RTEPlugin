@@ -22,7 +22,7 @@ public class ScheduledExecutorServiceTest implements ScheduledExecutorService {
   public void tick() {
     command.run();
   }
-  
+
   @Override
   public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
     this.command = command;

@@ -16,9 +16,9 @@ public class MessageLabel extends JLabel {
   public MessageLabel() {
     this(Executors.newSingleThreadScheduledExecutor());
   }
-  
+
   @VisibleForTesting
-  public MessageLabel(ScheduledExecutorService scheduledExecutorService){
+  public MessageLabel(ScheduledExecutorService scheduledExecutorService) {
     setVisible(false);
     messageExecutor = scheduledExecutorService;
     this.setFont(this.getFont().deriveFont(10.0F));

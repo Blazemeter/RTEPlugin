@@ -284,7 +284,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   private class CustomXI5250Crt extends XI5250Crt {
-
     
     private boolean copyPaste = false;
 
