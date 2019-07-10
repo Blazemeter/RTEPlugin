@@ -45,7 +45,7 @@ public class WaitConditionsRecorder {
   public List<WaitCondition> stop() {
     List<WaitCondition> waitConditions = new ArrayList<>();
 
-    Optional<WaitCondition> syncWaitCondition = syncWaitRecorder.stop();
+    Optional<WaitCondition> syncWaitCondition = syncWaitRecorder.buildWaitCondition();
     if (syncWaitCondition.isPresent()) {
       waitConditions.add(syncWaitCondition.get());
       Instant lastSyncInputInhibitedTime = syncWaitRecorder.getLastStatusChangeTime().orElse(null);
@@ -53,13 +53,13 @@ public class WaitConditionsRecorder {
       if ((lastSyncInputInhibitedTime != null) &&
           (ChronoUnit.MILLIS.between(lastSyncInputInhibitedTime,
               lastSilentTime) > stablePeriodMillis)) {
-        waitConditions.add(silentWaitRecorder.stop().orElse(null));
+        waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
       }
     } else {
-      waitConditions.add(silentWaitRecorder.stop().orElse(null));
+      waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
 
     }
-    Optional<WaitCondition> textWaitCondition = textWaitRecorder.stop();
+    Optional<WaitCondition> textWaitCondition = textWaitRecorder.buildWaitCondition();
     if (textWaitCondition.isPresent()) {
       waitConditions.add(textWaitCondition.get());
     }
