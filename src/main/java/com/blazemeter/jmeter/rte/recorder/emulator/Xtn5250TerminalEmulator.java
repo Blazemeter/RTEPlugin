@@ -5,7 +5,6 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
-import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
@@ -29,6 +28,7 @@ import java.util.Set;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
@@ -148,13 +148,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
     waitForTextButton.addActionListener(e -> {
       //int top, int left, int bottom, int right
-      Area area = Area
-          .fromTopLeftBottomRight(xi5250Crt.getSelectedArea().x, xi5250Crt.getSelectedArea().y,
-              xi5250Crt.getSelectedArea().x + xi5250Crt.getSelectedArea().width,
-              xi5250Crt.getSelectedArea().y + xi5250Crt.getSelectedArea().height);
-
-      for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-        listener.onWaitForText(area, getTextSelected());
+      Rectangle selectedArea = xi5250Crt.getSelectedArea();
+      if (selectedArea != null) {
+        for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+          listener.onWaitForText(getTextSelected());
+        }
+      } else {
+        JOptionPane.showMessageDialog(this, "A screen area must be selected", "Selection error",
+            JOptionPane.INFORMATION_MESSAGE);
       }
     });
 

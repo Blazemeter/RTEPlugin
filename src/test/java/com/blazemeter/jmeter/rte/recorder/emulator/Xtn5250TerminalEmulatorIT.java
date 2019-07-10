@@ -6,7 +6,6 @@ import static org.assertj.swing.timing.Pause.pause;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Screen;
-import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.awt.Component;
@@ -287,21 +286,19 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
     xtn5250TerminalEmulator.setSelectedArea(new Rectangle(1, 0, 5, 4));
     clickButton(WAIT_FOR_TEXT_BUTTON);
-    awaitOnWaitForTextIsCalled(Area.fromTopLeftBottomRight(2, 1, 6, 4),
-        "*****\n"
+    awaitOnWaitForTextIsCalled("*****\n"
             + "     \n"
             + "EXTO \n"
             + "EXTO ",
         terminalEmulatorListener);
   }
 
-  private void awaitOnWaitForTextIsCalled(Area area, String text,
+  private void awaitOnWaitForTextIsCalled(String text,
       TestTerminalEmulatorListener terminalEmulatorListener) {
     pause(new Condition("Listener is called") {
       @Override
       public boolean test() {
-        return terminalEmulatorListener.getArea().equals(area) && terminalEmulatorListener.getText()
-            .equals(text);
+        return terminalEmulatorListener.getText().equals(text);
       }
     }, PAUSE_TIMEOUT);
   }
@@ -314,7 +311,6 @@ public class Xtn5250TerminalEmulatorIT {
 
     private AttentionKey attentionKey = null;
     private String text;
-    private Area area;
 
 
     public AttentionKey getAttentionKey() {
@@ -323,10 +319,6 @@ public class Xtn5250TerminalEmulatorIT {
 
     public String getText() {
       return text;
-    }
-
-    public Area getArea() {
-      return area;
     }
 
     @Override
@@ -339,8 +331,7 @@ public class Xtn5250TerminalEmulatorIT {
     }
 
     @Override
-    public void onWaitForText(Area area, String text) {
-      this.area = area;
+    public void onWaitForText(String text) {
       this.text = text;
     }
 
