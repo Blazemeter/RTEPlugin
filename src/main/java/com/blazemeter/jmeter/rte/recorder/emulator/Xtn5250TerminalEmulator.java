@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
@@ -31,6 +32,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator {
 
@@ -82,9 +85,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final String TITLE = "Recorder";
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
+  private static final Logger LOG = LoggerFactory.getLogger(Xtn5250TerminalEmulator.class);
 
   private JButton copyButton = createIconButton("copyButton", "copy.png");
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
+  private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
@@ -92,6 +97,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
   private Set<AttentionKey> supportedAttentionKeys;
+  private String label;
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -135,12 +141,17 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     GroupLayout layout = new GroupLayout(toolsPanel);
     toolsPanel.setLayout(layout);
 
+    copyButton.setToolTipText("Copy");
+    pasteButton.setToolTipText("Paste");
+    labelButton.setToolTipText("Input by label");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton)
-        .addComponent(pasteButton));
+        .addComponent(pasteButton)
+        .addComponent(labelButton));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(copyButton)
-        .addComponent(pasteButton));
+        .addComponent(pasteButton)
+        .addComponent(labelButton));
 
     return toolsPanel;
   }
@@ -234,6 +245,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     this.supportedAttentionKeys = supportedAttentionKeys;
   }
 
+  @VisibleForTesting
+  public String getStatusMessage() {
+    return statusPanel.getStatusMessage();
+  }
+
   @Override
   public void setStatusMessage(String message) {
     this.statusPanel.setStatusMessage(message);
@@ -248,7 +264,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), f.getString()));
+        if (label != null) {
+          fields.add(new LabelInput(label.trim(), f.getString()));
+        } else {
+          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), f.getString()));
+        }
       }
     }
     return fields;
@@ -284,7 +304,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   private class CustomXI5250Crt extends XI5250Crt {
-    
+
     private boolean copyPaste = false;
 
     private CustomXI5250Crt() {
@@ -295,6 +315,26 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       pasteButton.addActionListener(e -> {
         doPaste();
         xi5250Crt.requestFocus();
+      });
+      labelButton.addActionListener(e -> {
+
+        label = xi5250Crt.getStringSelectedArea();
+        if (label != null) {
+          if (label.contains("\n")) {
+            setStatusMessage("ERROR: Please select only one row");
+            LOG.warn(
+                "Input by label does not support multiple selected rows, "
+                    + "please select just one row.");
+            label = null;
+          }
+        } else {
+          setStatusMessage("ERROR: Please select a part of the screen");
+          LOG.warn(
+              "The selection of a screen area is essential to be used as input by label later on.");
+          label = null;
+        }
+        xi5250Crt.requestFocus();
+        xi5250Crt.clearSelectedArea();
       });
     }
 

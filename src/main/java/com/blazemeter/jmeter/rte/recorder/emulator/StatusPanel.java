@@ -2,8 +2,11 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.blazemeter.jmeter.rte.sampler.gui.ThemedIconLabel;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.swing.GroupLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -13,14 +16,15 @@ public class StatusPanel extends JPanel {
   private static final String KEYBOARD_LOCKED_RESOURCE_NAME = "keyboard-locked.png";
   private static final String KEYBOARD_UNLOCKED_RESOURCE_NAME = "keyboard-unlocked.png";
 
+  private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
   private JLabel positionLabel = SwingUtils
       .createComponent("positionLabel", new JLabel("row: 00 / column: 00"));
   private AlarmLabel alarmLabel = SwingUtils
-      .createComponent("alarmLabel", new AlarmLabel());
+      .createComponent("alarmLabel", new AlarmLabel(executorService));
   private ThemedIconLabel keyboardLabel = SwingUtils
       .createComponent("keyboardLabel", new ThemedIconLabel(KEYBOARD_LOCKED_RESOURCE_NAME));
   private MessageLabel messageLabel = SwingUtils
-      .createComponent("messageLabel", new MessageLabel());
+      .createComponent("messageLabel", new MessageLabel(executorService));
 
   private HelpFrame helpFrame;
 
@@ -33,6 +37,11 @@ public class StatusPanel extends JPanel {
     layout.setAutoCreateContainerGaps(true);
     layout.setAutoCreateGaps(true);
     setLayout(layout);
+
+    alarmLabel.setToolTipText("Alarm status");
+    keyboardLabel.setToolTipText("Keyboard status");
+    helpLabel.setToolTipText("Help");
+    positionLabel.setToolTipText("Cursor Position");
 
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
@@ -93,11 +102,15 @@ public class StatusPanel extends JPanel {
   }
 
   public void dispose() {
-    messageLabel.shutdown();
-    alarmLabel.shutdown();
+    executorService.shutdown();
     if (helpFrame != null) {
       helpFrame.close();
     }
+  }
+
+  @VisibleForTesting
+  public String getStatusMessage() {
+    return messageLabel.getText();
   }
 
   public void setStatusMessage(String message) {

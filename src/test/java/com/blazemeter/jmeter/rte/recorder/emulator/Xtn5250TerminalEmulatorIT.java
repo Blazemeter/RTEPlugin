@@ -42,6 +42,7 @@ public class Xtn5250TerminalEmulatorIT {
   private static final int ROWS = 24;
   private static final String COPY_BUTTON = "copyButton";
   private static final String PASTE_BUTTON = "pasteButton";
+  private static final String INPUT_BY_LABEL_BUTTON = "labelButton";
   private static final String TEST_SCREEN_FILE = "test-screen.txt";
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
 
@@ -300,4 +301,29 @@ public class Xtn5250TerminalEmulatorIT {
 
   }
 
+  @Test
+  public void shouldNotifySetStatusMessageWhenUnsupportedAttentionKey() {
+    setScreen("");
+    sendKey(KeyEvent.VK_ESCAPE, 0 , 0 , 0);
+    assertThat(xtn5250TerminalEmulator.getStatusMessage())
+        .isEqualTo("ATTN not supported for this emulator protocol");
+  }
+
+  @Test
+  public void shouldNotifySetStatusMessageWhenInputByLabelWithNonSelectedArea() {
+    setScreen("");
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    assertThat(xtn5250TerminalEmulator.getStatusMessage())
+        .isEqualTo("ERROR: Please select a part of the screen");
+  }
+
+  @Test
+  public void shouldNotifySetStatusMessageWhenInputByLabelWithTwoRows() {
+    setScreen("");
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 4));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    assertThat(xtn5250TerminalEmulator.getStatusMessage())
+        .isEqualTo("ERROR: Please select only one row");
+  }
+  
 }
