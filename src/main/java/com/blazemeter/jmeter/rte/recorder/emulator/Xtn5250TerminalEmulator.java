@@ -239,7 +239,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   public void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener) {
     terminalEmulatorListeners.add(terminalEmulatorListener);
   }
-
+  
   @Override
   public void setSupportedAttentionKeys(Set<AttentionKey> supportedAttentionKeys) {
     this.supportedAttentionKeys = supportedAttentionKeys;
@@ -260,7 +260,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     return supportedAttentionKeys.contains(attentionKey);
   }
 
-  private List<Input> getInputFields() {
+  public List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
@@ -360,9 +360,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
         if (attentionKey != null) {
           if (isAttentionKeyValid(attentionKey)) {
-            List<Input> fields = getInputFields();
             for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-              listener.onAttentionKey(attentionKey, fields);
+              listener.onAttentionKey(attentionKey, getInputFields());
             }
           } else {
             setStatusMessage(attentionKey + " not supported for this emulator protocol");

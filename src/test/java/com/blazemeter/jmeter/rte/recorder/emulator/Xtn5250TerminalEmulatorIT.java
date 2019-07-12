@@ -2,9 +2,11 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.swing.timing.Pause.pause;
+import static org.mockito.Mockito.verify;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -18,11 +20,13 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
 import org.assertj.swing.fixture.FrameFixture;
@@ -30,8 +34,10 @@ import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -45,9 +51,12 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String INPUT_BY_LABEL_BUTTON = "labelButton";
   private static final String TEST_SCREEN_FILE = "test-screen.txt";
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
-
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
   private FrameFixture frame;
+  @Mock
+  private TerminalEmulatorListener listener;
 
   private static Screen buildScreen(String text) {
     Dimension screenSize = new Dimension(80, 24);
@@ -282,29 +291,10 @@ public class Xtn5250TerminalEmulatorIT {
     return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
   }
 
-  private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {
-
-    private AttentionKey attentionKey = null;
-
-    @Override
-    public void onCloseTerminal() {
-    }
-
-    @Override
-    public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
-      this.attentionKey = attentionKey;
-    }
-
-    public AttentionKey getAttentionKey() {
-      return attentionKey;
-    }
-
-  }
-
   @Test
   public void shouldNotifySetStatusMessageWhenUnsupportedAttentionKey() {
     setScreen("");
-    sendKey(KeyEvent.VK_ESCAPE, 0 , 0 , 0);
+    sendKey(KeyEvent.VK_ESCAPE, 0, 0, 0);
     assertThat(xtn5250TerminalEmulator.getStatusMessage())
         .isEqualTo("ATTN not supported for this emulator protocol");
   }
@@ -325,5 +315,55 @@ public class Xtn5250TerminalEmulatorIT {
     assertThat(xtn5250TerminalEmulator.getStatusMessage())
         .isEqualTo("ERROR: Please select only one row");
   }
-  
+
+  @Test
+  public void shouldSendInputByLabelAndNotifyListenerWhenInputByLabel() {
+    setScreen("");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    String input = buildCostumedInput();
+    
+    // a costumed input does not interfere with functionality for itself
+    // those added spaces are because of screen generation
+    
+    sendKey(KeyEvent.VK_T, 0, 2, 1);
+    sendKey(KeyEvent.VK_E, 0, 2, 2);
+    sendKey(KeyEvent.VK_S, 0, 2, 3);
+    sendKey(KeyEvent.VK_T, 0, 2, 4);
+    sendKey(KeyEvent.VK_ENTER, 0, 2, 5);
+    List<Input> inputs = new ArrayList<>();
+    inputs.add(new LabelInput("*****", input));
+    softly.assertThat(xtn5250TerminalEmulator.getInputFields().get(0))
+        .isEqualTo(inputs.get(0));
+    verify(listener).onAttentionKey(AttentionKey.ENTER, inputs);
+  }
+
+  private String buildCostumedInput() {
+    StringBuilder str = new StringBuilder();
+    str.append("test");
+    for (int i = 0; i < 76; i++) {
+      str.append(" ");
+    }
+    return new String(str);
+  }
+
+  private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {
+
+    private AttentionKey attentionKey = null;
+
+    @Override
+    public void onCloseTerminal() {
+    }
+
+    @Override
+    public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
+      this.attentionKey = attentionKey;
+    }
+
+    public AttentionKey getAttentionKey() {
+      return attentionKey;
+    }
+
+  }
 }
