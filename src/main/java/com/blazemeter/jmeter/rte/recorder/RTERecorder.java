@@ -340,6 +340,11 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     }
   }
 
+  @Override
+  public void onWaitForText(String text) {
+    waitConditionsRecorder.setWaitForTextCondition(text);
+  }
+
   private void recordPendingSample() {
     if (sampleResult.getResponseCode().isEmpty()) {
       RTESampler.updateSampleResultResponse(sampleResult, terminalClient);

@@ -1,47 +1,51 @@
 package com.blazemeter.jmeter.rte.waitsRecorder;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
+
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.recorder.wait.SilentWaitRecorder;
 import com.blazemeter.jmeter.rte.recorder.wait.SyncWaitRecorder;
+import com.blazemeter.jmeter.rte.recorder.wait.TextWaitRecorder;
 import com.blazemeter.jmeter.rte.recorder.wait.WaitConditionsRecorder;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
 @RunWith(MockitoJUnitRunner.class)
 public class WaitConditionsRecorderTest {
-  
+
   private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
   private final long STABLE_PERIOD_MILLIS = 1000L;
   private WaitConditionsRecorder waitConditionsRecorder;
-  private final WaitCondition SYNC_WAIT_CONDITION = 
+  private final WaitCondition SYNC_WAIT_CONDITION =
       new SyncWaitCondition(TIMEOUT_THRESHOLD_MILLIS, STABLE_PERIOD_MILLIS);
-  private final WaitCondition SILENT_WAIT_CONDITION = 
+  private final WaitCondition SILENT_WAIT_CONDITION =
       new SilentWaitCondition(TIMEOUT_THRESHOLD_MILLIS, STABLE_PERIOD_MILLIS);
   private Instant now;
-  @Mock private SilentWaitRecorder silentWaitRecorder;
-  @Mock private SyncWaitRecorder syncWaitRecorder;
+  @Mock
+  private SilentWaitRecorder silentWaitRecorder;
+  @Mock
+  private SyncWaitRecorder syncWaitRecorder;
+  @Mock
+  private TextWaitRecorder textWaitRecorder;
 
   @Before
-  public void setup(){ 
+  public void setup() {
     waitConditionsRecorder = new WaitConditionsRecorder(silentWaitRecorder,
-        syncWaitRecorder, STABLE_PERIOD_MILLIS);
+        syncWaitRecorder, textWaitRecorder, STABLE_PERIOD_MILLIS);
     now = Instant.now();
   }
-  
+
   @Test
   public void shouldReturnSilentWaitConditionWhenSyncWaitConditionIsNotPresent() {
     when(syncWaitRecorder.buildWaitCondition()).thenReturn(Optional.empty());
@@ -49,13 +53,11 @@ public class WaitConditionsRecorderTest {
         TIMEOUT_THRESHOLD_MILLIS, STABLE_PERIOD_MILLIS);
     when(silentWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(silentWaitCondition));
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
-      assertEquals(Collections.singletonList(silentWaitCondition), waitConditions);
-    
+    assertEquals(Collections.singletonList(silentWaitCondition), waitConditions);
   }
 
   @Test
-  public void shouldReturnSyncWaitConditionWhenDifferenceBetweenEventsLowerThanStablePeriod(){
-    
+  public void shouldReturnSyncWaitConditionWhenDifferenceBetweenEventsLowerThanStablePeriod() {
     when(syncWaitRecorder.getLastStatusChangeTime()).thenReturn(Optional.of(now));
     when(silentWaitRecorder.getLastStatusChangeTime()).thenReturn(
         Optional.of(now.plusMillis(STABLE_PERIOD_MILLIS - 100)));
@@ -63,6 +65,7 @@ public class WaitConditionsRecorderTest {
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
     assertEquals(Collections.singletonList(SYNC_WAIT_CONDITION), waitConditions);
   }
+
   @Test
   public void shouldReturnSyncAndSilentWaitConditionWhenDifferenceBetweenEventsIsBiggerThanStablePeriod() {
     when(syncWaitRecorder.getLastStatusChangeTime()).thenReturn(Optional.of(now));
@@ -75,6 +78,6 @@ public class WaitConditionsRecorderTest {
     waitConditionsExpected.add(SYNC_WAIT_CONDITION);
     waitConditionsExpected.add(SILENT_WAIT_CONDITION);
     assertEquals(waitConditionsExpected, waitConditions);
-    
+
   }
 }
