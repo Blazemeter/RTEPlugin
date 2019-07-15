@@ -1,6 +1,8 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.swing.edt.GuiActionRunner.execute;
+import static org.assertj.swing.finder.JOptionPaneFinder.findOptionPane;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.mockito.Mockito.verify;
 
@@ -25,12 +27,16 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.JOptionPane;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
+import org.assertj.swing.core.GenericTypeMatcher;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
+import org.assertj.swing.finder.JOptionPaneFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
+import org.assertj.swing.fixture.JOptionPaneFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
@@ -55,6 +61,7 @@ public class Xtn5250TerminalEmulatorIT {
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
   private FrameFixture frame;
+  
   @Mock
   private TerminalEmulatorListener listener;
 
@@ -295,16 +302,18 @@ public class Xtn5250TerminalEmulatorIT {
   public void shouldNotifySetStatusMessageWhenUnsupportedAttentionKey() {
     setScreen("");
     sendKey(KeyEvent.VK_ESCAPE, 0, 0, 0);
-    assertThat(xtn5250TerminalEmulator.getStatusMessage())
-        .isEqualTo("ATTN not supported for this emulator protocol");
+    JOptionPaneFixture optionPane = JOptionPaneFinder.findOptionPane().using(frame.robot());
+    optionPane.requireMessage("ATTN not supported for current protocol");
+    
   }
 
   @Test
   public void shouldNotifySetStatusMessageWhenInputByLabelWithNonSelectedArea() {
     setScreen("");
     clickButton(INPUT_BY_LABEL_BUTTON);
-    assertThat(xtn5250TerminalEmulator.getStatusMessage())
-        .isEqualTo("ERROR: Please select a part of the screen");
+    JOptionPaneFixture optionPane = JOptionPaneFinder.findOptionPane().using(frame.robot());
+    optionPane.requireMessage("Error: Please select a part of the screen");
+    
   }
 
   @Test
@@ -312,10 +321,10 @@ public class Xtn5250TerminalEmulatorIT {
     setScreen("");
     xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 4));
     clickButton(INPUT_BY_LABEL_BUTTON);
-    assertThat(xtn5250TerminalEmulator.getStatusMessage())
-        .isEqualTo("ERROR: Please select only one row");
+    JOptionPaneFixture optionPane = JOptionPaneFinder.findOptionPane().using(frame.robot());
+    optionPane.requireMessage("ERROR: Please select only one row");
   }
-
+  
   @Test
   public void shouldSendInputByLabelToListenerWhenInputByLabel() {
     setScreen("");
@@ -330,7 +339,7 @@ public class Xtn5250TerminalEmulatorIT {
     inputs.add(new LabelInput("*****", input));
     verify(listener).onAttentionKey(AttentionKey.ENTER, inputs);
   }
-
+  
   private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {
 
     private AttentionKey attentionKey = null;

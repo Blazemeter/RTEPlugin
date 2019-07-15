@@ -10,6 +10,7 @@ import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -29,6 +30,7 @@ import java.util.Set;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
@@ -239,28 +241,17 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   public void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener) {
     terminalEmulatorListeners.add(terminalEmulatorListener);
   }
-  
+
   @Override
   public void setSupportedAttentionKeys(Set<AttentionKey> supportedAttentionKeys) {
     this.supportedAttentionKeys = supportedAttentionKeys;
-  }
-
-  @VisibleForTesting
-  public String getStatusMessage() {
-    return statusPanel.getStatusMessage();
-  }
-
-  @Override
-  public void setStatusMessage(String message) {
-    this.statusPanel.setStatusMessage(message);
-
   }
 
   private boolean isAttentionKeyValid(AttentionKey attentionKey) {
     return supportedAttentionKeys.contains(attentionKey);
   }
 
-  public List<Input> getInputFields() {
+  private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
@@ -321,14 +312,15 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         label = xi5250Crt.getStringSelectedArea();
         if (label != null) {
           if (label.contains("\n")) {
-            setStatusMessage("ERROR: Please select only one row");
+            setStatusMessage(this, "ERROR: Please select only one row");
             LOG.warn(
                 "Input by label does not support multiple selected rows, "
                     + "please select just one row.");
             label = null;
           }
         } else {
-          setStatusMessage("ERROR: Please select a part of the screen");
+          setStatusMessage(this,
+              "Error: Please select a part of the screen");
           LOG.warn(
               "The selection of a screen area is essential to be used as input by label later on.");
           label = null;
@@ -336,6 +328,10 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
+    }
+
+    private void setStatusMessage(Component component, String msg) {
+      JOptionPane.showMessageDialog(component, msg);
     }
 
     @Override
@@ -364,7 +360,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener.onAttentionKey(attentionKey, getInputFields());
             }
           } else {
-            setStatusMessage(attentionKey + " not supported for this emulator protocol");
+            setStatusMessage(this, attentionKey + " not supported for current protocol");
             e.consume();
           }
         }

@@ -2,7 +2,6 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.blazemeter.jmeter.rte.sampler.gui.ThemedIconLabel;
-import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.concurrent.Executors;
@@ -23,8 +22,6 @@ public class StatusPanel extends JPanel {
       .createComponent("alarmLabel", new AlarmLabel(executorService));
   private ThemedIconLabel keyboardLabel = SwingUtils
       .createComponent("keyboardLabel", new ThemedIconLabel(KEYBOARD_LOCKED_RESOURCE_NAME));
-  private MessageLabel messageLabel = SwingUtils
-      .createComponent("messageLabel", new MessageLabel(executorService));
 
   private HelpFrame helpFrame;
 
@@ -46,13 +43,11 @@ public class StatusPanel extends JPanel {
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(messageLabel)
         .addComponent(alarmLabel)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(positionLabel)
-        .addComponent(messageLabel)
         .addComponent(alarmLabel)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
@@ -107,13 +102,5 @@ public class StatusPanel extends JPanel {
       helpFrame.close();
     }
   }
-
-  @VisibleForTesting
-  public String getStatusMessage() {
-    return messageLabel.getText();
-  }
-
-  public void setStatusMessage(String message) {
-    messageLabel.showMessage(message);
-  }
+  
 }
