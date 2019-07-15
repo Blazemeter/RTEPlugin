@@ -317,35 +317,18 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldSendInputByLabelAndNotifyListenerWhenInputByLabel() {
+  public void shouldSendInputByLabelToListenerWhenInputByLabel() {
     setScreen("");
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
     clickButton(INPUT_BY_LABEL_BUTTON);
-    String input = buildCostumedInput();
-    
-    // a costumed input does not interfere with functionality for itself
-    // those added spaces are because of screen generation
-    
+    String test = "t";
+    String input = test + StringUtils.repeat(' ',  COLUMNS - test.length());
     sendKey(KeyEvent.VK_T, 0, 2, 1);
-    sendKey(KeyEvent.VK_E, 0, 2, 2);
-    sendKey(KeyEvent.VK_S, 0, 2, 3);
-    sendKey(KeyEvent.VK_T, 0, 2, 4);
     sendKey(KeyEvent.VK_ENTER, 0, 2, 5);
     List<Input> inputs = new ArrayList<>();
     inputs.add(new LabelInput("*****", input));
-    softly.assertThat(xtn5250TerminalEmulator.getInputFields().get(0))
-        .isEqualTo(inputs.get(0));
     verify(listener).onAttentionKey(AttentionKey.ENTER, inputs);
-  }
-
-  private String buildCostumedInput() {
-    StringBuilder str = new StringBuilder();
-    str.append("test");
-    for (int i = 0; i < 76; i++) {
-      str.append(" ");
-    }
-    return new String(str);
   }
 
   private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {

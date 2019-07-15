@@ -634,25 +634,6 @@ public class RTERecorderTest {
     rteRecorder.onRecordingStop();
     rteRecorder.awaitConnected(TIMEOUT);
   }
-  
-  @Test
-  public void shouldAddInputByLabelWhenInputByLabel()
-      throws TimeoutException, InterruptedException {
-    connect();
-    rteRecorder.onRecordingStart();
-    buildExpectedSampler("bmz-SEND-INPUT", Action.SEND_INPUT).setPayload(buildInputByLabel());
-    //NotFinished!!
-  }
-
-  private Inputs buildInputByLabel() {
-    LabelInput labelInput = new LabelInput("Password", "testpsw");
-    LabelInputRowGUI ret = new LabelInputRowGUI();
-    ret.setLabel(labelInput.getLabel());
-    ret.setInput(labelInput.getInput());
-    Inputs inputs = new Inputs();
-    inputs.addInput(ret);
-    return inputs;
-  }
 
 }
 
