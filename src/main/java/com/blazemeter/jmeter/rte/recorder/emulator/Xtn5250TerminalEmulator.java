@@ -10,7 +10,6 @@ import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -88,7 +87,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
   private static final Logger LOG = LoggerFactory.getLogger(Xtn5250TerminalEmulator.class);
-
+  private JButton waitForTextButton = createIconButton("waitForTextButton", "waitForText.png");
   private JButton copyButton = createIconButton("copyButton", "copy.png");
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
   private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
@@ -99,7 +98,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
   private Set<AttentionKey> supportedAttentionKeys;
-  private String label;
+  private String labelText;
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -146,14 +145,17 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     copyButton.setToolTipText("Copy");
     pasteButton.setToolTipText("Paste");
     labelButton.setToolTipText("Input by label");
+    waitForTextButton.setToolTipText("Text wait condition");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton)
         .addComponent(pasteButton)
-        .addComponent(labelButton));
+        .addComponent(labelButton)
+        .addComponent(waitForTextButton));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(copyButton)
         .addComponent(pasteButton)
-        .addComponent(labelButton));
+        .addComponent(labelButton)
+        .addComponent(waitForTextButton));
 
     return toolsPanel;
   }
@@ -255,13 +257,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        if (label != null) {
-          fields.add(new LabelInput(label.trim(), f.getString()));
+        if (labelText != null) {
+          fields.add(new LabelInput(labelText.trim(), f.getString()));
         } else {
           fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), f.getString()));
         }
       }
     }
+    labelText = null;
     return fields;
   }
 
@@ -309,29 +312,45 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       });
       labelButton.addActionListener(e -> {
 
-        label = xi5250Crt.getStringSelectedArea();
-        if (label != null) {
-          if (label.contains("\n")) {
-            setStatusMessage(this, "ERROR: Please select only one row");
+        labelText = xi5250Crt.getStringSelectedArea();
+        if (labelText != null) {
+          if (labelText.contains("\n")) {
+            showUserMessage("Please select only one row", "Input by label error");
             LOG.warn(
                 "Input by label does not support multiple selected rows, "
                     + "please select just one row.");
-            label = null;
+            labelText = null;
           }
         } else {
-          setStatusMessage(this,
-              "Error: Please select a part of the screen");
+          showUserMessage("Please select a part of the screen", "Selection error");
           LOG.warn(
-              "The selection of a screen area is essential to be used as input by label later on.");
-          label = null;
+              "The selection of a screen area is essential to be used "
+                  + "as input by selectedText later on.");
+        }
+        xi5250Crt.requestFocus();
+        xi5250Crt.clearSelectedArea();
+      });
+
+      waitForTextButton.addActionListener(e -> {
+        String selectedText = xi5250Crt.getStringSelectedArea();
+
+        if (selectedText != null) {
+          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+            listener.onWaitForText(selectedText);
+          }
+        } else {
+          showUserMessage("Please select a part of the screen", "Selection error");
+          LOG.warn(
+              "The selection of a screen area is essential to "
+                  + "be used as wait condition text later on.");
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
     }
 
-    private void setStatusMessage(Component component, String msg) {
-      JOptionPane.showMessageDialog(component, msg);
+    private void showUserMessage(String msg, String title) {
+      JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Override
@@ -356,11 +375,13 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
         if (attentionKey != null) {
           if (isAttentionKeyValid(attentionKey)) {
+            List<Input> fields = getInputFields();
             for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-              listener.onAttentionKey(attentionKey, getInputFields());
+              listener.onAttentionKey(attentionKey, fields);
             }
           } else {
-            setStatusMessage(this, attentionKey + " not supported for current protocol");
+            showUserMessage(attentionKey + " not supported for current protocol",
+                "Unsupported Attention Key");
             e.consume();
           }
         }

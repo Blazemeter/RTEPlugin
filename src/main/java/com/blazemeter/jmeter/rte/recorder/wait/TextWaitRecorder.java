@@ -7,39 +7,46 @@ import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.helger.commons.annotation.VisibleForTesting;
+import java.awt.Dimension;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Objects;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.PatternMatcher;
 
 public class TextWaitRecorder extends WaitConditionRecorder {
 
-  private LinkedList<Screenshot> screenshots = new LinkedList<>();
-
-  private String regex = null;
+  private Deque<Screenshot> screenshots = new ArrayDeque<>();
+  private String regex;
   private Instant timestampWaitForText = null;
+  private long stablePeriod;
 
-  public TextWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis) {
-    super(rteProtocolClient, timeoutThresholdMillis, 0);
+  public TextWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
+      long stablePeriodThresholdMillis, long stablePeriodMillis) {
+    super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis);
+    this.stablePeriod = stablePeriodMillis;
   }
 
   @VisibleForTesting
   public TextWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
+      long stablePeriodThresholdMillis, long stablePeriodMillis,
       Clock clock) {
-    super(rteProtocolClient, timeoutThresholdMillis, 0, clock);
+    super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis, clock);
+    this.stablePeriod = stablePeriodMillis;
   }
 
   @Override
   public void onTerminalStateChange() {
     Screen screen = rteProtocolClient.getScreen();
-    if (screenshots.isEmpty() || !screenshots.get(screenshots.size() - 1)
-        .equals(screen)) {
+    if (screenshots.isEmpty() || !screenshots.getLast().screen.equals(screen)) {
       screenshots.add(new Screenshot(screen, clock.instant()));
     }
   }
@@ -53,60 +60,98 @@ public class TextWaitRecorder extends WaitConditionRecorder {
 
     PatternMatcher matcher = JMeterUtils.getMatcher();
     Pattern pattern = JMeterUtils.getPattern(regex);
-    Screenshot firstStable = findFirstStableOccurrence(matcher, pattern);
-    Screenshot last = findLastOccurrence(matcher, pattern);
-    long timeout = ChronoUnit.MILLIS.between(startTime, last.timestamp);
-    if (firstStable == null) {
+    List<ScreenTextPeriod> screenTextStablePeriods = buildScreenTextStablePeriods(matcher, pattern);
+
+    long timeout = ChronoUnit.MILLIS.between(startTime,
+        screenTextStablePeriods.get(screenTextStablePeriods.size() - 1).timestamp);
+
+    if (screenTextStablePeriods.isEmpty()) {
       LOG.warn(
           "The expected text appears but the screen has never been stable, "
-              + "so the sampler may throw a timeout.");
-    } else if (!firstStable.equals(last)) {
+              + "so the recorded wait for text may timeout when recorded sampler"
+              + " is used. Consider using a different text that is a clear indication"
+              + " that mainframe application is ready for next interaction.");
+    } else if (screenTextStablePeriods.size() > 1) {
       LOG.warn(
-          "The expected text has appeared before then the user has indicated, "
-              + "so the sampler may finish before the expected.");
-      timeout = ChronoUnit.MILLIS.between(startTime, firstStable.timestamp);
+          "The given text appears multiple times in screen with configured stable period,"
+              + " so recorded wait for text may cause sampler to finish before expected."
+              + " Consider using a different text that is a clear indication that mainframe"
+              + " application is ready for next interaction, or consider tuning stable period"
+              + " to be greater than ({})", getMaxScreenTextStablePeriod(screenTextStablePeriods));
+
     }
+
+    Dimension screenSize = rteProtocolClient.getScreen().getSize();
     return Optional.of(new TextWaitCondition(pattern, matcher,
-        Area.fromTopLeftBottomRight(1, 1, rteProtocolClient.getScreen().getSize().height,
-            rteProtocolClient.getScreen().getSize().width), timeout + timeoutThresholdMillis,
+        Area.fromTopLeftBottomRight(1, 1, screenSize.height,
+            screenSize.width), timeout + timeoutThresholdMillis,
         RTESampler.getStableTimeout()));
   }
 
-  private Screenshot findFirstStableOccurrence(PatternMatcher matcher, Pattern pattern) {
+  private long getMaxScreenTextStablePeriod(List<ScreenTextPeriod> stablePeriods) {
+    return stablePeriods.stream()
+        .limit(stablePeriods.size() - 1)
+        .mapToLong(e -> e.periodMillis)
+        .max()
+        .getAsLong();
+  }
+
+  private List<ScreenTextPeriod> buildScreenTextStablePeriods(PatternMatcher matcher,
+      Pattern pattern) {
+    List<ScreenTextPeriod> textPeriods = getTextPeriods(matcher, pattern);
+    List<ScreenTextPeriod> screenTextStablePeriod = textPeriods.stream()
+        .filter(e -> e.periodMillis >= stablePeriod)
+        .collect(Collectors.toList());
+    ScreenTextPeriod lastTextPeriod = textPeriods.get(textPeriods.size() - 1);
+    if (screenTextStablePeriod.isEmpty()
+        || screenTextStablePeriod.get(screenTextStablePeriod.size() - 1) != lastTextPeriod) {
+      screenTextStablePeriod.add(lastTextPeriod);
+    }
+    return screenTextStablePeriod;
+  }
+
+  private List<ScreenTextPeriod> getTextPeriods(PatternMatcher matcher, Pattern pattern) {
+    List<ScreenTextPeriod> textPeriods = new ArrayList<>();
     Iterator<Screenshot> it = screenshots.iterator();
     while (it.hasNext()) {
       Screenshot current = it.next();
-      if (current.timestamp.isBefore(timestampWaitForText)) {
-        if (matcher.contains(current.screen.getText(), pattern)) {
-          Screenshot next = current;
-          while (it.hasNext() && matcher.contains(next.screen.getText(), pattern)) {
-            next = it.next();
-          }
-          long period = ChronoUnit.MILLIS.between(current.timestamp, next.timestamp);
-          if (period > RTESampler.getStableTimeout()) {
-            return current;
-          }
+      if (!current.timestamp.isBefore(timestampWaitForText)) {
+        return textPeriods;
+      }
+      if (matcher.contains(current.screen.getText(), pattern)) {
+        Screenshot next = current;
+        while (it.hasNext() && matcher.contains(next.screen.getText(), pattern)) {
+          next = it.next();
         }
+        textPeriods.add(new ScreenTextPeriod(current.timestamp,
+            ChronoUnit.MILLIS.between(current.timestamp, next.timestamp)));
       }
     }
-    return null;
+    return textPeriods;
   }
 
-  private Screenshot findLastOccurrence(PatternMatcher matcher, Pattern pattern) {
-    Iterator<Screenshot> it = screenshots.descendingIterator();
-    while (it.hasNext()) {
-      Screenshot screenshot = it.next();
-      if (matcher.contains(screenshot.screen.getText(), pattern) && screenshot.timestamp
-          .isBefore(timestampWaitForText)) {
-        return screenshot;
-      }
-    }
-    return null;
+  public void start() {
+    super.start();
+    screenshots.clear();
+    regex = null;
+    timestampWaitForText = null;
   }
 
   public void setWaitForTextCondition(String text) {
-    regex = text.replace("\n", ".*?\\n.*?");
+    regex = text.replace("\n", ".*\\n.*");
     timestampWaitForText = clock.instant();
+  }
+
+  private static class ScreenTextPeriod {
+
+    private Instant timestamp;
+    private long periodMillis;
+
+    private ScreenTextPeriod(Instant timestamp, long periodMillis) {
+      this.timestamp = timestamp;
+      this.periodMillis = periodMillis;
+    }
+
   }
 
   private static class Screenshot {
@@ -114,27 +159,10 @@ public class TextWaitRecorder extends WaitConditionRecorder {
     private final Screen screen;
     private final Instant timestamp;
 
-    Screenshot(Screen screen, Instant timestamp) {
+    private Screenshot(Screen screen, Instant timestamp) {
       this.screen = screen;
       this.timestamp = timestamp;
     }
 
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-      Screenshot that = (Screenshot) o;
-      return Objects.equals(screen, that.screen) &&
-          Objects.equals(timestamp, that.timestamp);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(screen, timestamp);
-    }
   }
 }

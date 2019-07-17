@@ -3,7 +3,6 @@ package com.blazemeter.jmeter.rte.waitsRecorder;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -32,8 +31,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class TextWaitRecorderTest {
 
+  private static final long STABLE_PERIOD = 1000;
   private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
   private final static long CLOCK_STEP_MILLIS = 400L;
+  private final Screen EMPTY_SCREEN = new Screen(new Dimension(80, 24));
   private TextWaitRecorder textWaitRecorder;
   private Instant startTime;
   @Mock
@@ -45,8 +46,7 @@ public class TextWaitRecorderTest {
 
   @Before
   public void setup() {
-    JMeterTestUtils.setupJmeterEnv();
-    textWaitRecorder = new TextWaitRecorder(rteProtocolClientMock, TIMEOUT_THRESHOLD_MILLIS, clock);
+    textWaitRecorder = new TextWaitRecorder(rteProtocolClientMock, TIMEOUT_THRESHOLD_MILLIS, STABLE_PERIOD, STABLE_PERIOD, clock);
     startTime = Instant.now();
   }
 
@@ -68,8 +68,7 @@ public class TextWaitRecorderTest {
         startTime.plusMillis(CLOCK_STEP_MILLIS * 2),
         startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
     when(rteProtocolClientMock.getScreen())
-        .thenReturn(buildScreenFromHtmlFile("login-welcome-screen.html"),
-            new Screen(new Dimension(80, 24)));
+        .thenReturn(buildScreenFromHtmlFile("login-welcome-screen.html"), EMPTY_SCREEN);
     textWaitRecorder.start();
     textWaitRecorder.onTerminalStateChange();
     textWaitRecorder.onTerminalStateChange();
@@ -90,7 +89,6 @@ public class TextWaitRecorderTest {
 
   private void assertWaitTextCondition(Optional<WaitCondition> expected,
       Optional<WaitCondition> actual) {
-    assertEquals(expected.isPresent(), actual.isPresent());
 
     softly.assertThat(((TextWaitCondition) expected.get()).getRegex()).as("Regex")
         .isEqualTo(((TextWaitCondition) expected.get()).getRegex());
@@ -98,6 +96,7 @@ public class TextWaitRecorderTest {
         .isEqualTo(((TextWaitCondition) expected.get()).getSearchArea());
     softly.assertThat(expected.get().getTimeoutMillis()).as("Timeout")
         .isEqualTo(expected.get().getTimeoutMillis());
+    assertEquals(expected.isPresent(), actual.isPresent());
   }
 
   @Test

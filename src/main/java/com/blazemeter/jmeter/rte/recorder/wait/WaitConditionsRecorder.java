@@ -22,7 +22,8 @@ public class WaitConditionsRecorder {
         timeoutThresholdMillis, stablePeriodMillis, stablePeriodMillis);
     silentWaitRecorder = new SilentWaitRecorder(rteProtocolClient, timeoutThresholdMillis,
         stablePeriodMillis);
-    textWaitRecorder = new TextWaitRecorder(rteProtocolClient, timeoutThresholdMillis);
+    textWaitRecorder = new TextWaitRecorder(rteProtocolClient, timeoutThresholdMillis,
+        stablePeriodMillis, stablePeriodMillis);
     this.stablePeriodMillis = stablePeriodMillis;
   }
 
@@ -45,6 +46,7 @@ public class WaitConditionsRecorder {
   public List<WaitCondition> stop() {
     List<WaitCondition> waitConditions = new ArrayList<>();
 
+    Optional<WaitCondition> textWaitCondition = textWaitRecorder.buildWaitCondition();
     Optional<WaitCondition> syncWaitCondition = syncWaitRecorder.buildWaitCondition();
     if (syncWaitCondition.isPresent()) {
       waitConditions.add(syncWaitCondition.get());
@@ -52,17 +54,15 @@ public class WaitConditionsRecorder {
       Instant lastSilentTime = silentWaitRecorder.getLastStatusChangeTime().orElse(null);
       if ((lastSyncInputInhibitedTime != null) &&
           (ChronoUnit.MILLIS.between(lastSyncInputInhibitedTime,
-              lastSilentTime) > stablePeriodMillis)) {
+              lastSilentTime) > stablePeriodMillis) && textWaitCondition.isPresent()) {
+        waitConditions.add(textWaitCondition.get());
         waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
       }
     } else {
       waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
 
     }
-    Optional<WaitCondition> textWaitCondition = textWaitRecorder.buildWaitCondition();
-    if (textWaitCondition.isPresent()) {
-      waitConditions.add(textWaitCondition.get());
-    }
+    textWaitCondition.ifPresent(waitConditions::add);
     return waitConditions;
   }
 
