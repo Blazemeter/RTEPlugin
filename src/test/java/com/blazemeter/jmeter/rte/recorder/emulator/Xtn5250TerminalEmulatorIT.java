@@ -298,7 +298,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldNotifyShowUserMessageWhenUnsupportedAttentionKey() {
+  public void shouldShowUserMessageWhenUnsupportedAttentionKey() {
     setScreen("");
     sendKey(KeyEvent.VK_ESCAPE, 0, 0, 0);
     findOptionPane().requireMessage("ATTN not supported for current protocol");

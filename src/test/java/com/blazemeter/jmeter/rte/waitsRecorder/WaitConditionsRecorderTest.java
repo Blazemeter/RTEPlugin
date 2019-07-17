@@ -3,7 +3,6 @@ package com.blazemeter.jmeter.rte.waitsRecorder;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
@@ -44,9 +43,13 @@ public class WaitConditionsRecorderTest {
   @Mock
   private TextWaitRecorder textWaitRecorder;
   @Mock
+  private PatternMatcher matcher;
+  @Mock
   private Pattern regex;
   @Mock
-  private PatternMatcher patternMatcher;
+  private Area area;
+  private final WaitCondition TEXT_WAIT_CONDITION = new TextWaitCondition(regex, matcher, area,
+      TIMEOUT_THRESHOLD_MILLIS, STABLE_PERIOD_MILLIS);
 
   @Before
   public void setup() {
@@ -56,7 +59,7 @@ public class WaitConditionsRecorderTest {
   }
 
   @Test
-  public void shouldReturnSilentWaitConditionWhenSyncWaitConditionIsNotPresent() {
+  public void shouldReturnSilentWaitConditionWhenSyncAndTextWaitConditionsAreNotPresent() {
     when(silentWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SILENT_WAIT_CONDITION));
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
     assertEquals(Collections.singletonList(SILENT_WAIT_CONDITION), waitConditions);
@@ -73,27 +76,31 @@ public class WaitConditionsRecorderTest {
   }
 
   @Test
-  public void shouldReturnSyncWaitConditionWhenTextWaitConditionIsNotPresent() {
+  public void shouldReturnSyncAndSilentWaitConditionWhenDifferenceBetweenEventsIsBiggerThanStablePeriod() {
     when(syncWaitRecorder.getLastStatusChangeTime()).thenReturn(Optional.of(now));
     when(silentWaitRecorder.getLastStatusChangeTime())
         .thenReturn(Optional.of(now.plusMillis(STABLE_PERIOD_MILLIS + 100)));
     when(syncWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SYNC_WAIT_CONDITION));
+    when(silentWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SILENT_WAIT_CONDITION));
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
-    assertEquals(Collections.singletonList(SYNC_WAIT_CONDITION), waitConditions);
+    List<WaitCondition> expectedWaitConditions = new ArrayList<>();
+    expectedWaitConditions.add(SYNC_WAIT_CONDITION);
+    expectedWaitConditions.add(SILENT_WAIT_CONDITION);
+    assertEquals(expectedWaitConditions, waitConditions);
   }
 
   @Test
-  public void shouldReturnSilentAndTextWaitConditionWhenTextWaitCondition() {
-    TextWaitCondition textWaitCondition = new TextWaitCondition(regex, patternMatcher,
-        new Area(new Position(1, 1), new Position(2, 2)), TIMEOUT_THRESHOLD_MILLIS,
-        TIMEOUT_THRESHOLD_MILLIS);
-    when(textWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(textWaitCondition));
+  public void shouldReturnSyncAndTextWhenDifferenceBetweenEventsIsLowerThanStablePeriod() {
+    when(syncWaitRecorder.getLastStatusChangeTime()).thenReturn(Optional.of(now));
+    when(silentWaitRecorder.getLastStatusChangeTime())
+        .thenReturn(Optional.of(now.plusMillis(STABLE_PERIOD_MILLIS + 100)));
+    when(syncWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SYNC_WAIT_CONDITION));
+    when(textWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(TEXT_WAIT_CONDITION));
     when(silentWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SILENT_WAIT_CONDITION));
-    List<WaitCondition> actualWaitConditions = waitConditionsRecorder.stop();
-    List<WaitCondition> waitConditionsExpected = new ArrayList<>();
-    waitConditionsExpected.add(SILENT_WAIT_CONDITION);
-    waitConditionsExpected.add(textWaitCondition);
-
-    assertEquals(waitConditionsExpected, actualWaitConditions);
+    List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
+    List<WaitCondition> expectedWaitConditions = new ArrayList<>();
+    expectedWaitConditions.add(SYNC_WAIT_CONDITION);
+    expectedWaitConditions.add(TEXT_WAIT_CONDITION);
+    assertEquals(expectedWaitConditions, waitConditions);
   }
 }

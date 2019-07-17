@@ -315,17 +315,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         labelText = xi5250Crt.getStringSelectedArea();
         if (labelText != null) {
           if (labelText.contains("\n")) {
-            showUserMessage("Please select only one row", "Input by label error");
+            showUserMessage("Please select only one row");
             LOG.warn(
                 "Input by label does not support multiple selected rows, "
                     + "please select just one row.");
             labelText = null;
           }
         } else {
-          showUserMessage("Please select a part of the screen", "Selection error");
-          LOG.warn(
-              "The selection of a screen area is essential to be used "
-                  + "as input by selectedText later on.");
+          warnUserOfNotScreenSelectedArea();
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
@@ -339,20 +336,24 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
             listener.onWaitForText(selectedText);
           }
         } else {
-          showUserMessage("Please select a part of the screen", "Selection error");
-          LOG.warn(
-              "The selection of a screen area is essential to "
-                  + "be used as wait condition text later on.");
+        warnUserOfNotScreenSelectedArea();
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
     }
-
-    private void showUserMessage(String msg, String title) {
-      JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE);
+    
+    private void showUserMessage(String msg) {
+      JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    private void warnUserOfNotScreenSelectedArea() {
+      showUserMessage("Please select a part of the screen");
+      LOG.warn(
+          "The selection of a screen area is essential to "
+              + "be used as wait condition text later on.");
+    }
+    
     @Override
     protected synchronized void processKeyEvent(KeyEvent e) {
       AttentionKey attentionKey = null;
@@ -380,8 +381,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener.onAttentionKey(attentionKey, fields);
             }
           } else {
-            showUserMessage(attentionKey + " not supported for current protocol",
-                "Unsupported Attention Key");
+            showUserMessage(attentionKey + " not supported for current protocol");
             e.consume();
           }
         }

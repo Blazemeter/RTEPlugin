@@ -5,7 +5,6 @@ import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.Dimension;
 import java.time.Clock;
@@ -27,12 +26,12 @@ public class TextWaitRecorder extends WaitConditionRecorder {
   private Deque<Screenshot> screenshots = new ArrayDeque<>();
   private String regex;
   private Instant timestampWaitForText = null;
-  private long stablePeriod;
+  private long stableTimeoutMillis;
 
   public TextWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
-      long stablePeriodThresholdMillis, long stablePeriodMillis) {
+      long stablePeriodThresholdMillis, long stableTimeoutMillis) {
     super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis);
-    this.stablePeriod = stablePeriodMillis;
+    this.stableTimeoutMillis = stableTimeoutMillis;
   }
 
   @VisibleForTesting
@@ -40,7 +39,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
       long stablePeriodThresholdMillis, long stablePeriodMillis,
       Clock clock) {
     super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis, clock);
-    this.stablePeriod = stablePeriodMillis;
+    this.stableTimeoutMillis = stablePeriodMillis;
   }
 
   @Override
@@ -85,7 +84,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
     return Optional.of(new TextWaitCondition(pattern, matcher,
         Area.fromTopLeftBottomRight(1, 1, screenSize.height,
             screenSize.width), timeout + timeoutThresholdMillis,
-        RTESampler.getStableTimeout()));
+        stableTimeoutMillis));
   }
 
   private long getMaxScreenTextStablePeriod(List<ScreenTextPeriod> stablePeriods) {
@@ -100,7 +99,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
       Pattern pattern) {
     List<ScreenTextPeriod> textPeriods = getTextPeriods(matcher, pattern);
     List<ScreenTextPeriod> screenTextStablePeriod = textPeriods.stream()
-        .filter(e -> e.periodMillis >= stablePeriod)
+        .filter(e -> e.periodMillis >= stableTimeoutMillis)
         .collect(Collectors.toList());
     ScreenTextPeriod lastTextPeriod = textPeriods.get(textPeriods.size() - 1);
     if (screenTextStablePeriod.isEmpty()
