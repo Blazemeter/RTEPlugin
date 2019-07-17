@@ -25,6 +25,7 @@ public class LabelInputRowGUI extends InputTestElement {
     setProperty(new StringProperty(LABEL, label));
   }
 
+  @Override
   public Input toInput() {
     return new LabelInput(getLabel(), getInput());
   }

@@ -3,10 +3,10 @@ package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.google.common.base.Stopwatch;
-import java.awt.Dimension;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
@@ -18,13 +18,17 @@ import org.junit.Test;
 
 public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
 
-  private static final String EXPECTED_SCREEN = "hello";
+  private static final String EXPECTED_SCREEN = "hello\n";
 
   @Before
   @Override
   public void setup() throws Exception {
-    setupScreenWithText("Welcome");
+    setupScreenWithText("Welcome\n");
     super.setup();
+  }
+
+  private void setupScreenWithText(String screen) {
+    when(client.getScreen()).thenReturn(Screen.valueOf(screen));
   }
 
   @Override
@@ -39,11 +43,6 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
         client,
         stableTimeoutExecutor,
         exceptionHandler);
-  }
-
-  private void setupScreenWithText(String screen) {
-    when(client.getScreen()).thenReturn(screen);
-    when(client.getScreenSize()).thenReturn(new Dimension(screen.length(), 1));
   }
 
   @Test
@@ -81,7 +80,7 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenReceivedScreenNotMatchingRegexInArea()
       throws Exception {
-    setupScreenWithText("Welcome");
+    setupScreenWithText("Welcome\n");
     buildNewPanelGenerator().run();
     listener.await();
   }

@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,7 +57,7 @@ public class ScreenTextListener extends Tn5250ConditionWaiter<TextWaitCondition>
   }
 
   private void checkIfScreenMatchesCondition() {
-    if (condition.matchesScreen(client.getScreen(), client.getScreenSize())) {
+    if (condition.matchesScreen(client.getScreen())) {
       LOG.debug("Found matching text in screen, now waiting for silent period.");
       matched = true;
     }

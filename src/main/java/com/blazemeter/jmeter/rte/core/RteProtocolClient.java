@@ -1,13 +1,13 @@
 package com.blazemeter.jmeter.rte.core;
 
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import java.awt.Dimension;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import org.apache.jmeter.samplers.SampleResult;
 
 public interface RteProtocolClient {
 
@@ -30,27 +30,29 @@ public interface RteProtocolClient {
     return getSupportedTerminalTypes().get(0);
   }
 
-  void connect(String server, int port, SSLType sslType,
-      TerminalType terminalType, long timeoutMillis, long stableTimeout)
-      throws RteIOException, TimeoutException, InterruptedException;
+  void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+      long timeoutMillis) throws RteIOException, InterruptedException, TimeoutException;
 
   void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException;
 
-  RequestListener buildRequestListener(SampleResult result);
+  void addTerminalStateListener(TerminalStateListener terminalStateListener);
+
+  void removeTerminalStateListener(TerminalStateListener terminalStateListener);
 
   void send(List<Input> input, AttentionKey attentionKey) throws RteIOException;
 
-  String getScreen();
-
-  Dimension getScreenSize();
+  Screen getScreen();
 
   boolean isInputInhibited();
 
   Optional<Position> getCursorPosition();
 
-  boolean getSoundAlarm();
+  boolean isAlarmOn();
+
+  boolean resetAlarm();
 
   void disconnect() throws RteIOException;
 
+  Set<AttentionKey> getSupportedAttentionKeys();
 }

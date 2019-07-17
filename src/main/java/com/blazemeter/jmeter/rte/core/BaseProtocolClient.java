@@ -1,8 +1,11 @@
 package com.blazemeter.jmeter.rte.core;
 
-import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -21,12 +24,12 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   protected ExceptionHandler exceptionHandler;
   protected ScheduledExecutorService stableTimeoutExecutor;
 
-  protected SocketFactory getSocketFactory(SSLType sslType) throws RteIOException {
+  protected SocketFactory getSocketFactory(SSLType sslType, String server) throws RteIOException {
     if (sslType != null && sslType != SSLType.NONE) {
       try {
         return SSLContextFactory.buildSSLContext(sslType).getSocketFactory();
       } catch (IOException | GeneralSecurityException e) {
-        throw new RteIOException(e);
+        throw new RteIOException(e, server);
       }
     } else {
       return SocketFactory.getDefault();
@@ -61,6 +64,7 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
 
   protected abstract ConditionWaiter buildWaiter(WaitCondition waitCondition);
 
+  @Override
   public void disconnect() throws RteIOException {
     if (stableTimeoutExecutor == null) {
       return;

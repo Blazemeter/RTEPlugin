@@ -5,7 +5,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class RequestListener<T extends RteProtocolClient> {
+public class RequestListener<T extends RteProtocolClient> implements TerminalStateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequestListener.class);
 
@@ -20,19 +20,25 @@ public abstract class RequestListener<T extends RteProtocolClient> {
     lastResponseTime = result.currentTimeInMillis();
   }
 
-  protected void newScreenReceived() {
+  @Override
+  public void onTerminalStateChange() {
     if (!receivedFirstResponse) {
       receivedFirstResponse = true;
       result.latencyEnd();
     }
     lastResponseTime = result.currentTimeInMillis();
     if (LOG.isTraceEnabled()) {
-      LOG.trace(client.getScreen());
+      LOG.trace(client.getScreen().toString());
     }
   }
 
   public void stop() {
     result.setEndTime(lastResponseTime);
+    client.removeTerminalStateListener(this);
+  }
+
+  @Override
+  public void onException(Throwable e) {
   }
 
 }

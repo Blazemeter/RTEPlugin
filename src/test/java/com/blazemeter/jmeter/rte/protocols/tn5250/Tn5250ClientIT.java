@@ -1,11 +1,22 @@
 package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import com.blazemeter.jmeter.rte.core.AttentionKey;
+import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
-import com.blazemeter.jmeter.rte.core.*;
+import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
@@ -26,6 +37,9 @@ import org.junit.Test;
 
 public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
+  private static final String TEST_USERNAME = "TESTUSR";
+  private static final String TEST_PASSWORD = "TESTPSW";
+
   @Override
   protected Tn5250Client buildClient() {
     return new Tn5250Client();
@@ -40,12 +54,16 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    assertThat(client.getScreen())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildLoginWelcomeScreen());
   }
 
   private void loadLoginFlow() throws FileNotFoundException {
     loadFlow("login-immediate-responses.yml");
+  }
+
+  private Screen buildLoginWelcomeScreen() throws java.io.IOException {
+    return buildScreenFromHtmlFile("login-welcome-screen.html");
   }
 
   @Test
@@ -57,15 +75,16 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     server.setSslEnabled(true);
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
-        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS);
-    assertThat(client.getScreen())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+        TIMEOUT_MILLIS);
+    client.await(
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildLoginWelcomeScreen());
   }
 
   @Test(expected = RteIOException.class)
   public void shouldThrowRteIOExceptionWhenConnectWithInvalidPort() throws Exception {
-    client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, getDefaultTerminalType(), TIMEOUT_MILLIS,
-        STABLE_TIMEOUT_MILLIS);
+    client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, getDefaultTerminalType(), TIMEOUT_MILLIS);
   }
 
   @Test(expected = TimeoutException.class)
@@ -79,8 +98,11 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     sendCredsByCoordWithSyncWait();
-    assertThat(client.getScreen())
-        .isEqualTo(getFileContent("user-menu-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces()).isEqualTo(buildUserMenuScreen());
+  }
+
+  private Screen buildUserMenuScreen() throws java.io.IOException {
+    return buildScreenFromHtmlFile("user-menu-screen.html");
   }
 
   private void sendCredsByCoordWithSyncWait() throws Exception {
@@ -91,8 +113,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
 
   private List<Input> buildCredsFieldsByCoord() {
     return Arrays.asList(
-        new CoordInput(new Position(6, 53), "TESTUSR"),
-        new CoordInput(new Position(7, 53), "TESTPSW"));
+        new CoordInput(new Position(6, 53), TEST_USERNAME),
+        new CoordInput(new Position(7, 53), TEST_PASSWORD));
   }
 
   @Test
@@ -100,20 +122,19 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadFlow("login.yml");
     connectToVirtualService();
     sendCredsByLabelWithSyncWait();
-    assertThat(client.getScreen())
-            .isEqualTo(getFileContent("user-menu-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces()).isEqualTo(buildUserMenuScreen());
   }
 
   private void sendCredsByLabelWithSyncWait() throws Exception {
     client.send(buildCredsFieldsByLabel(), AttentionKey.ENTER);
     client.await(
-            Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   private List<Input> buildCredsFieldsByLabel() {
     return Arrays.asList(
-            new LabelInput("User", "TESTUSR"),
-            new LabelInput("Password", "TESTPSW"));
+        new LabelInput("User", TEST_USERNAME),
+        new LabelInput("Password", TEST_PASSWORD));
   }
 
   @Test(expected = InvalidFieldPositionException.class)
@@ -122,17 +143,17 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-        new CoordInput(new Position(7, 1), "TESTUSR"));
+        new CoordInput(new Position(7, 1), TEST_USERNAME));
     client.send(input, AttentionKey.ENTER);
   }
 
   @Test(expected = InvalidFieldLabelException.class)
   public void shouldThrowInvalidFieldPositionExceptionWhenSendIncorrectFieldPositionByLabel()
-          throws Exception {
+      throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
-            new LabelInput("Usr", "TESTUSR"));
+        new LabelInput("Usr", TEST_USERNAME));
     client.send(input, AttentionKey.ENTER);
   }
 
@@ -141,14 +162,14 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     loadLoginFlow();
     connectToVirtualService();
     sendCredsByCoordWithSyncWait();
-    assertThat(client.getSoundAlarm()).isTrue();
+    assertThat(client.resetAlarm()).isTrue();
   }
 
   @Test
   public void shouldGetFalseSoundAlarmWhenServerDoNotSendTheSignal() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    assertThat(client.getSoundAlarm()).isFalse();
+    assertThat(client.resetAlarm()).isFalse();
   }
 
   @Test(expected = RteIOException.class)
@@ -224,8 +245,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     sendCredsByCoordWithSyncWait();
     client.disconnect();
     connectToVirtualService();
-    assertThat(client.getScreen())
-        .isEqualTo(getFileContent("login-welcome-screen.txt"));
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildLoginWelcomeScreen());
   }
 
   @Test
@@ -244,4 +265,38 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     client.send(buildCredsFieldsByCoord(), AttentionKey.PA1);
   }
 
+  @Test
+  public void shouldNotifyAddedListenerWhenTerminalStateChanges() throws Exception {
+
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+
+    loadLoginFlow();
+    connectToVirtualService();
+
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+
+    sendCredsByCoordWithSyncWait();
+
+    /*
+     * When inputs are sent to client 2 changes happen: screen change and mouse moved
+     * */
+
+    verify(terminalEmulatorUpdater, times(2)).onTerminalStateChange();
+  }
+
+  @Test
+  public void shouldNotNotifyRemovedListenerWhenTerminalStateChanges() throws Exception {
+
+    TerminalStateListener terminalEmulatorUpdater = mock(TerminalStateListener.class);
+
+    loadLoginFlow();
+    connectToVirtualService();
+
+    client.addTerminalStateListener(terminalEmulatorUpdater);
+    client.removeTerminalStateListener(terminalEmulatorUpdater);
+
+    sendCredsByCoordWithSyncWait();
+
+    verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
+  }
 }

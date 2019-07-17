@@ -1,0 +1,115 @@
+<html>
+<head>
+    <style type="text/css">
+      th { text-align: left }
+  
+    
+    </style>
+</head>
+<body>
+<h1>BZM RTE emulator help</h1>
+<h2>Keyboard mapping</h2>
+<table>
+    <tr>
+        <th style="border: none">Action</th>
+        <th style="border: none">Keys</th>
+    </tr>
+    <td>Move cursor position</td>
+    <td>Arrows</td>
+    </tr>
+    <tr>
+        <td>Backspace</td>
+        <td>Backspace</td>
+    </tr>
+    <tr>
+        <td>Enter</td>
+        <td>Enter</td>
+    </tr>
+    <tr>
+        <td>Delete</td>
+        <td>Delete</td>
+    </tr>
+    <tr>
+        <td>Next field</td>
+        <td>Tab</td>
+    </tr>
+    <tr>
+        <td>Previous field</td>
+        <td>Shift + Tab</td>
+    </tr>
+    <tr>
+        <td>PF[1..12]</td>
+        <td>F[1..12]</td>
+    </tr>
+    <tr>
+        <td>PF[13..24]</td>
+        <td>Shift + F[1..12]</td>
+    </tr>
+    <tr>
+        <td>Attn</td>
+        <td>Esc</td>
+    </tr>
+    <tr>
+        <td>SysReq</td>
+        <td>Shift + Esc</td>
+    </tr>
+
+    <tr>
+        <td>Reset</td>
+        <td>Ctrl</td>
+    </tr>
+    <tr>
+        <td>Roll Down</td>
+        <td>PageUp / Fn + UpArrow</td>
+    </tr>
+    <tr>
+        <td>Roll Up</td>
+        <td>PageDown / Fn + DownArrow</td>
+    </tr>
+    <tr>
+        <td>Clear</td>
+        <td>Pause / <img src="{{resourcesPath}}/command.png" width="10" height="10"/> F5</td>
+    </tr>
+    <tr>
+        <td>PA1</td>
+        <td>Alt + Insert / <img src="{{resourcesPath}}/command.png" width="10" height="10"/> F1</td>
+    </tr>
+    <tr>
+        <td>PA2</td>
+        <td>Alt + Home / <img src="{{resourcesPath}}/command.png" width="10" height="10"/> F2</td>
+    </tr>
+    <tr>
+        <td>PA3</td>
+        <td>Shift + PageUp / <img src="{{resourcesPath}}/command.png" width="10" height="10"/> F3</td>
+    </tr>
+
+</table>
+<h2>Status bar</h2>
+<table>
+    <tr>
+        <th style="border: none">Indicator</th>
+        <th style="border: none">Description</th>
+    </tr>
+    <tr>
+        <td>row: X / column: Y</td>
+        <td>Row and column where the cursor is positioned<br/>First row and column is 1</td>
+    </tr>
+    <tr>
+        <td><img src="{{resourcesPath}}/keyboard-unlocked.png"/> / <img
+                src="{{resourcesPath}}/keyboard-locked.png"/></td>
+        <td>Shows whether keyboard input is enabled or not</td>
+    </tr>
+    <tr>
+        <td><img src="{{resourcesPath}}/alarm.png"/></td>
+        <td>Displayed when mainframe application triggers an alarm<br/>This will blink for 5 seconds
+            and is accompanied by an audio alert
+        </td>
+    </tr>
+</table>
+<h2>Credits</h2>
+This emulator is an adapted version of the great open source <a
+        href="https://sourceforge.net/projects/xtn5250/">XTN5250</a> emulator.
+<br>
+Those amazing icons are from <a href="https://material.io/tools/icons/">Material</a>.
+</body>
+</html>

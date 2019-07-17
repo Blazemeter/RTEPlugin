@@ -4,7 +4,11 @@ import java.util.Objects;
 
 public class LabelInput extends Input {
 
-  private final String label;
+  private String label;
+
+  // Provided for proper deserialization of sample results
+  public LabelInput() {
+  }
 
   public LabelInput(String label, String input) {
     super(input);

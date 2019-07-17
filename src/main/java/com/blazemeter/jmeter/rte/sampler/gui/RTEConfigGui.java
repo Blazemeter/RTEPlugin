@@ -22,6 +22,7 @@ public class RTEConfigGui extends AbstractConfigGui {
 
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(rteConfigPanelConfigPanel, BorderLayout.CENTER);
+    add(new BlazemeterLabsLogo(), BorderLayout.PAGE_END);
   }
 
   @VisibleForTesting
@@ -58,7 +59,8 @@ public class RTEConfigGui extends AbstractConfigGui {
               RTESampler.DEFAULT_TERMINAL_TYPE.getId())));
       rteConfigPanelConfigPanel.setSSLType(
           SSLType.valueOf(configTestElement
-              .getPropertyAsString(RTESampler.CONFIG_SSL_TYPE, RTESampler.DEFAULT_SSLTYPE.name())));
+              .getPropertyAsString(RTESampler.CONFIG_SSL_TYPE,
+                  RTESampler.DEFAULT_SSL_TYPE.name())));
       rteConfigPanelConfigPanel
           .setConnectionTimeout(
               configTestElement.getPropertyAsString(RTESampler.CONFIG_CONNECTION_TIMEOUT,

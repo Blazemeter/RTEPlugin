@@ -2,28 +2,31 @@ package com.blazemeter.jmeter.rte.protocols.tn5250;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
-import com.blazemeter.jmeter.rte.core.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.InvalidFieldLabelException;
-import com.blazemeter.jmeter.rte.core.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.RteIOException;
+import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.listener.ConditionWaiter;
-import com.blazemeter.jmeter.rte.core.listener.RequestListener;
+import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
+import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
+import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
+import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConnectionEndTerminalListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250RequestListener;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250TerminalStateListenerProxy;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
 import java.awt.Dimension;
@@ -33,11 +36,13 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import net.infordata.em.TerminalClient;
+import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
-import org.apache.jmeter.samplers.SampleResult;
 
 public class Tn5250Client extends BaseProtocolClient {
 
@@ -85,6 +90,8 @@ public class Tn5250Client extends BaseProtocolClient {
       };
 
   private TerminalClient client;
+  private Map<TerminalStateListener, Tn5250TerminalStateListenerProxy> listenersProxies =
+      new ConcurrentHashMap<>();
 
   @Override
   public List<TerminalType> getSupportedTerminalTypes() {
@@ -92,22 +99,26 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public void connect(String server, int port, SSLType sslType,
-      TerminalType terminalType, long timeoutMillis,
-      long stableTimeoutMillis)
-      throws RteIOException, InterruptedException, TimeoutException {
+  public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+      long timeoutMillis) throws RteIOException, TimeoutException, InterruptedException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
     /*
-     we need to do this on connect to avoid leaving keyboard thread running when instance of client
-     is created for getting supported terminal types in jmeter
+     we need create terminalClient instance on connect instead of 
+     constructor to avoid leaving keyboard thread running when 
+     instance of this class is created for getting supported terminal types in JMeter
     */
     client = new TerminalClient();
-    exceptionHandler = new ExceptionHandler();
+    client.setConnectionTimeoutMillis((int) timeoutMillis);
+    client.setTerminalType(terminalType.getId());
+    client.setSocketFactory(getSocketFactory(sslType, server));
+    exceptionHandler = new ExceptionHandler(server);
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
     client.setExceptionHandler(new net.infordata.em.ExceptionHandler() {
 
       @Override
       public void onException(Throwable e) {
         exceptionHandler.setPendingError(e);
+        connectionEndWaiter.stop();
       }
 
       @Override
@@ -115,18 +126,18 @@ public class Tn5250Client extends BaseProtocolClient {
         exceptionHandler.setPendingError(new ConnectionClosedException());
       }
     });
-    client.setConnectionTimeoutMillis((int) timeoutMillis);
-    client.setTerminalType(terminalType.getId());
-    client.setSocketFactory(getSocketFactory(sslType));
-    ConditionWaiter unlock = buildWaiter(new SyncWaitCondition(timeoutMillis, stableTimeoutMillis));
+    for (TerminalStateListener listener : listenersProxies.keySet()) {
+      addListener(listener);
+    }
+    ConnectionEndTerminalListener connectionEndListener = new ConnectionEndTerminalListener(
+        connectionEndWaiter);
+    client.addEmulatorListener(connectionEndListener);
     try {
       client.connect(server, port);
-      unlock.await();
-    } catch (TimeoutException | InterruptedException | RteIOException e) {
-      doDisconnect();
-      throw e;
+      connectionEndWaiter.await();
+      exceptionHandler.throwAnyPendingError();
     } finally {
-      unlock.stop();
+      client.removeEmulatorListener(connectionEndListener);
     }
   }
 
@@ -197,23 +208,56 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public RequestListener buildRequestListener(SampleResult result) {
-    return new Tn5250RequestListener(result, this);
+  public void addTerminalStateListener(TerminalStateListener listener) {
+    Tn5250TerminalStateListenerProxy proxy = new Tn5250TerminalStateListenerProxy(listener);
+    listenersProxies.put(listener, proxy);
+    if (client != null) {
+      addListener(listener);
+    }
+  }
+
+  private void addListener(TerminalStateListener listener) {
+    Tn5250TerminalStateListenerProxy listenerProxy = listenersProxies.get(listener);
+    client.addEmulatorListener(listenerProxy);
+    exceptionHandler.addListener(listener);
   }
 
   @Override
-  public String getScreen() {
-    return client.getScreenText();
+  public void removeTerminalStateListener(TerminalStateListener listener) {
+    Tn5250TerminalStateListenerProxy proxy = listenersProxies.remove(listener);
+    if (client != null) {
+      client.removeEmulatorListener(proxy);
+      exceptionHandler.removeListener(listener);
+    }
   }
 
   @Override
-  public Dimension getScreenSize() {
-    return client.getScreenDimensions();
+  public Screen getScreen() {
+    Dimension screenSize = client.getScreenDimensions();
+    Screen ret = new Screen(screenSize);
+    String screenText = client.getScreenText().replace("\n", "");
+    int textStartPos = 0;
+    for (XI5250Field f : client.getFields()) {
+      int fieldLinealPosition = getFieldLinealPosition(f, screenSize);
+      if (fieldLinealPosition > textStartPos) {
+        ret.addSegment(textStartPos, screenText.substring(textStartPos, fieldLinealPosition));
+      }
+      ret.addField(fieldLinealPosition, f.getString());
+      textStartPos = fieldLinealPosition + f.getString().length();
+    }
+    if (textStartPos < screenText.length()) {
+      ret.addSegment(textStartPos, screenText.substring(textStartPos));
+    }
+    return ret;
+  }
+
+  private int getFieldLinealPosition(XI5250Field field, Dimension screenSize) {
+    return field.getRow() * screenSize.width + field.getCol();
   }
 
   @Override
   public boolean isInputInhibited() {
-    return client.isKeyboardLocked();
+    return client == null || client.isKeyboardLocked();
   }
 
   @Override
@@ -223,8 +267,19 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public boolean getSoundAlarm() {
+  public boolean isAlarmOn() {
+    return client.isAlarmOn();
+  }
+
+  @Override
+  public boolean resetAlarm() {
     return client.resetAlarm();
+  }
+
+  @Override
+  public Set<AttentionKey> getSupportedAttentionKeys() {
+    return KEY_EVENTS.keySet();
+
   }
 
   public void addEmulatorListener(XI5250EmulatorListener listener) {

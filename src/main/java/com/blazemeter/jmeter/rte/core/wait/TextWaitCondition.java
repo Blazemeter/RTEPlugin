@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.core.wait;
 
 import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.Screen;
 import java.awt.Dimension;
 import java.util.Objects;
 import org.apache.oro.text.regex.Pattern;
@@ -28,13 +29,21 @@ public class TextWaitCondition extends WaitCondition {
     this.searchArea = searchArea;
   }
 
+  public String getRegex() {
+    return regex.toString();
+  }
+
+  public Area getSearchArea() {
+    return searchArea;
+  }
+
   @Override
   public String getDescription() {
     return "emulator screen area " + searchArea + " to contain " + regex.getPattern();
   }
 
-  public boolean matchesScreen(String screen, Dimension screenSize) {
-    String screenArea = extractScreenArea(searchArea, screen, screenSize);
+  public boolean matchesScreen(Screen screen) {
+    String screenArea = extractScreenArea(searchArea, screen.getText(), screen.getSize());
     return matcher.contains(screenArea, regex);
   }
 
@@ -52,7 +61,7 @@ public class TextWaitCondition extends WaitCondition {
     for (int i = top; i <= bottom; i++) {
       // we increase one due to new line at end of row
       int rowStart = (i - 1) * (screenSize.width + 1);
-      builder.append(screen.substring(rowStart + left - 1, rowStart + right));
+      builder.append(screen, rowStart + left - 1, rowStart + right);
       builder.append("\n");
     }
     return builder.toString();
