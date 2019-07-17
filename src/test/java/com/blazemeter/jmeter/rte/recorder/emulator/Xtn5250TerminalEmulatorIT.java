@@ -368,6 +368,11 @@ public class Xtn5250TerminalEmulatorIT {
 
     }
 
+    @Override
+    public void onAssertionScreen(String text) {
+      
+    }
+
     public AttentionKey getAttentionKey() {
       return attentionKey;
     }

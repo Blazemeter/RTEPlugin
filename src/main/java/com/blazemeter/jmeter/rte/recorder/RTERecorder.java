@@ -19,6 +19,7 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import com.helger.commons.annotation.VisibleForTesting;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.apache.jmeter.assertions.ResponseAssertion;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
@@ -66,6 +68,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient Function<Protocol, RteProtocolClient> protocolFactory;
   private transient JMeterTreeModel jMeterTreeModel;
   private transient RteProtocolClient terminalClient;
+  private transient List<ResponseAssertion> responseAssertions = new ArrayList<>();
 
   public RTERecorder() {
     this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
@@ -302,6 +305,12 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     if (attentionKey != null) {
       sampler.setAttentionKey(attentionKey);
     }
+    if (!responseAssertions.isEmpty()) {
+      for (ResponseAssertion as : responseAssertions) {
+        sampler.addTestElement(as);
+      }
+      responseAssertions.clear();
+    }
     return sampler;
   }
 
@@ -336,13 +345,24 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
     } catch (Exception e) {
-      onException(e); 
+      onException(e);
     }
   }
 
   @Override
   public void onWaitForText(String text) {
     waitConditionsRecorder.setWaitForTextCondition(text);
+  }
+
+  @Override
+  public void onAssertionScreen(String text) {
+    ResponseAssertion assertion = new ResponseAssertion();
+    assertion.setTestFieldResponseData();
+    assertion.setToContainsType();
+    assertion.addTestString(text);
+    assertion.setAssumeSuccess(false);
+    assertion.getResult(sampleResult);
+    responseAssertions.add(assertion);
   }
 
   private void recordPendingSample() {

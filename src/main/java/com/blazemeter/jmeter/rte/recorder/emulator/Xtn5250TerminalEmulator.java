@@ -91,7 +91,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JButton copyButton = createIconButton("copyButton", "copy.png");
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
   private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
-
+  private JButton assertionButton = createIconButton("assertionButton", "waitForText.png");
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private boolean stopping;
@@ -150,12 +150,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         .addComponent(copyButton)
         .addComponent(pasteButton)
         .addComponent(labelButton)
-        .addComponent(waitForTextButton));
+        .addComponent(waitForTextButton)
+        .addComponent(assertionButton));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(copyButton)
         .addComponent(pasteButton)
         .addComponent(labelButton)
-        .addComponent(waitForTextButton));
+        .addComponent(waitForTextButton)
+        .addComponent(assertionButton));
 
     return toolsPanel;
   }
@@ -337,6 +339,22 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         if (selectedText != null) {
           for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
             listener.onWaitForText(selectedText);
+          }
+        } else {
+          showUserMessage("Please select a part of the screen", "Selection error");
+          LOG.warn(
+              "The selection of a screen area is essential to "
+                  + "be used as wait condition text later on.");
+        }
+        xi5250Crt.requestFocus();
+        xi5250Crt.clearSelectedArea();
+      });
+
+      assertionButton.addActionListener(e -> {
+        String selectedText = xi5250Crt.getStringSelectedArea();
+        if (selectedText != null) {
+          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+            listener.onAssertionScreen(selectedText);
           }
         } else {
           showUserMessage("Please select a part of the screen", "Selection error");
