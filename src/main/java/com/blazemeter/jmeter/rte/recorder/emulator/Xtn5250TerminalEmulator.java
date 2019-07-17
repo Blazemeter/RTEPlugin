@@ -248,10 +248,26 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), f.getString()));
+        fields.add(
+            new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), trimNulls(f.getString())));
       }
     }
     return fields;
+  }
+
+  private String trimNulls(String str) {
+    if (str.isEmpty()) {
+      return str;
+    }
+    int firstNotNull = 0;
+    while (str.charAt(firstNotNull) == '\u0000') {
+      firstNotNull++;
+    }
+    int lastNotNull = str.length() - 1;
+    while (str.charAt(lastNotNull) == '\u0000') {
+      lastNotNull--;
+    }
+    return str.substring(firstNotNull, lastNotNull + 1);
   }
 
   private static class KeyEventMap {
@@ -284,7 +300,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   private class CustomXI5250Crt extends XI5250Crt {
-    
+
     private boolean copyPaste = false;
 
     private CustomXI5250Crt() {
