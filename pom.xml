@@ -6,7 +6,7 @@
   <groupId>com.blazemeter.jmeter</groupId>
   <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>2.0</version>
+  <version>2.1-SNAPSHOT</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
 
   <properties>
