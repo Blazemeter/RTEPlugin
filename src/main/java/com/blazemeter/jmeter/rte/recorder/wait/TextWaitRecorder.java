@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.PatternMatcher;
+import org.apache.oro.text.regex.Perl5Compiler;
 
 public class TextWaitRecorder extends WaitConditionRecorder {
 
@@ -43,7 +44,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
   }
 
   @Override
-  public void onTerminalStateChange() {
+  public synchronized void onTerminalStateChange() {
     Screen screen = rteProtocolClient.getScreen();
     if (screenshots.isEmpty() || !screenshots.getLast().screen.equals(screen)) {
       screenshots.add(new Screenshot(screen, clock.instant()));
@@ -102,6 +103,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
         .filter(e -> e.periodMillis >= stableTimeoutMillis)
         .collect(Collectors.toList());
     ScreenTextPeriod lastTextPeriod = textPeriods.get(textPeriods.size() - 1);
+    
     if (screenTextStablePeriod.isEmpty()
         || screenTextStablePeriod.get(screenTextStablePeriod.size() - 1) != lastTextPeriod) {
       screenTextStablePeriod.add(lastTextPeriod);
@@ -109,7 +111,8 @@ public class TextWaitRecorder extends WaitConditionRecorder {
     return screenTextStablePeriod;
   }
 
-  private List<ScreenTextPeriod> getTextPeriods(PatternMatcher matcher, Pattern pattern) {
+  private synchronized List<ScreenTextPeriod> getTextPeriods(PatternMatcher matcher,
+      Pattern pattern) {
     List<ScreenTextPeriod> textPeriods = new ArrayList<>();
     Iterator<Screenshot> it = screenshots.iterator();
     while (it.hasNext()) {
@@ -137,7 +140,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
   }
 
   public void setWaitForTextCondition(String text) {
-    regex = text.replace("\n", ".*\\n.*");
+    regex = Perl5Compiler.quotemeta(text).replace("\\\n", ".*\\\n.*");
     timestampWaitForText = clock.instant();
   }
 

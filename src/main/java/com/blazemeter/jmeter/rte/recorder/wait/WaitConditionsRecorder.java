@@ -57,7 +57,7 @@ public class WaitConditionsRecorder {
               lastSilentTime) > stablePeriodMillis) && !textWaitCondition.isPresent()) {
         waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
       }
-    } else if(!textWaitCondition.isPresent()){
+    } else if (!textWaitCondition.isPresent()) {
       waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
 
     }

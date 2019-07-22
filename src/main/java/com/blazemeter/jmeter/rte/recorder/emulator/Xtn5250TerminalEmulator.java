@@ -336,13 +336,13 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
             listener.onWaitForText(selectedText);
           }
         } else {
-        warnUserOfNotScreenSelectedArea();
+          warnUserOfNotScreenSelectedArea();
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
     }
-    
+
     private void showUserMessage(String msg) {
       JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -353,7 +353,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           "The selection of a screen area is essential to "
               + "be used as wait condition text later on.");
     }
-    
+
     @Override
     protected synchronized void processKeyEvent(KeyEvent e) {
       AttentionKey attentionKey = null;
