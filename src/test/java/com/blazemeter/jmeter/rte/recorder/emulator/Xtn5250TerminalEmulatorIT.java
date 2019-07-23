@@ -55,6 +55,7 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String TEST_SCREEN_FILE = "test-screen.txt";
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
   private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
+  private static final String ASSERTION_BUTTON = "assertionButton";
 
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
@@ -207,31 +208,18 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldCallTheListenerWhenPressAnyAttentionKey() {
     setScreen("");
-    TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
-    xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKey(KeyEvent.VK_F1, 0, 2, 2);
-    awaitListenerIsCalled(AttentionKey.F1, terminalEmulatorListener);
+    verify(listener, timeout(PAUSE_TIMEOUT)).onAttentionKey(AttentionKey.F1, new ArrayList<>());
   }
 
   @Test
   public void shouldCallTheListenerWhenPressControlAttentionKey() {
     setScreen("");
-    TestTerminalEmulatorListener terminalEmulatorListener = new TestTerminalEmulatorListener();
-    xtn5250TerminalEmulator.addTerminalEmulatorListener(terminalEmulatorListener);
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, 2, 2);
-    awaitListenerIsCalled(AttentionKey.RESET, terminalEmulatorListener);
+    verify(listener).onAttentionKey(AttentionKey.RESET, new ArrayList<>());
 
-  }
-
-  private void awaitListenerIsCalled(AttentionKey expected,
-      TestTerminalEmulatorListener terminalEmulatorListener) {
-    pause(new Condition("Listener is called") {
-      @Override
-      public boolean test() {
-        return terminalEmulatorListener.getAttentionKey() != null && terminalEmulatorListener
-            .getAttentionKey().equals(expected);
-      }
-    }, PAUSE_TIMEOUT);
   }
 
   @Test
@@ -350,32 +338,15 @@ public class Xtn5250TerminalEmulatorIT {
         .onWaitForText("*****\n " + "    \n" + "EXTO \n" + "EXTO ");
   }
 
-  private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {
-
-    private AttentionKey attentionKey = null;
-
-    @Override
-    public void onCloseTerminal() {
-    }
-
-    @Override
-    public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
-      this.attentionKey = attentionKey;
-    }
-
-    @Override
-    public void onWaitForText(String text) {
-
-    }
-
-    @Override
-    public void onAssertionScreen(String text) {
-      
-    }
-
-    public AttentionKey getAttentionKey() {
-      return attentionKey;
-    }
-
+  @Test
+  public void shouldCallTheListenerWhenAssertionScreen() {
+    setScreen("TEST");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 1, 4, 1));
+    clickButton(ASSERTION_BUTTON);
+    JOptionPaneFixture popup = findOptionPane();
+    popup.textBox().setText("Assertion Test");
+    popup.okButton().click();
+    verify(listener, timeout(PAUSE_TIMEOUT)).onAssertionScreen("Assertion Test", "TEST");
   }
 }

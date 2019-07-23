@@ -12,6 +12,6 @@ public interface TerminalEmulatorListener {
 
   void onWaitForText(String text);
   
-  void onAssertionScreen(String text);
+  void onAssertionScreen(String name, String text);
 
 }

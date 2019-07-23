@@ -91,7 +91,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JButton copyButton = createIconButton("copyButton", "copy.png");
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
   private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
-  private JButton assertionButton = createIconButton("assertionButton", "waitForText.png");
+  private JButton assertionButton = createIconButton("assertionButton", "assertion.png");
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private boolean stopping;
@@ -146,6 +146,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     pasteButton.setToolTipText("Paste");
     labelButton.setToolTipText("Input by label");
     waitForTextButton.setToolTipText("Text wait condition");
+    assertionButton.setToolTipText("Assertion");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton)
         .addComponent(pasteButton)
@@ -354,7 +355,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         String selectedText = xi5250Crt.getStringSelectedArea();
         if (selectedText != null) {
           for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-            listener.onAssertionScreen(selectedText);
+            listener.onAssertionScreen(getAssertionName(), selectedText);
           }
         } else {
           showUserMessage("Please select a part of the screen", "Selection error");
@@ -369,6 +370,10 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
     private void showUserMessage(String msg, String title) {
       JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private String getAssertionName() {
+      return JOptionPane.showInputDialog(this, "Insert name of assertion", "Response Assertion");
     }
 
     @Override

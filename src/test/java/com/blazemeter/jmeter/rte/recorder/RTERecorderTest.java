@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.recorder;
 
 import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -20,7 +21,6 @@ import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
@@ -32,8 +32,6 @@ import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.sampler.Action;
-import com.blazemeter.jmeter.rte.sampler.Inputs;
-import com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
@@ -48,7 +46,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+import org.apache.jmeter.assertions.ResponseAssertion;
+import org.apache.jmeter.assertions.gui.AssertionGui;
 import org.apache.jmeter.config.ConfigTestElement;
+import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.samplers.SampleEvent;
@@ -100,6 +101,8 @@ public class RTERecorderTest {
   private RteProtocolClient terminalClient;
   @Mock
   private RecordingStateListener recorderListener;
+  @Mock
+  private JMeterTreeNode samplerNode;
 
   @BeforeClass
   public static void setupClass() {
@@ -107,15 +110,15 @@ public class RTERecorderTest {
   }
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalUserActionException {
     setupTreeModel();
     when(finder.findTargetControllerNode()).thenReturn(treeNode);
     setupTerminalClient();
-
+    when(treeModel.addComponent(any(), eq(treeNode))).thenReturn(samplerNode);
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> terminalEmulator;
     rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, treeModel,
         p -> terminalClient);
-    
+
     setupRecorder();
   }
 
@@ -635,5 +638,35 @@ public class RTERecorderTest {
     rteRecorder.awaitConnected(TIMEOUT);
   }
 
+  @Test
+  public void shouldVerifyAssertionAdded() throws IllegalUserActionException {
+    rteRecorder.onRecordingStart();
+    rteRecorder.onAssertionScreen("Assertion Test", "trying to assert");
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+    rteRecorder.onRecordingStop();
+
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    ArgumentCaptor<ResponseAssertion> argumentCaptor = ArgumentCaptor
+        .forClass(ResponseAssertion.class);
+
+    verify(treeModel, times(4))
+        .addComponent(argument.capture(), eq(treeNode));
+    verify(treeModel, times(1)).addComponent(argumentCaptor.capture(), eq(samplerNode));
+
+    assertEquals(buildExpectedAssertion(), argumentCaptor.getAllValues().get(0));
+  }
+
+  private ResponseAssertion buildExpectedAssertion() {
+    ResponseAssertion assertion = new ResponseAssertion();
+    assertion.setName("Assertion Test");
+    assertion.setProperty(TestElement.GUI_CLASS, AssertionGui.class.getName());
+    assertion.setProperty(TestElement.TEST_CLASS, ResponseAssertion.class.getName());
+    assertion.setTestFieldResponseData();
+    assertion.setToContainsType();
+    assertion.addTestString("trying to assert");
+    assertion.setAssumeSuccess(false);
+    assertion.getResult(buildBasicSampleResult(Action.SEND_INPUT));
+    return assertion;
+  }
 }
 
