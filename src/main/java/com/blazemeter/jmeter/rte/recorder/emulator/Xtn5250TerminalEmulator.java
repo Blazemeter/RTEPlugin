@@ -260,7 +260,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         if (labelText != null) {
           fields.add(new LabelInput(labelText.trim(), trimNulls(f.getString())));
         } else {
-          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), trimNulls(f.getString())));
+          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
+              trimNulls(f.getString())));
         }
       }
     }
