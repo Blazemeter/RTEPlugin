@@ -349,4 +349,12 @@ public class Xtn5250TerminalEmulatorIT {
     popup.okButton().click();
     verify(listener, timeout(PAUSE_TIMEOUT)).onAssertionScreen("Assertion Test", "TEST");
   }
+
+  @Test
+  public void shouldShowUserMessageWhenAssertionButtonWhitNonSelectedArea() {
+    setScreen("");
+    clickButton(ASSERTION_BUTTON);
+    findOptionPane().requireMessage("Please select a part of the screen");
+  }
+
 }

@@ -355,7 +355,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         String selectedText = xi5250Crt.getStringSelectedArea();
         if (selectedText != null) {
           for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-            listener.onAssertionScreen(getAssertionName(), selectedText);
+            listener.onAssertionScreen(requestAssertionName(), selectedText);
           }
         } else {
           showUserMessage("Please select a part of the screen", "Selection error");
@@ -372,7 +372,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE);
     }
 
-    private String getAssertionName() {
+    private String requestAssertionName() {
       return JOptionPane.showInputDialog(this, "Insert name of assertion", "Response Assertion");
     }
 
