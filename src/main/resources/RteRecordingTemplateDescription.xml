@@ -6,7 +6,7 @@
         <h2>JMeter Configuration</h2>
         The recorder needs to be properly configured with server, port, protocol and terminal type before start recording.
         <br/>
-        For details on recorder please check <a href="https://github.com/Blazemeter/RTEPlugin/README.md">the RTE plugin documentation</a>
+        For details on recorder please check <a href="https://github.com/Blazemeter/RTEPlugin/blob/master/README.md">the RTE plugin documentation</a>
         ]]>
     </description>
 </template>
