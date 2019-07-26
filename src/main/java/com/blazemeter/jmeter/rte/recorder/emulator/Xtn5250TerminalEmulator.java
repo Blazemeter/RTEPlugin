@@ -33,6 +33,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
+import org.apache.jmeter.util.JMeterUtils;
+import org.apache.oro.text.regex.Pattern;
+import org.apache.oro.text.regex.Perl5Compiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -364,11 +367,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       assertionButton.addActionListener(e -> {
         String selectedText = xi5250Crt.getStringSelectedArea();
         if (selectedText != null) {
+          Pattern pattern = JMeterUtils
+              .getPattern(Perl5Compiler.quotemeta(selectedText).replace("\\\n", ".*\\n.*"));
           for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-            listener.onAssertionScreen(requestAssertionName(), selectedText);
+            listener
+                .onAssertionScreen(requestAssertionName(), pattern.getPattern());
           }
         } else {
-          showUserMessage("Please select a part of the screen", "Selection error");
+          showUserMessage("Please select a part of the screen");
           LOG.warn(
               "The selection of a screen area is essential to "
                   + "be used as wait condition text later on.");
@@ -377,7 +383,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.clearSelectedArea();
       });
     }
-
+    
     private void showUserMessage(String msg) {
       JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
     }
