@@ -49,17 +49,16 @@ public class ScreenTest {
     screen.addSegment(0, segmentText);
     String fieldText = "TESTUSR";
     screen.addField(segmentText.length(), fieldText);
-    String str = "Name: TESTUSR  \n               \n";
     assertThat(screen.getText())
-        .isEqualTo(buildExpectedString(segmentText + fieldText, SCREEN_WIDTH *3 , SCREEN_HEIGHT));
-    
+        .isEqualTo(buildExpectedString(segmentText + fieldText, SCREEN_WIDTH * 3, SCREEN_HEIGHT));
+
   }
-  
+
   private String buildExpectedString(String text, int width, int height) {
     StringBuilder str = new StringBuilder(text);
     int begin;
-    for (int j = 0; j < height; j++){
-      begin = j!=0 ? 0 : text.length();
+    for (int j = 0; j < height; j++) {
+      begin = j != 0 ? 0 : text.length();
       for (int i = begin; i < width; i++) {
         str.append(' ');
       }

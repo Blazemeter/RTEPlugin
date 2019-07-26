@@ -32,10 +32,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class TextWaitRecorderTest {
 
-  private static final long STABLE_PERIOD = 1000;
-  private final static long CLOCK_STEP_MILLIS = 400L;
   public static final String SELECTED_TEXT = "User  \n" + "Passwo";
   public static final String REGEX = "User\\ \\ .*\\n.*Passwo";
+  private static final long STABLE_PERIOD = 1000;
+  private final static long CLOCK_STEP_MILLIS = 400L;
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
@@ -63,24 +63,28 @@ public class TextWaitRecorderTest {
   public void shouldReturnEmptyWhenTextConditionIsNotSet() {
     when(rteProtocolClientMock.getScreen())
         .thenReturn(LOGIN_SCREEN);
-    when(clock.instant()).thenReturn(startTime);
+    setClockTime(0L);
     textWaitRecorder.start();
     textWaitRecorder.onTerminalStateChange();
     textWaitRecorder.onTerminalStateChange();
     assertEquals(Optional.empty(), textWaitRecorder.stop());
   }
 
+  private void setClockTime(long addition) {
+    when(clock.instant()).thenReturn(startTime.plusMillis(addition));
+  }
+
   @Test
   public void shouldReturnConditionWithLastTimeoutWhenWasNotStable() {
-    when(clock.instant()).thenReturn(startTime);
+    setClockTime(0L);
     when(rteProtocolClientMock.getScreen())
         .thenReturn(LOGIN_SCREEN, EMPTY_SCREEN, LOGIN_SCREEN);
     textWaitRecorder.start();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
+    setClockTime(CLOCK_STEP_MILLIS);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
+    setClockTime(CLOCK_STEP_MILLIS * 2);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
+    setClockTime(CLOCK_STEP_MILLIS * 3);
     textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)),
@@ -98,17 +102,17 @@ public class TextWaitRecorderTest {
 
   @Test
   public void shouldIgnoreAllScreenAfterSetCondition() {
-    when(clock.instant()).thenReturn(startTime);
+    setClockTime(0);
     when(rteProtocolClientMock.getScreen())
         .thenReturn(LOGIN_SCREEN, EMPTY_SCREEN, LOGIN_SCREEN, EMPTY_SCREEN);
     textWaitRecorder.start();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
+    setClockTime(CLOCK_STEP_MILLIS);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
+    setClockTime(CLOCK_STEP_MILLIS * 2);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
+    setClockTime(CLOCK_STEP_MILLIS * 3);
     textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 4));
+    setClockTime(CLOCK_STEP_MILLIS * 4);
     textWaitRecorder.onTerminalStateChange();
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)),
@@ -117,17 +121,17 @@ public class TextWaitRecorderTest {
 
   @Test
   public void shouldReturnStartOfStableTimeoutWhenStableBeforeSetCondition() {
-    when(clock.instant()).thenReturn(startTime);
+    setClockTime(0);
     when(rteProtocolClientMock.getScreen())
         .thenReturn(LOGIN_SCREEN, EMPTY_SCREEN, LOGIN_SCREEN, EMPTY_SCREEN);
     textWaitRecorder.start();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
+    setClockTime(CLOCK_STEP_MILLIS);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
+    setClockTime(CLOCK_STEP_MILLIS * 2);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
+    setClockTime(CLOCK_STEP_MILLIS * 10);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 11));
+    setClockTime(CLOCK_STEP_MILLIS * 11);
     textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)) * 10,
@@ -136,17 +140,17 @@ public class TextWaitRecorderTest {
 
   @Test
   public void shouldReturnLastOccurrenceTimeoutWhenIsTheOnlyStable() {
-    when(clock.instant()).thenReturn(startTime);
+    setClockTime(0);
     when(rteProtocolClientMock.getScreen())
         .thenReturn(EMPTY_SCREEN, LOGIN_SCREEN, EMPTY_SCREEN);
     textWaitRecorder.start();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
+    setClockTime(CLOCK_STEP_MILLIS);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
+    setClockTime(CLOCK_STEP_MILLIS * 2);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
+    setClockTime(CLOCK_STEP_MILLIS * 10);
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 11));
+    setClockTime(CLOCK_STEP_MILLIS * 11);
     textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS * 2)),

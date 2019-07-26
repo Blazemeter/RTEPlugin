@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -131,11 +132,7 @@ public class Screen {
   }
 
   private String buildNullString(int length) {
-    StringBuilder str = new StringBuilder();
-    for (int j = 0; j < length; j++) {
-      str.append(" ");
-    }
-    return str.toString();
+    return StringUtils.repeat(' ', length);
   }
 
   private int buildLinealPosition(int row, int column) {
