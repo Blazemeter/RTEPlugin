@@ -140,7 +140,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
   }
 
   public void setWaitForTextCondition(String text) {
-    regex = Perl5Compiler.quotemeta(text).replace("\\\n", ".*\\\n.*");
+    regex = Perl5Compiler.quotemeta(text).replace("\\\n", ".*\\n.*");
     timestampWaitForText = clock.instant();
   }
 

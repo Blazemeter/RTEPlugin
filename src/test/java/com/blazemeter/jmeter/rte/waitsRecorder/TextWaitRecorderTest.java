@@ -34,6 +34,8 @@ public class TextWaitRecorderTest {
 
   private static final long STABLE_PERIOD = 1000;
   private final static long CLOCK_STEP_MILLIS = 400L;
+  public static final String SELECTED_TEXT = "User  \n" + "Passwo";
+  public static final String REGEX = "User\\ \\ .*\\n.*Passwo";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
@@ -79,10 +81,10 @@ public class TextWaitRecorderTest {
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
     textWaitRecorder.onTerminalStateChange();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)),
-        "User  .*\\n.*" + "Passwo"), textWaitRecorder.stop());
+        REGEX), textWaitRecorder.stop());
   }
 
   private Optional<WaitCondition> buildExpectedCondition(long timeout, String regex) {
@@ -105,13 +107,12 @@ public class TextWaitRecorderTest {
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
     textWaitRecorder.onTerminalStateChange();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 4));
     textWaitRecorder.onTerminalStateChange();
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)),
-        "User  .*\\n.*" + "Passwo"), textWaitRecorder.stop());
+        REGEX), textWaitRecorder.stop());
   }
 
   @Test
@@ -127,11 +128,10 @@ public class TextWaitRecorderTest {
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
     textWaitRecorder.onTerminalStateChange();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 11));
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
-    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 12));
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)) * 10,
-        "User  .*\\n.*" + "Passwo"), textWaitRecorder.stop()); //this one
+        REGEX), textWaitRecorder.stop());
   }
 
   @Test
@@ -147,10 +147,10 @@ public class TextWaitRecorderTest {
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
     textWaitRecorder.onTerminalStateChange();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 11));
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
     assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS * 2)),
-        "User  .*\\n.*" + "Passwo"), textWaitRecorder.stop());
+        REGEX), textWaitRecorder.stop());
   }
 
   private URL findResource(String file) {

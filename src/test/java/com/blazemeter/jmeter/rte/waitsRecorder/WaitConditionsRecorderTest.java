@@ -96,7 +96,6 @@ public class WaitConditionsRecorderTest {
         .thenReturn(Optional.of(now.plusMillis(STABLE_PERIOD_MILLIS + 100)));
     when(syncWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SYNC_WAIT_CONDITION));
     when(textWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(TEXT_WAIT_CONDITION));
-    when(silentWaitRecorder.buildWaitCondition()).thenReturn(Optional.of(SILENT_WAIT_CONDITION));
     List<WaitCondition> waitConditions = waitConditionsRecorder.stop();
     List<WaitCondition> expectedWaitConditions = new ArrayList<>();
     expectedWaitConditions.add(SYNC_WAIT_CONDITION);

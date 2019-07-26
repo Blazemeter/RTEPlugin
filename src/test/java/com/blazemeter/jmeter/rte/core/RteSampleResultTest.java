@@ -7,6 +7,7 @@ import com.blazemeter.jmeter.rte.sampler.Action;
 import java.awt.Dimension;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 public class RteSampleResultTest {
@@ -20,6 +21,7 @@ public class RteSampleResultTest {
       "Terminal-type: IBM-3179-2: 24x80\n" +
       "Security: NONE\n" +
       "Action: CONNECT\n";
+  public static final int SCREEN_WIDTH = 30;
 
   private static List<Input> CUSTOM_INPUTS = Collections
       .singletonList(new CoordInput(new Position(3, 2), "input"));
@@ -100,14 +102,23 @@ public class RteSampleResultTest {
 
   @Test
   public void shouldGetScreenTextWhenGetResponseData() {
-    Screen screen = new Screen(new Dimension(30, 1));
+    Screen screen = new Screen(new Dimension(SCREEN_WIDTH, 1));
     String screenText = "Testing screen text";
     screen.addSegment(0, screenText);
 
     RteSampleResult rteSampleResult = new RteSampleResult();
     rteSampleResult.setScreen(screen);
+    assertThat(rteSampleResult.getResponseDataAsString())
+        .isEqualTo(buildScreenText(screenText, SCREEN_WIDTH));
+  }
 
-    assertThat(rteSampleResult.getResponseDataAsString()).isEqualTo(screenText);
+  private String buildScreenText(String text, int width) {
+    StringBuilder str = new StringBuilder(text);
+    for (int i = text.length(); i < width; i++) {
+      str.append(' ');
+    }
+    str.append('\n');
+    return str.toString();
   }
 
   @Test
