@@ -12,6 +12,7 @@ import com.blazemeter.jmeter.rte.recorder.wait.TextWaitRecorder;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.net.URL;
@@ -32,28 +33,36 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class TextWaitRecorderTest {
 
   private static final long STABLE_PERIOD = 1000;
-  private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
   private final static long CLOCK_STEP_MILLIS = 400L;
+  public static final String SELECTED_TEXT = "User  \n" + "Passwo";
+  public static final String REGEX = "User\\ \\ .*\\n.*Passwo";
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+  private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
   private final Screen EMPTY_SCREEN = new Screen(new Dimension(80, 24));
   private TextWaitRecorder textWaitRecorder;
   private Instant startTime;
+  private Screen LOGIN_SCREEN = buildScreenFromHtmlFile("login-welcome-screen.html");
   @Mock
   private Clock clock;
   @Mock
   private RteProtocolClient rteProtocolClientMock;
-  @Rule
-  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
+  @VisibleForTesting
+  public TextWaitRecorderTest() throws IOException {
+  }
 
   @Before
   public void setup() {
-    textWaitRecorder = new TextWaitRecorder(rteProtocolClientMock, TIMEOUT_THRESHOLD_MILLIS, STABLE_PERIOD, STABLE_PERIOD, clock);
+    textWaitRecorder = new TextWaitRecorder(rteProtocolClientMock, TIMEOUT_THRESHOLD_MILLIS,
+        STABLE_PERIOD, STABLE_PERIOD, clock);
     startTime = Instant.now();
   }
 
   @Test
-  public void shouldReturnEmptyWhenTextConditionIsNotSet() throws IOException {
+  public void shouldReturnEmptyWhenTextConditionIsNotSet() {
     when(rteProtocolClientMock.getScreen())
-        .thenReturn(buildScreenFromHtmlFile("login-welcome-screen.html"));
+        .thenReturn(LOGIN_SCREEN);
     when(clock.instant()).thenReturn(startTime);
     textWaitRecorder.start();
     textWaitRecorder.onTerminalStateChange();
@@ -62,20 +71,20 @@ public class TextWaitRecorderTest {
   }
 
   @Test
-  public void shouldReturnConditionWithLastTimeoutWhenWasNotStable() throws IOException {
-    when(clock.instant()).thenReturn(startTime,
-        startTime.plusMillis(CLOCK_STEP_MILLIS),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 2),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
+  public void shouldReturnConditionWithLastTimeoutWhenWasNotStable() {
+    when(clock.instant()).thenReturn(startTime);
     when(rteProtocolClientMock.getScreen())
-        .thenReturn(buildScreenFromHtmlFile("login-welcome-screen.html"), EMPTY_SCREEN);
+        .thenReturn(LOGIN_SCREEN, EMPTY_SCREEN, LOGIN_SCREEN);
     textWaitRecorder.start();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
     textWaitRecorder.onTerminalStateChange();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
     textWaitRecorder.onTerminalStateChange();
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
-    assertWaitTextCondition(buildExpectedCondition(
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
+    assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)),
-        "User  .*?\n.*?" + "Passwo"), textWaitRecorder.stop());
+        REGEX), textWaitRecorder.stop());
   }
 
   private Optional<WaitCondition> buildExpectedCondition(long timeout, String regex) {
@@ -87,83 +96,61 @@ public class TextWaitRecorderTest {
     return Optional.of(expected);
   }
 
-  private void assertWaitTextCondition(Optional<WaitCondition> expected,
-      Optional<WaitCondition> actual) {
-
-    softly.assertThat(((TextWaitCondition) expected.get()).getRegex()).as("Regex")
-        .isEqualTo(((TextWaitCondition) expected.get()).getRegex());
-    softly.assertThat(((TextWaitCondition) expected.get()).getSearchArea()).as("SearchArea")
-        .isEqualTo(((TextWaitCondition) expected.get()).getSearchArea());
-    softly.assertThat(expected.get().getTimeoutMillis()).as("Timeout")
-        .isEqualTo(expected.get().getTimeoutMillis());
-    assertEquals(expected.isPresent(), actual.isPresent());
-  }
-
   @Test
-  public void shouldIgnoreAllScreenAfterSetCondition() throws IOException {
-    when(clock.instant()).thenReturn(startTime,
-        startTime.plusMillis(CLOCK_STEP_MILLIS),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 2),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 3),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 4),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
+  public void shouldIgnoreAllScreenAfterSetCondition() {
+    when(clock.instant()).thenReturn(startTime);
     when(rteProtocolClientMock.getScreen())
-        .thenReturn(buildScreenFromHtmlFile("login-welcome-screen.html"),
-            new Screen(new Dimension(80, 24)),
-            buildScreenFromHtmlFile("login-welcome-screen.html"),
-            new Screen(new Dimension(80, 24)));
+        .thenReturn(LOGIN_SCREEN, EMPTY_SCREEN, LOGIN_SCREEN, EMPTY_SCREEN);
     textWaitRecorder.start();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
     textWaitRecorder.onTerminalStateChange();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
     textWaitRecorder.onTerminalStateChange();
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 3));
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 4));
     textWaitRecorder.onTerminalStateChange();
-    assertWaitTextCondition(buildExpectedCondition(
+    assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)),
-        "User  .*?\n.*?" + "Passwo"), textWaitRecorder.stop());
+        REGEX), textWaitRecorder.stop());
   }
 
   @Test
-  public void shouldReturnFirstStableTimeoutWhenStableBeforeSetCondition() throws IOException {
-    when(clock.instant()).thenReturn(startTime,
-        startTime.plusMillis(CLOCK_STEP_MILLIS),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 2),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 10),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 11),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 12));
+  public void shouldReturnStartOfStableTimeoutWhenStableBeforeSetCondition() {
+    when(clock.instant()).thenReturn(startTime);
     when(rteProtocolClientMock.getScreen())
-        .thenReturn(buildScreenFromHtmlFile("login-welcome-screen.html"),
-            new Screen(new Dimension(80, 24)),
-            buildScreenFromHtmlFile("login-welcome-screen.html"),
-            new Screen(new Dimension(80, 24)));
+        .thenReturn(LOGIN_SCREEN, EMPTY_SCREEN, LOGIN_SCREEN, EMPTY_SCREEN);
     textWaitRecorder.start();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
     textWaitRecorder.onTerminalStateChange();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
     textWaitRecorder.onTerminalStateChange();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
     textWaitRecorder.onTerminalStateChange();
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
-    assertWaitTextCondition(buildExpectedCondition(
-        ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)),
-        "User  .*?\n.*?" + "Passwo"), textWaitRecorder.stop());
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 11));
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
+    assertEquals(buildExpectedCondition(
+        ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS)) * 10,
+        REGEX), textWaitRecorder.stop());
   }
 
   @Test
-  public void shouldReturnLastOccurrenceTimeoutWhenIsTheOnlyStable() throws IOException {
-    when(clock.instant()).thenReturn(startTime,
-        startTime.plusMillis(CLOCK_STEP_MILLIS),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 2),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 10),
-        startTime.plusMillis(CLOCK_STEP_MILLIS * 11));
+  public void shouldReturnLastOccurrenceTimeoutWhenIsTheOnlyStable() {
+    when(clock.instant()).thenReturn(startTime);
     when(rteProtocolClientMock.getScreen())
-        .thenReturn(new Screen(new Dimension(80, 24)),
-            buildScreenFromHtmlFile("login-welcome-screen.html"),
-            new Screen(new Dimension(80, 24)));
+        .thenReturn(EMPTY_SCREEN, LOGIN_SCREEN, EMPTY_SCREEN);
     textWaitRecorder.start();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS));
     textWaitRecorder.onTerminalStateChange();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 2));
     textWaitRecorder.onTerminalStateChange();
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 10));
     textWaitRecorder.onTerminalStateChange();
-    textWaitRecorder.setWaitForTextCondition("User  \n" + "Passwo");
-    assertWaitTextCondition(buildExpectedCondition(
+    when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 11));
+    textWaitRecorder.setWaitForTextCondition(SELECTED_TEXT);
+    assertEquals(buildExpectedCondition(
         ChronoUnit.MILLIS.between(startTime, startTime.plusMillis(CLOCK_STEP_MILLIS * 2)),
-        "User  .*?\n.*?" + "Passwo"), textWaitRecorder.stop());
+        REGEX), textWaitRecorder.stop());
   }
 
   private URL findResource(String file) {

@@ -30,10 +30,6 @@ public class Screen {
     this.size = size;
   }
 
-  public Dimension getSize() {
-    return size;
-  }
-
   public static Screen valueOf(String screen) {
     int width = screen.indexOf('\n');
     int height = screen.length() / (width + 1);
@@ -44,6 +40,45 @@ public class Screen {
       pos += width;
     }
     return ret;
+  }
+
+  public static Screen fromHtml(String html) {
+    try {
+      Document doc = parseHtmlDocument(html);
+      Element root = doc.getDocumentElement();
+      Element head = (Element) root.getElementsByTagName("head").item(0);
+      Element meta = (Element) head.getElementsByTagName("meta").item(0);
+      String sizeStr = meta.getAttribute("content");
+      int separatorIndex = sizeStr.indexOf('x');
+      Screen ret = new Screen(new Dimension(Integer.parseInt(sizeStr.substring(separatorIndex + 1)),
+          Integer.parseInt(sizeStr.substring(0, separatorIndex))));
+      NodeList pres = root.getElementsByTagName("pre");
+      int linealPosition = 0;
+      for (int i = 0; i < pres.getLength(); i++) {
+        Element pre = (Element) pres.item(i);
+        String segmentText = pre.getTextContent().replace("\n", "");
+        if ("true".equals(pre.getAttribute("contenteditable"))) {
+          ret.addField(linealPosition, segmentText);
+        } else {
+          ret.addSegment(linealPosition, segmentText);
+        }
+        linealPosition += segmentText.length();
+      }
+      return ret;
+    } catch (ParserConfigurationException | SAXException | IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static Document parseHtmlDocument(String html)
+      throws SAXException, IOException, ParserConfigurationException {
+    InputSource is = new InputSource();
+    is.setCharacterStream(new StringReader(html));
+    return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
+  }
+
+  public Dimension getSize() {
+    return size;
   }
 
   public List<Segment> getSegments() {
@@ -70,10 +105,41 @@ public class Screen {
 
   public String getText() {
     StringBuilder screen = new StringBuilder();
+    int nextScreenPosition = 0;
     for (Segment segment : segments) {
+      int segmentPosition = buildLinealPosition(segment.getRow(), segment.getColumn());
+      if (segmentPosition != nextScreenPosition) {
+        Segment fillSegment = new Segment(buildRowFromLinealPosition(nextScreenPosition),
+            buildColumnFromLinealPosition(nextScreenPosition),
+            buildNullString(segmentPosition - nextScreenPosition), false);
+        screen.append(fillSegment.getWrappedText(size.width));
+        nextScreenPosition += fillSegment.getText().length();
+
+      }
       screen.append(segment.getWrappedText(size.width));
+      nextScreenPosition += segment.text.length();
     }
+    int lastScreenPosition = size.width * size.height;
+    if (nextScreenPosition < lastScreenPosition) {
+      screen.append(new Segment(buildRowFromLinealPosition(nextScreenPosition),
+          buildColumnFromLinealPosition(nextScreenPosition),
+          buildNullString(lastScreenPosition - nextScreenPosition), false)
+          .getWrappedText(size.width));
+    }
+
     return screen.toString();
+  }
+
+  private String buildNullString(int length) {
+    StringBuilder str = new StringBuilder();
+    for (int j = 0; j < length; j++) {
+      str.append(" ");
+    }
+    return str.toString();
+  }
+
+  private int buildLinealPosition(int row, int column) {
+    return size.width * (row - 1) + column - 1;
   }
 
   public Screen withInvisibleCharsToSpaces() {
@@ -137,41 +203,6 @@ public class Screen {
     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public static Screen fromHtml(String html) {
-    try {
-      Document doc = parseHtmlDocument(html);
-      Element root = doc.getDocumentElement();
-      Element head = (Element) root.getElementsByTagName("head").item(0);
-      Element meta = (Element) head.getElementsByTagName("meta").item(0);
-      String sizeStr = meta.getAttribute("content");
-      int separatorIndex = sizeStr.indexOf('x');
-      Screen ret = new Screen(new Dimension(Integer.parseInt(sizeStr.substring(separatorIndex + 1)),
-          Integer.parseInt(sizeStr.substring(0, separatorIndex))));
-      NodeList pres = root.getElementsByTagName("pre");
-      int linealPosition = 0;
-      for (int i = 0; i < pres.getLength(); i++) {
-        Element pre = (Element) pres.item(i);
-        String segmentText = pre.getTextContent().replace("\n", "");
-        if ("true".equals(pre.getAttribute("contenteditable"))) {
-          ret.addField(linealPosition, segmentText);
-        } else {
-          ret.addSegment(linealPosition, segmentText);
-        }
-        linealPosition += segmentText.length();
-      }
-      return ret;
-    } catch (ParserConfigurationException | SAXException | IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static Document parseHtmlDocument(String html)
-      throws SAXException, IOException, ParserConfigurationException {
-    InputSource is = new InputSource();
-    is.setCharacterStream(new StringReader(html));
-    return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
   }
 
   @Override

@@ -261,14 +261,30 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
         if (labelText != null) {
-          fields.add(new LabelInput(labelText.trim(), f.getString()));
+          fields.add(new LabelInput(labelText.trim(), trimNulls(f.getString())));
         } else {
-          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), f.getString()));
+          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
+              trimNulls(f.getString())));
         }
       }
     }
     labelText = null;
     return fields;
+  }
+
+  private String trimNulls(String str) {
+    if (str.isEmpty()) {
+      return str;
+    }
+    int firstNotNull = 0;
+    while (str.charAt(firstNotNull) == '\u0000') {
+      firstNotNull++;
+    }
+    int lastNotNull = str.length() - 1;
+    while (str.charAt(lastNotNull) == '\u0000') {
+      lastNotNull--;
+    }
+    return str.substring(firstNotNull, lastNotNull + 1);
   }
 
   private static class KeyEventMap {
@@ -318,17 +334,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         labelText = xi5250Crt.getStringSelectedArea();
         if (labelText != null) {
           if (labelText.contains("\n")) {
-            showUserMessage("Please select only one row", "Input by label error");
+            showUserMessage("Please select only one row");
             LOG.warn(
                 "Input by label does not support multiple selected rows, "
                     + "please select just one row.");
             labelText = null;
           }
         } else {
-          showUserMessage("Please select a part of the screen", "Selection error");
-          LOG.warn(
-              "The selection of a screen area is essential to be used "
-                  + "as input by selectedText later on.");
+          warnUserOfNotScreenSelectedArea("input by label");
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
@@ -342,10 +355,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
             listener.onWaitForText(selectedText);
           }
         } else {
-          showUserMessage("Please select a part of the screen", "Selection error");
-          LOG.warn(
-              "The selection of a screen area is essential to "
-                  + "be used as wait condition text later on.");
+          warnUserOfNotScreenSelectedArea("wait text condition");
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
@@ -368,8 +378,15 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       });
     }
 
-    private void showUserMessage(String msg, String title) {
-      JOptionPane.showMessageDialog(this, msg, title, JOptionPane.INFORMATION_MESSAGE);
+    private void showUserMessage(String msg) {
+      JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void warnUserOfNotScreenSelectedArea(String usage) {
+      showUserMessage("Please select a part of the screen");
+      LOG.warn(
+          "The selection of a screen area is essential to "
+              + "be used as " + usage + " later on.");
     }
 
     private String requestAssertionName() {
@@ -403,8 +420,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener.onAttentionKey(attentionKey, fields);
             }
           } else {
-            showUserMessage(attentionKey + " not supported for current protocol",
-                "Unsupported Attention Key");
+            showUserMessage(attentionKey + " not supported for current protocol");
             e.consume();
           }
         }

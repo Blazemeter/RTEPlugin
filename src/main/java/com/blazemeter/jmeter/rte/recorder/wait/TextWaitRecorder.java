@@ -5,7 +5,6 @@ import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
-import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.Dimension;
 import java.time.Clock;
@@ -21,18 +20,19 @@ import java.util.stream.Collectors;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.PatternMatcher;
+import org.apache.oro.text.regex.Perl5Compiler;
 
 public class TextWaitRecorder extends WaitConditionRecorder {
 
   private Deque<Screenshot> screenshots = new ArrayDeque<>();
   private String regex;
   private Instant timestampWaitForText = null;
-  private long stablePeriod;
+  private long stableTimeoutMillis;
 
   public TextWaitRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
-      long stablePeriodThresholdMillis, long stablePeriodMillis) {
+      long stablePeriodThresholdMillis, long stableTimeoutMillis) {
     super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis);
-    this.stablePeriod = stablePeriodMillis;
+    this.stableTimeoutMillis = stableTimeoutMillis;
   }
 
   @VisibleForTesting
@@ -40,11 +40,11 @@ public class TextWaitRecorder extends WaitConditionRecorder {
       long stablePeriodThresholdMillis, long stablePeriodMillis,
       Clock clock) {
     super(rteProtocolClient, timeoutThresholdMillis, stablePeriodThresholdMillis, clock);
-    this.stablePeriod = stablePeriodMillis;
+    this.stableTimeoutMillis = stablePeriodMillis;
   }
 
   @Override
-  public void onTerminalStateChange() {
+  public synchronized void onTerminalStateChange() {
     Screen screen = rteProtocolClient.getScreen();
     if (screenshots.isEmpty() || !screenshots.getLast().screen.equals(screen)) {
       screenshots.add(new Screenshot(screen, clock.instant()));
@@ -85,7 +85,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
     return Optional.of(new TextWaitCondition(pattern, matcher,
         Area.fromTopLeftBottomRight(1, 1, screenSize.height,
             screenSize.width), timeout + timeoutThresholdMillis,
-        RTESampler.getStableTimeout()));
+        stableTimeoutMillis));
   }
 
   private long getMaxScreenTextStablePeriod(List<ScreenTextPeriod> stablePeriods) {
@@ -100,9 +100,10 @@ public class TextWaitRecorder extends WaitConditionRecorder {
       Pattern pattern) {
     List<ScreenTextPeriod> textPeriods = getTextPeriods(matcher, pattern);
     List<ScreenTextPeriod> screenTextStablePeriod = textPeriods.stream()
-        .filter(e -> e.periodMillis >= stablePeriod)
+        .filter(e -> e.periodMillis >= stableTimeoutMillis)
         .collect(Collectors.toList());
     ScreenTextPeriod lastTextPeriod = textPeriods.get(textPeriods.size() - 1);
+    
     if (screenTextStablePeriod.isEmpty()
         || screenTextStablePeriod.get(screenTextStablePeriod.size() - 1) != lastTextPeriod) {
       screenTextStablePeriod.add(lastTextPeriod);
@@ -110,7 +111,8 @@ public class TextWaitRecorder extends WaitConditionRecorder {
     return screenTextStablePeriod;
   }
 
-  private List<ScreenTextPeriod> getTextPeriods(PatternMatcher matcher, Pattern pattern) {
+  private synchronized List<ScreenTextPeriod> getTextPeriods(PatternMatcher matcher,
+      Pattern pattern) {
     List<ScreenTextPeriod> textPeriods = new ArrayList<>();
     Iterator<Screenshot> it = screenshots.iterator();
     while (it.hasNext()) {
@@ -138,7 +140,7 @@ public class TextWaitRecorder extends WaitConditionRecorder {
   }
 
   public void setWaitForTextCondition(String text) {
-    regex = text.replace("\n", ".*\\n.*");
+    regex = Perl5Compiler.quotemeta(text).replace("\\\n", ".*\\n.*");
     timestampWaitForText = clock.instant();
   }
 

@@ -54,11 +54,10 @@ public class WaitConditionsRecorder {
       Instant lastSilentTime = silentWaitRecorder.getLastStatusChangeTime().orElse(null);
       if ((lastSyncInputInhibitedTime != null) &&
           (ChronoUnit.MILLIS.between(lastSyncInputInhibitedTime,
-              lastSilentTime) > stablePeriodMillis) && textWaitCondition.isPresent()) {
-        waitConditions.add(textWaitCondition.get());
+              lastSilentTime) > stablePeriodMillis) && !textWaitCondition.isPresent()) {
         waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
       }
-    } else {
+    } else if (!textWaitCondition.isPresent()) {
       waitConditions.add(silentWaitRecorder.buildWaitCondition().orElse(null));
 
     }
