@@ -110,9 +110,7 @@ public class Screen {
     for (Segment segment : segments) {
       int segmentPosition = buildLinealPosition(segment.getRow(), segment.getColumn());
       if (segmentPosition != nextScreenPosition) {
-        Segment fillSegment = new Segment(buildRowFromLinealPosition(nextScreenPosition),
-            buildColumnFromLinealPosition(nextScreenPosition),
-            buildNullString(segmentPosition - nextScreenPosition), false);
+        Segment fillSegment = buildBlankSegmentForRange(nextScreenPosition, segmentPosition);
         screen.append(fillSegment.getWrappedText(size.width));
         nextScreenPosition += fillSegment.getText().length();
 
@@ -122,16 +120,20 @@ public class Screen {
     }
     int lastScreenPosition = size.width * size.height;
     if (nextScreenPosition < lastScreenPosition) {
-      screen.append(new Segment(buildRowFromLinealPosition(nextScreenPosition),
-          buildColumnFromLinealPosition(nextScreenPosition),
-          buildNullString(lastScreenPosition - nextScreenPosition), false)
+      screen.append(buildBlankSegmentForRange(nextScreenPosition, lastScreenPosition)
           .getWrappedText(size.width));
     }
 
     return screen.toString();
   }
 
-  private String buildNullString(int length) {
+  private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
+    return new Segment(buildRowFromLinealPosition(firstPosition),
+              buildColumnFromLinealPosition(firstPosition),
+              buildBlankString(lastPosition - firstPosition), false);
+  }
+
+  private String buildBlankString(int length) {
     return StringUtils.repeat(' ', length);
   }
 

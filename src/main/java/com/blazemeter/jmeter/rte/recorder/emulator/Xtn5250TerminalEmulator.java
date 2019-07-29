@@ -367,7 +367,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       showUserMessage("Please select a part of the screen");
       LOG.warn(
           "The selection of a screen area is essential to "
-              + "be used as " + usage + " later on.");
+              + "be used as {} later on.", usage);
     }
 
     @Override
