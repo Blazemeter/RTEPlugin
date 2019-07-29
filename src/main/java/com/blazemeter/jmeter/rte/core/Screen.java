@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -109,9 +110,7 @@ public class Screen {
     for (Segment segment : segments) {
       int segmentPosition = buildLinealPosition(segment.getRow(), segment.getColumn());
       if (segmentPosition != nextScreenPosition) {
-        Segment fillSegment = new Segment(buildRowFromLinealPosition(nextScreenPosition),
-            buildColumnFromLinealPosition(nextScreenPosition),
-            buildNullString(segmentPosition - nextScreenPosition), false);
+        Segment fillSegment = buildBlankSegmentForRange(nextScreenPosition, segmentPosition);
         screen.append(fillSegment.getWrappedText(size.width));
         nextScreenPosition += fillSegment.getText().length();
 
@@ -121,21 +120,21 @@ public class Screen {
     }
     int lastScreenPosition = size.width * size.height;
     if (nextScreenPosition < lastScreenPosition) {
-      screen.append(new Segment(buildRowFromLinealPosition(nextScreenPosition),
-          buildColumnFromLinealPosition(nextScreenPosition),
-          buildNullString(lastScreenPosition - nextScreenPosition), false)
+      screen.append(buildBlankSegmentForRange(nextScreenPosition, lastScreenPosition)
           .getWrappedText(size.width));
     }
 
     return screen.toString();
   }
 
-  private String buildNullString(int length) {
-    StringBuilder str = new StringBuilder();
-    for (int j = 0; j < length; j++) {
-      str.append(" ");
-    }
-    return str.toString();
+  private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
+    return new Segment(buildRowFromLinealPosition(firstPosition),
+              buildColumnFromLinealPosition(firstPosition),
+              buildBlankString(lastPosition - firstPosition), false);
+  }
+
+  private String buildBlankString(int length) {
+    return StringUtils.repeat(' ', length);
   }
 
   private int buildLinealPosition(int row, int column) {
