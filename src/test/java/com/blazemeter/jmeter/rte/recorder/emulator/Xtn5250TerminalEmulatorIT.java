@@ -2,9 +2,12 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.swing.timing.Pause.pause;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -18,20 +21,26 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
+import org.assertj.swing.finder.JOptionPaneFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
+import org.assertj.swing.fixture.JOptionPaneFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -42,11 +51,18 @@ public class Xtn5250TerminalEmulatorIT {
   private static final int ROWS = 24;
   private static final String COPY_BUTTON = "copyButton";
   private static final String PASTE_BUTTON = "pasteButton";
+  private static final String INPUT_BY_LABEL_BUTTON = "labelButton";
   private static final String TEST_SCREEN_FILE = "test-screen.txt";
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
+  private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
 
+  @Rule
+  public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
   private FrameFixture frame;
+
+  @Mock
+  private TerminalEmulatorListener listener;
 
   private static Screen buildScreen(String text) {
     Dimension screenSize = new Dimension(80, 24);
@@ -281,6 +297,59 @@ public class Xtn5250TerminalEmulatorIT {
     return Resources.toString(getClass().getResource(file), Charsets.UTF_8);
   }
 
+  @Test
+  public void shouldShowUserMessageWhenUnsupportedAttentionKey() {
+    setScreen("");
+    sendKey(KeyEvent.VK_ESCAPE, 0, 0, 0);
+    findOptionPane().requireMessage("ATTN not supported for current protocol");
+
+  }
+
+  private JOptionPaneFixture findOptionPane() {
+    return JOptionPaneFinder.findOptionPane().using(frame.robot());
+  }
+
+  @Test
+  public void shouldShowUserMessageWhenInputByLabelWithNonSelectedArea() {
+    setScreen("");
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    findOptionPane().requireMessage("Please select a part of the screen");
+
+  }
+
+  @Test
+  public void shouldShowUserMessageWhenInputByLabelWithTwoRows() {
+    setScreen("");
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 4));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    findOptionPane().requireMessage("Please select only one row");
+  }
+
+  @Test
+  public void shouldSendInputByLabelThroughListenerWhenInputByLabel() {
+    setScreen("");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 5, 1));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    String test = "t";
+    String input = test + StringUtils.repeat(' ', COLUMNS - test.length());
+    sendKey(KeyEvent.VK_T, 0, 2, 1);
+    sendKey(KeyEvent.VK_ENTER, 0, 2, 5);
+    List<Input> inputs = new ArrayList<>();
+    inputs.add(new LabelInput("*****", input));
+    verify(listener).onAttentionKey(AttentionKey.ENTER, inputs);
+  }
+
+  @Test
+  public void shouldCallTheListenerWhenPressWaitForTextButton() {
+    setScreen("");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(1, 0, 5, 4));
+    clickButton(WAIT_FOR_TEXT_BUTTON);
+    verify(listener, timeout(PAUSE_TIMEOUT))
+        .onWaitForText("*****\n " + "    \n" + "EXTO \n" + "EXTO ");
+  }
+
   private static class TestTerminalEmulatorListener implements TerminalEmulatorListener {
 
     private AttentionKey attentionKey = null;
@@ -294,10 +363,14 @@ public class Xtn5250TerminalEmulatorIT {
       this.attentionKey = attentionKey;
     }
 
+    @Override
+    public void onWaitForText(String text) {
+
+    }
+
     public AttentionKey getAttentionKey() {
       return attentionKey;
     }
 
   }
-
 }

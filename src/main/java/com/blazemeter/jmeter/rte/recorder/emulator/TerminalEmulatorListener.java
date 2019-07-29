@@ -10,4 +10,6 @@ public interface TerminalEmulatorListener {
 
   void onAttentionKey(AttentionKey attentionKey, List<Input> inputs);
 
+  void onWaitForText(String text);
+
 }

@@ -49,17 +49,30 @@ public class ScreenTest {
     screen.addSegment(0, segmentText);
     String fieldText = "TESTUSR";
     screen.addField(segmentText.length(), fieldText);
-    String lastSegmentText = StringUtils
-        .repeat(' ', SCREEN_WIDTH * 3 - (segmentText.length() + fieldText.length()));
-    screen.addSegment(segmentText.length() + fieldText.length(), lastSegmentText);
-    assertThat(screen.getText()).isEqualTo(segmentText + fieldText + lastSegmentText + "\n");
+    assertThat(screen.getText())
+        .isEqualTo(buildExpectedString(segmentText + fieldText, SCREEN_WIDTH * 3, SCREEN_HEIGHT));
+
+  }
+
+  private String buildExpectedString(String text, int width, int height) {
+    StringBuilder str = new StringBuilder(text);
+    int begin;
+    for (int j = 0; j < height; j++) {
+      begin = j != 0 ? 0 : text.length();
+      for (int i = begin; i < width; i++) {
+        str.append(' ');
+      }
+      str.append('\n');
+    }
+    return str.toString();
   }
 
   @Test
   public void shouldGetScreenTextWithInvisibleCharactersAsSpacesWhenGetText() {
     Screen screen = buildScreen();
     screen.addSegment(0, "T\u0000est");
-    assertThat(screen.getText()).isEqualTo("T est\n");
+    assertThat(screen.getText()).isEqualTo(
+        buildExpectedString("T est", screen.getSize().width, screen.getSize().height));
   }
 
   @Test

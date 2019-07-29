@@ -17,20 +17,20 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   protected RteProtocolClient rteProtocolClient;
   protected long maxStablePeriodMillis;
   protected long stablePeriodThresholdMillis;
+  protected Clock clock;
+  protected Instant startTime;
+  protected long timeoutThresholdMillis;
   private Instant lastStatusChangeTime;
-  private Instant startTime;
-  private long timeoutThresholdMillis;
-  private Clock clock;
 
   public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
-                               long stablePeriodThresholdMillis) {
+      long stablePeriodThresholdMillis) {
     this(rteProtocolClient, timeoutThresholdMillis,
         stablePeriodThresholdMillis, Clock.systemUTC());
   }
 
   @VisibleForTesting
   public WaitConditionRecorder(RteProtocolClient rteProtocolClient, long timeoutThresholdMillis,
-                               long stablePeriodThresholdMillis, Clock clock) {
+      long stablePeriodThresholdMillis, Clock clock) {
     this.rteProtocolClient = rteProtocolClient;
     this.timeoutThresholdMillis = timeoutThresholdMillis;
     this.stablePeriodThresholdMillis = stablePeriodThresholdMillis;
@@ -70,9 +70,9 @@ public abstract class WaitConditionRecorder implements TerminalStateListener {
   public Optional<Instant> getLastStatusChangeTime() {
     return Optional.ofNullable(lastStatusChangeTime);
   }
-  
+
   @Override
-  public void onException(Throwable e){
-    
+  public void onException(Throwable e) {
+
   }
 }

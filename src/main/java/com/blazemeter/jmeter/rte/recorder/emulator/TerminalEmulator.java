@@ -23,6 +23,4 @@ public interface TerminalEmulator {
   void addTerminalEmulatorListener(TerminalEmulatorListener terminalEmulatorListener);
 
   void setSupportedAttentionKeys(Set<AttentionKey> supportedAttentionKeys);
-  
-  void setStatusMessage(String message);
 }

@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
@@ -28,9 +29,12 @@ import java.util.Set;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator {
 
@@ -82,9 +86,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private static final String TITLE = "Recorder";
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
-
+  private static final Logger LOG = LoggerFactory.getLogger(Xtn5250TerminalEmulator.class);
+  private JButton waitForTextButton = createIconButton("waitForTextButton", "waitForText.png");
   private JButton copyButton = createIconButton("copyButton", "copy.png");
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
+  private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
 
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
@@ -92,6 +98,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
   private Set<AttentionKey> supportedAttentionKeys;
+  private String labelText;
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -135,12 +142,20 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     GroupLayout layout = new GroupLayout(toolsPanel);
     toolsPanel.setLayout(layout);
 
+    copyButton.setToolTipText("Copy");
+    pasteButton.setToolTipText("Paste");
+    labelButton.setToolTipText("Input by label");
+    waitForTextButton.setToolTipText("Text wait condition");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton)
-        .addComponent(pasteButton));
+        .addComponent(pasteButton)
+        .addComponent(labelButton)
+        .addComponent(waitForTextButton));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(copyButton)
-        .addComponent(pasteButton));
+        .addComponent(pasteButton)
+        .addComponent(labelButton)
+        .addComponent(waitForTextButton));
 
     return toolsPanel;
   }
@@ -234,12 +249,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     this.supportedAttentionKeys = supportedAttentionKeys;
   }
 
-  @Override
-  public void setStatusMessage(String message) {
-    this.statusPanel.setStatusMessage(message);
-
-  }
-
   private boolean isAttentionKeyValid(AttentionKey attentionKey) {
     return supportedAttentionKeys.contains(attentionKey);
   }
@@ -248,10 +257,15 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     List<Input> fields = new ArrayList<>();
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        fields.add(
-            new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1), trimNulls(f.getString())));
+        if (labelText != null) {
+          fields.add(new LabelInput(labelText.trim(), trimNulls(f.getString())));
+        } else {
+          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
+              trimNulls(f.getString())));
+        }
       }
     }
+    labelText = null;
     return fields;
   }
 
@@ -312,6 +326,48 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         doPaste();
         xi5250Crt.requestFocus();
       });
+      labelButton.addActionListener(e -> {
+
+        labelText = xi5250Crt.getStringSelectedArea();
+        if (labelText != null) {
+          if (labelText.contains("\n")) {
+            showUserMessage("Please select only one row");
+            LOG.warn(
+                "Input by label does not support multiple selected rows, "
+                    + "please select just one row.");
+            labelText = null;
+          }
+        } else {
+          warnUserOfNotScreenSelectedArea("input by label");
+        }
+        xi5250Crt.requestFocus();
+        xi5250Crt.clearSelectedArea();
+      });
+
+      waitForTextButton.addActionListener(e -> {
+        String selectedText = xi5250Crt.getStringSelectedArea();
+
+        if (selectedText != null) {
+          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+            listener.onWaitForText(selectedText);
+          }
+        } else {
+          warnUserOfNotScreenSelectedArea("wait text condition");
+        }
+        xi5250Crt.requestFocus();
+        xi5250Crt.clearSelectedArea();
+      });
+    }
+
+    private void showUserMessage(String msg) {
+      JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void warnUserOfNotScreenSelectedArea(String usage) {
+      showUserMessage("Please select a part of the screen");
+      LOG.warn(
+          "The selection of a screen area is essential to "
+              + "be used as {} later on.", usage);
     }
 
     @Override
@@ -341,7 +397,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener.onAttentionKey(attentionKey, fields);
             }
           } else {
-            setStatusMessage(attentionKey + " not supported for this emulator protocol");
+            showUserMessage(attentionKey + " not supported for current protocol");
             e.consume();
           }
         }

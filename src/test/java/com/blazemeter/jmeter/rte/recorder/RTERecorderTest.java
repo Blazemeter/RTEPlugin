@@ -20,6 +20,7 @@ import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
@@ -31,10 +32,13 @@ import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.sampler.Action;
+import com.blazemeter.jmeter.rte.sampler.Inputs;
+import com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -111,7 +115,7 @@ public class RTERecorderTest {
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> terminalEmulator;
     rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, treeModel,
         p -> terminalClient);
-
+    
     setupRecorder();
   }
 
@@ -630,5 +634,6 @@ public class RTERecorderTest {
     rteRecorder.onRecordingStop();
     rteRecorder.awaitConnected(TIMEOUT);
   }
+
 }
 
