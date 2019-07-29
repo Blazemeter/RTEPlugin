@@ -13,12 +13,13 @@ build:
     - docker
   except:
     - master
-  script: /execute-on-vnc.sh mvn --batch-mode -X clean install
+  script: /execute-on-vnc.sh mvn --batch-mode -e -X clean install
   artifacts:
     paths:
       - target/jmeter-bzm-rte-*.jar
       - target/jmeter-test
       - target/failsafe-reports
+      - target/surefire-reports
     expire_in: 1 month
     when: always
 build_and_analyze:
@@ -33,6 +34,7 @@ build_and_analyze:
       - target/jmeter-bzm-rte-*.jar
       - target/jmeter-test
       - target/failsafe-reports
+      - target/surefire-reports
     expire_in: 1 month
     when: always
 jmeter_compatibility:

@@ -374,16 +374,13 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
                 .onAssertionScreen(requestAssertionName(), pattern.getPattern());
           }
         } else {
-          showUserMessage("Please select a part of the screen");
-          LOG.warn(
-              "The selection of a screen area is essential to "
-                  + "be used as wait condition text later on.");
+          warnUserOfNotScreenSelectedArea("assertion");
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
     }
-    
+
     private void showUserMessage(String msg) {
       JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
     }

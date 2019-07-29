@@ -622,10 +622,11 @@ public class RTERecorderTest {
 
   @Test
   public void shouldAddResponseAssertionAsChildOfPendingSamplerWhenOnAssertionScreen()
-      throws IllegalUserActionException {
-    rteRecorder.onRecordingStart();
+      throws Exception {
+    connect();
     rteRecorder.onAssertionScreen("Assertion Test", "selected text");
     rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+
     rteRecorder.onRecordingStop();
 
     ArgumentCaptor<ResponseAssertion> argumentCaptor = ArgumentCaptor
