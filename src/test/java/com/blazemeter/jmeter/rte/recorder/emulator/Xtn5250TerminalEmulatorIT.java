@@ -218,8 +218,7 @@ public class Xtn5250TerminalEmulatorIT {
     setScreen("");
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, 2, 2);
-    verify(listener).onAttentionKey(AttentionKey.RESET, new ArrayList<>());
-
+    verify(listener, timeout(PAUSE_TIMEOUT)).onAttentionKey(AttentionKey.RESET, new ArrayList<>());
   }
 
   @Test

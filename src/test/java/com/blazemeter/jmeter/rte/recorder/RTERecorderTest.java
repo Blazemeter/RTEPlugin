@@ -66,6 +66,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
 
+  public static final String ASSERTION_NAME = "Assertion Test";
+  public static final String SELECTED_TEXT = "selected text";
   private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
   private static final String SERVER = "localhost";
   private static final int PORT = 80;
@@ -77,7 +79,6 @@ public class RTERecorderTest {
   private static final Position CURSOR_POSITION = new Position(2, 1);
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(CURSOR_POSITION, "testusr"));
-
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private TestElement testStateListener;
@@ -502,12 +503,8 @@ public class RTERecorderTest {
      */
     verify(treeModel, times(3))
         .addComponent(argument.capture(), eq(treeNode));
-
-    softly.assertThat(argument.getAllValues().get(0)).isEqualTo(buildExpectedConfig());
-    softly.assertThat(argument.getAllValues().get(1)).isEqualTo(buildExpectedConnectionSampler());
-    softly.assertThat(argument.getAllValues().get(2))
-        .isEqualTo(buildExpectedDisconnectionSampler());
-
+    assertThat(Arrays.asList(buildExpectedConfig(), buildExpectedConnectionSampler(),
+        buildExpectedDisconnectionSampler())).isEqualTo(argument.getAllValues());
   }
 
   private RTESampler buildExpectedDisconnectionSampler() {
@@ -624,7 +621,7 @@ public class RTERecorderTest {
   public void shouldAddResponseAssertionAsChildOfPendingSamplerWhenOnAssertionScreen()
       throws Exception {
     connect();
-    rteRecorder.onAssertionScreen("Assertion Test", "selected text");
+    rteRecorder.onAssertionScreen(ASSERTION_NAME, SELECTED_TEXT);
     rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
 
     rteRecorder.onRecordingStop();
@@ -634,7 +631,7 @@ public class RTERecorderTest {
 
     verify(treeModel).addComponent(argumentCaptor.capture(), eq(samplerNode));
     assertThat(argumentCaptor.getValue())
-        .isEqualTo(buildExpectedAssertion("Assertion Test", "selected text"));
+        .isEqualTo(buildExpectedAssertion(ASSERTION_NAME, SELECTED_TEXT));
   }
 
   private ResponseAssertion buildExpectedAssertion(String name,
