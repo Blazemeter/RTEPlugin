@@ -20,7 +20,6 @@ import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
-import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
@@ -32,8 +31,6 @@ import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.recorder.emulator.TerminalEmulator;
 import com.blazemeter.jmeter.rte.sampler.Action;
-import com.blazemeter.jmeter.rte.sampler.Inputs;
-import com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
@@ -41,14 +38,14 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+import org.apache.jmeter.assertions.ResponseAssertion;
+import org.apache.jmeter.assertions.gui.AssertionGui;
 import org.apache.jmeter.config.ConfigTestElement;
+import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
 import org.apache.jmeter.samplers.SampleEvent;
@@ -56,7 +53,6 @@ import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
-import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -70,6 +66,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
 
+  public static final String ASSERTION_NAME = "Assertion Test";
+  public static final String SELECTED_TEXT = "selected text";
   private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
   private static final String SERVER = "localhost";
   private static final int PORT = 80;
@@ -81,7 +79,6 @@ public class RTERecorderTest {
   private static final Position CURSOR_POSITION = new Position(2, 1);
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(CURSOR_POSITION, "testusr"));
-
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private TestElement testStateListener;
@@ -100,6 +97,8 @@ public class RTERecorderTest {
   private RteProtocolClient terminalClient;
   @Mock
   private RecordingStateListener recorderListener;
+  @Mock
+  private JMeterTreeNode samplerNode;
 
   @BeforeClass
   public static void setupClass() {
@@ -107,15 +106,15 @@ public class RTERecorderTest {
   }
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalUserActionException {
     setupTreeModel();
     when(finder.findTargetControllerNode()).thenReturn(treeNode);
     setupTerminalClient();
-
+    when(treeModel.addComponent(any(), eq(treeNode))).thenReturn(samplerNode);
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> terminalEmulator;
     rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, treeModel,
         p -> terminalClient);
-    
+
     setupRecorder();
   }
 
@@ -171,7 +170,7 @@ public class RTERecorderTest {
     connect();
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(treeModel).addComponent(argument.capture(), eq(treeNode));
-    assertTestElement(buildExpectedConfig(), argument.getValue());
+    assertThat(argument.getValue()).isEqualTo(buildExpectedConfig());
   }
 
   private ConfigTestElement buildExpectedConfig() {
@@ -185,20 +184,6 @@ public class RTERecorderTest {
     expectedConfig.setProperty(RTESampler.CONFIG_TERMINAL_TYPE, TERMINAL_TYPE.getId());
     expectedConfig.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, Long.toString(TIMEOUT));
     return expectedConfig;
-  }
-
-  private void assertTestElement(TestElement expected, TestElement actual) {
-    assertThat(buildTestElementMap(actual)).isEqualTo(buildTestElementMap(expected));
-  }
-
-  private Map<String, String> buildTestElementMap(TestElement elem) {
-    Map<String, String> ret = new HashMap<>();
-    Iterator<JMeterProperty> iter = elem.propertyIterator();
-    while (iter.hasNext()) {
-      JMeterProperty prop = iter.next();
-      ret.put(prop.getName(), prop.getStringValue());
-    }
-    return ret;
   }
 
   @Test
@@ -331,7 +316,7 @@ public class RTERecorderTest {
      * */
     verify(treeModel, times(2))
         .addComponent(argument.capture(), eq(treeNode));
-    assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
+    assertThat(argument.getAllValues().get(1)).isEqualTo(buildExpectedConnectionSampler());
   }
 
   private RTESampler buildExpectedConnectionSampler() {
@@ -479,8 +464,7 @@ public class RTERecorderTest {
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(treeModel, times(2)).addComponent(argument.capture(),
         eq(treeNode));
-
-    assertTestElement(buildExpectedConnectionSampler(), argument.getValue());
+    assertThat(argument.getValue()).isEqualTo(buildExpectedConnectionSampler());
   }
 
   @Test
@@ -519,10 +503,8 @@ public class RTERecorderTest {
      */
     verify(treeModel, times(3))
         .addComponent(argument.capture(), eq(treeNode));
-
-    softly.assertThat(argument.getAllValues().get(0)).isEqualTo(buildExpectedConfig());
-    assertTestElement(buildExpectedConnectionSampler(), argument.getAllValues().get(1));
-    assertTestElement(buildExpectedDisconnectionSampler(), argument.getAllValues().get(2));
+    assertThat(Arrays.asList(buildExpectedConfig(), buildExpectedConnectionSampler(),
+        buildExpectedDisconnectionSampler())).isEqualTo(argument.getAllValues());
   }
 
   private RTESampler buildExpectedDisconnectionSampler() {
@@ -635,5 +617,35 @@ public class RTERecorderTest {
     rteRecorder.awaitConnected(TIMEOUT);
   }
 
+  @Test
+  public void shouldAddResponseAssertionAsChildOfPendingSamplerWhenOnAssertionScreen()
+      throws Exception {
+    connect();
+    rteRecorder.onAssertionScreen(ASSERTION_NAME, SELECTED_TEXT);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+
+    rteRecorder.onRecordingStop();
+
+    ArgumentCaptor<ResponseAssertion> argumentCaptor = ArgumentCaptor
+        .forClass(ResponseAssertion.class);
+
+    verify(treeModel).addComponent(argumentCaptor.capture(), eq(samplerNode));
+    assertThat(argumentCaptor.getValue())
+        .isEqualTo(buildExpectedAssertion(ASSERTION_NAME, SELECTED_TEXT));
+  }
+
+  private ResponseAssertion buildExpectedAssertion(String name,
+      String text) {
+    ResponseAssertion assertion = new ResponseAssertion();
+    assertion.setName(name);
+    assertion.setProperty(TestElement.GUI_CLASS, AssertionGui.class.getName());
+    assertion.setProperty(TestElement.TEST_CLASS, ResponseAssertion.class.getName());
+    assertion.setTestFieldResponseData();
+    assertion.setToContainsType();
+    assertion.addTestString(text);
+    assertion.setAssumeSuccess(false);
+    assertion.getResult(buildBasicSampleResult(Action.SEND_INPUT));
+    return assertion;
+  }
 }
 

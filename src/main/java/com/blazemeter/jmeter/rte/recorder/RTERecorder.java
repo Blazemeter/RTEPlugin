@@ -19,6 +19,7 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import com.helger.commons.annotation.VisibleForTesting;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -28,6 +29,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import org.apache.jmeter.assertions.ResponseAssertion;
+import org.apache.jmeter.assertions.gui.AssertionGui;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
@@ -66,6 +69,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient Function<Protocol, RteProtocolClient> protocolFactory;
   private transient JMeterTreeModel jMeterTreeModel;
   private transient RteProtocolClient terminalClient;
+  private transient List<TestElement> responseAssertions = new ArrayList<>();
 
   public RTERecorder() {
     this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
@@ -184,7 +188,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     LOG.debug("Start recording");
     sampleCount = 0;
     samplersTargetNode = finder.findTargetControllerNode();
-    addTestElementToTestPlan(buildRteConfigElement(), samplersTargetNode);
+    addTestElementToTestPlan(buildRteConfigElement(), responseAssertions, samplersTargetNode);
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
     sampleResult = buildSampleResult(Action.CONNECT);
     sampler = buildSampler(Action.CONNECT, null, null);
@@ -238,11 +242,15 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     return configTestElement;
   }
 
-  private void addTestElementToTestPlan(TestElement testElement, JMeterTreeNode targetNode) {
+  private void addTestElementToTestPlan(TestElement testElement, List<TestElement> children,
+      JMeterTreeNode targetNode) {
     try {
       JMeterUtils.runSafe(true, () -> {
         try {
-          jMeterTreeModel.addComponent(testElement, targetNode);
+          JMeterTreeNode samplerNode = jMeterTreeModel.addComponent(testElement, targetNode);
+          for (TestElement element : children) {
+            jMeterTreeModel.addComponent(element, samplerNode);
+          }
         } catch (IllegalUserActionException illegalUserAction) {
           LOG.error("Error placing sample configTestElement", illegalUserAction);
           JMeterUtils.reportErrorToUser(illegalUserAction.getMessage());
@@ -336,7 +344,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       waitConditionsRecorder.start();
       terminalClient.send(inputs, attentionKey);
     } catch (Exception e) {
-      onException(e); 
+      onException(e);
     }
   }
 
@@ -345,13 +353,28 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     waitConditionsRecorder.setWaitForTextCondition(text);
   }
 
+  @Override
+  public void onAssertionScreen(String name, String text) {
+    ResponseAssertion assertion = new ResponseAssertion();
+    assertion.setName(name);
+    assertion.setProperty(TestElement.GUI_CLASS, AssertionGui.class.getName());
+    assertion.setProperty(TestElement.TEST_CLASS, ResponseAssertion.class.getName());
+    assertion.setTestFieldResponseData();
+    assertion.setToContainsType();
+    assertion.addTestString(text);
+    assertion.setAssumeSuccess(false);
+    assertion.getResult(sampleResult);
+    responseAssertions.add(assertion);
+  }
+
   private void recordPendingSample() {
     if (sampleResult.getResponseCode().isEmpty()) {
       RTESampler.updateSampleResultResponse(sampleResult, terminalClient);
     }
     notifySampleOccurred();
     sampler.setWaitConditions(waitConditionsRecorder.stop());
-    addTestElementToTestPlan(sampler, samplersTargetNode);
+    addTestElementToTestPlan(sampler, responseAssertions, samplersTargetNode);
+    responseAssertions.clear();
   }
 
   private void notifySampleOccurred() {
@@ -390,7 +413,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
             sampleResult.sampleEnd();
           }
           notifySampleOccurred();
-          addTestElementToTestPlan(sampler, samplersTargetNode);
+          addTestElementToTestPlan(sampler, responseAssertions, samplersTargetNode);
+          responseAssertions.clear();
         }
         terminalClient.removeTerminalStateListener(this);
         notifyChildren(TestStateListener.class, TestStateListener::testEnded);

@@ -33,6 +33,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
+import org.apache.jmeter.util.JMeterUtils;
+import org.apache.oro.text.regex.Pattern;
+import org.apache.oro.text.regex.Perl5Compiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +94,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JButton copyButton = createIconButton("copyButton", "copy.png");
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
   private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
-
+  private JButton assertionButton = createIconButton("assertionButton", "assertion.png");
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private boolean stopping;
@@ -146,16 +149,19 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     pasteButton.setToolTipText("Paste");
     labelButton.setToolTipText("Input by label");
     waitForTextButton.setToolTipText("Text wait condition");
+    assertionButton.setToolTipText("Assertion");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton)
         .addComponent(pasteButton)
         .addComponent(labelButton)
-        .addComponent(waitForTextButton));
+        .addComponent(waitForTextButton)
+        .addComponent(assertionButton));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(copyButton)
         .addComponent(pasteButton)
         .addComponent(labelButton)
-        .addComponent(waitForTextButton));
+        .addComponent(waitForTextButton)
+        .addComponent(assertionButton));
 
     return toolsPanel;
   }
@@ -357,6 +363,22 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
+
+      assertionButton.addActionListener(e -> {
+        String selectedText = xi5250Crt.getStringSelectedArea();
+        if (selectedText != null) {
+          Pattern pattern = JMeterUtils
+              .getPattern(Perl5Compiler.quotemeta(selectedText).replace("\\\n", ".*\\n.*"));
+          for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+            listener
+                .onAssertionScreen(requestAssertionName(), pattern.getPattern());
+          }
+        } else {
+          warnUserOfNotScreenSelectedArea("assertion");
+        }
+        xi5250Crt.requestFocus();
+        xi5250Crt.clearSelectedArea();
+      });
     }
 
     private void showUserMessage(String msg) {
@@ -368,6 +390,10 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       LOG.warn(
           "The selection of a screen area is essential to "
               + "be used as {} later on.", usage);
+    }
+
+    private String requestAssertionName() {
+      return JOptionPane.showInputDialog(this, "Insert name of assertion", "Response Assertion");
     }
 
     @Override
