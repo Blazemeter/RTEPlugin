@@ -101,7 +101,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
   private Set<AttentionKey> supportedAttentionKeys;
-  private String labelText;
+  private Map<Position, String> labelMap = new HashMap<>();
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -261,17 +261,25 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
+    boolean flag = false;
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        if (labelText != null) {
-          fields.add(new LabelInput(labelText.trim(), trimNulls(f.getString())));
-        } else {
+        if (!labelMap.isEmpty()) {
+          for (Position pos : labelMap.keySet()) {
+            if (pos.getColumn() == f.getCol() && pos.getRow() == f.getRow()) {
+              fields.add(new LabelInput(labelMap.get(pos), trimNulls(f.getString())));
+              flag = true;
+            }
+          }
+        }
+        if (!flag) {
           fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
               trimNulls(f.getString())));
         }
+
       }
     }
-    labelText = null;
+    labelMap.clear();
     return fields;
   }
 
@@ -333,18 +341,26 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.requestFocus();
       });
       labelButton.addActionListener(e -> {
-
-        labelText = xi5250Crt.getStringSelectedArea();
-        if (labelText != null) {
+        String labelText = xi5250Crt.getStringSelectedArea();
+        if (labelText == null) {
+          warnUserOfNotScreenSelectedArea("input by label");
+        } else {
           if (labelText.contains("\n")) {
             showUserMessage("Please select only one row");
             LOG.warn(
                 "Input by label does not support multiple selected rows, "
                     + "please select just one row.");
-            labelText = null;
+          } else {
+            Position position = new Position(xi5250Crt.getSelectedArea().y,
+                xi5250Crt.getSelectedArea().x);
+
+            XI5250Field field = xi5250Crt
+                .getNextFieldFromPos(position.getColumn(), position.getRow());
+            position = new Position(field.getRow(), field.getCol());
+
+            labelMap.put(position, labelText);
+
           }
-        } else {
-          warnUserOfNotScreenSelectedArea("input by label");
         }
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
