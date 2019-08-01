@@ -261,22 +261,19 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
-    boolean flag = false;
+
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        if (!labelMap.isEmpty()) {
-          for (Position pos : labelMap.keySet()) {
-            if (pos.getColumn() == f.getCol() && pos.getRow() == f.getRow()) {
-              fields.add(new LabelInput(labelMap.get(pos), trimNulls(f.getString())));
-              flag = true;
-            }
-          }
-        }
-        if (!flag) {
+
+        Position fieldPosition = new Position(f.getRow(), f.getCol());
+        String label = labelMap.get(fieldPosition);
+        String trimmedInput = trimNulls(f.getString());
+        if (label != null) {
+          fields.add(new LabelInput(label, trimmedInput));
+        } else {
           fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
               trimNulls(f.getString())));
         }
-
       }
     }
     labelMap.clear();
@@ -344,24 +341,34 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         String labelText = xi5250Crt.getStringSelectedArea();
         if (labelText == null) {
           warnUserOfNotScreenSelectedArea("input by label");
+        } else if (labelText.contains("\n")) {
+          showUserMessage("Please select only one row");
+          LOG.warn(
+              "Input by label does not support multiple selected rows, "
+                  + "please select just one row.");
+        } else if (labelText.trim().isEmpty()) {
+          showUserMessage("Invalid text to be used as input by label");
+          LOG.warn(
+              "Blank spaces are not supported for input by label,"
+                  + " please try again selecting valid text");
         } else {
-          if (labelText.contains("\n")) {
-            showUserMessage("Please select only one row");
-            LOG.warn(
-                "Input by label does not support multiple selected rows, "
-                    + "please select just one row.");
+          Position labelPosition = new Position(xi5250Crt.getSelectedArea().y,
+              xi5250Crt.getSelectedArea().x);
+
+          XI5250Field field = xi5250Crt
+              .getNextFieldFromPos(labelPosition.getColumn(), labelPosition.getRow());
+
+          if (!isFieldValid(labelPosition, field)) {
+            labelMap.put(new Position(field.getRow(), field.getCol()), labelText);
           } else {
-            Position position = new Position(xi5250Crt.getSelectedArea().y,
-                xi5250Crt.getSelectedArea().x);
-
-            XI5250Field field = xi5250Crt
-                .getNextFieldFromPos(position.getColumn(), position.getRow());
-            position = new Position(field.getRow(), field.getCol());
-
-            labelMap.put(position, labelText);
-
+            showUserMessage("No input fields founded near to `" + labelText + ".");
+            LOG.warn(
+                "Selected text may have the particularity of been the last"
+                    + " text on the screen so no fields are close on the right");
           }
+
         }
+
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
@@ -395,6 +402,13 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
+    }
+
+    private boolean isFieldValid(Position labelPosition, XI5250Field field) {
+      int width = xi5250Crt.getCrtSize().width;
+      int linearLabelPosition = (width * (labelPosition.getRow() - 1) + labelPosition.getColumn());
+      int linearFieldPosition = (width * (field.getRow() - 1) + field.getCol());
+      return linearFieldPosition > linearLabelPosition;
     }
 
     private void showUserMessage(String msg) {
@@ -471,10 +485,10 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         return KeyEvent.VK_CONTROL;
       }
     }
-
     //This is implemented in this way because ctrl key is used in a shortcut to
     //copy/paste and the attention key should be triggered only if have not
     //executed a copy paste before.
+
     private boolean isAnyKeyPressedOrControlKeyReleasedAndNotCopy(KeyEvent e) {
       return (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() != getKeyCodeFromKeyMask(
           getMenuShortcutKeyMask())) || (e.getID() == KeyEvent.KEY_RELEASED
@@ -494,5 +508,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         super.paintComponent(g);
       }
     }
+
   }
 }
