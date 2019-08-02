@@ -46,6 +46,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class Xtn5250TerminalEmulatorIT {
 
+  public static final String GOODBYE_TEXT = "Thanks for use testing login";
   private static final long PAUSE_TIMEOUT = 10000;
   private static final int COLUMNS = 80;
   private static final int ROWS = 24;
@@ -56,7 +57,6 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
   private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
   private static final String ASSERTION_BUTTON = "assertionButton";
-
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
@@ -87,6 +87,30 @@ public class Xtn5250TerminalEmulatorIT {
     return baseLine + StringUtils.repeat(' ', width - baseLine.length());
   }
 
+  private Screen buildCustomScreen() {
+    Dimension screenSize = new Dimension(COLUMNS, ROWS);
+    Screen screen = new Screen(screenSize);
+    String name = "Insert Name: ";
+    String password = "Insert Password: ";
+    int fieldLength = 1;
+    int linearPosition = 0;
+    screen.addSegment(linearPosition, name);
+    linearPosition += name.length();
+    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLength));
+    linearPosition += fieldLength;
+    screen.addSegment(linearPosition, completeLine("", COLUMNS));
+    linearPosition = screenSize.width;
+    screen.addSegment(linearPosition, password);
+    linearPosition += password.length();
+    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLength));
+    linearPosition += fieldLength;
+    screen.addSegment(linearPosition, completeLine("", COLUMNS));
+    linearPosition += screenSize.width;
+    screen.addSegment(linearPosition, completeLine(GOODBYE_TEXT, COLUMNS));
+
+    return screen;
+  }
+
   private Set<AttentionKey> buildSupportedAttentionKeys() {
     return new HashSet<AttentionKey>() {{
       add(AttentionKey.ENTER);
@@ -113,7 +137,7 @@ public class Xtn5250TerminalEmulatorIT {
       frame.cleanUp();
     }
   }
-
+  
   @Test
   public void shouldShowTerminalEmulatorFrameWithProperlySizeWhenStart() {
     xtn5250TerminalEmulator.setScreenSize(132, 43);
@@ -325,6 +349,58 @@ public class Xtn5250TerminalEmulatorIT {
     List<Input> inputs = new ArrayList<>();
     inputs.add(new LabelInput("*****", input));
     verify(listener).onAttentionKey(AttentionKey.ENTER, inputs);
+  }
+
+  @Test
+  public void shouldNotifyListenerOfMultipleInputByLabel() {
+    setCustomScreen();
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 0, 11, 1));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    sendKey(KeyEvent.VK_T, 0, 1, 14);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 1, 15, 1));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    sendKey(KeyEvent.VK_Y, 0, 2, 18);
+    sendKey(KeyEvent.VK_ENTER, 0, 2, 19);
+
+    verify(listener).onAttentionKey(AttentionKey.ENTER, buildExpectedInputList());
+  }
+
+  private List<Input> buildExpectedInputList() {
+    LabelInput userName = new LabelInput("Insert Name", "t");
+    LabelInput password = new LabelInput("Insert Password", "y");
+    return Arrays.asList(userName, password);
+  }
+
+  private void setCustomScreen() {
+    xtn5250TerminalEmulator.setScreen(buildCustomScreen());
+    xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
+    frame = new FrameFixture(xtn5250TerminalEmulator);
+    frame.show();
+  }
+
+  @Test
+  public void shouldShowUserMessageWhenNoFieldAfterCurrentLabel() {
+    setCustomScreen();
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(18, 2, 28, 1));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    findOptionPane().requireMessage("No input fields founded near to \" " + GOODBYE_TEXT + "\".");
+  }
+
+  @Test
+  public void shouldShowUserMessageWhenBlankSelectedArea() {
+    setCustomScreen();
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(19, 3, 15, 1));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    findOptionPane().requireMessage("Invalid text to be used as input by label");
+  }
+
+  @Test
+  public void shouldShowUserMessageWhenMultipleRowWereSelected() {
+    setCustomScreen();
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(19, 3, 15, 2));
+    clickButton(INPUT_BY_LABEL_BUTTON);
+    findOptionPane().requireMessage("Please select only one row");
   }
 
   @Test

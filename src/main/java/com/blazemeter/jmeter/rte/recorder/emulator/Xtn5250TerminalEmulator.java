@@ -359,9 +359,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               .getNextFieldFromPos(labelPosition.getColumn(), labelPosition.getRow());
 
           if (isFieldValid(labelPosition, field)) {
-            labelMap.put(new Position(field.getRow(), field.getCol()), labelText);
+            labelMap.put(new Position(field.getRow(), field.getCol()), labelText.trim());
           } else {
-            showUserMessage("No input fields founded near to `" + labelText + ".");
+            showUserMessage("No input fields founded near to \" " + labelText + "\".");
             LOG.warn(
                 "Selected text may have the particularity of been the last"
                     + " text on the screen so no fields are close on the right");
