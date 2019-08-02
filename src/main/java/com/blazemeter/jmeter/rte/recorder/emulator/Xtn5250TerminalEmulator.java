@@ -272,7 +272,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           fields.add(new LabelInput(label, trimmedInput));
         } else {
           fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
-              trimNulls(f.getString())));
+              trimmedInput));
         }
       }
     }
@@ -358,7 +358,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           XI5250Field field = xi5250Crt
               .getNextFieldFromPos(labelPosition.getColumn(), labelPosition.getRow());
 
-          if (!isFieldValid(labelPosition, field)) {
+          if (isFieldValid(labelPosition, field)) {
             labelMap.put(new Position(field.getRow(), field.getCol()), labelText);
           } else {
             showUserMessage("No input fields founded near to `" + labelText + ".");
