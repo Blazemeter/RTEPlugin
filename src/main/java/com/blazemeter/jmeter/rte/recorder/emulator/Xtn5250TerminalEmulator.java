@@ -271,8 +271,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         if (label != null) {
           fields.add(new LabelInput(label, trimmedInput));
         } else {
-          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
-              trimmedInput));
+          fields.add(new CoordInput(fieldPosition, trimmedInput));
         }
       }
     }
@@ -352,14 +351,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               "Blank spaces are not supported for input by label,"
                   + " please try again selecting valid text");
         } else {
-          Position labelPosition = new Position(xi5250Crt.getSelectedArea().y,
-              xi5250Crt.getSelectedArea().x);
-
           XI5250Field field = xi5250Crt
-              .getNextFieldFromPos(labelPosition.getColumn(), labelPosition.getRow());
+              .getNextFieldFromPos(xi5250Crt.getSelectedArea().x, xi5250Crt.getSelectedArea().y);
 
-          if (isFieldValid(labelPosition, field)) {
-            labelMap.put(new Position(field.getRow(), field.getCol()), labelText.trim());
+          if (isFieldValid(field)) {
+            labelMap.put(new Position(field.getRow() + 1, field.getCol() + 1), labelText.trim());
           } else {
             showUserMessage("No input fields founded near to \" " + labelText + "\".");
             LOG.warn(
@@ -404,9 +400,10 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       });
     }
 
-    private boolean isFieldValid(Position labelPosition, XI5250Field field) {
+    private boolean isFieldValid(XI5250Field field) {
       int width = xi5250Crt.getCrtSize().width;
-      int linearLabelPosition = (width * (labelPosition.getRow() - 1) + labelPosition.getColumn());
+      int linearLabelPosition = (width * (xi5250Crt.getSelectedArea().y - 1) + xi5250Crt
+          .getSelectedArea().x);
       int linearFieldPosition = (width * (field.getRow() - 1) + field.getCol());
       return linearFieldPosition > linearLabelPosition;
     }
