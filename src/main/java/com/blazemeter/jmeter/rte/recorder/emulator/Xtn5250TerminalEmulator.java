@@ -265,7 +265,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
 
-        Position fieldPosition = new Position(f.getRow(), f.getCol());
+        Position fieldPosition = new Position(f.getRow() + 1, f.getCol() + 1);
         String label = labelMap.get(fieldPosition);
         String trimmedInput = trimNulls(f.getString());
         if (label != null) {
