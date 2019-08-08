@@ -29,8 +29,10 @@ import java.util.Set;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 import org.apache.jmeter.util.JMeterUtils;
@@ -341,15 +343,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         if (labelText == null) {
           warnUserOfNotScreenSelectedArea("input by label");
         } else if (labelText.contains("\n")) {
-          showUserMessage("Please select only one row");
+          showUserMessage("Please try again selecting one row");
           LOG.warn(
               "Input by label does not support multiple selected rows, "
                   + "please select just one row.");
         } else if (labelText.trim().isEmpty()) {
-          showUserMessage("Invalid text to be used as input by label");
+          showUserMessage("Please select a non empty or blank text \nto be used as input by label");
           LOG.warn(
-              "Blank spaces are not supported for input by label,"
-                  + " please try again selecting valid text");
+              "Selected text is composed only by spaces.");
         } else {
           XI5250Field field = xi5250Crt
               .getNextFieldFromPos(xi5250Crt.getSelectedArea().x, xi5250Crt.getSelectedArea().y);
@@ -357,10 +358,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           if (isFieldValid(field)) {
             labelMap.put(new Position(field.getRow() + 1, field.getCol() + 1), labelText.trim());
           } else {
-            showUserMessage("No input fields founded near to \" " + labelText + "\".");
-            LOG.warn(
-                "Selected text may have the particularity of been the last"
-                    + " text on the screen so no fields are close on the right");
+            showUserMessage("No input fields found near to \" " + labelText + "\".");
+            LOG.warn("No field was found after specified label {}", labelText);
           }
 
         }
@@ -411,7 +410,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     private void showUserMessage(String msg) {
       JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
     }
-
+    
     private void warnUserOfNotScreenSelectedArea(String usage) {
       showUserMessage("Please select a part of the screen");
       LOG.warn(
