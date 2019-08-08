@@ -386,7 +386,7 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.setSelectedArea(new Rectangle(19, 3, 15, 1));
     clickButton(INPUT_BY_LABEL_BUTTON);
     findOptionPane().requireMessage("Please select a non empty or blank text \n"
-        + "to be used for input by label");
+        + "to be used as input by label");
   }
 
   @Test
