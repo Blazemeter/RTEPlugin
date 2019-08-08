@@ -13,7 +13,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.LayoutManager;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -27,8 +26,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.core.KeyPressInfo;
@@ -140,7 +137,7 @@ public class Xtn5250TerminalEmulatorIT {
       frame.cleanUp();
     }
   }
-  
+
   @Test
   public void shouldShowTerminalEmulatorFrameWithProperlySizeWhenStart() {
     xtn5250TerminalEmulator.setScreenSize(132, 43);
@@ -358,7 +355,8 @@ public class Xtn5250TerminalEmulatorIT {
     sendKey(KeyEvent.VK_Y, 0, 2, 18);
     sendKey(KeyEvent.VK_ENTER, 0, 2, 19);
 
-    verify(listener).onAttentionKey(AttentionKey.ENTER, buildExpectedInputListForMultipleInputsByLabel());
+    verify(listener)
+        .onAttentionKey(AttentionKey.ENTER, buildExpectedInputListForMultipleInputsByLabel());
   }
 
   private List<Input> buildExpectedInputListForMultipleInputsByLabel() {
@@ -381,7 +379,7 @@ public class Xtn5250TerminalEmulatorIT {
     clickButton(INPUT_BY_LABEL_BUTTON);
     findOptionPane().requireMessage("No input fields found near to \" " + GOODBYE_TEXT + "\".");
   }
-  
+
   @Test
   public void shouldShowUserMessageWhenInputByLabelAndBlankSelectedArea() {
     setScreenWithUserNameAndPasswordFields();

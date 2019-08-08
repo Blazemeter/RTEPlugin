@@ -29,10 +29,8 @@ import java.util.Set;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingConstants;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 import org.apache.jmeter.util.JMeterUtils;
@@ -410,7 +408,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     private void showUserMessage(String msg) {
       JOptionPane.showMessageDialog(this, msg, "Info", JOptionPane.INFORMATION_MESSAGE);
     }
-    
+
     private void warnUserOfNotScreenSelectedArea(String usage) {
       showUserMessage("Please select a part of the screen");
       LOG.warn(
