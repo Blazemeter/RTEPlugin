@@ -7,8 +7,7 @@ import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
-import com.blazemeter.jmeter.rte.core.RteSampleResult;
-import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
@@ -20,8 +19,6 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.helger.commons.annotation.VisibleForTesting;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -410,7 +407,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       addWaitCondition(waitCondition);
     }
   }
-  
+
   private void addWaitCondition(WaitCondition condition) {
     if (condition instanceof SyncWaitCondition) {
       setWaitSync(true);
@@ -471,7 +468,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   @Override
   public SampleResult sample(Entry entry) {
-    RteSampleResult rteSampleResult = buildSampleResult();
+    RteSampleResultBuilder resultBuilder = buildSampleResultBuilder();
     RteProtocolClient client = null;
 
     try {
@@ -480,34 +477,33 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
         if (client != null) {
           disconnect(client);
         }
-        rteSampleResult.setSuccessful(true);
-        rteSampleResult.sampleEnd();
-        return rteSampleResult;
+        return resultBuilder.withSuccessResponse(null)
+            .build();
       }
       if (client == null) {
         client = buildClient();
-        rteSampleResult.connectEnd();
+        resultBuilder.withConnectEndNow();
         if (getAction() == Action.SEND_INPUT) {
           client.await(Collections
               .singletonList(new SyncWaitCondition(getConnectionTimeout(), getStableTimeout())));
         }
       }
-      RequestListener<RteProtocolClient> requestListener = new RequestListener<>(rteSampleResult,
+      RequestListener<RteProtocolClient> requestListener = new RequestListener<>(resultBuilder,
           client);
       client.addTerminalStateListener(requestListener);
 
       try {
         if (getAction() == Action.SEND_INPUT) {
-          rteSampleResult.setInputInhibitedRequest(client.isInputInhibited());
-          rteSampleResult.setAttentionKey(getAttentionKey());
-          rteSampleResult.setInputs(getInputs());
+          resultBuilder.withInputInhibitedRequest(client.isInputInhibited())
+              .withAttentionKey(getAttentionKey())
+              .withInputs(getInputs());
           client.send(getInputs(), getAttentionKey());
         }
         List<WaitCondition> waiters = getWaitersList();
         if (!waiters.isEmpty()) {
           client.await(waiters);
         }
-        updateSampleResultResponse(rteSampleResult, client);
+        resultBuilder.withSuccessResponse(client);
       } finally {
         client.resetAlarm();
         requestListener.stop();
@@ -515,27 +511,29 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOG.error("The sampling has been interrupted", e);
-      return updateErrorResult(e, rteSampleResult);
+      return resultBuilder.withFailure(e)
+          .build();
     } catch (TimeoutException e) {
-      return timeoutErrorResult(e, rteSampleResult, client != null ? client.getScreen() : null);
+      LOG.warn("Timeout error", e);
+      return resultBuilder.withTimeoutFailure(e, client)
+          .build();
     } catch (Exception e) {
       LOG.error("Error while sampling the remote terminal", e);
-      return updateErrorResult(e, rteSampleResult);
+      return resultBuilder.withFailure(e)
+          .build();
     }
-    return rteSampleResult;
+    return resultBuilder.build();
   }
 
-  private RteSampleResult buildSampleResult() {
-    RteSampleResult ret = new RteSampleResult();
-    ret.setSampleLabel(getName());
-    ret.setServer(getServer());
-    ret.setPort(getPort());
-    ret.setProtocol(getProtocol());
-    ret.setTerminalType(getTerminalType());
-    ret.setSslType(getSSLType());
-    ret.setAction(getAction());
-    ret.sampleStart();
-    return ret;
+  private RteSampleResultBuilder buildSampleResultBuilder() {
+    return new RteSampleResultBuilder()
+        .withLabel(getName())
+        .withServer(getServer())
+        .withPort(getPort())
+        .withProtocol(getProtocol())
+        .withTerminalType(getTerminalType())
+        .withSslType(getSSLType())
+        .withAction(getAction());
   }
 
   private RteProtocolClient getClient() {
@@ -606,37 +604,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
             getWaitTextAreaBottomValue(), getWaitTextAreaRightValue()),
         getWaitTextTimeoutValue(),
         getStableTimeout());
-  }
-
-  public static void updateSampleResultResponse(RteSampleResult result,
-      RteProtocolClient client) {
-    result.setSuccessful(true);
-    result.setCursorPosition(client.getCursorPosition().orElse(null));
-    result.setSoundedAlarm(client.isAlarmOn());
-    result.setInputInhibitedResponse(client.isInputInhibited());
-    result.setScreen(client.getScreen());
-  }
-
-  public static RteSampleResult updateErrorResult(Throwable e, RteSampleResult result) {
-    result.setSuccessful(false);
-    result.setResponseHeaders("");
-    result.setResponseCode(e.getClass().getName());
-    result.setResponseMessage(e.getMessage());
-    result.setDataType(SampleResult.TEXT);
-    StringWriter sw = new StringWriter();
-    e.printStackTrace(new PrintWriter(sw));
-    result.setResponseData(sw.toString(), SampleResult.DEFAULT_HTTP_ENCODING);
-    return result;
-  }
-
-  private RteSampleResult timeoutErrorResult(Throwable e, RteSampleResult result, Screen screen) {
-    result.setSuccessful(false);
-    result.setResponseHeaders("");
-    result.setResponseCode(e.getClass().getName());
-    result.setResponseMessage(e.getMessage());
-    result.setScreen(screen);
-    LOG.warn("Timeout error", e);
-    return result;
   }
 
   @Override
