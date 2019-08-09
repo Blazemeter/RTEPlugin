@@ -356,7 +356,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           if (isFieldValid(field)) {
             labelMap.put(new Position(field.getRow() + 1, field.getCol() + 1), labelText.trim());
           } else {
-            showUserMessage("No input fields found near to \" " + labelText + "\".");
+            showUserMessage("No input fields found near to \"" + labelText + "\".");
             LOG.warn("No field was found after specified label {}", labelText);
           }
 
@@ -399,9 +399,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
     private boolean isFieldValid(XI5250Field field) {
       int width = xi5250Crt.getCrtSize().width;
-      int linearLabelPosition = (width * (xi5250Crt.getSelectedArea().y - 1) + xi5250Crt
+      int linearLabelPosition = (width * xi5250Crt.getSelectedArea().y + xi5250Crt
           .getSelectedArea().x);
-      int linearFieldPosition = (width * (field.getRow() - 1) + field.getCol());
+      int linearFieldPosition = (width * field.getRow() + field.getCol());
       return linearFieldPosition > linearLabelPosition;
     }
 

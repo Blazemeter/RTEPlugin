@@ -94,21 +94,29 @@ public class Xtn5250TerminalEmulatorIT {
     String password = "Insert Password: ";
     int fieldLength = 1;
     int linearPosition = 0;
-    screen.addSegment(linearPosition, name);
-    linearPosition += name.length();
-    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLength));
-    linearPosition += fieldLength;
-    screen.addSegment(linearPosition, completeLine("", COLUMNS));
-    linearPosition = screenSize.width;
-    screen.addSegment(linearPosition, password);
-    linearPosition += password.length();
-    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLength));
-    linearPosition += fieldLength;
-    screen.addSegment(linearPosition, completeLine("", COLUMNS));
-    linearPosition += screenSize.width;
-    screen.addSegment(linearPosition, completeLine(GOODBYE_TEXT, COLUMNS));
-
+    linearPosition = addScreenSegment(screen, linearPosition, name);
+    linearPosition = addScreenField(screen, linearPosition, fieldLength);
+    
+    linearPosition = addScreenSegment(screen, linearPosition, completeLine("", COLUMNS - linearPosition));
+    
+    linearPosition = addScreenSegment(screen, linearPosition, password);
+    linearPosition = addScreenField(screen, linearPosition, fieldLength);
+    
+    linearPosition = addScreenSegment(screen, linearPosition, completeLine("", COLUMNS - password.length() - fieldLength));
+    
+    addScreenSegment(screen, linearPosition, completeLine(GOODBYE_TEXT, COLUMNS));
+    
     return screen;
+  }
+  
+  private int addScreenSegment(Screen screen, int linearPosition, String name) {
+    screen.addSegment(linearPosition, name);
+    return linearPosition + name.length();
+  }
+
+  private int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
+    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
+    return  linearPosition + fieldLenght;
   }
 
   private Set<AttentionKey> buildSupportedAttentionKeys() {
@@ -375,9 +383,9 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldShowUserMessageWhenInputByLabelAndNoFieldAfterCurrentLabel() {
     setScreenWithUserNameAndPasswordFields();
-    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(18, 2, 28, 1));
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 2, 28, 1));
     clickButton(INPUT_BY_LABEL_BUTTON);
-    findOptionPane().requireMessage("No input fields found near to \" " + GOODBYE_TEXT + "\".");
+    findOptionPane().requireMessage("No input fields found near to \"" + GOODBYE_TEXT + "\".");
   }
 
   @Test
