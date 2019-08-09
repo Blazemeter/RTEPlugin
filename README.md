@@ -33,10 +33,12 @@ To start recording, the user should specify the _Server_, _Port_, _Protocol_, _T
  > - *Restart*: This button is the equivalent to pressing stop and start buttons.
  > - *Timeout Threshold*: This field will set the timeout which later on the [waits conditions ](docs/wait-conditions-recording.md)will use to set the proper time out for the conditions.
 
-Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the **[Terminal Emulator](#termninal-emulator-basis)** will show up. 
+Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the **[Terminal Emulator](/docs/terminal-emulator.md)** will show up. 
 
 ![alt_text](docs/Emulator-Login.png)
 >If you click on the ![alter_text](src/main/resources/dark-theme/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc.
+
+>Click [here](/docs/terminal-emulator.md) to see all the information you must know about terminal emulator.
 
 Now we are able to interact with our client through RTE-Emulator. Every interaction will be automatically saved in samplers (_[check out everything about samplers ](#sampler-rte-sampler)_).
 Once we have ended the flow that we want to record, we can easily close the terminal emulator or press STOP button to stop our recording. 

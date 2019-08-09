@@ -27,9 +27,20 @@ Wait conditions recording resolution is currently determined by the following 4 
  
 ###Text Wait Condition
 
-Text wait condition is feature from version 2.1, which allows the user to select a part of the screen to be used as a wait text condition. 
-Essentially this condition will wait until the part of the screen, which the user has selected, appears on the screen again while the testplan is running.
+Text wait condition is feature that was released on version **2.1**, which allows the user to select a part of the screen to be used as a wait text condition. 
+Essentially this condition will wait until the part of the screen (already selected by user) appears on the screen again while the test plan is running.
 
 Here there is a basic usage of text wait condition while using the emulator.
 
+![alt_text](wait-for-text-usage.gif)
   
+Once the recording finished and corresponding samplers have been created, we would notice that inside the samplers, which are related with the already selected screen parts, have a wait condition text:
+
+![alt_text](regex-wait-for-text.png) 
+
+Now we are free to run our script. 
+In case the selected part of the screen does not appear in time or it does not appear at all we will receive an unsuccessful result in View Result Tree indicating us the reason.
+
+![alter_text](unsucessful-text-wait-condition.png)
+>In this example the regex has been changed by "*This text is not on the screen, isn't it?* "
+ 
