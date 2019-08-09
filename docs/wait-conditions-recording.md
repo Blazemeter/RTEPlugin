@@ -6,6 +6,7 @@ To begin with the explication of how Wait Conditions works in RTE-Recorder, lets
 
 *Sync wait*: It will wait till the keyboard is unlocked.
 
+*Text wait*: It will  wait for a text in the screen
 [Here](../README.md#waiters-usage) there is more information about Wait Conditions in general.
 
 
