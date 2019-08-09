@@ -399,9 +399,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
     private boolean isFieldValid(XI5250Field field) {
       int width = xi5250Crt.getCrtSize().width;
-      int linearLabelPosition = (width * xi5250Crt.getSelectedArea().y + xi5250Crt
-          .getSelectedArea().x);
-      int linearFieldPosition = (width * field.getRow() + field.getCol());
+      int linearLabelPosition = width * xi5250Crt.getSelectedArea().y + xi5250Crt
+          .getSelectedArea().x;
+      int linearFieldPosition = width * field.getRow() + field.getCol();
       return linearFieldPosition > linearLabelPosition;
     }
 
