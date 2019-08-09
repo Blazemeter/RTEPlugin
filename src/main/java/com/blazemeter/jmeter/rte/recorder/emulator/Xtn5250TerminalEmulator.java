@@ -81,7 +81,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           put(new KeyEventMap(KeyEvent.META_MASK, KeyEvent.VK_F2), AttentionKey.PA2);
           put(new KeyEventMap(KeyEvent.META_MASK, KeyEvent.VK_F3), AttentionKey.PA3);
           put(new KeyEventMap(KeyEvent.ALT_MASK, KeyEvent.VK_INSERT), AttentionKey.PA1);
-          put(new KeyEventMap(KeyEvent.ALT_MASK, KeyEvent.VK_HOME), AttentionKey.PA1);
+          put(new KeyEventMap(KeyEvent.ALT_MASK, KeyEvent.VK_HOME), AttentionKey.PA2);
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_PAGE_UP), AttentionKey.PA3);
         }
       };
@@ -101,7 +101,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
   private Set<AttentionKey> supportedAttentionKeys;
-  private String labelText;
+  private Map<Position, String> labelMap = new HashMap<>();
 
   public Xtn5250TerminalEmulator() {
     xi5250Crt.setName("Terminal");
@@ -261,17 +261,21 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   private List<Input> getInputFields() {
     List<Input> fields = new ArrayList<>();
+
     for (XI5250Field f : xi5250Crt.getFields()) {
       if (f.isMDTOn()) {
-        if (labelText != null) {
-          fields.add(new LabelInput(labelText.trim(), trimNulls(f.getString())));
+
+        Position fieldPosition = new Position(f.getRow() + 1, f.getCol() + 1);
+        String label = labelMap.get(fieldPosition);
+        String trimmedInput = trimNulls(f.getString());
+        if (label != null) {
+          fields.add(new LabelInput(label, trimmedInput));
         } else {
-          fields.add(new CoordInput(new Position(f.getRow() + 1, f.getCol() + 1),
-              trimNulls(f.getString())));
+          fields.add(new CoordInput(fieldPosition, trimmedInput));
         }
       }
     }
-    labelText = null;
+    labelMap.clear();
     return fields;
   }
 
@@ -333,19 +337,31 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.requestFocus();
       });
       labelButton.addActionListener(e -> {
-
-        labelText = xi5250Crt.getStringSelectedArea();
-        if (labelText != null) {
-          if (labelText.contains("\n")) {
-            showUserMessage("Please select only one row");
-            LOG.warn(
-                "Input by label does not support multiple selected rows, "
-                    + "please select just one row.");
-            labelText = null;
-          }
-        } else {
+        String labelText = xi5250Crt.getStringSelectedArea();
+        if (labelText == null) {
           warnUserOfNotScreenSelectedArea("input by label");
+        } else if (labelText.contains("\n")) {
+          showUserMessage("Please try again selecting one row");
+          LOG.warn(
+              "Input by label does not support multiple selected rows, "
+                  + "please select just one row.");
+        } else if (labelText.trim().isEmpty()) {
+          showUserMessage("Please select a non empty or blank text \nto be used as input by label");
+          LOG.warn(
+              "Selected text is composed only by spaces.");
+        } else {
+          XI5250Field field = xi5250Crt
+              .getNextFieldFromPos(xi5250Crt.getSelectedArea().x, xi5250Crt.getSelectedArea().y);
+
+          if (isFieldValid(field)) {
+            labelMap.put(new Position(field.getRow() + 1, field.getCol() + 1), labelText.trim());
+          } else {
+            showUserMessage("No input fields found near to \"" + labelText + "\".");
+            LOG.warn("No field was found after specified label {}", labelText);
+          }
+
         }
+
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
@@ -379,6 +395,14 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.requestFocus();
         xi5250Crt.clearSelectedArea();
       });
+    }
+
+    private boolean isFieldValid(XI5250Field field) {
+      int width = xi5250Crt.getCrtSize().width;
+      int linearLabelPosition = width * xi5250Crt.getSelectedArea().y + xi5250Crt
+          .getSelectedArea().x;
+      int linearFieldPosition = width * field.getRow() + field.getCol();
+      return linearFieldPosition > linearLabelPosition;
     }
 
     private void showUserMessage(String msg) {
@@ -455,10 +479,10 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         return KeyEvent.VK_CONTROL;
       }
     }
-
     //This is implemented in this way because ctrl key is used in a shortcut to
     //copy/paste and the attention key should be triggered only if have not
     //executed a copy paste before.
+
     private boolean isAnyKeyPressedOrControlKeyReleasedAndNotCopy(KeyEvent e) {
       return (e.getID() == KeyEvent.KEY_PRESSED && e.getKeyCode() != getKeyCodeFromKeyMask(
           getMenuShortcutKeyMask())) || (e.getID() == KeyEvent.KEY_RELEASED
@@ -478,5 +502,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         super.paintComponent(g);
       }
     }
+
   }
 }
