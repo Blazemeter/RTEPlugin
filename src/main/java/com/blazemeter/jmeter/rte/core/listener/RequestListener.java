@@ -1,7 +1,7 @@
 package com.blazemeter.jmeter.rte.core.listener;
 
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
-import org.apache.jmeter.samplers.SampleResult;
+import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,30 +10,30 @@ public class RequestListener<T extends RteProtocolClient> implements TerminalSta
   private static final Logger LOG = LoggerFactory.getLogger(RequestListener.class);
 
   protected final T client;
-  private final SampleResult result;
+  private final RteSampleResultBuilder resultBuilder;
   private long lastResponseTime;
   private boolean receivedFirstResponse = false;
 
-  public RequestListener(SampleResult result, T client) {
-    this.result = result;
+  public RequestListener(RteSampleResultBuilder resultBuilder, T client) {
+    this.resultBuilder = resultBuilder;
     this.client = client;
-    lastResponseTime = result.currentTimeInMillis();
+    lastResponseTime = resultBuilder.getCurrentTimeInMillis();
   }
 
   @Override
   public void onTerminalStateChange() {
     if (!receivedFirstResponse) {
       receivedFirstResponse = true;
-      result.latencyEnd();
+      resultBuilder.withLatencyEndNow();
     }
-    lastResponseTime = result.currentTimeInMillis();
+    lastResponseTime = resultBuilder.getCurrentTimeInMillis();
     if (LOG.isTraceEnabled()) {
       LOG.trace(client.getScreen().toString());
     }
   }
 
   public void stop() {
-    result.setEndTime(lastResponseTime);
+    resultBuilder.withEndTime(lastResponseTime);
     client.removeTerminalStateListener(this);
   }
 

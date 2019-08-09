@@ -3,8 +3,8 @@ package com.blazemeter.jmeter.rte.core.listeners;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
+import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
-import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,7 +14,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RequestListenerIT {
 
-  private SampleResult result;
+  private RteSampleResultBuilder resultBuilder;
   private RequestListener listener;
 
   @Mock
@@ -22,9 +22,8 @@ public class RequestListenerIT {
 
   @Before
   public void setup() {
-    result = new SampleResult();
-    result.sampleStart();
-    listener = new RequestListener<>(result, client);
+    resultBuilder = new RteSampleResultBuilder();
+    listener = new RequestListener<>(resultBuilder, client);
   }
 
   @Test
@@ -32,7 +31,7 @@ public class RequestListenerIT {
     Thread.sleep(500);
     listener.onTerminalStateChange();
     listener.stop();
-    assertThat(result.getLatency()).isGreaterThanOrEqualTo(500);
+    assertThat(resultBuilder.build().getLatency()).isGreaterThanOrEqualTo(500);
   }
 
   @Test
@@ -45,7 +44,7 @@ public class RequestListenerIT {
       listener.onTerminalStateChange();
     }
     listener.stop();
-    assertThat(result.getEndTime()).isGreaterThanOrEqualTo(startTime + 300);
+    assertThat(resultBuilder.build().getEndTime()).isGreaterThanOrEqualTo(startTime + 300);
   }
 
 }
