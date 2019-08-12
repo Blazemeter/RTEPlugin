@@ -392,9 +392,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener
                   .onAssertionScreen(assertionName, pattern.getPattern());
             }
-          } else {
-            LOG.warn("Assertion screen canceled");
-          }
+          } 
         } else {
           warnUserOfNotScreenSelectedArea("assertion");
         }

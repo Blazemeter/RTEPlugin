@@ -436,8 +436,9 @@ public class Xtn5250TerminalEmulatorIT {
   }
   
   @Test
-  public void shouldNotAddAssertionWhenAssertionScreenAndCancelButtonPressed() {
+  public void shouldNotNotifyListenerWhenAssertionScreenAndCancelButtonPressed() {
     setScreen("");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 1, 4, 1));
     clickButton(ASSERTION_BUTTON);
     findOptionPane().textBox().setText("Assertion Test");
