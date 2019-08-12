@@ -36,7 +36,6 @@ To start recording, the user should specify the _Server_, _Port_, _Protocol_, _T
 Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the **[Terminal Emulator](/docs/terminal-emulator.md)** will show up. 
 
 ![alt_text](docs/Emulator-Login.png)
->If you click on the ![alter_text](src/main/resources/dark-theme/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc.
 
 >Click [here](/docs/terminal-emulator.md) to see all the information you must know about terminal emulator.
 
