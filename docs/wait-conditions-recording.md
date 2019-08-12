@@ -20,10 +20,11 @@ Wait conditions recording resolution is currently determined by the following 4 
  
 > [Here](../README.md#stable-period) for a description of stable period        
  
- **Case 3**: In this case our keyboard state has been changed once or several times but now the difference between those status changes is lower than stable period and also the difference between last keyboard unlock and last event occurred (like attention keys, inputs, etc) is lower than Stable Period. Then a Sync Wait Condition will be added to that sampler. If [Text Wait](#text-wait-condition) was called then a Text Wait Condition will be added to the sampler as well.
+ **Case 3**: In this case our keyboard state has been changed once or several times but now the difference between those status changes is lower than stable period and also the difference between last keyboard unlock and last event occurred (like attention keys, inputs, etc) is lower than Stable Period. Then a Sync Wait Condition will be added to that sampler.
  
- **Case 4**: This case will include those possibles scenarios where none of the previously mentioned cases could take a part. As an example, keyboard status has been change several times, the difference between those status changes is lower than stable period, but the difference between last keyboard unlock, last event is bigger than Stable Period and Text Wait was not called. In this case a Sync Wait and a Silent Wait will be added to the sampler.
+ **Case 4**: This case will include those possibles scenarios where none of the previously mentioned cases could take a part. As an example, keyboard status has been change several times, the difference between those status changes is lower than stable period, but the difference between last keyboard unlock and last event is bigger than Stable Period. In this case a Sync Wait and a Silent Wait will be added to the sampler.
  
+ **_As a general rule, when Text Wait is called, silent wait condition is not going to take a part in wait conditions._**
  
 ### Text Wait Condition
 
