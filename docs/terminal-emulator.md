@@ -14,7 +14,7 @@
 - We can press assertion button ![alt_text](../src/main/resources/dark-theme/assertion.png) when we want to make sure that a part of the screen has appeared in the screen. This assertion has the same behaviour as JMeter Assertions. To assert for a part of the screen we just have to select a part of the screen and press the button. An assertion will be added to corresponding sampler.
     >[Here](#recorder-screen-assertion-usage) is an example of usage.
 
-- If you click on the ![alter_text](src/main/resources/dark-theme/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc.
+- If you click on the ![alter_text](../src/main/resources/dark-theme/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc.
 
     
 ### Input By Label Usage
