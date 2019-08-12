@@ -382,8 +382,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
       assertionButton.addActionListener(e -> {
         String selectedText = xi5250Crt.getStringSelectedArea();
-        String assertionName = requestAssertionName();
         if (selectedText != null) {
+          String assertionName = requestAssertionName();
           if (assertionName != null) {
             Pattern pattern = JMeterUtils
                 .getPattern(Perl5Compiler.quotemeta(selectedText).replace("\\\n", ".*\\n.*"));
