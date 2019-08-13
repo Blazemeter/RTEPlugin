@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.swing.timing.Pause.pause;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
@@ -433,5 +434,15 @@ public class Xtn5250TerminalEmulatorIT {
     clickButton(ASSERTION_BUTTON);
     findOptionPane().requireMessage("Please select a part of the screen");
   }
-
+  
+  @Test
+  public void shouldNotNotifyListenerWhenAssertionScreenAndCancelButtonPressed() {
+    setScreen("");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 1, 4, 1));
+    clickButton(ASSERTION_BUTTON);
+    findOptionPane().textBox().setText("Assertion Test");
+    findOptionPane().cancelButton().click();
+    verify(listener, never()).onAssertionScreen("Assertion Test", "TEST");
+  }
 }
