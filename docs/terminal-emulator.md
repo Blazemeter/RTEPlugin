@@ -7,7 +7,7 @@
   > Input by label allows to find the field on the screen regardless of changes of field positioning, which makes recorded test plans more robust (than using default input by coord).
        
      >[Here](#input-by-label-usage) is a small example of input by label usage.  
-- You can select a screen area to be used as wait for text and then press ![alt_text](../src/main/resources/dark-theme/waitForText.png), a new *Text Wait Condition* has been added to your sampler.
+- You can select a screen area to be used as wait for text, then press ![alt_text](../src/main/resources/dark-theme/waitForText.png)and a new *Text Wait Condition* will be added to your sampler.
      
     >[Here](wait-conditions-recording.md#text-wait-condition) is more information about wait for text, how it works and a little usage example.
 
