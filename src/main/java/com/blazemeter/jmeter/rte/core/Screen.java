@@ -249,6 +249,10 @@ public class Screen {
       return column;
     }
 
+    public Position getPosition() {
+      return new Position(row, column);
+    }  
+    
     public String getText() {
       return text;
     }

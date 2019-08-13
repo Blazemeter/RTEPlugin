@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
+import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import java.io.PrintWriter;
@@ -186,10 +187,18 @@ public class RteSampleResultBuilder {
     if (action == Action.DISCONNECT) {
       return "";
     }
+
+    List<Position> segmentsPosition = screen.getSegments().stream()
+        .filter(Segment::isEditable)
+        .map(Segment::getPosition)
+        .collect(Collectors.toList());
+
     return "Input-inhibited: " + inputInhibitedResponse + "\n" +
         "Cursor-position: " + (cursorPosition != null ? cursorPosition.getRow() + ","
         + cursorPosition.getColumn() : "") +
-        (soundedAlarm ? "\nSound-Alarm: true" : "");
+        (soundedAlarm ? "\nSound-Alarm: true" : "") +
+        "\nField-positions: " + segmentsPosition.stream().map(Position::toString)
+        .collect(Collectors.joining(", "));
   }
 
 }
