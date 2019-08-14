@@ -4,7 +4,7 @@
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing a recorder for automatic test plan creation, and config and sampler for protocol interactions.
 
-Nowadays the plugin supports **IBM protocol's TN5250 and TN3270** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators with modifications ([xtn5250 fork](https://github.com/blazemeter/xtn5250) and [dm3270 fork](https://github.com/blazemeter/dm3270)) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
+Nowadays the plugin supports **IBM protocol's TN5250 and TN3270** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators with modifications ([xtn5250 fork](https://github.com/abstracta/xtn5250) and [dm3270 fork](https://github.com/abstracta/dm3270)) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
 
 People who usually work with these IBM servers interact with them, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes. The plugin provides a [recording controller](#a-recording-controller-rte-recorder), which allows the user to interact through a terminal emulator, recording every interaction (samplers) with the mainframe application. Additionally, the plugin allows for manual test plan creation, providing a config element for setting connection parameters and a sampler to set fields on screen and attention key to send to the mainframe application. Besides, the sampler allows to simulate the existing attention keys on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc.  
 
@@ -33,10 +33,11 @@ To start recording, the user should specify the _Server_, _Port_, _Protocol_, _T
  > - *Restart*: This button is the equivalent to pressing stop and start buttons.
  > - *Timeout Threshold*: This field will set the timeout which later on the [waits conditions ](docs/wait-conditions-recording.md)will use to set the proper time out for the conditions.
 
-Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the **Terminal Emulator** will show up. 
+Once everything is configured, the user proceeds to start the recording session, pressing START button. After the connection to the mainframe application is established (supposing configurations are right), the **[Terminal Emulator](/docs/terminal-emulator.md)** will show up. 
 
 ![alt_text](docs/Emulator-Login.png)
->If you click on the ![alter_text](src/main/resources/dark-theme/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc
+
+>Click [here](/docs/terminal-emulator.md) to see all the information you must know about terminal emulator.
 
 Now we are able to interact with our client through RTE-Emulator. Every interaction will be automatically saved in samplers (_[check out everything about samplers ](#sampler-rte-sampler)_).
 Once we have ended the flow that we want to record, we can easily close the terminal emulator or press STOP button to stop our recording. 
