@@ -8,7 +8,7 @@ public class Area {
   private final Position topLeft;
   private final Position bottomRight;
 
-  private Area(Position topLeft, Position bottomRight) {
+  public Area(Position topLeft, Position bottomRight) {
     this.topLeft = topLeft;
     this.bottomRight = bottomRight;
   }
