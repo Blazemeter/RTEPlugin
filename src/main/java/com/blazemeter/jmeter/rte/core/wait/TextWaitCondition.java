@@ -30,7 +30,7 @@ public class TextWaitCondition extends WaitCondition {
   }
 
   public String getRegex() {
-    return regex.toString();
+    return regex.getPattern();
   }
 
   public Area getSearchArea() {
