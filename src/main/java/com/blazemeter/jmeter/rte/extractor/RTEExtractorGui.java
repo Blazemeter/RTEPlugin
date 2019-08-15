@@ -2,11 +2,10 @@ package com.blazemeter.jmeter.rte.extractor;
 
 import com.blazemeter.jmeter.rte.sampler.gui.BlazemeterLabsLogo;
 import java.awt.BorderLayout;
-import org.apache.jmeter.gui.JMeterGUIComponent;
 import org.apache.jmeter.processor.gui.AbstractPostProcessorGui;
 import org.apache.jmeter.testelement.TestElement;
 
-public class RTEExtractorGui extends AbstractPostProcessorGui implements JMeterGUIComponent {
+public class RTEExtractorGui extends AbstractPostProcessorGui {
 
   private RTEExtractorPanel extractorPanel;
 
@@ -30,14 +29,38 @@ public class RTEExtractorGui extends AbstractPostProcessorGui implements JMeterG
   }
 
   @Override
+  public void configure(TestElement testElement) {
+    super.configure(testElement);
+    if (testElement instanceof RTEExtractor) {
+      RTEExtractor rteExtractor = (RTEExtractor) testElement;
+
+      extractorPanel.setVariablePrefix(rteExtractor.getVariablePrefix());
+      extractorPanel.setRow(String.valueOf(rteExtractor.getRow()));
+      extractorPanel.setColumn(String.valueOf(rteExtractor.getColumn()));
+      extractorPanel.setOffset(String.valueOf(rteExtractor.getOffset()));
+
+    }
+  }
+
+  @Override
   public TestElement createTestElement() {
     RTEExtractor rteExtractor = new RTEExtractor();
-    configure(rteExtractor);
+    configureTestElement(rteExtractor);
     return rteExtractor;
   }
 
   @Override
   public void modifyTestElement(TestElement testElement) {
+    configureTestElement(testElement);
+    if (testElement instanceof RTEExtractor) {
+      RTEExtractor rteExtractor = (RTEExtractor) testElement;
+
+      rteExtractor.setVariablePrefix(extractorPanel.getVariablePrefix());
+      rteExtractor.setRow(extractorPanel.getRow());
+      rteExtractor.setColumn(extractorPanel.getColumn());
+      rteExtractor.setOffset(extractorPanel.getOffset());
+      rteExtractor.setCursorPosition(extractorPanel.isCursorPosition());
+    }
 
   }
 }
