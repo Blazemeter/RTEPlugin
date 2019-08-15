@@ -46,6 +46,12 @@ public class Position {
 
   @Override
   public String toString() {
-    return "(" + row + ", " + column + ")";
+    return "(" + row + "," + column + ")";
+  }
+  
+  public static Position getPositionFromString(String text) {
+    String row = text.substring(text.indexOf('(') + 1, text.indexOf(','));
+    String column = text.substring(text.indexOf(',') + 1, text.indexOf(')'));
+    return new Position(Integer.parseInt(row), Integer.parseInt(column));
   }
 }

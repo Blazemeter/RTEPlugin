@@ -194,8 +194,7 @@ public class RteSampleResultBuilder {
         .collect(Collectors.toList());
 
     return "Input-inhibited: " + inputInhibitedResponse + "\n" +
-        "Cursor-position: " + (cursorPosition != null ? cursorPosition.getRow() + ","
-        + cursorPosition.getColumn() : "") +
+        "Cursor-position: " + (cursorPosition != null ? cursorPosition.toString() : "") +
         (soundedAlarm ? "\nSound-Alarm: true" : "") +
         "\nField-positions: " + segmentsPosition.stream().map(Position::toString)
         .collect(Collectors.joining(", "));
