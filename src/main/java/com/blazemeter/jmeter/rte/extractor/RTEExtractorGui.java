@@ -38,7 +38,7 @@ public class RTEExtractorGui extends AbstractPostProcessorGui {
       extractorPanel.setRow(String.valueOf(rteExtractor.getRow()));
       extractorPanel.setColumn(String.valueOf(rteExtractor.getColumn()));
       extractorPanel.setOffset(String.valueOf(rteExtractor.getOffset()));
-
+      extractorPanel.setPositionType(rteExtractor.getPositionType());
     }
   }
 
@@ -59,8 +59,9 @@ public class RTEExtractorGui extends AbstractPostProcessorGui {
       rteExtractor.setRow(extractorPanel.getRow());
       rteExtractor.setColumn(extractorPanel.getColumn());
       rteExtractor.setOffset(extractorPanel.getOffset());
-      rteExtractor.setCursorPosition(extractorPanel.isCursorPosition());
+      rteExtractor.setPositionType(extractorPanel.getPositionType());
     }
 
   }
+
 }

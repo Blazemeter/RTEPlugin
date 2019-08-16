@@ -1,6 +1,5 @@
 package com.blazemeter.jmeter.rte.extractor;
 
-import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -16,7 +15,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import org.apache.jmeter.util.JMeterUtils;
 
 public class RTEExtractorPanel extends JPanel implements ActionListener {
 
@@ -29,9 +27,6 @@ public class RTEExtractorPanel extends JPanel implements ActionListener {
   private JTextField offset = SwingUtils.createComponent("fieldOffset", new JTextField());
   private JTextField variablePrefix = SwingUtils
       .createComponent("variablePrefix", new JTextField());
-
-  private Position maxPosition = new Position(24,
-      80); // this should be obtained from xtnTerminalEmulator 
 
   public RTEExtractorPanel() {
     GroupLayout layout = new GroupLayout(this);
@@ -69,10 +64,10 @@ public class RTEExtractorPanel extends JPanel implements ActionListener {
   }
 
   private void setRadioButtonConfiguration(JPanel fieldPanel) {
-    ButtonGroup radios = new ButtonGroup();
-    radios.add(cursorPosition);
-    radios.add(nextFieldPosition);
-    
+    ButtonGroup group = new ButtonGroup();
+    group.add(cursorPosition);
+    group.add(nextFieldPosition);
+
     cursorPosition.setEnabled(true);
     cursorPosition.addItemListener(l -> {
       if (cursorPosition.isSelected()) {
@@ -143,70 +138,40 @@ public class RTEExtractorPanel extends JPanel implements ActionListener {
 
   @Override
   public void actionPerformed(ActionEvent e) {
+
   }
 
-  public Boolean isCursorPosition() {
-    return cursorPosition.isSelected();
+  public PositionType getPositionType() {
+    return cursorPosition.isSelected() ? PositionType.CURSOR_POSITION
+        : PositionType.NEXT_FIELD_POSITION;
   }
 
-  public void setCursorPosition(boolean cursorPosition) {
-    this.cursorPosition.setEnabled(cursorPosition);
-  }
-
-  public Boolean isFieldPosition() {
-    return nextFieldPosition.isSelected();
-  }
-
-  public void setNextFieldPosition(boolean fieldPosition) {
-    this.nextFieldPosition.setEnabled(fieldPosition);
-  }
-
-  public int getRow() {
-    int row = -1;
-    try {
-      row = Integer.parseInt(this.row.getText());
-      if (row > 0 && row < maxPosition.getRow()) {
-        return row;
-      }
-    } catch (NumberFormatException e) {
-      JMeterUtils.reportErrorToUser("Incorrect row value", "Invalid Input");
-      setColumn("");
+  public void setPositionType(PositionType positionType) {
+    if (positionType.equals(PositionType.CURSOR_POSITION)) {
+      cursorPosition.setEnabled(true);
+    } else {
+      nextFieldPosition.setEnabled(true);
     }
-    return row;
+  }
+
+  public String getRow() {
+    return row.getText();
   }
 
   public void setRow(String text) {
     row.setText(text);
   }
 
-  public int getColumn() {
-    int column = -1;
-    try {
-      column = Integer.parseInt(this.column.getText());
-      if (column > 0 && column < maxPosition.getColumn()) {
-        return column;
-      }
-    } catch (NumberFormatException e) {
-      JMeterUtils.reportErrorToUser("Incorrect column value", "Invalid Input");
-      setColumn("");
-    }
-    return column;
-
+  public String getColumn() {
+    return column.getText();
   }
 
   public void setColumn(String column) {
     this.column.setText(column);
   }
 
-  public int getOffset() {
-    int offset = -1;
-    try {
-      offset = Integer.parseInt(this.offset.getText());
-    } catch (NumberFormatException e) {
-      JMeterUtils.reportErrorToUser("Incorrect tab offset value", "Invalid Input");
-      setOffset("");
-    }
-    return offset;
+  public String getOffset() {
+    return offset.getText();
   }
 
   public void setOffset(String offset) {
