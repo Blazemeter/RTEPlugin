@@ -87,8 +87,8 @@ public class Screen {
   }
 
   public void addSegment(int linealPosition, String text) {
-    segments.add(new Segment(buildRowFromLinealPosition(linealPosition),
-        buildColumnFromLinealPosition(linealPosition), text, false));
+    segments.add(new Segment(new Position(buildRowFromLinealPosition(linealPosition),
+        buildColumnFromLinealPosition(linealPosition)), text, false));
   }
 
   private int buildRowFromLinealPosition(int linealPosition) {
@@ -100,15 +100,16 @@ public class Screen {
   }
 
   public void addField(int linealPosition, String text) {
-    segments.add(new Segment(buildRowFromLinealPosition(linealPosition),
-        buildColumnFromLinealPosition(linealPosition), text, true));
+    segments.add(new Segment(new Position(buildRowFromLinealPosition(linealPosition),
+        buildColumnFromLinealPosition(linealPosition)), text, true));
   }
 
   public String getText() {
     StringBuilder screen = new StringBuilder();
     int nextScreenPosition = 0;
     for (Segment segment : segments) {
-      int segmentPosition = buildLinealPosition(segment.getRow(), segment.getColumn());
+      int segmentPosition = buildLinealPosition(segment.getPosition().getRow(),
+          segment.getPosition().getColumn());
       if (segmentPosition != nextScreenPosition) {
         Segment fillSegment = buildBlankSegmentForRange(nextScreenPosition, segmentPosition);
         screen.append(fillSegment.getWrappedText(size.width));
@@ -128,9 +129,9 @@ public class Screen {
   }
 
   private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
-    return new Segment(buildRowFromLinealPosition(firstPosition),
-              buildColumnFromLinealPosition(firstPosition),
-              buildBlankString(lastPosition - firstPosition), false);
+    return new Segment(new Position(buildRowFromLinealPosition(firstPosition),
+        buildColumnFromLinealPosition(firstPosition)),
+        buildBlankString(lastPosition - firstPosition), false);
   }
 
   private String buildBlankString(int length) {
@@ -229,30 +230,20 @@ public class Screen {
 
   public static class Segment {
 
-    private final int row;
-    private final int column;
     private final String text;
     private final boolean editable;
+    private Position position;
 
-    public Segment(int row, int column, String text, boolean editable) {
+    public Segment(Position position, String text, boolean editable) {
       this.text = text;
-      this.row = row;
-      this.column = column;
+      this.position = position;
       this.editable = editable;
     }
 
-    public int getRow() {
-      return row;
-    }
-
-    public int getColumn() {
-      return column;
-    }
-
     public Position getPosition() {
-      return new Position(row, column);
-    }  
-    
+      return position;
+    }
+
     public String getText() {
       return text;
     }
@@ -262,7 +253,7 @@ public class Screen {
     }
 
     private String getWrappedText(int width) {
-      int offset = (column > 0 ? column : width) - 1;
+      int offset = (position.getColumn() > 0 ? position.getColumn() : width) - 1;
       int pos = 0;
       StringBuilder ret = new StringBuilder();
       while (offset + text.length() - pos >= width) {
@@ -285,7 +276,7 @@ public class Screen {
     }
 
     private Segment withInvisibleCharsToSpaces() {
-      return new Segment(row, column, convertInvisibleCharsToSpaces(text), editable);
+      return new Segment(position, convertInvisibleCharsToSpaces(text), editable);
     }
 
     @Override
@@ -298,22 +289,20 @@ public class Screen {
       }
 
       Segment segment = (Segment) o;
-      return row == segment.row &&
-          column == segment.column &&
+      return position.equals(((Segment) o).position) &&
           text.equals(segment.text) &&
           editable == segment.editable;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(row, column, text);
+      return Objects.hash(position, text);
     }
 
     @Override
     public String toString() {
       return "Segment{" +
-          "row=" + row +
-          ", column=" + column +
+          "Position=" + position.toString() +
           ", text='" + text + '\'' +
           ", editable=" + editable +
           '}';

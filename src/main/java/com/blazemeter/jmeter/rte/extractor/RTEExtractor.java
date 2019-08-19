@@ -27,26 +27,17 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   public void process() {
     context = getThreadContext();
     JMeterVariables vars = context.getVariables();
-    setJMeterVariables(vars);
-  }
-
-  private void setJMeterVariables(JMeterVariables vars) {
-    String columnVariablePrefix = getVariablePrefix() + "_COLUMN";
-    String rowVariablePrefix = getVariablePrefix() + "_ROW";
     Position position = extractPosition(context.getPreviousResult().getResponseHeaders());
-    vars.put(columnVariablePrefix, String.valueOf(position.getColumn()));
-    vars.put(rowVariablePrefix, String.valueOf(position.getRow()));
+    vars.put(getVariablePrefix() + "_COLUMN", String.valueOf(position.getColumn()));
+    vars.put(getVariablePrefix() + "_ROW", String.valueOf(position.getRow()));
   }
 
   private Position extractPosition(String responseHeaders) {
     Position effectivePosition = null;
     if (getPositionType() == PositionType.CURSOR_POSITION) {
 
-      String cursorDelimiter = "Cursor-position: ";
-      String cursorPositionAsText = responseHeaders
-          .substring(responseHeaders.indexOf(cursorDelimiter) + cursorDelimiter.length(),
-              responseHeaders.indexOf(')') + 1);
-      effectivePosition = Position.getPositionFromString(cursorPositionAsText);
+      effectivePosition = extractCursorPosition(responseHeaders);
+      
     } else {
       String fieldDelimiter = "Field-positions: ";
 
@@ -55,7 +46,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
 
       List<Position> fieldPositions = new ArrayList<>();
       for (String field : fieldsPositionAsText.split(", ")) {
-        fieldPositions.add(Position.getPositionFromString(field));
+        fieldPositions.add(Position.fromString(field));
       }
 
       try {
@@ -78,6 +69,17 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
       }
 
     }
+    return effectivePosition;
+  }
+
+  private Position extractCursorPosition(String responseHeaders) {
+    Position effectivePosition;
+    String cursorDelimiter = "Cursor-position: ";
+    int cursorPositionStart = responseHeaders.indexOf(cursorDelimiter) + cursorDelimiter.length();
+    String cursorPositionAsText = responseHeaders
+        .substring(cursorPositionStart,
+            responseHeaders.indexOf('\n'));
+    effectivePosition = Position.fromString(cursorPositionAsText);
     return effectivePosition;
   }
 

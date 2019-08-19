@@ -188,16 +188,18 @@ public class RteSampleResultBuilder {
       return "";
     }
 
-    List<Position> segmentsPosition = screen.getSegments().stream()
-        .filter(Segment::isEditable)
-        .map(Segment::getPosition)
-        .collect(Collectors.toList());
+    List<Segment> segments = screen.getSegments();
 
     return "Input-inhibited: " + inputInhibitedResponse + "\n" +
         "Cursor-position: " + (cursorPosition != null ? cursorPosition.toString() : "") +
         (soundedAlarm ? "\nSound-Alarm: true" : "") +
-        "\nField-positions: " + segmentsPosition.stream().map(Position::toString)
-        .collect(Collectors.joining(", "));
+        (segments != null ? "\nField-positions: " + segments.stream()
+            .filter(Segment::isEditable)
+            .map(Segment::getPosition)
+            .map(Position::toString)
+            .collect(Collectors.joining(", "))
+            : "");
+
   }
 
 }

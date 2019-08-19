@@ -216,13 +216,15 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     xi5250Crt.removeFields();
     for (Screen.Segment s : screen.getSegments()) {
       if (s.isEditable()) {
-        XI5250Field xi5250Field = new XI5250Field(xi5250Crt, s.getColumn() - 1, s.getRow() - 1,
+        XI5250Field xi5250Field = new XI5250Field(xi5250Crt, s.getPosition().getColumn() - 1,
+            s.getPosition().getRow() - 1,
             s.getText().length(), 32);
         xi5250Field.setString(s.getText());
         xi5250Field.resetMDT();
         xi5250Crt.addField(xi5250Field);
       } else {
-        xi5250Crt.drawString(s.getText(), s.getColumn() - 1, s.getRow() - 1);
+        xi5250Crt
+            .drawString(s.getText(), s.getPosition().getColumn() - 1, s.getPosition().getRow() - 1);
       }
     }
     xi5250Crt.initAllFields();
@@ -392,7 +394,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener
                   .onAssertionScreen(assertionName, pattern.getPattern());
             }
-          } 
+          }
         } else {
           warnUserOfNotScreenSelectedArea("assertion");
         }

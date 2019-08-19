@@ -1,10 +1,13 @@
 package com.blazemeter.jmeter.rte.core;
 
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Position {
 
   public static final int UNSPECIFIED_INDEX = 0;
+  private static final Pattern POSITION_PATTERN = Pattern.compile("^\\((\\d+),(\\d+)\\)$");
 
   private int row;
   private int column;
@@ -49,9 +52,13 @@ public class Position {
     return "(" + row + "," + column + ")";
   }
   
-  public static Position getPositionFromString(String text) {
-    String row = text.substring(text.indexOf('(') + 1, text.indexOf(','));
-    String column = text.substring(text.indexOf(',') + 1, text.indexOf(')'));
-    return new Position(Integer.parseInt(row), Integer.parseInt(column));
+  public static Position fromString(String text) {
+    Matcher m = POSITION_PATTERN.matcher(text);
+    if (m.matches()) {
+      return new Position(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
+    } else {
+      throw new IllegalArgumentException("The text '" + text + "' does not match position format");
+    }
+
   }
 }
