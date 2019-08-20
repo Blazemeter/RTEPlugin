@@ -21,7 +21,7 @@ public class RteSampleResultBuilderTest {
 
   private static final Position CURSOR_POSITION = new Position(1, 1);
   private static final String EXPECTED_HEADERS_RESPONSE = "Input-inhibited: true\n" +
-      "Cursor-position: 1,1";
+      "Cursor-position: (1,1)";
   private static final String EXPECTED_HEADERS = "Server: Test Server\n" +
       "Port: 2123\n" +
       "Protocol: TN5250\n" +
