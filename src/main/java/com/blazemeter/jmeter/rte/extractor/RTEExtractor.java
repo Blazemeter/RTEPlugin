@@ -1,6 +1,8 @@
 package com.blazemeter.jmeter.rte.extractor;
 
 import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
+import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.jmeter.processor.PostProcessor;
@@ -37,63 +39,75 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     if (getPositionType() == PositionType.CURSOR_POSITION) {
 
       effectivePosition = extractCursorPosition(responseHeaders);
-      
+
     } else {
-      String fieldDelimiter = "Field-positions: ";
+      effectivePosition = getPosition(responseHeaders);
 
-      String fieldsPositionAsText = responseHeaders
-          .substring(responseHeaders.indexOf(fieldDelimiter) + fieldDelimiter.length());
+    }
+    return effectivePosition;
+  }
 
-      List<Position> fieldPositions = new ArrayList<>();
-      for (String field : fieldsPositionAsText.split(", ")) {
-        fieldPositions.add(Position.fromString(field));
-      }
+  private Position getPosition(String responseHeaders) {
+    Position effectivePosition = null;
+    int startFieldsPosition =
+        responseHeaders.indexOf(RteSampleResultBuilder.FIELDS_POSITION_HEADER)
+            + RteSampleResultBuilder.FIELDS_POSITION_HEADER.length();
+    int lastFieldsPosition = responseHeaders
+        .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, startFieldsPosition);
 
-      try {
-        if (isGivenFieldPositionValid()) {
-          effectivePosition = fieldPositions
-              .get(fieldPositions
-                  .indexOf(new Position(Integer.parseInt(getRow()), Integer.parseInt(getColumn())))
-                  + Integer.parseInt(getOffset()));
-        } else {
-          JMeterUtils.reportErrorToUser(
-              "Inserted values for row and column in extractor\n" 
-                  + "do not match with the screen size.");
-        }
+    String fieldsPositionAsText = responseHeaders
+        .substring(startFieldsPosition, lastFieldsPosition);
 
-      } catch (IndexOutOfBoundsException e) {
+    List<Position> fieldPositions = new ArrayList<>();
+    for (String field : fieldsPositionAsText
+        .split(RteSampleResultBuilder.FIELD_POSITION_SEPARATOR)) {
+      fieldPositions.add(Position.fromString(field));
+    }
+
+    try {
+      if (isGivenFieldPositionValid(responseHeaders)) {
+        effectivePosition = fieldPositions
+            .get(fieldPositions
+                .indexOf(new Position(Integer.parseInt(getRow()), Integer.parseInt(getColumn())))
+                + Integer.parseInt(getOffset()));
+      } else {
         JMeterUtils.reportErrorToUser(
-            "Number of fields in the screen was " + fieldPositions.size()
-                + "Therefore is not possible to skip "
-                + getOffset() + " fields");
+            "Inserted values for row and column in extractor\n"
+                + "do not match with the screen size.");
       }
 
+    } catch (IndexOutOfBoundsException e) {
+      JMeterUtils.reportErrorToUser(
+          "Number of fields in the screen was " + fieldPositions.size()
+              + "Therefore is not possible to skip "
+              + getOffset() + " fields");
     }
     return effectivePosition;
   }
 
   private Position extractCursorPosition(String responseHeaders) {
     Position effectivePosition;
-    String cursorDelimiter = "Cursor-position: ";
-    int cursorPositionStart = responseHeaders.indexOf(cursorDelimiter) + cursorDelimiter.length();
+    int cursorPositionStart = responseHeaders.indexOf(RteSampleResultBuilder.CURSOR_POSITION_HEADER)
+        + RteSampleResultBuilder.CURSOR_POSITION_HEADER.length();
     String cursorPositionAsText = responseHeaders
         .substring(cursorPositionStart,
-            responseHeaders.indexOf('\n'));
+            responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR));
     effectivePosition = Position.fromString(cursorPositionAsText);
     return effectivePosition;
   }
 
-  private boolean isGivenFieldPositionValid() {
-    String requestHeaders = context.getPreviousResult().getRequestHeaders();
-    String screenSizeDelimiter = "Terminal-type: ";
+  private boolean isGivenFieldPositionValid(String responseHeaders) {
     int terminalTypeIndex =
-        requestHeaders.indexOf(screenSizeDelimiter) + screenSizeDelimiter.length();
-    String screenSizeAsText = requestHeaders
-        .substring(requestHeaders.indexOf(": ", terminalTypeIndex) + 2,
-            requestHeaders.indexOf('\n', terminalTypeIndex));
-    int rowSize = Integer.parseInt(screenSizeAsText.substring(0, screenSizeAsText.indexOf('x')));
+        responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_TERMINAL_TYPE)
+            + RteSampleResultBuilder.HEADERS_TERMINAL_TYPE.length();
+    String screenSizeAsText = responseHeaders
+        .substring(responseHeaders.indexOf(": ", terminalTypeIndex) + 2,
+            responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, terminalTypeIndex));
+    int rowSize = Integer.parseInt(screenSizeAsText.substring(0, screenSizeAsText.indexOf(
+        TerminalType.SCREEN_SIZE_SEPARATOR)));
     int columnSize = Integer.parseInt(screenSizeAsText
-        .substring(screenSizeAsText.indexOf('x') + 1, screenSizeAsText.length() - 1));
+        .substring(screenSizeAsText.indexOf(TerminalType.SCREEN_SIZE_SEPARATOR) + 1,
+            screenSizeAsText.length() - 1));
     return (getRowAsInt() <= rowSize && getRowAsInt() >= 1) && (getColumnAsInt() <= columnSize
         && getColumnAsInt() >= 1);
   }

@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public class TerminalType {
 
+  public static final String SCREEN_SIZE_SEPARATOR = "x";
   private String id;
   private Dimension screenSize;
 
@@ -27,7 +28,7 @@ public class TerminalType {
 
   @Override
   public String toString() {
-    return id + ": " + screenSize.height + "x" + screenSize.width;
+    return id + ": " + screenSize.height + SCREEN_SIZE_SEPARATOR + screenSize.width;
   }
 
   @Override
@@ -47,5 +48,4 @@ public class TerminalType {
   public int hashCode() {
     return Objects.hash(id, screenSize);
   }
-
 }

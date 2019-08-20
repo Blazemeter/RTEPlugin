@@ -19,6 +19,8 @@ interface.
  */
 public class RteSampleResultBuilder {
 
+  public static final String FIELD_POSITION_SEPARATOR = ", ";
+  public static final String HEADERS_TERMINAL_TYPE = "Terminal-type: ";
   private SampleResult result;
   private String server;
   private int port;
@@ -33,7 +35,9 @@ public class RteSampleResultBuilder {
   private Position cursorPosition;
   private boolean soundedAlarm;
   private Screen screen;
-
+  public static String CURSOR_POSITION_HEADER = "Cursor-position: ";
+  public static String FIELDS_POSITION_HEADER = "Field-positions: ";
+  public static String HEADERS_SEPARATOR = "\n";
   public RteSampleResultBuilder() {
     result = new SampleResult();
     result.sampleStart();
@@ -165,7 +169,7 @@ public class RteSampleResultBuilder {
     return "Server: " + server + "\n" +
         "Port: " + port + "\n" +
         "Protocol: " + protocol + "\n" +
-        "Terminal-type: " + terminalType + "\n" +
+        HEADERS_TERMINAL_TYPE + terminalType + "\n" +
         "Security: " + sslType + "\n" +
         "Action: " + action + "\n" +
         (inputInhibitedRequest != null ? "Input-inhibited: " + inputInhibitedRequest + "\n" : "");
@@ -192,14 +196,14 @@ public class RteSampleResultBuilder {
         .filter(Segment::isEditable)
         .collect(Collectors.toList()) : null;
 
-    return "Input-inhibited: " + inputInhibitedResponse + "\n" +
-        "Cursor-position: " + (cursorPosition != null ? cursorPosition.toString() : "") +
-        (soundedAlarm ? "\nSound-Alarm: true" : "") +
-        (segments != null && !segments.isEmpty() ? "\nField-positions: " + segments.stream()
+    return "Input-inhibited: " + inputInhibitedResponse + HEADERS_SEPARATOR +
+        CURSOR_POSITION_HEADER + (cursorPosition != null ? cursorPosition.toString() : "") +
+        (soundedAlarm ? HEADERS_SEPARATOR + "Sound-Alarm: true" : "") +
+        (segments != null && !segments.isEmpty() ? HEADERS_SEPARATOR + FIELDS_POSITION_HEADER + segments.stream()
             .map(Segment::getPosition)
             .map(Position::toString)
-            .collect(Collectors.joining(", "))
-            : "");
+            .collect(Collectors.joining(FIELD_POSITION_SEPARATOR))
+            : "") + HEADERS_SEPARATOR;
 
   }
 
