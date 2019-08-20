@@ -16,7 +16,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
-public class RTEExtractorPanel extends JPanel implements ActionListener {
+public class RTEExtractorPanel extends JPanel {
 
   private JRadioButton cursorPosition = new JRadioButton("Extract cursor position");
   private JRadioButton nextFieldPosition = new JRadioButton(
@@ -134,11 +134,6 @@ public class RTEExtractorPanel extends JPanel implements ActionListener {
         setEnabled(child, enabled);
       }
     }
-  }
-
-  @Override
-  public void actionPerformed(ActionEvent e) {
-
   }
 
   public PositionType getPositionType() {

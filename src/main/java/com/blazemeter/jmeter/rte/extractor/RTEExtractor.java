@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.extractor;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.jmeter.processor.PostProcessor;
@@ -23,6 +24,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   private JMeterContext context;
 
   public RTEExtractor() {
+    
   }
 
   @Override
@@ -35,19 +37,14 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   private Position extractPosition(String responseHeaders) {
-    Position effectivePosition = null;
     if (getPositionType() == PositionType.CURSOR_POSITION) {
-
-      effectivePosition = extractCursorPosition(responseHeaders);
-
+      return extractCursorPosition(responseHeaders);
     } else {
-      effectivePosition = getPosition(responseHeaders);
-
+      return getFieldPosition(responseHeaders);
     }
-    return effectivePosition;
   }
 
-  private Position getPosition(String responseHeaders) {
+  private Position getFieldPosition(String responseHeaders) {
     Position effectivePosition = null;
     int startFieldsPosition =
         responseHeaders.indexOf(RteSampleResultBuilder.FIELDS_POSITION_HEADER)
@@ -97,6 +94,13 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   private boolean isGivenFieldPositionValid(String responseHeaders) {
+    Dimension screenSize = extractScreenDimensions(responseHeaders);
+    return (getRowAsInt() <= screenSize.height && getRowAsInt() >= 1) && (
+        getColumnAsInt() <= screenSize.width
+            && getColumnAsInt() >= 1);
+  }
+
+  private Dimension extractScreenDimensions(String responseHeaders) {
     int terminalTypeIndex =
         responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_TERMINAL_TYPE)
             + RteSampleResultBuilder.HEADERS_TERMINAL_TYPE.length();
@@ -108,8 +112,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     int columnSize = Integer.parseInt(screenSizeAsText
         .substring(screenSizeAsText.indexOf(TerminalType.SCREEN_SIZE_SEPARATOR) + 1,
             screenSizeAsText.length() - 1));
-    return (getRowAsInt() <= rowSize && getRowAsInt() >= 1) && (getColumnAsInt() <= columnSize
-        && getColumnAsInt() >= 1);
+    return new Dimension(columnSize, rowSize);
   }
 
   private int getRowAsInt() {
