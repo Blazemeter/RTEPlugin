@@ -2,10 +2,6 @@ package com.blazemeter.jmeter.rte.extractor;
 
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Container;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
@@ -64,27 +60,30 @@ public class RTEExtractorPanel extends JPanel {
   }
 
   private void setRadioButtonConfiguration(JPanel fieldPanel) {
+    cursorPosition.setSelected(true);
+    SwingUtils.setEnabledRecursively(fieldPanel, false);
+    cursorPosition.setEnabled(true);
+    cursorPosition.setName("cursorPosition");
+    nextFieldPosition.setName("nextFieldPosition");
     ButtonGroup group = new ButtonGroup();
     group.add(cursorPosition);
     group.add(nextFieldPosition);
-
-    cursorPosition.setEnabled(true);
     cursorPosition.addItemListener(l -> {
       if (cursorPosition.isSelected()) {
-        setEnabled(fieldPanel, false);
-
+        SwingUtils.setEnabledRecursively(fieldPanel, false);
       }
     });
 
     nextFieldPosition.addItemListener(l -> {
       if (nextFieldPosition.isSelected()) {
-        setEnabled(fieldPanel, true);
+        SwingUtils.setEnabledRecursively(fieldPanel, true);
       }
     });
   }
 
   private JPanel buildFieldPanel() {
     JPanel panel = new JPanel(new BorderLayout());
+    panel.setName("fieldPanel");
     GroupLayout layout = new GroupLayout(panel);
     layout.setAutoCreateGaps(true);
     layout.setAutoCreateContainerGaps(true);
@@ -125,15 +124,6 @@ public class RTEExtractorPanel extends JPanel {
     );
 
     return panel;
-  }
-
-  private void setEnabled(Component component, boolean enabled) {
-    component.setEnabled(enabled);
-    if (component instanceof Container) {
-      for (Component child : ((Container) component).getComponents()) {
-        setEnabled(child, enabled);
-      }
-    }
   }
 
   public PositionType getPositionType() {
