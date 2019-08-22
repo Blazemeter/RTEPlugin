@@ -88,7 +88,7 @@ public class Xtn5250TerminalEmulatorIT {
     return baseLine + StringUtils.repeat(' ', width - baseLine.length());
   }
 
-  private Screen buildLoginScreenWithUserNameAndPasswordFields() {
+  public static Screen buildLoginScreenWithUserNameAndPasswordFields() {
     Dimension screenSize = new Dimension(COLUMNS, ROWS);
     Screen screen = new Screen(screenSize);
     String name = "Insert Name: ";
@@ -110,12 +110,12 @@ public class Xtn5250TerminalEmulatorIT {
     return screen;
   }
   
-  private int addScreenSegment(Screen screen, int linearPosition, String name) {
+  private static int addScreenSegment(Screen screen, int linearPosition, String name) {
     screen.addSegment(linearPosition, name);
     return linearPosition + name.length();
   }
 
-  private int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
+  private static int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
     screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
     return  linearPosition + fieldLenght;
   }

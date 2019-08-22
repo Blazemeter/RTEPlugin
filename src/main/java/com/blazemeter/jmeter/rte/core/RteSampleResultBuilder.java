@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.core;
 import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.Action;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,9 @@ public class RteSampleResultBuilder {
 
   public static final String FIELD_POSITION_SEPARATOR = ", ";
   public static final String HEADERS_TERMINAL_TYPE = "Terminal-type: ";
+  public static final String CURSOR_POSITION_HEADER = "Cursor-position: ";
+  public static final String FIELDS_POSITION_HEADER = "Field-positions: ";
+  public static final String HEADERS_SEPARATOR = "\n";
   private SampleResult result;
   private String server;
   private int port;
@@ -35,12 +39,18 @@ public class RteSampleResultBuilder {
   private Position cursorPosition;
   private boolean soundedAlarm;
   private Screen screen;
-  public static String CURSOR_POSITION_HEADER = "Cursor-position: ";
-  public static String FIELDS_POSITION_HEADER = "Field-positions: ";
-  public static String HEADERS_SEPARATOR = "\n";
+
   public RteSampleResultBuilder() {
     result = new SampleResult();
     result.sampleStart();
+  }
+  
+  @VisibleForTesting
+  public RteSampleResultBuilder(Position cursorPosition, Screen screen) {
+    result = new SampleResult();
+    result.sampleStart();
+    this.screen = screen;
+    this.cursorPosition = cursorPosition;
   }
 
   public long getCurrentTimeInMillis() {
@@ -199,7 +209,8 @@ public class RteSampleResultBuilder {
     return "Input-inhibited: " + inputInhibitedResponse + HEADERS_SEPARATOR +
         CURSOR_POSITION_HEADER + (cursorPosition != null ? cursorPosition.toString() : "") +
         (soundedAlarm ? HEADERS_SEPARATOR + "Sound-Alarm: true" : "") +
-        (segments != null && !segments.isEmpty() ? HEADERS_SEPARATOR + FIELDS_POSITION_HEADER + segments.stream()
+        (segments != null && !segments.isEmpty() ? HEADERS_SEPARATOR + FIELDS_POSITION_HEADER
+            + segments.stream()
             .map(Segment::getPosition)
             .map(Position::toString)
             .collect(Collectors.joining(FIELD_POSITION_SEPARATOR))

@@ -30,18 +30,18 @@ public class RteSampleResultBuilderTest {
       "Action: CONNECT\n";
   private static final String SCREEN_TEXT = "Testing screen text";
   private static final Screen SCREEN = buildScreen();
+  private static final List<Input> CUSTOM_INPUTS = Collections
+      .singletonList(new CoordInput(new Position(3, 2), "input"));
+  public static final String FIELD_POSITION_TEXT = "Field-positions: (1,1)" + "\n";
+  public static final String SOUNDED_ALARM_TEXT = "Sound-Alarm: true" + "\n";
+  @Mock
+  private RteProtocolClient client;
 
   private static Screen buildScreen() {
     Screen screen = new Screen(new Dimension(30, 1));
-    screen.addSegment(0, SCREEN_TEXT);
+    screen.addField(0, SCREEN_TEXT);
     return screen;
   }
-
-  private static final List<Input> CUSTOM_INPUTS = Collections
-      .singletonList(new CoordInput(new Position(3, 2), "input"));
-
-  @Mock
-  private RteProtocolClient client;
 
   @Before
   public void setUp() {
@@ -98,8 +98,8 @@ public class RteSampleResultBuilderTest {
   public void shouldGetTerminalStatusHeadersWhenGetResponseHeadersWithSuccessResponse() {
     RteSampleResultBuilder resultBuilder = buildBasicResultBuilder()
         .withSuccessResponse(client);
-    String expectedResponseHeaders = EXPECTED_HEADERS_RESPONSE + "\n" +
-        "Sound-Alarm: true" + "\n";
+    String expectedResponseHeaders = EXPECTED_HEADERS_RESPONSE +
+        SOUNDED_ALARM_TEXT + FIELD_POSITION_TEXT;
     assertThat(resultBuilder.build().getResponseHeaders()).isEqualTo(expectedResponseHeaders);
   }
 
@@ -116,7 +116,7 @@ public class RteSampleResultBuilderTest {
     when(client.isAlarmOn()).thenReturn(false);
     RteSampleResultBuilder resultBuilder = buildBasicResultBuilder()
         .withSuccessResponse(client);
-    assertThat(resultBuilder.build().getResponseHeaders()).isEqualTo(EXPECTED_HEADERS_RESPONSE);
+    assertThat(resultBuilder.build().getResponseHeaders()).isEqualTo(EXPECTED_HEADERS_RESPONSE + FIELD_POSITION_TEXT);
   }
 
   @Test
@@ -134,4 +134,22 @@ public class RteSampleResultBuilderTest {
     assertThat(resultBuilder.build().getResponseDataAsString()).isEqualTo("");
   }
 
+  @Test
+  public void shouldGetEmptyScreenFieldsWhenNoScreenFields() {
+    RteSampleResultBuilder resultBuilder = new RteSampleResultBuilder(new Position(1, 1), null);
+    when(client.getScreen()).thenReturn(null);
+    resultBuilder.withInputInhibitedRequest(true)
+        .withSuccessResponse(client);
+    assertThat(resultBuilder.build().getResponseHeaders())
+        .isEqualTo(EXPECTED_HEADERS_RESPONSE + SOUNDED_ALARM_TEXT);
+  }
+
+  @Test
+  public void shouldGetHeadersWithFieldWhenScreenContainFields() {
+    RteSampleResultBuilder resultBuilder = new RteSampleResultBuilder(new Position(1, 1),
+        buildScreen());
+    resultBuilder.withSuccessResponse(client);
+    assertThat(resultBuilder.build().getResponseHeaders())
+        .isEqualTo(EXPECTED_HEADERS_RESPONSE + SOUNDED_ALARM_TEXT + FIELD_POSITION_TEXT);
+  }
 }
