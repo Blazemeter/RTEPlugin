@@ -3,6 +3,8 @@ package com.blazemeter.jmeter.rte.extractor;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,19 +23,28 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   private static final String POSITION_TYPE_PROPERTY = "RTEExtractor.positionType";
   private static final PositionType DEFAULT_POSITION_TYPE = PositionType.CURSOR_POSITION;
 
+  private boolean testing;
   private JMeterContext context;
 
   public RTEExtractor() {
-    
+
   }
 
   @Override
   public void process() {
-    context = getThreadContext();
+    context = testing ? context : getThreadContext();
     JMeterVariables vars = context.getVariables();
     Position position = extractPosition(context.getPreviousResult().getResponseHeaders());
-    vars.put(getVariablePrefix() + "_COLUMN", String.valueOf(position.getColumn()));
-    vars.put(getVariablePrefix() + "_ROW", String.valueOf(position.getRow()));
+    String variablePrefix = validateVariablePrefix(getVariablePrefix());
+    vars.put(variablePrefix + "_COLUMN", String.valueOf(position.getColumn()));
+    vars.put(variablePrefix + "_ROW", String.valueOf(position.getRow()));
+  }
+
+  private String validateVariablePrefix(String variablePrefix) {
+    if (variablePrefix.isEmpty()) {
+      JMeterUtils.reportErrorToUser("The variable name in extractor is essential for later usage");
+    }
+    return variablePrefix;
   }
 
   private Position extractPosition(String responseHeaders) {
@@ -62,11 +73,21 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     }
 
     try {
-      if (isGivenFieldPositionValid(responseHeaders)) {
-        effectivePosition = fieldPositions
-            .get(fieldPositions
-                .indexOf(new Position(Integer.parseInt(getRow()), Integer.parseInt(getColumn())))
-                + Integer.parseInt(getOffset()));
+      if (isGivenFieldPositionValid(context.getPreviousResult().getRequestHeaders())) {
+
+        int positionIndex = fieldPositions
+            .indexOf(new Position(getRowAsInt(), getColumnAsInt()));
+        if (positionIndex != -1) {
+          effectivePosition = fieldPositions
+              .get(positionIndex + Integer.parseInt(getOffset()));
+        } else {
+          String cause = "Inserted values for row/column in extractor\n"
+              + "do not match with any field in current screen";
+          JMeterUtils.reportErrorToUser(cause);
+
+          throw new InvalidFieldPositionException(new Position(getRowAsInt(), getColumnAsInt()),
+              new Throwable(cause));
+        }
       } else {
         JMeterUtils.reportErrorToUser(
             "Inserted values for row and column in extractor\n"
@@ -76,7 +97,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     } catch (IndexOutOfBoundsException e) {
       JMeterUtils.reportErrorToUser(
           "Number of fields in the screen was " + fieldPositions.size()
-              + "Therefore is not possible to skip "
+              + "\nTherefore is not possible to skip "
               + getOffset() + " fields");
     }
     return effectivePosition;
@@ -88,31 +109,34 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
         + RteSampleResultBuilder.CURSOR_POSITION_HEADER.length();
     String cursorPositionAsText = responseHeaders
         .substring(cursorPositionStart,
-            responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR));
+            responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, cursorPositionStart));
     effectivePosition = Position.fromString(cursorPositionAsText);
     return effectivePosition;
   }
 
-  private boolean isGivenFieldPositionValid(String responseHeaders) {
-    Dimension screenSize = extractScreenDimensions(responseHeaders);
+  private boolean isGivenFieldPositionValid(String requestHeaders) {
+    Dimension screenSize = getScreenDimensions(requestHeaders);
     return (getRowAsInt() <= screenSize.height && getRowAsInt() >= 1) && (
         getColumnAsInt() <= screenSize.width
             && getColumnAsInt() >= 1);
   }
 
-  private Dimension extractScreenDimensions(String responseHeaders) {
+  private Dimension getScreenDimensions(String requestHeaders) {
+    return TerminalType.fromString(extractScreenSize(requestHeaders));
+  }
+
+  private String extractScreenSize(String requestHeaders) {
     int terminalTypeIndex =
-        responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_TERMINAL_TYPE)
+        requestHeaders.indexOf(RteSampleResultBuilder.HEADERS_TERMINAL_TYPE)
             + RteSampleResultBuilder.HEADERS_TERMINAL_TYPE.length();
-    String screenSizeAsText = responseHeaders
-        .substring(responseHeaders.indexOf(": ", terminalTypeIndex) + 2,
-            responseHeaders.indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, terminalTypeIndex));
-    int rowSize = Integer.parseInt(screenSizeAsText.substring(0, screenSizeAsText.indexOf(
-        TerminalType.SCREEN_SIZE_SEPARATOR)));
-    int columnSize = Integer.parseInt(screenSizeAsText
-        .substring(screenSizeAsText.indexOf(TerminalType.SCREEN_SIZE_SEPARATOR) + 1,
-            screenSizeAsText.length() - 1));
-    return new Dimension(columnSize, rowSize);
+    int endOfScreenDimension = requestHeaders
+        .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, terminalTypeIndex);
+    String terminalTypeHeader = requestHeaders.substring(terminalTypeIndex, endOfScreenDimension);
+    int lastNonBlankPosition = terminalTypeHeader.length() - 1;
+    while (lastNonBlankPosition >= 0 && (terminalTypeHeader.charAt(lastNonBlankPosition) != ' ')) {
+      lastNonBlankPosition--;
+    }
+    return terminalTypeHeader.substring(lastNonBlankPosition + 1);
   }
 
   private int getRowAsInt() {
@@ -162,5 +186,11 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
 
   public void setPositionType(PositionType positionType) {
     setProperty(POSITION_TYPE_PROPERTY, positionType.name());
+  }
+
+  @VisibleForTesting
+  public void setContext(JMeterContext context) {
+    testing = true;
+    this.context = context;
   }
 }
