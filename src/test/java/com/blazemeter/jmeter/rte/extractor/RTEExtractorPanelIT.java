@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.extractor;
 
 import static org.assertj.swing.assertions.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
+import static org.assertj.swing.timing.Pause.pause;
 
 import java.awt.Component;
 import javax.swing.JRadioButton;
@@ -62,6 +63,7 @@ public class RTEExtractorPanelIT {
 
   @Test
   public void shouldGetConfiguredPropertiesWhenFieldsAreSet() {
+    clickRadioButton(NEXT_FIELD_POSITION);
     setProperties();
     softly.assertThat(panel.getVariablePrefix()).as("Variable Prefix Name").isEqualTo("position");
     softly.assertThat(panel.getRow()).as("Field Row").isEqualTo("1");
