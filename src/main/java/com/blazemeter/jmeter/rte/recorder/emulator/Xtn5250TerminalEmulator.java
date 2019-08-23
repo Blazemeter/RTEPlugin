@@ -6,6 +6,7 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
@@ -27,10 +28,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 import org.apache.jmeter.util.JMeterUtils;
@@ -95,6 +100,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
   private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
   private JButton assertionButton = createIconButton("assertionButton", "assertion.png");
+  private JLabel sampleNameLabel = new JLabel("Insert sample name: ");
+  private JTextField sampleNameField = SwingUtils
+      .createComponent("sampleNameField", new JTextField());
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private boolean stopping;
@@ -155,13 +163,29 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         .addComponent(pasteButton)
         .addComponent(labelButton)
         .addComponent(waitForTextButton)
-        .addComponent(assertionButton));
-    layout.setVerticalGroup(layout.createParallelGroup()
+        .addComponent(assertionButton)
+        .addGroup(layout.createParallelGroup()
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(sampleNameLabel)
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addComponent(sampleNameField, GroupLayout.PREFERRED_SIZE, 120,
+                    GroupLayout.PREFERRED_SIZE)
+            )
+        )
+    );
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
         .addComponent(copyButton)
         .addComponent(pasteButton)
         .addComponent(labelButton)
         .addComponent(waitForTextButton)
-        .addComponent(assertionButton));
+        .addComponent(assertionButton)
+        .addGroup(Alignment.BASELINE, layout.createSequentialGroup()
+            .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                .addComponent(sampleNameLabel)
+                .addComponent(sampleNameField, GroupLayout.PREFERRED_SIZE, 25,
+                    GroupLayout.PREFERRED_SIZE))
+        )
+    );
 
     return toolsPanel;
   }
@@ -226,6 +250,17 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       }
     }
     xi5250Crt.initAllFields();
+    terminalEmulatorListeners.forEach(t -> updateSampleName(t.getSampleCount()));
+  }
+
+  private void updateSampleName(int sampleCount) {
+    String name = "bzm-RTE-" + Action.SEND_INPUT + "-" + (sampleCount + 1);
+    sampleNameField.setText(name);
+  }
+
+  private void setSamplerName() {
+    terminalEmulatorListeners
+        .forEach(l -> l.onSampleName(sampleNameField.getText()));
   }
 
   @VisibleForTesting
@@ -392,7 +427,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener
                   .onAssertionScreen(assertionName, pattern.getPattern());
             }
-          } 
+          }
         } else {
           warnUserOfNotScreenSelectedArea("assertion");
         }
@@ -448,6 +483,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           if (isAttentionKeyValid(attentionKey)) {
             List<Input> fields = getInputFields();
             for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
+              setSamplerName();
               listener.onAttentionKey(attentionKey, fields);
             }
           } else {

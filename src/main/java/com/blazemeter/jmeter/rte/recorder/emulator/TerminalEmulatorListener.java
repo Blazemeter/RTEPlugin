@@ -11,7 +11,10 @@ public interface TerminalEmulatorListener {
   void onAttentionKey(AttentionKey attentionKey, List<Input> inputs);
 
   void onWaitForText(String text);
-  
+
   void onAssertionScreen(String name, String text);
 
+  void onSampleName(String name);
+
+  int getSampleCount();
 }

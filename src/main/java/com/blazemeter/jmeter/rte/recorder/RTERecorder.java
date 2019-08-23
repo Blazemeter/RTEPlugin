@@ -58,6 +58,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient JMeterTreeNode samplersTargetNode;
   private transient RecordingStateListener recordingListener;
 
+  private transient String samplerName;
   private transient RteSampleResultBuilder resultBuilder;
   private transient RTESampler sampler;
   private transient RequestListener requestListener;
@@ -279,7 +280,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private RteSampleResultBuilder buildSampleResultBuilder(Action action) {
     RteSampleResultBuilder ret = new RteSampleResultBuilder()
-        .withLabel(buildSampleName(action))
+        .withLabel(action != Action.SEND_INPUT ? buildSampleName(action) : samplerName)
         .withServer(getServer())
         .withPort(getPort())
         .withProtocol(getProtocol())
@@ -293,7 +294,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private String buildSampleName(Action action) {
-    return "bzm-RTE-" + action + (action == Action.SEND_INPUT ? "-" + sampleCount : "");
+    return action != Action.SEND_INPUT ? "bzm-RTE-" + action : samplerName;
   }
 
   private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
@@ -362,6 +363,16 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     assertion.addTestString(text);
     assertion.setAssumeSuccess(false);
     responseAssertions.add(assertion);
+  }
+
+  @Override
+  public void onSampleName(String name) {
+    samplerName = name;
+  }
+
+  @Override
+  public int getSampleCount() {
+    return sampleCount;
   }
 
   private void recordPendingSample() {
