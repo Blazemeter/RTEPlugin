@@ -8,7 +8,8 @@ import java.util.regex.Pattern;
 public class TerminalType {
 
   public static final String SCREEN_SIZE_SEPARATOR = "x";
-  private static final Pattern DIMENSION_SCREEN_PATTERN = Pattern.compile("^(\\d+)x(\\d+)$");
+  private static final Pattern TERMINAL_TYPE_PATTERN = Pattern
+      .compile("^([[A-Z]\\-\\d]+): (\\d+)x(\\d+)$");
   private String id;
   private Dimension screenSize;
 
@@ -21,10 +22,11 @@ public class TerminalType {
     this.screenSize = screenSize;
   }
 
-  public static Dimension fromString(String text) {
-    Matcher m = DIMENSION_SCREEN_PATTERN.matcher(text);
+  public static TerminalType fromString(String text) {
+    Matcher m = TERMINAL_TYPE_PATTERN.matcher(text);
     if (m.matches()) {
-      return new Dimension(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
+      return new TerminalType(m.group(1),
+          new Dimension(Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3))));
     } else {
       throw new IllegalArgumentException("The text '" + text + "' does not match dimension format");
     }
