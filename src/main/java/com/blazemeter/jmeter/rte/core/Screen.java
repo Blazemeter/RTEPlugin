@@ -87,29 +87,22 @@ public class Screen {
   }
 
   public void addSegment(int linealPosition, String text) {
-    segments.add(new Segment(new Position(buildRowFromLinealPosition(linealPosition),
-        buildColumnFromLinealPosition(linealPosition)), text, false));
+    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, false));
   }
 
-  private int buildRowFromLinealPosition(int linealPosition) {
-    return linealPosition / size.width + 1;
-  }
-
-  private int buildColumnFromLinealPosition(int linealPosition) {
-    return linealPosition % size.width + 1;
+  private Position buildPositionFromLinearPosition(int linealPosition) {
+    return new Position((linealPosition / size.width + 1), linealPosition % size.width + 1);
   }
 
   public void addField(int linealPosition, String text) {
-    segments.add(new Segment(new Position(buildRowFromLinealPosition(linealPosition),
-        buildColumnFromLinealPosition(linealPosition)), text, true));
+    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true));
   }
 
   public String getText() {
     StringBuilder screen = new StringBuilder();
     int nextScreenPosition = 0;
     for (Segment segment : segments) {
-      int segmentPosition = buildLinealPosition(segment.getPosition().getRow(),
-          segment.getPosition().getColumn());
+      int segmentPosition = buildLinealPosition(segment.getPosition());
       if (segmentPosition != nextScreenPosition) {
         Segment fillSegment = buildBlankSegmentForRange(nextScreenPosition, segmentPosition);
         screen.append(fillSegment.getWrappedText(size.width));
@@ -129,8 +122,7 @@ public class Screen {
   }
 
   private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
-    return new Segment(new Position(buildRowFromLinealPosition(firstPosition),
-        buildColumnFromLinealPosition(firstPosition)),
+    return new Segment(buildPositionFromLinearPosition(firstPosition),
         buildBlankString(lastPosition - firstPosition), false);
   }
 
@@ -138,8 +130,8 @@ public class Screen {
     return StringUtils.repeat(' ', length);
   }
 
-  private int buildLinealPosition(int row, int column) {
-    return size.width * (row - 1) + column - 1;
+  private int buildLinealPosition(Position position) {
+    return size.width * (position.getRow() - 1) + position.getColumn() - 1;
   }
 
   public Screen withInvisibleCharsToSpaces() {

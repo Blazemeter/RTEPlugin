@@ -44,7 +44,7 @@ public class RteSampleResultBuilder {
     result = new SampleResult();
     result.sampleStart();
   }
-  
+
   @VisibleForTesting
   public RteSampleResultBuilder(Position cursorPosition, Screen screen) {
     result = new SampleResult();
@@ -202,20 +202,19 @@ public class RteSampleResultBuilder {
       return "";
     }
 
-    List<Segment> segments = screen != null ? screen.getSegments().stream()
+    String fieldsPositions = screen != null ? screen.getSegments().stream()
         .filter(Segment::isEditable)
-        .collect(Collectors.toList()) : null;
+        .map(Segment::getPosition)
+        .map(Position::toString)
+        .collect(Collectors.joining(FIELD_POSITION_SEPARATOR))
+        : "";
 
     return "Input-inhibited: " + inputInhibitedResponse + HEADERS_SEPARATOR +
         CURSOR_POSITION_HEADER + (cursorPosition != null ? cursorPosition.toString() : "") +
         (soundedAlarm ? HEADERS_SEPARATOR + "Sound-Alarm: true" : "") +
-        (segments != null && !segments.isEmpty() ? HEADERS_SEPARATOR + FIELDS_POSITION_HEADER
-            + segments.stream()
-            .map(Segment::getPosition)
-            .map(Position::toString)
-            .collect(Collectors.joining(FIELD_POSITION_SEPARATOR))
-            : "") + HEADERS_SEPARATOR;
-
+        (!fieldsPositions.isEmpty() ? HEADERS_SEPARATOR + FIELDS_POSITION_HEADER
+            + fieldsPositions + HEADERS_SEPARATOR : "");
+    
   }
 
 }
