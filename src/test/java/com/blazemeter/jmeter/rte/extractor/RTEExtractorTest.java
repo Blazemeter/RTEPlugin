@@ -1,35 +1,29 @@
 package com.blazemeter.jmeter.rte.extractor;
 
-import static org.assertj.core.api.Assertions.extractProperty;
-import static org.assertj.swing.assertions.Assertions.assertThat;
-
-import com.blazemeter.jmeter.rte.core.CoordInput;
-import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
-import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulatorIT;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import java.awt.Dimension;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
-import org.apache.jmeter.threads.JMeterVariables;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -38,17 +32,17 @@ public class RTEExtractorTest {
   public static final String POSITION_VAR_ROW = "positionVar_ROW";
   public static final String POSITION_VAR_COLUMN = "positionVar_COLUMN";
   public static final String VARIABLE_PREFIX = "positionVar";
-  public static final String USER_MESSAGE_ERROR =
-      "Inserted values for row and column in extractor\n"
-          + "do not match with the screen size.\n";
+  private static final String RESPONSE_HEADERS = "Input-inhibited: true\n" +
+      "Cursor-position: (1,1)" + '\n' +
+      "Field-positions: [(2,25)-(2,30)], [(4,25)-(4,30)], [(6,25)-(6,30)]\n";
   private static Position CURSOR_POSITION = new Position(10, 2);
+
   @Rule
   public JUnitSoftAssertions softly = new JUnitSoftAssertions();
-  private JMeterVariables vars;
   private JMeterContext context;
   private RTEExtractor rteExtractor;
+  @Mock
   private Screen screen;
-  private ByteArrayOutputStream outputStream;
 
   @BeforeClass
   public static void setupClass() {
@@ -56,13 +50,23 @@ public class RTEExtractorTest {
 
   @Before
   public void setup() {
-    vars = new JMeterVariables();
-    screen = Xtn5250TerminalEmulatorIT.buildLoginScreenWithUserNameAndPasswordFields();
+    Mockito.when(screen.getSegments()).thenReturn(buildSegments());
+    Mockito.when(screen.getText()).thenReturn("TEST");
     rteExtractor = new RTEExtractor();
     TestJMeterUtils.createJmeterEnv();
     configureEnvironment();
     rteExtractor.setContext(context);
-    outputStream = new ByteArrayOutputStream();
+  }
+
+  private List<Segment> buildSegments() {
+    return Arrays.asList(
+        new Segment(new Position(2, 25), filler(), true),
+        new Segment(new Position(4, 25), filler(), true),
+        new Segment(new Position(6, 25), filler(), true));
+  }
+
+  private String filler() {
+    return StringUtils.repeat(' ', 5);
   }
 
   public void configureEnvironment() {
@@ -71,12 +75,14 @@ public class RTEExtractorTest {
   }
 
   private SampleResult getCustomizedResult() {
-    RteSampleResultBuilder ret = new RteSampleResultBuilder(CURSOR_POSITION, screen)
+    TerminalType terminalType = new TerminalType("IBM-3179-2", new Dimension(24, 80));
+    RteSampleResultBuilder ret = new RteSampleResultBuilder(CURSOR_POSITION, screen,
+        RESPONSE_HEADERS, terminalType)
         .withLabel("bzm-Connect")
         .withServer("localhost")
         .withPort(2526)
         .withProtocol(Protocol.TN3270)
-        .withTerminalType(new TerminalType("IBM-3179-2", new Dimension(24, 80)))
+        .withTerminalType(terminalType)
         .withSslType(SSLType.NONE)
         .withAction(Action.SEND_INPUT)
         .withConnectEndNow()
@@ -106,7 +112,8 @@ public class RTEExtractorTest {
     softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("18");
   }
 
-  private void setUpExtractorForNextFieldPosition(String offset, String row, String column, String prefix) {
+  private void setUpExtractorForNextFieldPosition(String offset, String row, String column,
+      String prefix) {
     rteExtractor.setPositionType(PositionType.NEXT_FIELD_POSITION);
     rteExtractor.setVariablePrefix(prefix);
     rteExtractor.setOffset(offset);
@@ -114,54 +121,119 @@ public class RTEExtractorTest {
     rteExtractor.setColumn(column);
   }
 
-  @Test
-  public void shouldAlertUserWhenNextFieldCursorWithCoordsBiggerThanScreenDimension() {
-    setUpExtractorForNextFieldPosition("1", "100", "30", VARIABLE_PREFIX);
-    setOutputListener();
-    try {
-      rteExtractor.process();
-      // This exception is not needed to be cached
-      // in the extractor, 'couse before it, user
-      // will receive an alert informing
-    } catch (NullPointerException e) {
-      assertThat(outputStream.toString()).isEqualTo(USER_MESSAGE_ERROR);
-    }
+  private void setUpExtractorForNextFieldPosition(String offset, String row, String column) {
+    setUpExtractorForNextFieldPosition(offset, row, column, VARIABLE_PREFIX);
   }
 
-  private void setOutputListener() {
-    PrintStream ps = new PrintStream(outputStream);
-    System.setOut(ps);
+  @Test(expected = NullPointerException.class)
+  public void shouldAlertUserWhenNextFieldCursorWithCoordsBiggerThanScreenDimension() {
+    setUpExtractorForNextFieldPosition("1", "100", "30", VARIABLE_PREFIX);
+    rteExtractor.process();
+    //Tried to assert on LOGs to be more precise
   }
+
 
   @Test
   public void shouldAlertUserWhenOffsetValueBiggerThanPossibleFieldsToSkip() {
     setUpExtractorForNextFieldPosition("4", "1", "14", VARIABLE_PREFIX);
-    setOutputListener();
-    try {
-      rteExtractor.process();
-    } catch (NullPointerException e) {
-      assertThat(outputStream.toString().trim()).isEqualTo("Number of fields in the screen was 2"
-          + "\nTherefore is not possible to skip 4 fields");
-    }
+    rteExtractor.process();
+    //shouldThrowIndexOutOfBoundsException
   }
-  
-  @Test(expected = InvalidFieldPositionException.class)
-  public void shouldAlertUserWhenNextFieldPositionWithCoordsDifferentThanFieldCoords() {
-    setUpExtractorForNextFieldPosition("1", "21", "3", VARIABLE_PREFIX);
-    setOutputListener();
-    try {
-      rteExtractor.process();
-    } catch (NullPointerException e) {
-      assertThat(outputStream.toString().trim()).isEqualTo("Inserted values for row/column in extractor\n"
-          + "do not match with any field in current screen");
-    }
-    
-  }
+
+
   @Test
   public void shouldAlertUserWhenNoPrefixVariableNameSet() {
     setUpExtractorForNextFieldPosition("1", "1", "14", "");
-    setOutputListener();
     rteExtractor.process();
-    assertThat(outputStream.toString().trim()).isEqualTo("The variable name in extractor is essential for later usage");
+    //shouldAssertTheError
+  }
+
+  @Test
+  public void shouldGetTheGivenPositionWhenOffsetZero() {
+    setUpExtractorForNextFieldPosition("0", "1", "14", VARIABLE_PREFIX);
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("1");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("14");
+  }
+
+  @Test
+  public void shouldGetNextFieldWhenOffsetOneAndPositionRightBeforeField() {
+    setUpExtractorForNextFieldPosition("1", "2", "24");
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("25");
+  }
+
+  @Test
+  public void shouldGetNextFieldWhenOffsetOneAndPositionIsInField() {
+    setUpExtractorForNextFieldPosition("1", "2", "25");
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("4");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("25");
+  }
+
+  @Test
+  public void shouldGetCurrentPositionField() {
+    setUpExtractorForNextFieldPosition("1", "2", "26");
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("25");
+  }
+
+  @Test
+  public void shouldGetFieldSkippingOne() {
+    setUpExtractorForNextFieldPosition("2", "2", "24");
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("4");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("25");
+  }
+
+  @Test
+  public void shouldNotifyUserWhenNoForwardFieldsToSkip() {
+    setUpExtractorForNextFieldPosition("2", "4", "25");
+    rteExtractor.process();
+    //should assert on IndexOutOfBoundsException
+  }
+
+  @Test
+  public void shouldNotifyUserWhenNoBackwardFieldsToSkip() {
+    setUpExtractorForNextFieldPosition("-1", "2", "24");
+    rteExtractor.process();
+    //>>> KEEP THIS TEST IN MIND
+  }
+
+  @Test
+  public void shouldNotifyUserWhenGivenPositionIsInTheEndOfFieldWhileBackwards() {
+    setUpExtractorForNextFieldPosition("-1", "2", "30");
+    rteExtractor.process();
+    //There are no fields position in the left side of the given position
+  }
+
+  @Test
+  public void shouldGetFieldWhenOffsetIsMinusOne() {
+    setUpExtractorForNextFieldPosition("-1", "2", "31");
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("25");
+  }
+
+  @Test
+  public void shouldNotifyUserOfSkippingInvalidTimesWhenNoFieldsBackwardsWhileOffsetNegativeTwo() {
+    setUpExtractorForNextFieldPosition("-2", "2", "31");
+    rteExtractor.process();
+  }
+
+  @Test
+  public void shouldNotifyUserOfSkippingInvalidTimesWhenPositionIsEndOfFieldAndOffsetNegative() {
+    setUpExtractorForNextFieldPosition("-2", "2", "30");
+    rteExtractor.process();
+  }
+
+  @Test
+  public void shouldGetFieldWhenSkippingBackwardsOnceFromValidPosition() {
+    setUpExtractorForNextFieldPosition("-2", "4", "31");
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("25");
   }
 }

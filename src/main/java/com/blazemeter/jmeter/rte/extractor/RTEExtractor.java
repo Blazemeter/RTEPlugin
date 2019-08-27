@@ -5,15 +5,20 @@ import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.testelement.AbstractScopedTestElement;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterVariables;
-import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +32,8 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   private static final String VARIABLE_PREFIX_PROPERTY = "RTEExtractor.variablePrefix";
   private static final String POSITION_TYPE_PROPERTY = "RTEExtractor.positionType";
   private static final PositionType DEFAULT_POSITION_TYPE = PositionType.CURSOR_POSITION;
+  private static final Pattern END_TO_END_FIELD_POSITION_PATTERN = Pattern
+      .compile("^\\[\\((\\d+),(\\d+)\\)-\\((\\d+),(\\d+)\\)]$");
   private JMeterContext context;
 
   public RTEExtractor() {
@@ -45,7 +52,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
 
   private String validateVariablePrefix(String variablePrefix) {
     if (variablePrefix.isEmpty()) {
-      LOG.warn("The variable name in extractor is essential for later usage");
+      LOG.error("The variable name in extractor is essential for later usage");
     }
     return variablePrefix;
   }
@@ -69,90 +76,121 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     String fieldsPositionAsText = responseHeaders
         .substring(startFieldsPosition, lastFieldsPosition);
 
-    List<Position> fieldPositions = Arrays
+    List<String> fieldPositions = Arrays
         .stream(fieldsPositionAsText.split(RteSampleResultBuilder.FIELD_POSITION_SEPARATOR))
-        .map(Position::fromString)
         .collect(Collectors.toList());
 
+    Map<Position, Position> completeFieldPosition = getCompleteFieldMapPositions(fieldPositions);
     String requestHeaders = context.getPreviousResult().getRequestHeaders();
     if (isGivenFieldPositionValid(requestHeaders)) {
       Position givenPosition = new Position(getRowAsInt(), getColumnAsInt());
 
-      effectivePosition = getNewPosition(givenPosition, fieldPositions);
+      effectivePosition = getNewPosition(givenPosition, completeFieldPosition);
 
     } else {
-      JMeterUtils.reportErrorToUser(
-          "Inserted values for row and column in extractor\n"
-              + "do not match with the screen size.");
+
+      LOG.error("Inserted values for row and column in extractor\n"
+          + "do not match with the screen size.");
 
     }
 
     return effectivePosition;
   }
 
+  private Map<Position, Position> getCompleteFieldMapPositions(List<String> fieldPositions) {
+    Map<Position, Position> fieldPositionsMap = new LinkedHashMap<>();
+    for (String segments : fieldPositions) {
+      Matcher m = END_TO_END_FIELD_POSITION_PATTERN.matcher(segments);
+      if (m.matches()) {
+        fieldPositionsMap
+            .put(new Position(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))),
+                new Position(Integer.parseInt(m.group(3)), Integer.parseInt(m.group(4))));
+      } else {
+        throw new IllegalArgumentException(
+            "The text '" + segments + "' does not position field format");
+      }
+    }
+    return fieldPositionsMap;
+  }
+
   private Position getNewPosition(Position givenPosition,
-      List<Position> fieldPositions) {
+      Map<Position, Position> fieldPositions) {
     int givenLinearPosition = buildLinealPosition(givenPosition);
-    List<Integer> fieldsLinearPosition = fieldPositions.stream()
-        .map(this::buildLinealPosition)
-        .collect(Collectors.toList());
     int offset = Integer.parseInt(getOffset());
+    List<Position> keys = new ArrayList<>(fieldPositions.keySet());
 
     if (offset > 0) {
-      int nextField = getForwardLinearPositionField(fieldsLinearPosition, givenLinearPosition);
+      Position nextField = getForwardPositionField(fieldPositions, givenLinearPosition);
       try {
-        return fieldPositions.get(fieldsLinearPosition.indexOf(nextField) + offset);
-      } catch (ArrayIndexOutOfBoundsException e) {
+        return keys.get(keys.indexOf(nextField) + offset - 1);
+      } catch (IndexOutOfBoundsException e) {
         e.printStackTrace();
-        LOG.warn("Number of fields in the screen was " + fieldPositions.size()
+        LOG.error("Number of fields in the screen was " + fieldPositions.size()
             + "\nTherefore is not possible to skip "
             + getOffset() + " fields");
       }
     } else if (offset < 0) {
 
-      int nextField = getBackwardLinearPositionField(fieldsLinearPosition, givenLinearPosition);
+      Position position = getBackwardLinearPositionField(fieldPositions, givenLinearPosition);
 
       try {
-        return fieldPositions.get(fieldsLinearPosition.indexOf(nextField) + offset);
-      } catch (ArrayIndexOutOfBoundsException e) {
+        return keys.get(keys.indexOf(position) + offset + 1);
+      } catch (IndexOutOfBoundsException e) {
         e.printStackTrace();
-        LOG.warn("Number of fields in the screen was " + fieldPositions.size()
+        LOG.error("Number of fields in the screen was " + fieldPositions.size()
             + "\nTherefore is not possible to go backwards "
             + Math.abs(Integer.parseInt(getOffset())) + " fields");
       }
-    } else {
-      int nextField = getForwardLinearPositionField(fieldsLinearPosition, givenLinearPosition);
-      return fieldPositions.get(fieldsLinearPosition.indexOf(nextField) + offset);
     }
+
     return givenPosition;
 
   }
 
-  private int getBackwardLinearPositionField(List<Integer> fieldsLinearPosition,
+  private Position getBackwardLinearPositionField(Map<Position, Position> fieldsPositionsMap,
       int givenLinearPosition) {
-    fieldsLinearPosition.sort(Collections.reverseOrder());
-    for (Integer field : fieldsLinearPosition) {
-      if (field == givenLinearPosition) {
-        return field;
-      } else if (field < givenLinearPosition) {
-        return field;
+    List<Position> reverseKeysOrder = new ArrayList<>(fieldsPositionsMap.keySet());
+    Collections.reverse(reverseKeysOrder);
+    for (Position key : reverseKeysOrder) {
+      int linealStartFieldPosition = buildLinealPosition(key);
+      int linealEndFieldPosition = buildLinealPosition(fieldsPositionsMap.get(key));
+
+      if (linealStartFieldPosition == givenLinearPosition) {
+        return key;
+      } else if (givenLinearPosition < linealEndFieldPosition
+          && givenLinearPosition > linealStartFieldPosition) {
+        LOG.warn("Given positions in extractor is in the middle of a field");
+        return reverseKeysOrder.get(reverseKeysOrder.indexOf(key) - 1);
+      } else if (givenLinearPosition > linealEndFieldPosition) {
+        return key;
       }
     }
-    LOG.warn("There is not fields position in the right close of the given position");
-    return -1;
+    LOG.error("There are no fields position in the left side of the given position");
+    return null;
   }
 
-  private int getForwardLinearPositionField(List<Integer> fieldsLinearPosition,
+  private Position getForwardPositionField(Map<Position, Position> fieldsPositionMap,
       int givenLinearPosition) {
-    for (Integer field : fieldsLinearPosition) {
-      if (field == givenLinearPosition) {
-        return field;
-      } else if (field > givenLinearPosition) {
-        return field;
+    Iterator<Map.Entry<Position, Position>> it = fieldsPositionMap.entrySet().iterator();
+    List<Position> keys = new ArrayList<>(fieldsPositionMap.keySet());
+    while (it.hasNext()) {
+      Map.Entry<Position, Position> pairPos = it.next();
+      int linealStartFieldPosition = buildLinealPosition(pairPos.getKey());
+      int linealEndFieldPosition = buildLinealPosition(pairPos.getValue());
+
+      if (linealStartFieldPosition == givenLinearPosition) {
+        return keys.get(keys.indexOf(pairPos.getKey()) + 1);
+      } else if (givenLinearPosition > linealStartFieldPosition
+          && givenLinearPosition < linealEndFieldPosition) {
+        LOG.warn("Given position in Extractor is in the middle of a field");
+        return pairPos.getKey();
+
+      } else if (givenLinearPosition < linealStartFieldPosition) {
+        return pairPos.getKey();
       }
     }
-    LOG.warn("There is not fields position in the right close of the given position");
-    return -1;
+    LOG.warn("There are not fields position in the right close of the given position");
+    return null;
   }
 
   private Position extractCursorPosition(String responseHeaders) {
