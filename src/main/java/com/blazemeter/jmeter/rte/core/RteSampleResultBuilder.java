@@ -39,6 +39,7 @@ public class RteSampleResultBuilder {
   private Position cursorPosition;
   private boolean soundedAlarm;
   private Screen screen;
+  private String responseHeaders;
 
   public RteSampleResultBuilder() {
     result = new SampleResult();
@@ -46,11 +47,14 @@ public class RteSampleResultBuilder {
   }
 
   @VisibleForTesting
-  public RteSampleResultBuilder(Position cursorPosition, Screen screen) {
+  public RteSampleResultBuilder(Position cursorPosition, Screen screen, String responseHeaders,
+      TerminalType terminalType) {
     result = new SampleResult();
     result.sampleStart();
     this.screen = screen;
     this.cursorPosition = cursorPosition;
+    this.responseHeaders = responseHeaders;
+    this.terminalType = terminalType;
   }
 
   public long getCurrentTimeInMillis() {
@@ -167,7 +171,8 @@ public class RteSampleResultBuilder {
   public SampleResult build() {
     result.setRequestHeaders(buildRequestHeaders());
     result.setSamplerData(buildSamplerData());
-    result.setResponseHeaders(buildResponseHeaders());
+    responseHeaders = responseHeaders == null ? buildResponseHeaders() : responseHeaders;
+    result.setResponseHeaders(responseHeaders);
     result.setDataType(SampleResult.TEXT);
     if (result.getResponseDataAsString().isEmpty()) {
       result.setResponseData(screen != null ? screen.getText() : "", StandardCharsets.UTF_8.name());
@@ -202,19 +207,40 @@ public class RteSampleResultBuilder {
       return "";
     }
 
-    String fieldsPositions = screen != null ? screen.getSegments().stream()
-        .filter(Segment::isEditable)
-        .map(Segment::getPosition)
-        .map(Position::toString)
-        .collect(Collectors.joining(FIELD_POSITION_SEPARATOR))
-        : "";
-
+    String fieldsPositions = getFieldsPositions();
     return "Input-inhibited: " + inputInhibitedResponse + HEADERS_SEPARATOR +
-        CURSOR_POSITION_HEADER + (cursorPosition != null ? cursorPosition.toString() : "") +
-        (soundedAlarm ? HEADERS_SEPARATOR + "Sound-Alarm: true" : "") +
-        (!fieldsPositions.isEmpty() ? HEADERS_SEPARATOR + FIELDS_POSITION_HEADER
+        CURSOR_POSITION_HEADER + (cursorPosition != null ? cursorPosition.toString() : "")
+        + HEADERS_SEPARATOR +
+        (soundedAlarm ? "Sound-Alarm: true" : "") + HEADERS_SEPARATOR +
+        (!fieldsPositions.isEmpty() ? FIELDS_POSITION_HEADER
             + fieldsPositions + HEADERS_SEPARATOR : "");
-    
+
+  }
+
+  private String getFieldsPositions() {
+    if (screen != null) {
+      List<Position> firstPosition = screen.getSegments().stream()
+          .filter(Segment::isEditable)
+          .map(Segment::getPosition)
+          .collect(Collectors.toList());
+      if (!firstPosition.isEmpty()) {
+        List<Position> endPosition = screen
+            .getFieldEndPositions(terminalType.getScreenSize().width);
+        StringBuilder str = new StringBuilder();
+        for (int i = 0; i < endPosition.size(); i++) {
+          str.append('[');
+          str.append(firstPosition.get(i).toString());
+          str.append('-');
+          str.append(endPosition.get(i).toString());
+          str.append(']');
+          if (i + 1 < endPosition.size()) {
+            str.append(", ");
+          }
+        }
+        return str.toString();
+      }
+    }
+    return "";
   }
 
 }

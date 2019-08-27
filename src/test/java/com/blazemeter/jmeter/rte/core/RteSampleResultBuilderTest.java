@@ -32,7 +32,7 @@ public class RteSampleResultBuilderTest {
   private static final Screen SCREEN = buildScreen();
   private static final List<Input> CUSTOM_INPUTS = Collections
       .singletonList(new CoordInput(new Position(3, 2), "input"));
-  public static final String FIELD_POSITION_TEXT = "Field-positions: (1,1)" + "\n";
+  public static final String FIELD_POSITION_TEXT = "Field-positions: [(1,1)-(1,20)]" + "\n";
   public static final String SOUNDED_ALARM_TEXT = "Sound-Alarm: true" + "\n";
   @Mock
   private RteProtocolClient client;
@@ -136,7 +136,7 @@ public class RteSampleResultBuilderTest {
 
   @Test
   public void shouldGetEmptyScreenFieldsWhenNoScreenFields() {
-    RteSampleResultBuilder resultBuilder = new RteSampleResultBuilder(new Position(1, 1), null);
+    RteSampleResultBuilder resultBuilder = new RteSampleResultBuilder(new Position(1, 1), null, null, null);
     when(client.getScreen()).thenReturn(null);
     resultBuilder.withInputInhibitedRequest(true)
         .withSuccessResponse(client);
@@ -147,7 +147,7 @@ public class RteSampleResultBuilderTest {
   @Test
   public void shouldGetHeadersWithFieldWhenScreenContainFields() {
     RteSampleResultBuilder resultBuilder = new RteSampleResultBuilder(new Position(1, 1),
-        buildScreen());
+        buildScreen(), null, new TerminalType("IBM-3179-2", new Dimension(24, 80)));
     resultBuilder.withSuccessResponse(client);
     assertThat(resultBuilder.build().getResponseHeaders())
         .isEqualTo(EXPECTED_HEADERS_RESPONSE + SOUNDED_ALARM_TEXT + FIELD_POSITION_TEXT);

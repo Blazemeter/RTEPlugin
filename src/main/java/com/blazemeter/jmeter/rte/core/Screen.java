@@ -6,6 +6,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang3.StringUtils;
@@ -76,6 +77,13 @@ public class Screen {
     InputSource is = new InputSource();
     is.setCharacterStream(new StringReader(html));
     return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
+  }
+
+  public List<Position> getFieldEndPositions(int width) {
+    return this.segments.stream()
+        .filter(Segment::isEditable)
+        .map(l -> l.getEndPosition(width))
+        .collect(Collectors.toList());
   }
 
   public Dimension getSize() {
@@ -242,6 +250,23 @@ public class Screen {
 
     public boolean isEditable() {
       return editable;
+    }
+
+    public Position getEndPosition(int width) {
+      int relativeColumnPosition = position.getColumn() + text.length();
+      int row = position.getRow();
+      if (relativeColumnPosition <= width) {
+        return new Position(position.getRow(), relativeColumnPosition);
+      }
+
+      while (relativeColumnPosition >= width) {
+        if ((relativeColumnPosition % width) == 0) {
+          row++;
+        }
+        relativeColumnPosition--;
+      }
+
+      return new Position(row, relativeColumnPosition);
     }
 
     private String getWrappedText(int width) {
