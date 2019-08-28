@@ -1,18 +1,12 @@
 package com.blazemeter.jmeter.rte.extractor;
 
-import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
-import com.blazemeter.jmeter.rte.core.Screen;
-import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import java.awt.Dimension;
-import java.util.Arrays;
-import java.util.List;
 import kg.apc.emulators.TestJMeterUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
@@ -22,8 +16,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -35,14 +27,11 @@ public class RTEExtractorTest {
   private static final String RESPONSE_HEADERS = "Input-inhibited: true\n" +
       "Cursor-position: (1,1)" + '\n' +
       "Field-positions: [(2,25)-(2,30)], [(4,25)-(4,30)], [(6,25)-(6,30)]\n";
-  private static Position CURSOR_POSITION = new Position(10, 2);
 
   @Rule
   public JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private JMeterContext context;
   private RTEExtractor rteExtractor;
-  @Mock
-  private Screen screen;
 
   @BeforeClass
   public static void setupClass() {
@@ -50,23 +39,10 @@ public class RTEExtractorTest {
 
   @Before
   public void setup() {
-    Mockito.when(screen.getSegments()).thenReturn(buildSegments());
-    Mockito.when(screen.getText()).thenReturn("TEST");
     rteExtractor = new RTEExtractor();
     TestJMeterUtils.createJmeterEnv();
     configureEnvironment();
     rteExtractor.setContext(context);
-  }
-
-  private List<Segment> buildSegments() {
-    return Arrays.asList(
-        new Segment(new Position(2, 25), filler(), true),
-        new Segment(new Position(4, 25), filler(), true),
-        new Segment(new Position(6, 25), filler(), true));
-  }
-
-  private String filler() {
-    return StringUtils.repeat(' ', 5);
   }
 
   public void configureEnvironment() {
@@ -76,7 +52,7 @@ public class RTEExtractorTest {
 
   private SampleResult getCustomizedResult() {
     TerminalType terminalType = new TerminalType("IBM-3179-2", new Dimension(24, 80));
-    RteSampleResultBuilder ret = new RteSampleResultBuilder(CURSOR_POSITION, screen,
+    RteSampleResultBuilder ret = new RteSampleResultBuilder(null, null,
         RESPONSE_HEADERS, terminalType)
         .withLabel("bzm-Connect")
         .withServer("localhost")
@@ -95,21 +71,13 @@ public class RTEExtractorTest {
   public void shouldExtractCursorPositionWhenCursorPositionSelected() {
     setUpExtractorForCursorPosition();
     rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("10");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("2");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("1");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("1");
   }
 
   public void setUpExtractorForCursorPosition() {
     rteExtractor.setPositionType(PositionType.CURSOR_POSITION);
     rteExtractor.setVariablePrefix(VARIABLE_PREFIX);
-  }
-
-  @Test
-  public void shouldVerifyJmeterVariablesWhenNextFieldSelected() {
-    setUpExtractorForNextFieldPosition("1", "1", "14", VARIABLE_PREFIX);
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("18");
   }
 
   private void setUpExtractorForNextFieldPosition(String offset, String row, String column,

@@ -19,6 +19,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RteSampleResultBuilderTest {
 
+  public static final String FIELD_POSITION_TEXT = "Field-positions: [(1,1)-(1,20)]" + "\n";
+  public static final String SOUNDED_ALARM_TEXT = "Sound-Alarm: true" + "\n";
   private static final Position CURSOR_POSITION = new Position(1, 1);
   private static final String EXPECTED_HEADERS_RESPONSE = "Input-inhibited: true\n" +
       "Cursor-position: (1,1)" + '\n';
@@ -32,8 +34,6 @@ public class RteSampleResultBuilderTest {
   private static final Screen SCREEN = buildScreen();
   private static final List<Input> CUSTOM_INPUTS = Collections
       .singletonList(new CoordInput(new Position(3, 2), "input"));
-  public static final String FIELD_POSITION_TEXT = "Field-positions: [(1,1)-(1,20)]" + "\n";
-  public static final String SOUNDED_ALARM_TEXT = "Sound-Alarm: true" + "\n";
   @Mock
   private RteProtocolClient client;
 
@@ -116,7 +116,8 @@ public class RteSampleResultBuilderTest {
     when(client.isAlarmOn()).thenReturn(false);
     RteSampleResultBuilder resultBuilder = buildBasicResultBuilder()
         .withSuccessResponse(client);
-    assertThat(resultBuilder.build().getResponseHeaders()).isEqualTo(EXPECTED_HEADERS_RESPONSE + FIELD_POSITION_TEXT);
+    assertThat(resultBuilder.build().getResponseHeaders())
+        .isEqualTo(EXPECTED_HEADERS_RESPONSE + FIELD_POSITION_TEXT);
   }
 
   @Test
@@ -136,7 +137,8 @@ public class RteSampleResultBuilderTest {
 
   @Test
   public void shouldGetEmptyScreenFieldsWhenNoScreenFields() {
-    RteSampleResultBuilder resultBuilder = new RteSampleResultBuilder(new Position(1, 1), null, null, null);
+    RteSampleResultBuilder resultBuilder = new RteSampleResultBuilder(new Position(1, 1), null,
+        null, null);
     when(client.getScreen()).thenReturn(null);
     resultBuilder.withInputInhibitedRequest(true)
         .withSuccessResponse(client);

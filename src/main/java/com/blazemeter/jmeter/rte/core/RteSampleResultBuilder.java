@@ -211,7 +211,7 @@ public class RteSampleResultBuilder {
     return "Input-inhibited: " + inputInhibitedResponse + HEADERS_SEPARATOR +
         CURSOR_POSITION_HEADER + (cursorPosition != null ? cursorPosition.toString() : "")
         + HEADERS_SEPARATOR +
-        (soundedAlarm ? "Sound-Alarm: true" : "") + HEADERS_SEPARATOR +
+        (soundedAlarm ? "Sound-Alarm: true" + HEADERS_SEPARATOR : "") +
         (!fieldsPositions.isEmpty() ? FIELDS_POSITION_HEADER
             + fieldsPositions + HEADERS_SEPARATOR : "");
 
