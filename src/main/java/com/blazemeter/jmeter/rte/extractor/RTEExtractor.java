@@ -44,7 +44,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   @Override
   public void process() {
     LOG.info("RTE-Extractor {}: processing result", getProperty(TestElement.NAME));
-    context = context != null ? context : getThreadContext();
+    JMeterContext context = this.context != null ? this.context : getThreadContext();
     JMeterVariables vars = context.getVariables();
     String variablePrefix = validateVariablePrefix(getVariablePrefix());
     Position position = extractPosition(context.getPreviousResult().getResponseHeaders());
