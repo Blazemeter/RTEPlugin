@@ -18,7 +18,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RteSampleResultBuilderTest {
-
   public static final String FIELD_POSITION_TEXT = "Field-positions: [(1,1)-(1,20)]" + "\n";
   public static final String SOUNDED_ALARM_TEXT = "Sound-Alarm: true" + "\n";
   private static final Position CURSOR_POSITION = new Position(1, 1);

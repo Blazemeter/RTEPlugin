@@ -1,5 +1,7 @@
 package com.blazemeter.jmeter.rte.extractor;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
@@ -10,6 +12,7 @@ import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -32,6 +35,7 @@ public class RTEExtractorTest {
   public JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private JMeterContext context;
   private RTEExtractor rteExtractor;
+  private JMeterVariables vars;
 
   @BeforeClass
   public static void setupClass() {
@@ -43,9 +47,10 @@ public class RTEExtractorTest {
     TestJMeterUtils.createJmeterEnv();
     configureEnvironment();
     rteExtractor.setContext(context);
+    vars = context.getVariables();
   }
 
-  public void configureEnvironment() {
+  private void configureEnvironment() {
     context = JMeterContextService.getContext();
     context.setPreviousResult(getCustomizedResult());
   }
@@ -75,7 +80,7 @@ public class RTEExtractorTest {
     softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("1");
   }
 
-  public void setUpExtractorForCursorPosition() {
+  private void setUpExtractorForCursorPosition() {
     rteExtractor.setPositionType(PositionType.CURSOR_POSITION);
     rteExtractor.setVariablePrefix(VARIABLE_PREFIX);
   }
@@ -93,19 +98,22 @@ public class RTEExtractorTest {
     setUpExtractorForNextFieldPosition(offset, row, column, VARIABLE_PREFIX);
   }
 
-  @Test(expected = NullPointerException.class)
+  @Test
   public void shouldAlertUserWhenNextFieldCursorWithCoordsBiggerThanScreenDimension() {
     setUpExtractorForNextFieldPosition("1", "100", "30", VARIABLE_PREFIX);
     rteExtractor.process();
-    //Tried to assert on LOGs to be more precise
+    assertUnchangedJMeterVariables();
   }
 
+  private void assertUnchangedJMeterVariables() {
+    assertThat(context.getVariables()).isEqualTo(vars);
+  }
 
   @Test
   public void shouldAlertUserWhenOffsetValueBiggerThanPossibleFieldsToSkip() {
     setUpExtractorForNextFieldPosition("4", "1", "14", VARIABLE_PREFIX);
     rteExtractor.process();
-    //shouldThrowIndexOutOfBoundsException
+    assertUnchangedJMeterVariables();
   }
 
 
@@ -113,7 +121,7 @@ public class RTEExtractorTest {
   public void shouldAlertUserWhenNoPrefixVariableNameSet() {
     setUpExtractorForNextFieldPosition("1", "1", "14", "");
     rteExtractor.process();
-    //shouldAssertTheError
+    assertUnchangedJMeterVariables();
   }
 
   @Test
@@ -160,21 +168,21 @@ public class RTEExtractorTest {
   public void shouldNotifyUserWhenNoForwardFieldsToSkip() {
     setUpExtractorForNextFieldPosition("2", "4", "25");
     rteExtractor.process();
-    //should assert on IndexOutOfBoundsException
+    assertUnchangedJMeterVariables();
   }
 
   @Test
   public void shouldNotifyUserWhenNoBackwardFieldsToSkip() {
     setUpExtractorForNextFieldPosition("-1", "2", "24");
     rteExtractor.process();
-    //>>> KEEP THIS TEST IN MIND
+    assertUnchangedJMeterVariables();
   }
 
   @Test
   public void shouldNotifyUserWhenGivenPositionIsInTheEndOfFieldWhileBackwards() {
     setUpExtractorForNextFieldPosition("-1", "2", "30");
     rteExtractor.process();
-    //There are no fields position in the left side of the given position
+    assertUnchangedJMeterVariables();
   }
 
   @Test
@@ -189,12 +197,14 @@ public class RTEExtractorTest {
   public void shouldNotifyUserOfSkippingInvalidTimesWhenNoFieldsBackwardsWhileOffsetNegativeTwo() {
     setUpExtractorForNextFieldPosition("-2", "2", "31");
     rteExtractor.process();
+    assertUnchangedJMeterVariables();
   }
 
   @Test
   public void shouldNotifyUserOfSkippingInvalidTimesWhenPositionIsEndOfFieldAndOffsetNegative() {
     setUpExtractorForNextFieldPosition("-2", "2", "30");
     rteExtractor.process();
+    assertUnchangedJMeterVariables();
   }
 
   @Test

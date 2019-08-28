@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.testelement.AbstractScopedTestElement;
+import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.slf4j.Logger;
@@ -42,12 +43,15 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
 
   @Override
   public void process() {
+    LOG.info("RTE-Extractor {}: processing result", getProperty(TestElement.NAME));
     context = context != null ? context : getThreadContext();
     JMeterVariables vars = context.getVariables();
-    Position position = extractPosition(context.getPreviousResult().getResponseHeaders());
     String variablePrefix = validateVariablePrefix(getVariablePrefix());
-    vars.put(variablePrefix + "_COLUMN", String.valueOf(position.getColumn()));
-    vars.put(variablePrefix + "_ROW", String.valueOf(position.getRow()));
+    Position position = extractPosition(context.getPreviousResult().getResponseHeaders());
+    if (position != null && !variablePrefix.isEmpty()) {
+      vars.put(variablePrefix + "_COLUMN", String.valueOf(position.getColumn()));
+      vars.put(variablePrefix + "_ROW", String.valueOf(position.getRow()));
+    }
   }
 
   private String validateVariablePrefix(String variablePrefix) {
@@ -139,10 +143,10 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
       try {
         return keys.get(keys.indexOf(nextField) + offset - 1);
       } catch (IndexOutOfBoundsException e) {
-        e.printStackTrace();
         LOG.error("Number of fields in the screen was " + fieldPositions.size()
             + "\nTherefore is not possible to skip "
             + getOffset() + " fields");
+        return null;
       }
     } else if (offset < 0) {
 
@@ -151,10 +155,10 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
       try {
         return keys.get(keys.indexOf(position) + offset + 1);
       } catch (IndexOutOfBoundsException e) {
-        e.printStackTrace();
         LOG.error("Number of fields in the screen was " + fieldPositions.size()
             + "\nTherefore is not possible to go backwards "
             + Math.abs(Integer.parseInt(getOffset())) + " fields");
+        return null;
       }
     }
 
@@ -174,7 +178,6 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
         return key;
       } else if (givenLinearPosition < linealEndFieldPosition
           && givenLinearPosition > linealStartFieldPosition) {
-        LOG.warn("Given positions in extractor is in the middle of a field");
         return reverseKeysOrder.get(reverseKeysOrder.indexOf(key) - 1);
       } else if (givenLinearPosition > linealEndFieldPosition) {
         return key;
