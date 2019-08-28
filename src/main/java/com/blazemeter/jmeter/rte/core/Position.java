@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
+import java.awt.Dimension;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +20,16 @@ public class Position {
   public Position(int row, int column) {
     this.row = row;
     this.column = column;
+  }
+
+  public static Position fromString(String text) {
+    Matcher m = POSITION_PATTERN.matcher(text);
+    if (m.matches()) {
+      return new Position(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
+    } else {
+      throw new IllegalArgumentException("The text '" + text + "' does not match position format");
+    }
+
   }
 
   public int getRow() {
@@ -51,14 +62,10 @@ public class Position {
   public String toString() {
     return "(" + row + "," + column + ")";
   }
-  
-  public static Position fromString(String text) {
-    Matcher m = POSITION_PATTERN.matcher(text);
-    if (m.matches()) {
-      return new Position(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
-    } else {
-      throw new IllegalArgumentException("The text '" + text + "' does not match position format");
-    }
 
+  public boolean isInside(Dimension screenDimension) {
+    return (row <= screenDimension.height && row >= 1) && (
+        column <= screenDimension.width
+            && column >= 1);
   }
 }

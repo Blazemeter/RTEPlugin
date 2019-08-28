@@ -65,36 +65,51 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     }
   }
 
+  private Position extractCursorPosition(String responseHeaders) {
+    return Position.fromString(
+        extractHeaderValue(RteSampleResultBuilder.CURSOR_POSITION_HEADER, responseHeaders));
+  }
+
+  private String extractHeaderValue(String headerName, String responseHeaders) {
+    int startPosition = responseHeaders.indexOf(headerName) + headerName.length();
+    int endPosition = responseHeaders
+        .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, startPosition);
+    return responseHeaders.substring(startPosition, endPosition);
+  }
+
   private Position extractFieldPosition(String responseHeaders) {
-    Position effectivePosition = null;
-    int startFieldsPosition =
-        responseHeaders.indexOf(RteSampleResultBuilder.FIELDS_POSITION_HEADER)
-            + RteSampleResultBuilder.FIELDS_POSITION_HEADER.length();
-    int lastFieldsPosition = responseHeaders
-        .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, startFieldsPosition);
 
-    String fieldsPositionAsText = responseHeaders
-        .substring(startFieldsPosition, lastFieldsPosition);
+    if (isGivenFieldPositionValid(context.getPreviousResult().getRequestHeaders())) {
 
-    List<String> fieldPositions = Arrays
-        .stream(fieldsPositionAsText.split(RteSampleResultBuilder.FIELD_POSITION_SEPARATOR))
-        .collect(Collectors.toList());
+      String fieldsPositionAsText = extractHeaderValue(
+          RteSampleResultBuilder.FIELDS_POSITION_HEADER, responseHeaders);
 
-    Map<Position, Position> completeFieldPosition = getCompleteFieldMapPositions(fieldPositions);
-    String requestHeaders = context.getPreviousResult().getRequestHeaders();
-    if (isGivenFieldPositionValid(requestHeaders)) {
+      List<String> fieldPositions = Arrays
+          .stream(fieldsPositionAsText.split(RteSampleResultBuilder.FIELD_POSITION_SEPARATOR))
+          .collect(Collectors.toList());
+
+      Map<Position, Position> completeFieldPosition = getCompleteFieldMapPositions(fieldPositions);
       Position givenPosition = new Position(getRowAsInt(), getColumnAsInt());
 
-      effectivePosition = getNewPosition(givenPosition, completeFieldPosition);
+      return getNewPosition(givenPosition, completeFieldPosition);
 
     } else {
-
       LOG.error("Inserted values for row and column in extractor\n"
           + "do not match with the screen size.");
-
+      return null;
     }
+  }
 
-    return effectivePosition;
+  private boolean isGivenFieldPositionValid(String requestHeaders) {
+    return getBasePosition().isInside(getScreenDimensions(requestHeaders));
+  }
+
+  private Position getBasePosition() {
+    return new Position(getRowAsInt(), getColumnAsInt());
+  }
+
+  private Dimension getScreenDimensions(String requestHeaders) {
+    return TerminalType.fromString(extractTerminalType(requestHeaders)).getScreenSize();
   }
 
   private Map<Position, Position> getCompleteFieldMapPositions(List<String> fieldPositions) {
@@ -191,30 +206,6 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     }
     LOG.warn("There are not fields position in the right close of the given position");
     return null;
-  }
-
-  private Position extractCursorPosition(String responseHeaders) {
-    Position effectivePosition;
-    int cursorPositionStart =
-        responseHeaders.indexOf(RteSampleResultBuilder.CURSOR_POSITION_HEADER)
-            + RteSampleResultBuilder.CURSOR_POSITION_HEADER.length();
-    String cursorPositionAsText = responseHeaders
-        .substring(cursorPositionStart,
-            responseHeaders
-                .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, cursorPositionStart));
-    effectivePosition = Position.fromString(cursorPositionAsText);
-    return effectivePosition;
-  }
-
-  private boolean isGivenFieldPositionValid(String requestHeaders) {
-    Dimension screenSize = getScreenDimensions(requestHeaders);
-    return (getRowAsInt() <= screenSize.height && getRowAsInt() >= 1) && (
-        getColumnAsInt() <= screenSize.width
-            && getColumnAsInt() >= 1);
-  }
-
-  private Dimension getScreenDimensions(String requestHeaders) {
-    return TerminalType.fromString(extractTerminalType(requestHeaders)).getScreenSize();
   }
 
   private String extractTerminalType(String requestHeaders) {

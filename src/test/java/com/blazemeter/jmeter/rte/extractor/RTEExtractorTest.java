@@ -92,7 +92,7 @@ public class RTEExtractorTest {
   }
 
   @Test
-  public void shouldVerifyJmeterVariablesWhenCursorPositionSelected() {
+  public void shouldExtractCursorPositionWhenCursorPositionSelected() {
     setUpExtractorForCursorPosition();
     rteExtractor.process();
     softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("10");
