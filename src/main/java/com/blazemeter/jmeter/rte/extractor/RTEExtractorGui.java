@@ -64,4 +64,14 @@ public class RTEExtractorGui extends AbstractPostProcessorGui {
 
   }
 
+  @Override
+  public void clearGui() {
+    super.clearGui();
+    extractorPanel.setPositionType(PositionType.CURSOR_POSITION);
+    extractorPanel.setVariablePrefix("");
+    extractorPanel.setRow("");
+    extractorPanel.setColumn("");
+    extractorPanel.setOffset("");
+  }
+
 }

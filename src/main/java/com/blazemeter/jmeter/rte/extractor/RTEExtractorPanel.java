@@ -60,7 +60,6 @@ public class RTEExtractorPanel extends JPanel {
   }
 
   private void setRadioButtonConfiguration(JPanel fieldPanel) {
-    cursorPosition.setSelected(true);
     SwingUtils.setEnabledRecursively(fieldPanel, false);
     cursorPosition.setEnabled(true);
     cursorPosition.setName("cursorPosition");
@@ -133,9 +132,9 @@ public class RTEExtractorPanel extends JPanel {
 
   public void setPositionType(PositionType positionType) {
     if (positionType.equals(PositionType.CURSOR_POSITION)) {
-      cursorPosition.setEnabled(true);
+      cursorPosition.setSelected(true);
     } else {
-      nextFieldPosition.setEnabled(true);
+      nextFieldPosition.setSelected(true);
     }
   }
 
