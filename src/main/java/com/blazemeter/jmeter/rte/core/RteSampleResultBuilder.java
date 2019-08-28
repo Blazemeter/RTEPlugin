@@ -218,29 +218,14 @@ public class RteSampleResultBuilder {
   }
 
   private String getFieldsPositions() {
-    if (screen != null) {
-      List<Position> firstPosition = screen.getSegments().stream()
-          .filter(Segment::isEditable)
-          .map(Segment::getPosition)
-          .collect(Collectors.toList());
-      if (!firstPosition.isEmpty()) {
-        List<Position> endPosition = screen
-            .getFieldEndPositions(terminalType.getScreenSize().width);
-        StringBuilder str = new StringBuilder();
-        for (int i = 0; i < endPosition.size(); i++) {
-          str.append('[');
-          str.append(firstPosition.get(i).toString());
-          str.append('-');
-          str.append(endPosition.get(i).toString());
-          str.append(']');
-          if (i + 1 < endPosition.size()) {
-            str.append(", ");
-          }
-        }
-        return str.toString();
-      }
+    if (screen == null) {
+      return "";
     }
-    return "";
-  }
+    return screen.getSegments().stream()
+        .filter(Segment::isEditable)
+        .map(s -> "[" + s.getStartPosition() + "-" + s
+            .getEndPosition(terminalType.getScreenSize().width) + "]")
+        .collect(Collectors.joining(", "));
 
+  }
 }

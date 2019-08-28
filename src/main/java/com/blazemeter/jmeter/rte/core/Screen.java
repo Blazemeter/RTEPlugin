@@ -110,7 +110,7 @@ public class Screen {
     StringBuilder screen = new StringBuilder();
     int nextScreenPosition = 0;
     for (Segment segment : segments) {
-      int segmentPosition = buildLinealPosition(segment.getPosition());
+      int segmentPosition = buildLinealPosition(segment.getStartPosition());
       if (segmentPosition != nextScreenPosition) {
         Segment fillSegment = buildBlankSegmentForRange(nextScreenPosition, segmentPosition);
         screen.append(fillSegment.getWrappedText(size.width));
@@ -240,7 +240,7 @@ public class Screen {
       this.editable = editable;
     }
 
-    public Position getPosition() {
+    public Position getStartPosition() {
       return position;
     }
 
