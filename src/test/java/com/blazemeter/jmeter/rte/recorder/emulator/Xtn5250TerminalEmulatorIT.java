@@ -35,6 +35,7 @@ import org.assertj.swing.finder.JOptionPaneFinder;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JButtonFixture;
 import org.assertj.swing.fixture.JOptionPaneFixture;
+import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
@@ -58,6 +59,7 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
   private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
   private static final String ASSERTION_BUTTON = "assertionButton";
+  public static final String SAMPLE_NAME_FIELD = "sampleNameField";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
@@ -97,19 +99,21 @@ public class Xtn5250TerminalEmulatorIT {
     int linearPosition = 0;
     linearPosition = addScreenSegment(screen, linearPosition, name);
     linearPosition = addScreenField(screen, linearPosition, fieldLength);
-    
-    linearPosition = addScreenSegment(screen, linearPosition, completeLine("", COLUMNS - linearPosition));
-    
+
+    linearPosition = addScreenSegment(screen, linearPosition,
+        completeLine("", COLUMNS - linearPosition));
+
     linearPosition = addScreenSegment(screen, linearPosition, password);
     linearPosition = addScreenField(screen, linearPosition, fieldLength);
-    
-    linearPosition = addScreenSegment(screen, linearPosition, completeLine("", COLUMNS - password.length() - fieldLength));
-    
+
+    linearPosition = addScreenSegment(screen, linearPosition,
+        completeLine("", COLUMNS - password.length() - fieldLength));
+
     addScreenSegment(screen, linearPosition, completeLine(GOODBYE_TEXT, COLUMNS));
-    
+
     return screen;
   }
-  
+
   private int addScreenSegment(Screen screen, int linearPosition, String name) {
     screen.addSegment(linearPosition, name);
     return linearPosition + name.length();
@@ -117,7 +121,7 @@ public class Xtn5250TerminalEmulatorIT {
 
   private int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
     screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
-    return  linearPosition + fieldLenght;
+    return linearPosition + fieldLenght;
   }
 
   private Set<AttentionKey> buildSupportedAttentionKeys() {
@@ -179,7 +183,7 @@ public class Xtn5250TerminalEmulatorIT {
   @Test
   public void shouldShowTheScreenExpectedWhenSetScreen() throws IOException {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(buildScreen(""));
+    xtn5250TerminalEmulator.setScreen(buildScreen(""), "");
     assertThat(xtn5250TerminalEmulator.getScreen()).isEqualTo(getFileContent(TEST_SCREEN_FILE));
   }
 
@@ -216,8 +220,12 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   private void setScreen(String text) {
+    setScreen(text, "");
+  }
+
+  private void setScreen(String text, String sampleName) {
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
-    xtn5250TerminalEmulator.setScreen(buildScreen(text));
+    xtn5250TerminalEmulator.setScreen(buildScreen(text), sampleName);
     frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
   }
@@ -243,7 +251,7 @@ public class Xtn5250TerminalEmulatorIT {
     setScreen("");
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKey(KeyEvent.VK_F1, 0, 2, 2);
-    verify(listener, timeout(PAUSE_TIMEOUT)).onAttentionKey(AttentionKey.F1, new ArrayList<>());
+    verify(listener, timeout(PAUSE_TIMEOUT)).onAttentionKey(AttentionKey.F1, new ArrayList<>(), "");
   }
 
   @Test
@@ -251,7 +259,8 @@ public class Xtn5250TerminalEmulatorIT {
     setScreen("");
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKey(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, 2, 2);
-    verify(listener, timeout(PAUSE_TIMEOUT)).onAttentionKey(AttentionKey.RESET, new ArrayList<>());
+    verify(listener, timeout(PAUSE_TIMEOUT))
+        .onAttentionKey(AttentionKey.RESET, new ArrayList<>(), "");
   }
 
   @Test
@@ -349,7 +358,7 @@ public class Xtn5250TerminalEmulatorIT {
     sendKey(KeyEvent.VK_ENTER, 0, 2, 5);
     List<Input> inputs = new ArrayList<>();
     inputs.add(new LabelInput("*****", input));
-    verify(listener).onAttentionKey(AttentionKey.ENTER, inputs);
+    verify(listener).onAttentionKey(AttentionKey.ENTER, inputs, "");
   }
 
   @Test
@@ -365,7 +374,7 @@ public class Xtn5250TerminalEmulatorIT {
     sendKey(KeyEvent.VK_ENTER, 0, 2, 19);
 
     verify(listener)
-        .onAttentionKey(AttentionKey.ENTER, buildExpectedInputListForMultipleInputsByLabel());
+        .onAttentionKey(AttentionKey.ENTER, buildExpectedInputListForMultipleInputsByLabel(), "");
   }
 
   private List<Input> buildExpectedInputListForMultipleInputsByLabel() {
@@ -375,7 +384,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   private void setScreenWithUserNameAndPasswordFields() {
-    xtn5250TerminalEmulator.setScreen(buildLoginScreenWithUserNameAndPasswordFields());
+    xtn5250TerminalEmulator.setScreen(buildLoginScreenWithUserNameAndPasswordFields(), "");
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     frame = new FrameFixture(xtn5250TerminalEmulator);
     frame.show();
@@ -434,7 +443,7 @@ public class Xtn5250TerminalEmulatorIT {
     clickButton(ASSERTION_BUTTON);
     findOptionPane().requireMessage("Please select a part of the screen");
   }
-  
+
   @Test
   public void shouldNotNotifyListenerWhenAssertionScreenAndCancelButtonPressed() {
     setScreen("");
@@ -444,5 +453,32 @@ public class Xtn5250TerminalEmulatorIT {
     findOptionPane().textBox().setText("Assertion Test");
     findOptionPane().cancelButton().click();
     verify(listener, never()).onAssertionScreen("Assertion Test", "TEST");
+  }
+
+  @Test
+  public void shouldNotifyListenerWhenInputInhibitedOnSampleName() {
+    xtn5250TerminalEmulator.setKeyboardLock(true);
+    setScreen("");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setKeyboardLock(false);
+    setSampleName("CONNECTING");
+    sendKey(KeyEvent.VK_ENTER, 0, 2, 1);
+
+    verify(listener).onAttentionKey(AttentionKey.ENTER, new ArrayList<>(), "CONNECTING");
+  }
+
+  private void setSampleName(String name) {
+    JTextComponentFixture field = frame.textBox(SAMPLE_NAME_FIELD);
+    field.target().setText(name);
+  }
+
+  @Test
+  public void shouldGetDefaultSampleNameWhenOnAttentionKey() {
+    xtn5250TerminalEmulator.setKeyboardLock(true);
+    setScreen("", "DEFAULT_INPUT_VALUE");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setKeyboardLock(false);
+    sendKey(KeyEvent.VK_ENTER, 0, 2, 1);
+    assertThat(frame.textBox(SAMPLE_NAME_FIELD).text()).isEqualTo("DEFAULT_INPUT_VALUE");
   }
 }

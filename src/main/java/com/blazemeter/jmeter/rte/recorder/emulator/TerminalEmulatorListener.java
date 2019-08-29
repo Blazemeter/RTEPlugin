@@ -8,13 +8,9 @@ public interface TerminalEmulatorListener {
 
   void onCloseTerminal();
 
-  void onAttentionKey(AttentionKey attentionKey, List<Input> inputs);
+  void onAttentionKey(AttentionKey attentionKey, List<Input> inputs, String screenName);
 
   void onWaitForText(String text);
 
   void onAssertionScreen(String name, String text);
-
-  void onSampleName(String name);
-
-  int getSampleCount();
 }

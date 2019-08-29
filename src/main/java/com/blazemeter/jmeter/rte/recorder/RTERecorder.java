@@ -280,7 +280,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private RteSampleResultBuilder buildSampleResultBuilder(Action action) {
     RteSampleResultBuilder ret = new RteSampleResultBuilder()
-        .withLabel(action != Action.SEND_INPUT ? buildSampleName(action) : samplerName)
+        .withLabel(getSampleName(action))
         .withServer(getServer())
         .withPort(getPort())
         .withProtocol(getProtocol())
@@ -293,15 +293,19 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     return ret;
   }
 
+  private String getSampleName(Action action) {
+    return action == Action.SEND_INPUT ? samplerName : buildSampleName(action);
+  }
+
   private String buildSampleName(Action action) {
-    return action != Action.SEND_INPUT ? "bzm-RTE-" + action : samplerName;
+    return "bzm-RTE-" + action + (action == Action.SEND_INPUT ? "-" + (sampleCount + 1) : "");
   }
 
   private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
     RTESampler sampler = new RTESampler();
     sampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
     sampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
-    sampler.setName(buildSampleName(action));
+    sampler.setName(getSampleName(action));
     sampler.setAction(action);
     if (inputs != null) {
       sampler.setInputs(inputs);
@@ -330,7 +334,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   @Override
-  public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs) {
+  public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs, String screenName) {
+    samplerName = screenName;
     sampleCount++;
     terminalEmulator.setKeyboardLock(true);
     requestListener.stop();
@@ -364,17 +369,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     assertion.setAssumeSuccess(false);
     responseAssertions.add(assertion);
   }
-
-  @Override
-  public void onSampleName(String name) {
-    samplerName = name;
-  }
-
-  @Override
-  public int getSampleCount() {
-    return sampleCount;
-  }
-
+  
   private void recordPendingSample() {
     if (!resultBuilder.hasFailure()) {
       resultBuilder.withSuccessResponse(terminalClient);
@@ -443,7 +438,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onTerminalStateChange() {
-    terminalEmulator.setScreen(terminalClient.getScreen());
+    samplerName = buildSampleName(Action.SEND_INPUT);
+    terminalEmulator.setScreen(terminalClient.getScreen(), samplerName);
     terminalClient.getCursorPosition().ifPresent(cursorPosition -> terminalEmulator
         .setCursor(cursorPosition.getRow(), cursorPosition.getColumn()));
     terminalEmulator.setKeyboardLock(terminalClient.isInputInhibited());
