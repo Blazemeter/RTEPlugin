@@ -5,15 +5,8 @@ import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.Dimension;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.testelement.AbstractScopedTestElement;
@@ -33,8 +26,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   private static final String VARIABLE_PREFIX_PROPERTY = "RTEExtractor.variablePrefix";
   private static final String POSITION_TYPE_PROPERTY = "RTEExtractor.positionType";
   private static final PositionType DEFAULT_POSITION_TYPE = PositionType.CURSOR_POSITION;
-  private static final Pattern END_TO_END_FIELD_POSITION_PATTERN = Pattern
-      .compile("^\\[\\((\\d+),(\\d+)\\)-\\((\\d+),(\\d+)\\)]$");
+
   private JMeterContext context;
 
   public RTEExtractor() {
@@ -46,26 +38,22 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     LOG.info("RTE-Extractor {}: processing result", getProperty(TestElement.NAME));
     JMeterContext context = this.context != null ? this.context : getThreadContext();
     JMeterVariables vars = context.getVariables();
-    String variablePrefix = validateVariablePrefix(getVariablePrefix());
-    Position position = extractPosition(context.getPreviousResult().getResponseHeaders());
+    String variablePrefix = getVariablePrefix();
+    Position position = extractPosition(context.getPreviousResult().getResponseHeaders(),
+        context.getPreviousResult().getRequestHeaders());
     if (position != null && !variablePrefix.isEmpty()) {
       vars.put(variablePrefix + "_COLUMN", String.valueOf(position.getColumn()));
       vars.put(variablePrefix + "_ROW", String.valueOf(position.getRow()));
-    }
-  }
-
-  private String validateVariablePrefix(String variablePrefix) {
-    if (variablePrefix.isEmpty()) {
+    } else if (variablePrefix.isEmpty()) {
       LOG.error("The variable name in extractor is essential for later usage");
     }
-    return variablePrefix;
   }
 
-  private Position extractPosition(String responseHeaders) {
+  private Position extractPosition(String responseHeaders, String requestHeaders) {
     if (getPositionType() == PositionType.CURSOR_POSITION) {
       return extractCursorPosition(responseHeaders);
     } else {
-      return extractFieldPosition(responseHeaders);
+      return extractFieldPosition(responseHeaders, requestHeaders);
     }
   }
 
@@ -81,27 +69,33 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     return responseHeaders.substring(startPosition, endPosition);
   }
 
-  private Position extractFieldPosition(String responseHeaders) {
+  private Position extractFieldPosition(String responseHeaders, String requestHeaders) {
 
-    if (isGivenFieldPositionValid(context.getPreviousResult().getRequestHeaders())) {
-
-      String fieldsPositionAsText = extractHeaderValue(
-          RteSampleResultBuilder.FIELDS_POSITION_HEADER, responseHeaders);
-
-      List<String> fieldPositions = Arrays
-          .stream(fieldsPositionAsText.split(RteSampleResultBuilder.FIELD_POSITION_SEPARATOR))
-          .collect(Collectors.toList());
-
-      Map<Position, Position> completeFieldPosition = getCompleteFieldMapPositions(fieldPositions);
-      Position givenPosition = new Position(getRowAsInt(), getColumnAsInt());
-
-      return getNewPosition(givenPosition, completeFieldPosition);
-
-    } else {
+    if (!isGivenFieldPositionValid(requestHeaders)) {
       LOG.error("Inserted values for row and column in extractor\n"
           + "do not match with the screen size.");
       return null;
     }
+
+    if (Integer.parseInt(getOffset()) == 0) {
+      return getBasePosition();
+    }
+
+    String fieldsPositionAsText = extractHeaderValue(
+        RteSampleResultBuilder.FIELDS_POSITION_HEADER, responseHeaders);
+
+    if (fieldsPositionAsText.isEmpty()) {
+      LOG.error("No fields found in screen");
+      return null;
+    }
+
+    List<PositionRange> fieldPositionRanges = Arrays
+        .stream(fieldsPositionAsText.split(RteSampleResultBuilder.FIELD_POSITION_SEPARATOR))
+        .map(PositionRange::fromStrings)
+        .collect(Collectors.toList());
+
+    return findField(getBasePosition(), fieldPositionRanges, Integer.parseInt(getOffset()));
+
   }
 
   private boolean isGivenFieldPositionValid(String requestHeaders) {
@@ -116,108 +110,41 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     return TerminalType.fromString(extractTerminalType(requestHeaders)).getScreenSize();
   }
 
-  private Map<Position, Position> getCompleteFieldMapPositions(List<String> fieldPositions) {
-    Map<Position, Position> fieldPositionsMap = new LinkedHashMap<>();
-    for (String segments : fieldPositions) {
-      Matcher m = END_TO_END_FIELD_POSITION_PATTERN.matcher(segments);
-      if (m.matches()) {
-        fieldPositionsMap
-            .put(new Position(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))),
-                new Position(Integer.parseInt(m.group(3)), Integer.parseInt(m.group(4))));
-      } else {
-        throw new IllegalArgumentException(
-            "The text '" + segments + "' does not position field format");
-      }
+  private Position findField(Position basePosition, List<PositionRange> fieldPositionRanges,
+      int offset) {
+    int basePositionIndex = findBasePositionIndex(basePosition, fieldPositionRanges, offset);
+    try {
+      return fieldPositionRanges.get(basePositionIndex + offset).getStart();
+    } catch (IndexOutOfBoundsException e) {
+      LOG.error(
+          "Couldn't find a field from {} with offset {} in screen fields {}",
+          basePositionIndex, Integer.parseInt(getOffset()),
+          fieldPositionRanges.stream().map(PositionRange::toString));
+      return null;
     }
-    return fieldPositionsMap;
   }
 
-  private Position getNewPosition(Position givenPosition,
-      Map<Position, Position> fieldPositions) {
-    int givenLinearPosition = buildLinealPosition(givenPosition);
-    int offset = Integer.parseInt(getOffset());
-    List<Position> keys = new ArrayList<>(fieldPositions.keySet());
-
-    if (offset > 0) {
-      Position nextField = getForwardPositionField(fieldPositions, givenLinearPosition);
-      try {
-        return keys.get(keys.indexOf(nextField) + offset - 1);
-      } catch (IndexOutOfBoundsException e) {
-        LOG.error("Number of fields in the screen was " + fieldPositions.size()
-            + "\nTherefore is not possible to skip "
-            + getOffset() + " fields");
-        return null;
+  private int findBasePositionIndex(Position basePosition, List<PositionRange> fieldPositionRanges,
+      int offset) {
+    int index = 0;
+    for (PositionRange fieldRange : fieldPositionRanges) {
+      if (fieldRange.contains(basePosition)) {
+        return index + offset > 0 ? -1 : 1;
+      } else if (basePosition.compareTo(fieldRange.getStart()) < 0) {
+        return offset > 0 ? index - 1 : index;
       }
-    } else if (offset < 0) {
-
-      Position position = getBackwardLinearPositionField(fieldPositions, givenLinearPosition);
-
-      try {
-        return keys.get(keys.indexOf(position) + offset + 1);
-      } catch (IndexOutOfBoundsException e) {
-        LOG.error("Number of fields in the screen was " + fieldPositions.size()
-            + "\nTherefore is not possible to go backwards "
-            + Math.abs(Integer.parseInt(getOffset())) + " fields");
-        return null;
-      }
+      index++;
     }
-
-    return givenPosition;
-
-  }
-
-  private Position getBackwardLinearPositionField(Map<Position, Position> fieldsPositionsMap,
-      int givenLinearPosition) {
-    List<Position> reverseKeysOrder = new ArrayList<>(fieldsPositionsMap.keySet());
-    Collections.reverse(reverseKeysOrder);
-    for (Position key : reverseKeysOrder) {
-      int linealStartFieldPosition = buildLinealPosition(key);
-      int linealEndFieldPosition = buildLinealPosition(fieldsPositionsMap.get(key));
-
-      if (linealStartFieldPosition == givenLinearPosition) {
-        return key;
-      } else if (givenLinearPosition < linealEndFieldPosition
-          && givenLinearPosition > linealStartFieldPosition) {
-        return reverseKeysOrder.get(reverseKeysOrder.indexOf(key) - 1);
-      } else if (givenLinearPosition > linealEndFieldPosition) {
-        return key;
-      }
-    }
-    LOG.error("There are no fields position in the left side of the given position");
-    return null;
-  }
-
-  private Position getForwardPositionField(Map<Position, Position> fieldsPositionMap,
-      int givenLinearPosition) {
-    Iterator<Map.Entry<Position, Position>> it = fieldsPositionMap.entrySet().iterator();
-    List<Position> keys = new ArrayList<>(fieldsPositionMap.keySet());
-    while (it.hasNext()) {
-      Map.Entry<Position, Position> pairPos = it.next();
-      int linealStartFieldPosition = buildLinealPosition(pairPos.getKey());
-      int linealEndFieldPosition = buildLinealPosition(pairPos.getValue());
-
-      if (linealStartFieldPosition == givenLinearPosition) {
-        return keys.get(keys.indexOf(pairPos.getKey()) + 1);
-      } else if (givenLinearPosition > linealStartFieldPosition
-          && givenLinearPosition < linealEndFieldPosition) {
-        LOG.warn("Given position in Extractor is in the middle of a field");
-        return pairPos.getKey();
-
-      } else if (givenLinearPosition < linealStartFieldPosition) {
-        return pairPos.getKey();
-      }
-    }
-    LOG.warn("There are not fields position in the right close of the given position");
-    return null;
+    return offset > 0 ? index - 1 : index;
   }
 
   private String extractTerminalType(String requestHeaders) {
-    int terminalTypeIndex =
+    int extractHeaderValue =
         requestHeaders.indexOf(RteSampleResultBuilder.HEADERS_TERMINAL_TYPE)
             + RteSampleResultBuilder.HEADERS_TERMINAL_TYPE.length();
     int endOfScreenDimension = requestHeaders
-        .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, terminalTypeIndex);
-    return requestHeaders.substring(terminalTypeIndex, endOfScreenDimension);
+        .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, extractHeaderValue);
+    return requestHeaders.substring(extractHeaderValue, endOfScreenDimension);
   }
 
   private int getRowAsInt() {
@@ -267,11 +194,6 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
 
   public void setPositionType(PositionType positionType) {
     setProperty(POSITION_TYPE_PROPERTY, positionType.name());
-  }
-
-  private int buildLinealPosition(Position position) {
-    Dimension size = getScreenDimensions(context.getPreviousResult().getRequestHeaders());
-    return size.width * (position.getRow() - 1) + position.getColumn() - 1;
   }
 
   @VisibleForTesting

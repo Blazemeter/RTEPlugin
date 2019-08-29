@@ -71,14 +71,14 @@ public class Xtn5250TerminalEmulatorIT {
     Screen screen = new Screen(screenSize);
     int segmentPosition = 0;
     screen.addSegment(segmentPosition,
-        completeLine("*****************************************", screenSize.width));
+        completeLine("*****************************************", screenSize.width), screenSize);
     segmentPosition += screenSize.width;
-    screen.addField(segmentPosition, completeLine(text, screenSize.width));
+    screen.addField(segmentPosition, completeLine(text, screenSize.width), screenSize);
     segmentPosition += screenSize.width;
     for (String lineText : Arrays
         .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
             "*****************************************")) {
-      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width));
+      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width), screenSize);
       segmentPosition += screenSize.width;
     }
     return screen;
@@ -88,7 +88,7 @@ public class Xtn5250TerminalEmulatorIT {
     return baseLine + StringUtils.repeat(' ', width - baseLine.length());
   }
 
-  public static Screen buildLoginScreenWithUserNameAndPasswordFields() {
+  private static Screen buildLoginScreenWithUserNameAndPasswordFields() {
     Dimension screenSize = new Dimension(COLUMNS, ROWS);
     Screen screen = new Screen(screenSize);
     String name = "Insert Name: ";
@@ -111,12 +111,12 @@ public class Xtn5250TerminalEmulatorIT {
   }
   
   private static int addScreenSegment(Screen screen, int linearPosition, String name) {
-    screen.addSegment(linearPosition, name);
+    screen.addSegment(linearPosition, name, screen.getSize());
     return linearPosition + name.length();
   }
 
   private static int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
-    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
+    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght), screen.getSize());
     return  linearPosition + fieldLenght;
   }
 

@@ -1,12 +1,12 @@
 package com.blazemeter.jmeter.rte.core;
 
+import com.blazemeter.jmeter.rte.extractor.PositionRange;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.commons.lang3.StringUtils;
@@ -38,7 +38,7 @@ public class Screen {
     Screen ret = new Screen(new Dimension(width, height));
     int pos = 0;
     for (String part : screen.split("\n")) {
-      ret.addSegment(pos, part);
+      ret.addSegment(pos, part, new Dimension(width, height));
       pos += width;
     }
     return ret;
@@ -52,17 +52,18 @@ public class Screen {
       Element meta = (Element) head.getElementsByTagName("meta").item(0);
       String sizeStr = meta.getAttribute("content");
       int separatorIndex = sizeStr.indexOf('x');
-      Screen ret = new Screen(new Dimension(Integer.parseInt(sizeStr.substring(separatorIndex + 1)),
-          Integer.parseInt(sizeStr.substring(0, separatorIndex))));
+      Dimension screenSize = new Dimension(Integer.parseInt(sizeStr.substring(separatorIndex + 1)),
+          Integer.parseInt(sizeStr.substring(0, separatorIndex)));
+      Screen ret = new Screen(screenSize);
       NodeList pres = root.getElementsByTagName("pre");
       int linealPosition = 0;
       for (int i = 0; i < pres.getLength(); i++) {
         Element pre = (Element) pres.item(i);
         String segmentText = pre.getTextContent().replace("\n", "");
         if ("true".equals(pre.getAttribute("contenteditable"))) {
-          ret.addField(linealPosition, segmentText);
+          ret.addField(linealPosition, segmentText, screenSize);
         } else {
-          ret.addSegment(linealPosition, segmentText);
+          ret.addSegment(linealPosition, segmentText, screenSize);
         }
         linealPosition += segmentText.length();
       }
@@ -79,13 +80,6 @@ public class Screen {
     return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
   }
 
-  public List<Position> getFieldEndPositions(int width) {
-    return this.segments.stream()
-        .filter(Segment::isEditable)
-        .map(l -> l.getEndPosition(width))
-        .collect(Collectors.toList());
-  }
-
   public Dimension getSize() {
     return size;
   }
@@ -94,16 +88,16 @@ public class Screen {
     return segments;
   }
 
-  public void addSegment(int linealPosition, String text) {
-    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, false));
+  public void addSegment(int linealPosition, String text, Dimension size) {
+    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, false, size));
   }
 
   private Position buildPositionFromLinearPosition(int linealPosition) {
-    return new Position((linealPosition / size.width + 1), linealPosition % size.width + 1);
+    return new Position(linealPosition / size.width + 1, linealPosition % size.width + 1);
   }
 
-  public void addField(int linealPosition, String text) {
-    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true));
+  public void addField(int linealPosition, String text, Dimension size) {
+    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true, size));
   }
 
   public String getText() {
@@ -131,7 +125,7 @@ public class Screen {
 
   private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
     return new Segment(buildPositionFromLinearPosition(firstPosition),
-        buildBlankString(lastPosition - firstPosition), false);
+        buildBlankString(lastPosition - firstPosition), false, size);
   }
 
   private String buildBlankString(int length) {
@@ -233,11 +227,15 @@ public class Screen {
     private final String text;
     private final boolean editable;
     private Position position;
+    private Dimension size;
+    private PositionRange positionRange;
 
-    public Segment(Position position, String text, boolean editable) {
+    public Segment(Position position, String text, boolean editable, Dimension size) {
       this.text = text;
       this.position = position;
       this.editable = editable;
+      this.size = size;
+      this.positionRange = new PositionRange(position, getEndPosition());
     }
 
     public Position getStartPosition() {
@@ -248,19 +246,23 @@ public class Screen {
       return text;
     }
 
+    public PositionRange getPositionRange() {
+      return positionRange;
+    }
+
     public boolean isEditable() {
       return editable;
     }
 
-    public Position getEndPosition(int width) {
+    public Position getEndPosition() {
       int relativeColumnPosition = position.getColumn() + text.length();
       int row = position.getRow();
-      if (relativeColumnPosition <= width) {
+      if (relativeColumnPosition <= size.width) {
         return new Position(position.getRow(), relativeColumnPosition);
       }
 
-      while (relativeColumnPosition >= width) {
-        if ((relativeColumnPosition % width) == 0) {
+      while (relativeColumnPosition >= size.width) {
+        if ((relativeColumnPosition % size.width) == 0) {
           row++;
         }
         relativeColumnPosition--;
@@ -293,7 +295,7 @@ public class Screen {
     }
 
     private Segment withInvisibleCharsToSpaces() {
-      return new Segment(position, convertInvisibleCharsToSpaces(text), editable);
+      return new Segment(position, convertInvisibleCharsToSpaces(text), editable, size);
     }
 
     @Override

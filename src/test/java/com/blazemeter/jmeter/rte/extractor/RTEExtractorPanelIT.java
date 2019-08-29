@@ -39,26 +39,17 @@ public class RTEExtractorPanelIT {
   @Test
   public void shouldSelectOneRadioButtonAndDeselectTheOtherOne() {
     clickRadioButton(NEXT_FIELD_POSITION);
-    assertThat(isRadioButtonSelected(CURSOR_POSITION)).isFalse();
+    frame.radioButton(CURSOR_POSITION).requireNotSelected();
   }
 
-  private Component findComponentByName(String name) {
-    return frame.robot().finder().findByName(name);
-  }
-
-  public boolean isRadioButtonSelected(String radioName) {
-    JRadioButton radio = (JRadioButton) findComponentByName(radioName);
-    return radio.isSelected();
-  }
-
-  private void clickRadioButton(String radioName) {
-    frame.robot().click(findComponentByName(radioName));
+  private void clickRadioButton(String name) {
+    frame.radioButton(name).click();
   }
 
   @Test
   public void shouldDisableNextFieldPanelWhenCursorPosition() {
     clickRadioButton(CURSOR_POSITION);
-    assertThat(findComponentByName("fieldPanel").isEnabled()).isFalse();
+    frame.panel("fieldPanel").requireDisabled();
   }
 
   @Test
