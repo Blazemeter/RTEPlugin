@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.JTextField;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.core.KeyPressInfo;
@@ -97,19 +98,21 @@ public class Xtn5250TerminalEmulatorIT {
     int linearPosition = 0;
     linearPosition = addScreenSegment(screen, linearPosition, name);
     linearPosition = addScreenField(screen, linearPosition, fieldLength);
-    
-    linearPosition = addScreenSegment(screen, linearPosition, completeLine("", COLUMNS - linearPosition));
-    
+
+    linearPosition = addScreenSegment(screen, linearPosition,
+        completeLine("", COLUMNS - linearPosition));
+
     linearPosition = addScreenSegment(screen, linearPosition, password);
     linearPosition = addScreenField(screen, linearPosition, fieldLength);
-    
-    linearPosition = addScreenSegment(screen, linearPosition, completeLine("", COLUMNS - password.length() - fieldLength));
-    
+
+    linearPosition = addScreenSegment(screen, linearPosition,
+        completeLine("", COLUMNS - password.length() - fieldLength));
+
     addScreenSegment(screen, linearPosition, completeLine(GOODBYE_TEXT, COLUMNS));
-    
+
     return screen;
   }
-  
+
   private int addScreenSegment(Screen screen, int linearPosition, String name) {
     screen.addSegment(linearPosition, name);
     return linearPosition + name.length();
@@ -117,7 +120,7 @@ public class Xtn5250TerminalEmulatorIT {
 
   private int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
     screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
-    return  linearPosition + fieldLenght;
+    return linearPosition + fieldLenght;
   }
 
   private Set<AttentionKey> buildSupportedAttentionKeys() {
@@ -434,7 +437,7 @@ public class Xtn5250TerminalEmulatorIT {
     clickButton(ASSERTION_BUTTON);
     findOptionPane().requireMessage("Please select a part of the screen");
   }
-  
+
   @Test
   public void shouldNotNotifyListenerWhenAssertionScreenAndCancelButtonPressed() {
     setScreen("");
@@ -445,4 +448,23 @@ public class Xtn5250TerminalEmulatorIT {
     findOptionPane().cancelButton().click();
     verify(listener, never()).onAssertionScreen("Assertion Test", "TEST");
   }
+
+  @Test
+  public void shouldNotifyListenerWhenInputInhibitedOnSampleName() {
+    xtn5250TerminalEmulator.setKeyboardLock(true);
+    setScreen("");
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    xtn5250TerminalEmulator.setKeyboardLock(false);
+    setSampleName("CONNECTING");
+    sendKey(KeyEvent.VK_ENTER, 0, 2, 1);
+
+    verify(listener).onSampleName("CONNECTING");
+
+  }
+
+  private void setSampleName(String name) {
+    JTextField field = (JTextField) frame.robot().finder().findByName("sampleNameField");
+    field.setText(name);
+  }
+  
 }

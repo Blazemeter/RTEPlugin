@@ -630,5 +630,29 @@ public class RTERecorderTest {
     assertion.setAssumeSuccess(false);
     return assertion;
   }
+
+  @Test
+  public void shouldAddSamplerToTargetControllerNodeWhenAttentionKeyOnSampleName() throws Exception {
+    connect();
+    rteRecorder.onSampleName("CONNECTING");
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onRecordingStop();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    verify(treeModel, times(4)).addComponent(argument.capture(),
+        eq(treeNode));
+    assertThat(argument.getAllValues().get(2).getName()).isEqualTo("CONNECTING");
+  }
+  
+  @Test
+  public void shouldAddSamplerWithDefaultSampleNameWhenConnectAndDisconnect()
+      throws TimeoutException, InterruptedException, IllegalUserActionException {
+    connect();
+    rteRecorder.onRecordingStop();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    verify(treeModel, times(3)).addComponent(argument.capture(),
+        eq(treeNode));
+    softly.assertThat(argument.getAllValues().get(2).getName()).isEqualTo("bzm-RTE-DISCONNECT");
+    softly.assertThat(argument.getAllValues().get(1).getName()).isEqualTo("bzm-RTE-CONNECT");
+  }
 }
 
