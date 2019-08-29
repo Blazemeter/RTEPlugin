@@ -24,7 +24,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class RTEExtractorTest {
 
   public static final String POSITION_VAR_ROW = "positionVar_ROW";
