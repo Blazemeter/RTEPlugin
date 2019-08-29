@@ -5,10 +5,11 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Position {
+public class Position implements Comparable {
 
   public static final int UNSPECIFIED_INDEX = 0;
   private static final Pattern POSITION_PATTERN = Pattern.compile("^\\((\\d+),(\\d+)\\)$");
+  private static final int UNSPECIFIED_WIDTH = 80;
 
   private int row;
   private int column;
@@ -30,6 +31,11 @@ public class Position {
       throw new IllegalArgumentException("The text '" + text + "' does not match position format");
     }
 
+  }
+
+  public static int getLinealPosition(Position position) {
+    // DEFAULT_WIDTH value does not interfere with the propose  
+    return UNSPECIFIED_WIDTH * (position.getRow() - 1) + position.getColumn() - 1;
   }
 
   public int getRow() {
@@ -67,5 +73,10 @@ public class Position {
     return (row <= screenDimension.height && row >= 1) && (
         column <= screenDimension.width
             && column >= 1);
+  }
+
+  @Override
+  public int compareTo(Object o) {
+    return Integer.compare(getLinealPosition(this), getLinealPosition((Position) o));
   }
 }

@@ -30,6 +30,7 @@ public class RteSampleResultBuilderTest {
       "Security: NONE\n" +
       "Action: CONNECT\n";
   private static final String SCREEN_TEXT = "Testing screen text";
+  public static final Dimension SCREEN_SIZE = new Dimension(30, 1);
   private static final Screen SCREEN = buildScreen();
   private static final List<Input> CUSTOM_INPUTS = Collections
       .singletonList(new CoordInput(new Position(3, 2), "input"));
@@ -37,8 +38,8 @@ public class RteSampleResultBuilderTest {
   private RteProtocolClient client;
 
   private static Screen buildScreen() {
-    Screen screen = new Screen(new Dimension(30, 1));
-    screen.addField(0, SCREEN_TEXT);
+    Screen screen = new Screen(SCREEN_SIZE);
+    screen.addField(0, SCREEN_TEXT, SCREEN_SIZE);
     return screen;
   }
 

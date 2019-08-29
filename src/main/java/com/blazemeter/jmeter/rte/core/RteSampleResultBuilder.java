@@ -223,8 +223,7 @@ public class RteSampleResultBuilder {
     }
     return screen.getSegments().stream()
         .filter(Segment::isEditable)
-        .map(s -> "[" + s.getStartPosition() + "-" + s
-            .getEndPosition(terminalType.getScreenSize().width) + "]")
+        .map(s -> s.getPositionRange().toString())
         .collect(Collectors.joining(", "));
 
   }
