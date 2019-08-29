@@ -72,12 +72,14 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   private Position extractFieldPosition(String responseHeaders, String requestHeaders) {
 
     if (!isGivenFieldPositionValid(requestHeaders)) {
-      LOG.error("Inserted values for row and column in extractor\n"
-          + "do not match with the screen size.");
+      LOG.error(
+          "Inserted values for row and column {} in "
+              + "extractor do not match with the screen size {}.",
+          getBasePosition(), getScreenDimensions(requestHeaders));
       return null;
     }
 
-    if (Integer.parseInt(getOffset()) == 0) {
+    if (getOffsetAsInt() == 0) {
       return getBasePosition();
     }
 
@@ -94,8 +96,12 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
         .map(PositionRange::fromStrings)
         .collect(Collectors.toList());
 
-    return findField(getBasePosition(), fieldPositionRanges, Integer.parseInt(getOffset()));
+    return findField(getBasePosition(), fieldPositionRanges, getOffsetAsInt());
 
+  }
+
+  private int getOffsetAsInt() {
+    return Integer.parseInt(getOffset());
   }
 
   private boolean isGivenFieldPositionValid(String requestHeaders) {
@@ -118,7 +124,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     } catch (IndexOutOfBoundsException e) {
       LOG.error(
           "Couldn't find a field from {} with offset {} in screen fields {}",
-          basePositionIndex, Integer.parseInt(getOffset()),
+          basePositionIndex, getOffsetAsInt(),
           fieldPositionRanges.stream().map(PositionRange::toString));
       return null;
     }
@@ -130,7 +136,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     for (PositionRange fieldRange : fieldPositionRanges) {
       if (fieldRange.contains(basePosition)) {
         return index + offset > 0 ? -1 : 1;
-      } else if (basePosition.compareTo(fieldRange.getStart()) < 0) {
+      } else if (basePosition.compare(fieldRange.getStart()) < 0) {
         return offset > 0 ? index - 1 : index;
       }
       index++;

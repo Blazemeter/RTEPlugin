@@ -1,11 +1,12 @@
 package com.blazemeter.jmeter.rte.core;
 
 import java.awt.Dimension;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Position implements Comparable {
+public class Position {
 
   public static final int UNSPECIFIED_INDEX = 0;
   private static final Pattern POSITION_PATTERN = Pattern.compile("^\\((\\d+),(\\d+)\\)$");
@@ -75,8 +76,9 @@ public class Position implements Comparable {
             && column >= 1);
   }
 
-  @Override
-  public int compareTo(Object o) {
-    return Integer.compare(getLinealPosition(this), getLinealPosition((Position) o));
+  public int compare(Object o) {
+    return Comparator.comparingInt(Position::getRow)
+            .thenComparing(Position::getColumn)
+            .compare(this, (Position) o);
   }
 }

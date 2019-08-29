@@ -6,10 +6,8 @@ import java.util.regex.Pattern;
 
 public class PositionRange {
 
-  public static final int DEFAULT_WIDTH = 80;
-  private static final Pattern END_TO_END_FIELD_POSITION_PATTERN = Pattern
+  private static final Pattern RANGE_POSITION_PATTERN = Pattern
       .compile("^\\[\\((\\d+),(\\d+)\\)-\\((\\d+),(\\d+)\\)]$");
-  //serialization and deserialization like from string and so the like;
   private Position start;
   private Position end;
 
@@ -18,9 +16,9 @@ public class PositionRange {
     this.end = end;
   }
 
-  public static PositionRange fromStrings(String position) {
+  public static PositionRange fromStrings(String positionRange) {
 
-    Matcher m = END_TO_END_FIELD_POSITION_PATTERN.matcher(position);
+    Matcher m = RANGE_POSITION_PATTERN.matcher(positionRange);
     if (m.matches()) {
       return new PositionRange(
           new Position(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))),
@@ -28,7 +26,7 @@ public class PositionRange {
 
     } else {
       throw new IllegalArgumentException(
-          "The text '" + position + "' does not match position field format");
+          "The text '" + positionRange + "' does not match positionRange field format");
     }
   }
 
@@ -36,11 +34,12 @@ public class PositionRange {
     return start;
   }
 
+  public Position getEnd() {
+    return end;
+  }
+
   public boolean contains(Position position) {
-    int givenLinealPos = Position.getLinealPosition(position);
-    int startLinealPos = Position.getLinealPosition(start);
-    int endLinealPos = Position.getLinealPosition(end);
-    return startLinealPos < givenLinealPos && endLinealPos > givenLinealPos;
+    return position.compare(start) > 0 && position.compare(end) < 0;
   }
 
   @Override

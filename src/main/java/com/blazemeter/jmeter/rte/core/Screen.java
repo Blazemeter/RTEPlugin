@@ -139,7 +139,7 @@ public class Screen {
   public Screen withInvisibleCharsToSpaces() {
     Screen ret = new Screen(size);
     for (Segment s : segments) {
-      ret.segments.add(s.withInvisibleCharsToSpaces());
+      ret.segments.add(s.withInvisibleCharsToSpaces(size));
     }
     return ret;
   }
@@ -164,7 +164,7 @@ public class Screen {
   private void appendHtmlHead(Document doc, Element root) {
     Element head = appendHtmlChild("head", root, doc);
     Element meta = appendHtmlChild("meta", head, doc);
-    meta.setAttribute("name", "screen-size");
+    meta.setAttribute("name", "screen-screenSize");
     meta.setAttribute("content", size.height + "x" + size.width);
     Element style = appendHtmlChild("style", head, doc);
     style.setTextContent("pre { display: inline; background: black; color: green; }");
@@ -226,20 +226,17 @@ public class Screen {
 
     private final String text;
     private final boolean editable;
-    private Position position;
-    private Dimension size;
     private PositionRange positionRange;
 
-    public Segment(Position position, String text, boolean editable, Dimension size) {
+    public Segment(Position position, String text, boolean editable, Dimension screenSize) {
       this.text = text;
-      this.position = position;
       this.editable = editable;
-      this.size = size;
-      this.positionRange = new PositionRange(position, getEndPosition());
+      this.positionRange = new PositionRange(position,
+          calculateEndPosition(screenSize.width, position));
     }
 
     public Position getStartPosition() {
-      return position;
+      return positionRange.getStart();
     }
 
     public String getText() {
@@ -255,24 +252,20 @@ public class Screen {
     }
 
     public Position getEndPosition() {
-      int relativeColumnPosition = position.getColumn() + text.length();
-      int row = position.getRow();
-      if (relativeColumnPosition <= size.width) {
-        return new Position(position.getRow(), relativeColumnPosition);
-      }
+      return positionRange.getEnd();
+    }
 
-      while (relativeColumnPosition >= size.width) {
-        if ((relativeColumnPosition % size.width) == 0) {
-          row++;
-        }
-        relativeColumnPosition--;
-      }
+    private Position calculateEndPosition(int width, Position startPosition) {
+      int relativeColumnPosition = startPosition.getColumn() + text.length();
+      return new Position(startPosition.getRow() + (relativeColumnPosition - 1) / width,
+          (relativeColumnPosition - 1 % width) + 1);
 
-      return new Position(row, relativeColumnPosition);
     }
 
     private String getWrappedText(int width) {
-      int offset = (position.getColumn() > 0 ? position.getColumn() : width) - 1;
+      int offset =
+          (positionRange.getStart().getColumn() > 0 ? positionRange.getStart().getColumn() : width)
+              - 1;
       int pos = 0;
       StringBuilder ret = new StringBuilder();
       while (offset + text.length() - pos >= width) {
@@ -294,8 +287,9 @@ public class Screen {
       return str.replace('\u0000', ' ');
     }
 
-    private Segment withInvisibleCharsToSpaces() {
-      return new Segment(position, convertInvisibleCharsToSpaces(text), editable, size);
+    private Segment withInvisibleCharsToSpaces(Dimension screenSize) {
+      return new Segment(positionRange.getStart(), convertInvisibleCharsToSpaces(text), editable,
+          screenSize);
     }
 
     @Override
@@ -308,20 +302,21 @@ public class Screen {
       }
 
       Segment segment = (Segment) o;
-      return position.equals(((Segment) o).position) &&
+      return positionRange.getStart().equals(((Segment) o).positionRange.getStart()) &&
           text.equals(segment.text) &&
           editable == segment.editable;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(position, text);
+      return Objects.hash(positionRange.getStart(), text);
     }
 
     @Override
     public String toString() {
       return "Segment{" +
-          "Position=" + position.toString() +
+          "Start position=" + positionRange.getStart().toString() +
+          "End position=" + positionRange.getEnd() +
           ", text='" + text + '\'' +
           ", editable=" + editable +
           '}';
