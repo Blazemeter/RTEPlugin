@@ -34,6 +34,7 @@ public class RteSampleResultBuilderTest {
   private static final Screen SCREEN = buildScreen();
   private static final List<Input> CUSTOM_INPUTS = Collections
       .singletonList(new CoordInput(new Position(3, 2), "input"));
+  
   @Mock
   private RteProtocolClient client;
 
