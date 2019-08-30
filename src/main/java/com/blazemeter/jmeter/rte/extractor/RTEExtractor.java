@@ -145,12 +145,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   private String extractTerminalType(String requestHeaders) {
-    int extractHeaderValue =
-        requestHeaders.indexOf(RteSampleResultBuilder.HEADERS_TERMINAL_TYPE)
-            + RteSampleResultBuilder.HEADERS_TERMINAL_TYPE.length();
-    int endOfScreenDimension = requestHeaders
-        .indexOf(RteSampleResultBuilder.HEADERS_SEPARATOR, extractHeaderValue);
-    return requestHeaders.substring(extractHeaderValue, endOfScreenDimension);
+    return extractHeaderValue(RteSampleResultBuilder.HEADERS_TERMINAL_TYPE, requestHeaders);
   }
 
   private int getRowAsInt() {

@@ -14,9 +14,10 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 
 public class RTEExtractorPanel extends JPanel {
 
-  private JRadioButton cursorPosition = new JRadioButton("Extract cursor position");
-  private JRadioButton nextFieldPosition = new JRadioButton(
-      "Extract next field from position");
+  private JRadioButton cursorPosition = SwingUtils
+      .createComponent("cursorPosition", new JRadioButton());
+  private JRadioButton nextFieldPosition = SwingUtils
+      .createComponent("cursorPosition", new JRadioButton());
 
   private JTextField row = SwingUtils.createComponent("fieldRow", new JTextField());
   private JTextField column = SwingUtils.createComponent("fieldColumn", new JTextField());
@@ -61,6 +62,8 @@ public class RTEExtractorPanel extends JPanel {
 
   private void setRadioButtonConfiguration(JPanel fieldPanel) {
     SwingUtils.setEnabledRecursively(fieldPanel, false);
+    cursorPosition.setText("Extract cursor position");
+    nextFieldPosition.setText("Extract next field from position");
     cursorPosition.setEnabled(true);
     cursorPosition.setName("cursorPosition");
     nextFieldPosition.setName("nextFieldPosition");
