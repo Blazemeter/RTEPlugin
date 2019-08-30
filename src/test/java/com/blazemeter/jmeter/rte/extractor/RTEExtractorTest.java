@@ -59,7 +59,7 @@ public class RTEExtractorTest {
   }
 
   private static SampleResult getCustomizedResult() {
-    TerminalType terminalType = new TerminalType("IBM-3179-2", new Dimension(24, 80));
+    TerminalType terminalType = new TerminalType("IBM-3179-2", new Dimension(80, 24));
     RteSampleResultBuilder ret = new RteSampleResultBuilder(null, null,
         RESPONSE_HEADERS, terminalType)
         .withLabel("bzm-Connect")

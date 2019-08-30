@@ -258,7 +258,7 @@ public class Screen {
     private Position calculateEndPosition(int width, Position startPosition) {
       int relativeColumnPosition = startPosition.getColumn() + text.length();
       return new Position(startPosition.getRow() + (relativeColumnPosition - 1) / width,
-          (relativeColumnPosition - 1) % (width) + 1);
+          (relativeColumnPosition - 1) % width + 1);
 
     }
 
