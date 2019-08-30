@@ -49,6 +49,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 public class Xtn5250TerminalEmulatorIT {
 
   public static final String GOODBYE_TEXT = "Thanks for use testing login";
+  public static final String SAMPLE_NAME_FIELD = "sampleNameField";
+  public static final String ASSERTION_TEST_LITERAL = "Assertion Test";
+  public static final String CONNECTING_LITERAL = "CONNECTING";
   private static final long PAUSE_TIMEOUT = 10000;
   private static final int COLUMNS = 80;
   private static final int ROWS = 24;
@@ -59,7 +62,7 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
   private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
   private static final String ASSERTION_BUTTON = "assertionButton";
-  public static final String SAMPLE_NAME_FIELD = "sampleNameField";
+  public static final String DEFAULT_SAMPLE_NAME_INPUT_VALUE = "DEFAULT_INPUT_VALUE";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
@@ -432,9 +435,9 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 1, 4, 1));
     clickButton(ASSERTION_BUTTON);
     JOptionPaneFixture popup = findOptionPane();
-    popup.textBox().setText("Assertion Test");
+    popup.textBox().setText(ASSERTION_TEST_LITERAL);
     popup.okButton().click();
-    verify(listener, timeout(PAUSE_TIMEOUT)).onAssertionScreen("Assertion Test", "TEST");
+    verify(listener, timeout(PAUSE_TIMEOUT)).onAssertionScreen(ASSERTION_TEST_LITERAL, "TEST");
   }
 
   @Test
@@ -450,9 +453,9 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     xtn5250TerminalEmulator.setSelectedArea(new Rectangle(0, 1, 4, 1));
     clickButton(ASSERTION_BUTTON);
-    findOptionPane().textBox().setText("Assertion Test");
+    findOptionPane().textBox().setText(ASSERTION_TEST_LITERAL);
     findOptionPane().cancelButton().click();
-    verify(listener, never()).onAssertionScreen("Assertion Test", "TEST");
+    verify(listener, never()).onAssertionScreen(ASSERTION_TEST_LITERAL, "TEST");
   }
 
   @Test
@@ -461,10 +464,10 @@ public class Xtn5250TerminalEmulatorIT {
     setScreen("");
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     xtn5250TerminalEmulator.setKeyboardLock(false);
-    setSampleName("CONNECTING");
+    setSampleName(CONNECTING_LITERAL);
     sendKey(KeyEvent.VK_ENTER, 0, 2, 1);
 
-    verify(listener).onAttentionKey(AttentionKey.ENTER, new ArrayList<>(), "CONNECTING");
+    verify(listener).onAttentionKey(AttentionKey.ENTER, new ArrayList<>(), CONNECTING_LITERAL);
   }
 
   private void setSampleName(String name) {
@@ -473,12 +476,12 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   @Test
-  public void shouldGetDefaultSampleNameWhenOnAttentionKey() {
+  public void shouldSetDefaultValueInFieldWhenOnAttentionKey() {
     xtn5250TerminalEmulator.setKeyboardLock(true);
-    setScreen("", "DEFAULT_INPUT_VALUE");
+    setScreen("", DEFAULT_SAMPLE_NAME_INPUT_VALUE);
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     xtn5250TerminalEmulator.setKeyboardLock(false);
     sendKey(KeyEvent.VK_ENTER, 0, 2, 1);
-    assertThat(frame.textBox(SAMPLE_NAME_FIELD).text()).isEqualTo("DEFAULT_INPUT_VALUE");
+    assertThat(frame.textBox(SAMPLE_NAME_FIELD).text()).isEqualTo(DEFAULT_SAMPLE_NAME_INPUT_VALUE);
   }
 }
