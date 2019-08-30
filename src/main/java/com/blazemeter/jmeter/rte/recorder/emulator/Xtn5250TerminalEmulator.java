@@ -150,9 +150,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JPanel createToolsPanel() {
     JPanel toolsPanel = new JPanel();
     GroupLayout layout = new GroupLayout(toolsPanel);
+    layout.setAutoCreateContainerGaps(true);
     toolsPanel.setLayout(layout);
     JPanel sampleNamePanel = buildSampleNamePanel();
     JPanel fillPanel = new JPanel();
+    
     copyButton.setToolTipText("Copy");
     pasteButton.setToolTipText("Paste");
     labelButton.setToolTipText("Input by label");
@@ -165,17 +167,20 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         .addComponent(waitForTextButton)
         .addComponent(assertionButton)
         .addPreferredGap(ComponentPlacement.RELATED)
-        .addComponent(fillPanel, GroupLayout.PREFERRED_SIZE, 50, GroupLayout.PREFERRED_SIZE)
-        .addComponent(sampleNamePanel)
+        .addComponent(fillPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            Short.MAX_VALUE)
+        .addGroup(layout.createParallelGroup()
+            .addComponent(sampleNamePanel)
+        )
     );
     layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+        .addComponent(sampleNamePanel, Alignment.CENTER)
         .addComponent(copyButton)
         .addComponent(pasteButton)
         .addComponent(labelButton)
         .addComponent(waitForTextButton)
         .addComponent(assertionButton)
         .addComponent(fillPanel)
-        .addComponent(sampleNamePanel, Alignment.CENTER)
     );
     return toolsPanel;
   }
@@ -184,7 +189,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     JPanel sampleNamePanel = new JPanel();
     GroupLayout layout = new GroupLayout(sampleNamePanel);
     sampleNamePanel.setLayout(layout);
-
+    sampleNameField.setFont(new Font("SansSerif", Font.PLAIN, 11));
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(sampleNameLabel)
         .addPreferredGap(ComponentPlacement.RELATED)
@@ -258,6 +263,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       }
     }
     xi5250Crt.initAllFields();
+
     sampleNameField.setText(screenName);
   }
 
