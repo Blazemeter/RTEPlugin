@@ -18,8 +18,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RteSampleResultBuilderTest {
+
   public static final String FIELD_POSITION_TEXT = "Field-positions: [(1,1)-(1,20)]" + "\n";
   public static final String SOUNDED_ALARM_TEXT = "Sound-Alarm: true" + "\n";
+  public static final Dimension SCREEN_SIZE = new Dimension(30, 1);
   private static final Position CURSOR_POSITION = new Position(1, 1);
   private static final String EXPECTED_HEADERS_RESPONSE = "Input-inhibited: true\n" +
       "Cursor-position: (1,1)" + '\n';
@@ -30,11 +32,10 @@ public class RteSampleResultBuilderTest {
       "Security: NONE\n" +
       "Action: CONNECT\n";
   private static final String SCREEN_TEXT = "Testing screen text";
-  public static final Dimension SCREEN_SIZE = new Dimension(30, 1);
   private static final Screen SCREEN = buildScreen();
   private static final List<Input> CUSTOM_INPUTS = Collections
       .singletonList(new CoordInput(new Position(3, 2), "input"));
-  
+
   @Mock
   private RteProtocolClient client;
 

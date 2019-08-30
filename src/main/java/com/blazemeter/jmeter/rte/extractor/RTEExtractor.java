@@ -135,7 +135,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
     int index = 0;
     for (PositionRange fieldRange : fieldPositionRanges) {
       if (fieldRange.contains(basePosition)) {
-        return index + offset > 0 ? -1 : 1;
+        return index;
       } else if (basePosition.compare(fieldRange.getStart()) < 0) {
         return offset > 0 ? index - 1 : index;
       }

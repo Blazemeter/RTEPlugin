@@ -39,7 +39,7 @@ public class PositionRange {
   }
 
   public boolean contains(Position position) {
-    return position.compare(start) > 0 && position.compare(end) < 0;
+    return position.compare(start) >= 0 && position.compare(end) <= 0;
   }
 
   @Override

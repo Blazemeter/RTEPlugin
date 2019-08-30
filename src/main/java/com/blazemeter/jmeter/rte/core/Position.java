@@ -78,7 +78,7 @@ public class Position {
 
   public int compare(Object o) {
     return Comparator.comparingInt(Position::getRow)
-            .thenComparing(Position::getColumn)
-            .compare(this, (Position) o);
+        .thenComparing(Position::getColumn)
+        .compare(this, (Position) o);
   }
 }

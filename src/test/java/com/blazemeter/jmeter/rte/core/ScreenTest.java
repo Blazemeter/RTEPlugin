@@ -19,6 +19,7 @@ public class ScreenTest {
   private final int SCREEN_HEIGHT = 2;
   private final String WHITESPACES_FILLED_ROW = StringUtils.repeat(' ', (SCREEN_WIDTH));
   private final Dimension SCREEN_DIMENSION = new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT);
+
   private Screen buildScreen() {
     return new Screen(new Dimension(SCREEN_DIMENSION));
   }

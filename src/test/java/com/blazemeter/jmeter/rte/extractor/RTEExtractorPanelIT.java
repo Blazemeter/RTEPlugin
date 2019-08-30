@@ -1,11 +1,7 @@
 package com.blazemeter.jmeter.rte.extractor;
 
-import static org.assertj.swing.assertions.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
-import static org.assertj.swing.timing.Pause.pause;
 
-import java.awt.Component;
-import javax.swing.JRadioButton;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.fixture.FrameFixture;
 import org.junit.After;
@@ -72,6 +68,6 @@ public class RTEExtractorPanelIT {
   private void setTextField(String fieldName, String fieldValue) {
     frame.textBox(fieldName).setText(fieldValue);
   }
-  
-  
+
+
 }

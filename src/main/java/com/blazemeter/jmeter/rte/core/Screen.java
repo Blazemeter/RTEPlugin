@@ -164,7 +164,7 @@ public class Screen {
   private void appendHtmlHead(Document doc, Element root) {
     Element head = appendHtmlChild("head", root, doc);
     Element meta = appendHtmlChild("meta", head, doc);
-    meta.setAttribute("name", "screen-screenSize");
+    meta.setAttribute("name", "screen-size");
     meta.setAttribute("content", size.height + "x" + size.width);
     Element style = appendHtmlChild("style", head, doc);
     style.setTextContent("pre { display: inline; background: black; color: green; }");

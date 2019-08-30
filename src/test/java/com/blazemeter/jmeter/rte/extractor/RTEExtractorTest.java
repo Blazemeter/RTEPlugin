@@ -1,7 +1,5 @@
 package com.blazemeter.jmeter.rte.extractor;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
@@ -11,7 +9,7 @@ import com.blazemeter.jmeter.rte.sampler.Action;
 import java.awt.Dimension;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
@@ -23,23 +21,35 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class RTEExtractorTest {
 
   public static final String POSITION_VAR_ROW = "positionVar_ROW";
   public static final String POSITION_VAR_COLUMN = "positionVar_COLUMN";
   public static final String VARIABLE_PREFIX = "positionVar";
-  public static final String FOURTEEN_LITERAL = "14";
-  public static final String TWENTY_FIVE_LITERAL = "25";
-  public static final String ONE_LITERAL = "1";
   private static final String RESPONSE_HEADERS = "Input-inhibited: true\n" +
       "Cursor-position: (1,1)" + '\n' +
       "Field-positions: [(2,25)-(2,30)], [(4,25)-(4,30)], [(6,25)-(6,30)]\n";
   @Rule
   public JUnitSoftAssertions softly = new JUnitSoftAssertions();
+  @Parameter()
+  public String iRow;
+  @Parameter(1)
+  public String iColumn;
+  @Parameter(2)
+  public String offset;
+  @Parameter(3)
+  public String eRow;
+  @Parameter(4)
+  public String eColumn;
+  @Parameter(5)
+  public String variablePrefix;
+
   private JMeterContext context;
   private RTEExtractor rteExtractor;
-  private JMeterVariables vars;
 
   @BeforeClass
   public static void setupClass() {
@@ -65,26 +75,55 @@ public class RTEExtractorTest {
     return ret.build();
   }
 
+  @Parameters
+  public static Collection<Object[]> data() {
+    return Arrays.asList(new Object[][]{
+        {"100", "200", "1", null, null, VARIABLE_PREFIX},
+        {"2", "25", "10", null, null, VARIABLE_PREFIX},
+        {"2", "25", "0", "2", "25", VARIABLE_PREFIX},
+        {"2", "24", "1", "2", "25", VARIABLE_PREFIX},
+        {"2", "25", "1", "4", "25", VARIABLE_PREFIX},
+        {"2", "26", "1", "4", "25", VARIABLE_PREFIX},
+        {"2", "24", "2", "4", "25", VARIABLE_PREFIX},
+        {"2", "25", "2", "6", "25", VARIABLE_PREFIX},
+        {"4", "25", "2", null, null, VARIABLE_PREFIX},
+        {"2", "24", "-1", null, null, VARIABLE_PREFIX},
+        {"2", "30", "-1", null, null, VARIABLE_PREFIX},
+        {"2", "31", "-1", "2", "25", VARIABLE_PREFIX},
+        {"2", "31", "-2", null, null, VARIABLE_PREFIX},
+        {"4", "30", "-2", null, null, VARIABLE_PREFIX},
+        {"4", "31", "-2", "2", "25", VARIABLE_PREFIX},
+        {"2", "25", "0", null, null, StringUtils.EMPTY},
+    });
+  }
+
   @Before
   public void setup() {
     context = JMeterContextService.getContext();
     rteExtractor = new RTEExtractor();
     rteExtractor.setContext(context);
     context.setVariables(new JMeterVariables());
-    vars = context.getVariables();
   }
 
   @Test
   public void shouldExtractCursorPositionWhenCursorPositionSelected() {
     setUpExtractorForCursorPosition();
     rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo(ONE_LITERAL);
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo(ONE_LITERAL);
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("1");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("1");
   }
 
   private void setUpExtractorForCursorPosition() {
     rteExtractor.setPositionType(PositionType.CURSOR_POSITION);
     rteExtractor.setVariablePrefix(VARIABLE_PREFIX);
+  }
+
+  @Test
+  public void whenNextFieldPositionCases() {
+    setUpExtractorForNextFieldPosition(offset, iRow, iColumn, variablePrefix);
+    rteExtractor.process();
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo(eRow);
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo(eColumn);
   }
 
   private void setUpExtractorForNextFieldPosition(String offset, String row, String column,
@@ -94,133 +133,5 @@ public class RTEExtractorTest {
     rteExtractor.setOffset(offset);
     rteExtractor.setRow(row);
     rteExtractor.setColumn(column);
-  }
-
-  private void setUpExtractorForNextFieldPosition(String offset, String row, String column) {
-    setUpExtractorForNextFieldPosition(offset, row, column, VARIABLE_PREFIX);
-  }
-
-
-  @Test()
-  public void shouldAlertUserWhenNextFieldCursorWithCoordsBiggerThanScreenDimension() {
-    setUpExtractorForNextFieldPosition(ONE_LITERAL, "100", "30", VARIABLE_PREFIX);
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-
-  private void assertUnchangedJMeterVariables() {
-    assertThat(context.getVariables()).isEqualTo(vars);
-  }
-
-  @Test
-  public void shouldAlertUserWhenOffsetValueBiggerThanPossibleFieldsToSkip() {
-    setUpExtractorForNextFieldPosition("4", ONE_LITERAL, FOURTEEN_LITERAL, VARIABLE_PREFIX);
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-
-
-  @Test
-  public void shouldAlertUserWhenNoPrefixVariableNameSet() {
-    setUpExtractorForNextFieldPosition(ONE_LITERAL, ONE_LITERAL, FOURTEEN_LITERAL, "");
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-  
-  @Test
-  public void shouldGetTheGivenPositionWhenOffsetZero() {
-    setUpExtractorForNextFieldPosition("0", ONE_LITERAL, FOURTEEN_LITERAL, VARIABLE_PREFIX);
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo(ONE_LITERAL);
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo(FOURTEEN_LITERAL);
-  }
-
-  @Test
-  public void shouldGetNextFieldWhenOffsetOneAndPositionRightBeforeField() {
-    setUpExtractorForNextFieldPosition(ONE_LITERAL, "2", "24");
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo(
-        TWENTY_FIVE_LITERAL);
-  }
-
-  @Test
-  public void shouldGetNextFieldWhenOffsetOneAndPositionIsInField() {
-    setUpExtractorForNextFieldPosition(ONE_LITERAL, "2", TWENTY_FIVE_LITERAL);
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("4");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN))
-        .isEqualTo(TWENTY_FIVE_LITERAL);
-  }
-
-  @Test
-  public void shouldGetCurrentPositionField() {
-    setUpExtractorForNextFieldPosition(ONE_LITERAL, "2", "26");
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN))
-        .isEqualTo(TWENTY_FIVE_LITERAL);
-  }
-
-  @Test
-  public void shouldGetFieldSkippingOne() {
-    setUpExtractorForNextFieldPosition("2", "2", "24");
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("4");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN))
-        .isEqualTo(TWENTY_FIVE_LITERAL);
-  }
-
-  @Test
-  public void shouldNotifyUserWhenNoForwardFieldsToSkip() {
-    setUpExtractorForNextFieldPosition("2", "4", TWENTY_FIVE_LITERAL);
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-
-  @Test
-  public void shouldNotifyUserWhenNoBackwardFieldsToSkip() {
-    setUpExtractorForNextFieldPosition("-1", "2", "24");
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-
-  @Test
-  public void shouldNotifyUserWhenGivenPositionIsInTheEndOfFieldWhileBackwards() {
-    setUpExtractorForNextFieldPosition("-1", "2", "30");
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-
-  @Test
-  public void shouldGetFieldWhenOffsetIsMinusOne() {
-    setUpExtractorForNextFieldPosition("-1", "2", "31");
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN))
-        .isEqualTo(TWENTY_FIVE_LITERAL);
-  }
-
-  @Test
-  public void shouldNotifyUserOfSkippingInvalidTimesWhenNoFieldsBackwardsWhileOffsetNegativeTwo() {
-    setUpExtractorForNextFieldPosition("-2", "2", "31");
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-
-  @Test
-  public void shouldNotifyUserOfSkippingInvalidTimesWhenPositionIsEndOfFieldAndOffsetNegative() {
-    setUpExtractorForNextFieldPosition("-2", "2", "30");
-    rteExtractor.process();
-    assertUnchangedJMeterVariables();
-  }
-
-  @Test
-  public void shouldGetFieldWhenSkippingBackwardsOnceFromValidPosition() {
-    setUpExtractorForNextFieldPosition("-2", "4", "31");
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("2");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN))
-        .isEqualTo(TWENTY_FIVE_LITERAL);
   }
 }
