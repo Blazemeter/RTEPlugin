@@ -26,7 +26,7 @@ public class TerminalType {
     Matcher m = TERMINAL_TYPE_PATTERN.matcher(text);
     if (m.matches()) {
       return new TerminalType(m.group(1),
-          new Dimension(Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3))));
+          new Dimension(Integer.parseInt(m.group(3)), Integer.parseInt(m.group(2))));
     } else {
       throw new IllegalArgumentException("The text '" + text + "' does not match dimension format");
     }
