@@ -38,7 +38,7 @@ public class Screen {
     Screen ret = new Screen(new Dimension(width, height));
     int pos = 0;
     for (String part : screen.split("\n")) {
-      ret.addSegment(pos, part, new Dimension(width, height));
+      ret.addSegment(pos, part);
       pos += width;
     }
     return ret;
@@ -61,9 +61,9 @@ public class Screen {
         Element pre = (Element) pres.item(i);
         String segmentText = pre.getTextContent().replace("\n", "");
         if ("true".equals(pre.getAttribute("contenteditable"))) {
-          ret.addField(linealPosition, segmentText, screenSize);
+          ret.addField(linealPosition, segmentText);
         } else {
-          ret.addSegment(linealPosition, segmentText, screenSize);
+          ret.addSegment(linealPosition, segmentText);
         }
         linealPosition += segmentText.length();
       }
@@ -88,7 +88,7 @@ public class Screen {
     return segments;
   }
 
-  public void addSegment(int linealPosition, String text, Dimension size) {
+  public void addSegment(int linealPosition, String text) {
     segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, false, size));
   }
 
@@ -96,7 +96,7 @@ public class Screen {
     return new Position(linealPosition / size.width + 1, linealPosition % size.width + 1);
   }
 
-  public void addField(int linealPosition, String text, Dimension size) {
+  public void addField(int linealPosition, String text) {
     segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true, size));
   }
 

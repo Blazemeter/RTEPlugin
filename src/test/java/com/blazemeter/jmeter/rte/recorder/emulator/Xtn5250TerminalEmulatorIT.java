@@ -71,14 +71,14 @@ public class Xtn5250TerminalEmulatorIT {
     Screen screen = new Screen(screenSize);
     int segmentPosition = 0;
     screen.addSegment(segmentPosition,
-        completeLine("*****************************************", screenSize.width), screenSize);
+        completeLine("*****************************************", screenSize.width));
     segmentPosition += screenSize.width;
-    screen.addField(segmentPosition, completeLine(text, screenSize.width), screenSize);
+    screen.addField(segmentPosition, completeLine(text, screenSize.width));
     segmentPosition += screenSize.width;
     for (String lineText : Arrays
         .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
             "*****************************************")) {
-      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width), screenSize);
+      screen.addSegment(segmentPosition, completeLine(lineText, screenSize.width));
       segmentPosition += screenSize.width;
     }
     return screen;
@@ -111,12 +111,12 @@ public class Xtn5250TerminalEmulatorIT {
   }
   
   private static int addScreenSegment(Screen screen, int linearPosition, String name) {
-    screen.addSegment(linearPosition, name, screen.getSize());
+    screen.addSegment(linearPosition, name);
     return linearPosition + name.length();
   }
 
   private static int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
-    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght), screen.getSize());
+    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
     return  linearPosition + fieldLenght;
   }
 

@@ -258,12 +258,12 @@ public class Tn3270Client extends BaseProtocolClient {
     }
     int segmentEndPosition = lastNonBlankPosition + 1;
     if (segmentEndPosition <= 0) {
-      ret.addField(0, screenText, size);
+      ret.addField(0, screenText);
     } else if (segmentEndPosition >= screenText.length()) {
-      ret.addSegment(0, screenText, size);
+      ret.addSegment(0, screenText);
     } else {
-      ret.addSegment(0, screenText.substring(0, segmentEndPosition + 1), size);
-      ret.addField(segmentEndPosition + 1, screenText.substring(segmentEndPosition + 1), size);
+      ret.addSegment(0, screenText.substring(0, segmentEndPosition + 1));
+      ret.addField(segmentEndPosition + 1, screenText.substring(segmentEndPosition + 1));
     }
     return ret;
   }
@@ -276,11 +276,11 @@ public class Tn3270Client extends BaseProtocolClient {
           (f.getFirstLocation() != 0 ? f.getFirstLocation() : size.height * size.width) - 1;
       String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
       if (f.isProtected()) {
-        ret.addSegment(linealPosition, " " + text, size);
+        ret.addSegment(linealPosition, " " + text);
       } else {
-        ret.addSegment(linealPosition, " ", size);
+        ret.addSegment(linealPosition, " ");
         if (linealPosition + 1 < size.height * size.width) {
-          ret.addField(linealPosition + 1, text, size);
+          ret.addField(linealPosition + 1, text);
         }
       }
     }

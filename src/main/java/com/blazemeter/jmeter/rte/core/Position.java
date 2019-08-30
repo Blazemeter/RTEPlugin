@@ -65,9 +65,9 @@ public class Position {
   }
 
   public boolean isInside(Dimension screenDimension) {
-    return (column <= screenDimension.height && column >= 1) && (
-        row <= screenDimension.width
-            && row >= 1);
+    return (row <= screenDimension.height && row >= 1) && (
+        column <= screenDimension.width
+            && column >= 1);
   }
 
   public int compare(Object o) {
