@@ -9,7 +9,6 @@ import com.blazemeter.jmeter.rte.sampler.Action;
 import java.awt.Dimension;
 import java.util.Arrays;
 import java.util.Collection;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
@@ -36,17 +35,19 @@ public class RTEExtractorTest {
   @Rule
   public JUnitSoftAssertions softly = new JUnitSoftAssertions();
   @Parameter()
-  public String iRow;
-  @Parameter(1)
-  public String iColumn;
-  @Parameter(2)
-  public String offset;
-  @Parameter(3)
-  public String eRow;
-  @Parameter(4)
-  public String eColumn;
-  @Parameter(5)
   public String variablePrefix;
+  @Parameter(1)
+  public PositionType positionType;
+  @Parameter(2)
+  public String baseRow;
+  @Parameter(3)
+  public String baseColumn;
+  @Parameter(4)
+  public String offset;
+  @Parameter(5)
+  public String extractedRow;
+  @Parameter(6)
+  public String extractedColumn;
 
   private JMeterContext context;
   private RTEExtractor rteExtractor;
@@ -78,22 +79,23 @@ public class RTEExtractorTest {
   @Parameters
   public static Collection<Object[]> data() {
     return Arrays.asList(new Object[][]{
-        {"100", "200", "1", null, null, VARIABLE_PREFIX},
-        {"2", "25", "10", null, null, VARIABLE_PREFIX},
-        {"2", "25", "0", "2", "25", VARIABLE_PREFIX},
-        {"2", "24", "1", "2", "25", VARIABLE_PREFIX},
-        {"2", "25", "1", "4", "25", VARIABLE_PREFIX},
-        {"2", "26", "1", "4", "25", VARIABLE_PREFIX},
-        {"2", "24", "2", "4", "25", VARIABLE_PREFIX},
-        {"2", "25", "2", "6", "25", VARIABLE_PREFIX},
-        {"4", "25", "2", null, null, VARIABLE_PREFIX},
-        {"2", "24", "-1", null, null, VARIABLE_PREFIX},
-        {"2", "30", "-1", null, null, VARIABLE_PREFIX},
-        {"2", "31", "-1", "2", "25", VARIABLE_PREFIX},
-        {"2", "31", "-2", null, null, VARIABLE_PREFIX},
-        {"4", "30", "-2", null, null, VARIABLE_PREFIX},
-        {"4", "31", "-2", "2", "25", VARIABLE_PREFIX},
-        {"2", "25", "0", null, null, StringUtils.EMPTY},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "100", "200", "1", null, null},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "25", "10", null, null},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "25", "0", "2", "25"},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "24", "1", "2", "25"},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "25", "1", "4", "25"},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "26", "1", "4", "25"},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "24", "2", "4", "25"},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "25", "2", "6", "25"},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "4", "25", "2", null, null},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "24", "-1", null, null},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "30", "-1", null, null},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "31", "-1", "2", "25"},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "2", "31", "-2", null, null},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "4", "30", "-2", null, null},
+        {VARIABLE_PREFIX, PositionType.NEXT_FIELD_POSITION, "4", "31", "-2", "2", "25"},
+        {"", PositionType.NEXT_FIELD_POSITION, "2", "25", "0", null, null},
+        {VARIABLE_PREFIX, PositionType.CURSOR_POSITION, null, null, null, "1", "1"}
     });
   }
 
@@ -106,24 +108,20 @@ public class RTEExtractorTest {
   }
 
   @Test
-  public void shouldExtractCursorPositionWhenCursorPositionSelected() {
-    setUpExtractorForCursorPosition();
+  public void whenNextFieldPositionCases() {
+    if(positionType.equals(PositionType.NEXT_FIELD_POSITION)){
+    setUpExtractorForNextFieldPosition(offset, baseRow, baseColumn, variablePrefix);
+    } else {
+      setUpExtractorForCursorPosition();
+    }
     rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo("1");
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo("1");
+    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo(extractedRow);
+    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo(extractedColumn);
   }
 
   private void setUpExtractorForCursorPosition() {
     rteExtractor.setPositionType(PositionType.CURSOR_POSITION);
     rteExtractor.setVariablePrefix(VARIABLE_PREFIX);
-  }
-
-  @Test
-  public void whenNextFieldPositionCases() {
-    setUpExtractorForNextFieldPosition(offset, iRow, iColumn, variablePrefix);
-    rteExtractor.process();
-    softly.assertThat(context.getVariables().get(POSITION_VAR_ROW)).isEqualTo(eRow);
-    softly.assertThat(context.getVariables().get(POSITION_VAR_COLUMN)).isEqualTo(eColumn);
   }
 
   private void setUpExtractorForNextFieldPosition(String offset, String row, String column,

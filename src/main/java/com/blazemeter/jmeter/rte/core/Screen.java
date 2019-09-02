@@ -139,7 +139,7 @@ public class Screen {
   public Screen withInvisibleCharsToSpaces() {
     Screen ret = new Screen(size);
     for (Segment s : segments) {
-      ret.segments.add(s.withInvisibleCharsToSpaces(size));
+      ret.segments.add(s.withInvisibleCharsToSpaces());
     }
     return ret;
   }
@@ -235,6 +235,12 @@ public class Screen {
           calculateEndPosition(screenSize.width, position));
     }
 
+    private Segment(PositionRange positionRange, String text, boolean editable) {
+      this.positionRange = positionRange;
+      this.text = text;
+      this.editable = editable;
+    }
+
     public Position getStartPosition() {
       return positionRange.getStart();
     }
@@ -287,9 +293,8 @@ public class Screen {
       return str.replace('\u0000', ' ');
     }
 
-    private Segment withInvisibleCharsToSpaces(Dimension screenSize) {
-      return new Segment(positionRange.getStart(), convertInvisibleCharsToSpaces(text), editable,
-          screenSize);
+    private Segment withInvisibleCharsToSpaces() {
+      return new Segment(positionRange, convertInvisibleCharsToSpaces(text), editable);
     }
 
     @Override
