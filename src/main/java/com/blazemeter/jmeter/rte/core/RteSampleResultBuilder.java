@@ -1,7 +1,9 @@
 package com.blazemeter.jmeter.rte.core;
 
+import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.sampler.Action;
+import com.helger.commons.annotation.VisibleForTesting;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +20,11 @@ interface.
  */
 public class RteSampleResultBuilder {
 
+  public static final String FIELD_POSITION_SEPARATOR = ", ";
+  public static final String HEADERS_TERMINAL_TYPE = "Terminal-type: ";
+  public static final String CURSOR_POSITION_HEADER = "Cursor-position: ";
+  public static final String FIELDS_POSITION_HEADER = "Field-positions: ";
+  public static final String HEADERS_SEPARATOR = "\n";
   private SampleResult result;
   private String server;
   private int port;
@@ -32,10 +39,22 @@ public class RteSampleResultBuilder {
   private Position cursorPosition;
   private boolean soundedAlarm;
   private Screen screen;
+  private String responseHeaders;
 
   public RteSampleResultBuilder() {
     result = new SampleResult();
     result.sampleStart();
+  }
+
+  @VisibleForTesting
+  public RteSampleResultBuilder(Position cursorPosition, Screen screen, String responseHeaders,
+      TerminalType terminalType) {
+    result = new SampleResult();
+    result.sampleStart();
+    this.screen = screen;
+    this.cursorPosition = cursorPosition;
+    this.responseHeaders = responseHeaders;
+    this.terminalType = terminalType;
   }
 
   public long getCurrentTimeInMillis() {
@@ -152,7 +171,8 @@ public class RteSampleResultBuilder {
   public SampleResult build() {
     result.setRequestHeaders(buildRequestHeaders());
     result.setSamplerData(buildSamplerData());
-    result.setResponseHeaders(buildResponseHeaders());
+    responseHeaders = responseHeaders == null ? buildResponseHeaders() : responseHeaders;
+    result.setResponseHeaders(responseHeaders);
     result.setDataType(SampleResult.TEXT);
     if (result.getResponseDataAsString().isEmpty()) {
       result.setResponseData(screen != null ? screen.getText() : "", StandardCharsets.UTF_8.name());
@@ -164,7 +184,7 @@ public class RteSampleResultBuilder {
     return "Server: " + server + "\n" +
         "Port: " + port + "\n" +
         "Protocol: " + protocol + "\n" +
-        "Terminal-type: " + terminalType + "\n" +
+        HEADERS_TERMINAL_TYPE + terminalType + "\n" +
         "Security: " + sslType + "\n" +
         "Action: " + action + "\n" +
         (inputInhibitedRequest != null ? "Input-inhibited: " + inputInhibitedRequest + "\n" : "");
@@ -186,10 +206,25 @@ public class RteSampleResultBuilder {
     if (action == Action.DISCONNECT) {
       return "";
     }
-    return "Input-inhibited: " + inputInhibitedResponse + "\n" +
-        "Cursor-position: " + (cursorPosition != null ? cursorPosition.getRow() + ","
-        + cursorPosition.getColumn() : "") +
-        (soundedAlarm ? "\nSound-Alarm: true" : "");
+
+    String fieldsPositions = getFieldsPositions();
+    return "Input-inhibited: " + inputInhibitedResponse + HEADERS_SEPARATOR +
+        CURSOR_POSITION_HEADER + (cursorPosition != null ? cursorPosition.toString() : "")
+        + HEADERS_SEPARATOR +
+        (soundedAlarm ? "Sound-Alarm: true" + HEADERS_SEPARATOR : "") +
+        (!fieldsPositions.isEmpty() ? FIELDS_POSITION_HEADER
+            + fieldsPositions + HEADERS_SEPARATOR : "");
+
   }
 
+  private String getFieldsPositions() {
+    if (screen == null) {
+      return "";
+    }
+    return screen.getSegments().stream()
+        .filter(Segment::isEditable)
+        .map(s -> s.getPositionRange().toString())
+        .collect(Collectors.joining(", "));
+
+  }
 }

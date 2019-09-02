@@ -18,9 +18,10 @@ public class ScreenTest {
   private final int SCREEN_WIDTH = 5;
   private final int SCREEN_HEIGHT = 2;
   private final String WHITESPACES_FILLED_ROW = StringUtils.repeat(' ', (SCREEN_WIDTH));
+  private final Dimension SCREEN_DIMENSION = new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT);
 
   private Screen buildScreen() {
-    return new Screen(new Dimension(SCREEN_WIDTH, SCREEN_HEIGHT));
+    return new Screen(new Dimension(SCREEN_DIMENSION));
   }
 
   @Test
@@ -84,10 +85,10 @@ public class ScreenTest {
     screen.addField(SCREEN_WIDTH * 2 + 4, "F2");
 
     List<Segment> expectedSegments = new ArrayList<>();
-    expectedSegments.add(new Screen.Segment(1, 1, "S1: ", false));
-    expectedSegments.add(new Screen.Segment(1, 5, "F1", true));
-    expectedSegments.add(new Screen.Segment(2, 1, "S2: ", false));
-    expectedSegments.add(new Screen.Segment(2, 5, "F2", true));
+    expectedSegments.add(new Screen.Segment(new Position(1, 1), "S1: ", false, SCREEN_DIMENSION));
+    expectedSegments.add(new Screen.Segment(new Position(1, 5), "F1", true, SCREEN_DIMENSION));
+    expectedSegments.add(new Screen.Segment(new Position(2, 1), "S2: ", false, SCREEN_DIMENSION));
+    expectedSegments.add(new Screen.Segment(new Position(2, 5), "F2", true, SCREEN_DIMENSION));
 
     assertThat(screen.getSegments()).isEqualTo(expectedSegments);
   }
