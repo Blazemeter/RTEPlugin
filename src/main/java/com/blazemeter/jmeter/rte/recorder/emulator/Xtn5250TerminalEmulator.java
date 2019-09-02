@@ -27,10 +27,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import net.infordata.em.crt5250.XI5250Crt;
 import net.infordata.em.crt5250.XI5250Field;
 import org.apache.jmeter.util.JMeterUtils;
@@ -95,6 +99,9 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
   private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
   private JButton assertionButton = createIconButton("assertionButton", "assertion.png");
+  private JLabel sampleNameLabel = new JLabel("Insert sample name: ");
+  private JTextField sampleNameField = SwingUtils
+      .createComponent("sampleNameField", new JTextField());
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
   private boolean stopping;
@@ -143,8 +150,11 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JPanel createToolsPanel() {
     JPanel toolsPanel = new JPanel();
     GroupLayout layout = new GroupLayout(toolsPanel);
+    layout.setAutoCreateContainerGaps(true);
     toolsPanel.setLayout(layout);
-
+    JPanel sampleNamePanel = buildSampleNamePanel();
+    JPanel fillPanel = new JPanel();
+    
     copyButton.setToolTipText("Copy");
     pasteButton.setToolTipText("Paste");
     labelButton.setToolTipText("Input by label");
@@ -155,15 +165,42 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         .addComponent(pasteButton)
         .addComponent(labelButton)
         .addComponent(waitForTextButton)
-        .addComponent(assertionButton));
-    layout.setVerticalGroup(layout.createParallelGroup()
+        .addComponent(assertionButton)
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(fillPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            Short.MAX_VALUE)
+        .addGroup(layout.createParallelGroup()
+            .addComponent(sampleNamePanel)
+        )
+    );
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+        .addComponent(sampleNamePanel, Alignment.CENTER)
         .addComponent(copyButton)
         .addComponent(pasteButton)
         .addComponent(labelButton)
         .addComponent(waitForTextButton)
-        .addComponent(assertionButton));
-
+        .addComponent(assertionButton)
+        .addComponent(fillPanel)
+    );
     return toolsPanel;
+  }
+
+  private JPanel buildSampleNamePanel() {
+    JPanel sampleNamePanel = new JPanel();
+    GroupLayout layout = new GroupLayout(sampleNamePanel);
+    sampleNamePanel.setLayout(layout);
+    sampleNameField.setFont(new Font("SansSerif", Font.PLAIN, 11));
+    layout.setHorizontalGroup(layout.createSequentialGroup()
+        .addComponent(sampleNameLabel)
+        .addPreferredGap(ComponentPlacement.RELATED)
+        .addComponent(sampleNameField, GroupLayout.PREFERRED_SIZE, 150,
+            GroupLayout.PREFERRED_SIZE));
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+        .addComponent(sampleNameLabel)
+        .addComponent(sampleNameField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+
+    return sampleNamePanel;
   }
 
   @Override
@@ -209,7 +246,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   @Override
-  public synchronized void setScreen(Screen screen) {
+  public synchronized void setScreen(Screen screen, String screenName) {
     Dimension screenSize = screen.getSize();
     setScreenSize(screenSize.width, screenSize.height);
     xi5250Crt.clear();
@@ -226,6 +263,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       }
     }
     xi5250Crt.initAllFields();
+
+    sampleNameField.setText(screenName);
   }
 
   @VisibleForTesting
@@ -392,7 +431,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
               listener
                   .onAssertionScreen(assertionName, pattern.getPattern());
             }
-          } 
+          }
         } else {
           warnUserOfNotScreenSelectedArea("assertion");
         }
@@ -448,7 +487,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           if (isAttentionKeyValid(attentionKey)) {
             List<Input> fields = getInputFields();
             for (TerminalEmulatorListener listener : terminalEmulatorListeners) {
-              listener.onAttentionKey(attentionKey, fields);
+              listener.onAttentionKey(attentionKey, fields, sampleNameField.getText());
             }
           } else {
             showUserMessage(attentionKey + " not supported for current protocol");
