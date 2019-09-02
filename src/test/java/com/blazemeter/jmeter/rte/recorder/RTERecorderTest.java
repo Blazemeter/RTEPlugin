@@ -80,6 +80,7 @@ public class RTERecorderTest {
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(CURSOR_POSITION, "testusr"));
   public static final String SEND_INPUT_1 = "bzm-RTE-SEND_INPUT-1";
+  public static final String SENDING_USER = "SENDING_USER";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private TestElement testStateListener;
@@ -637,12 +638,12 @@ public class RTERecorderTest {
   public void shouldAddSamplerToTargetControllerNodeWhenOnAttentionKey()
       throws Exception {
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "SENDING_USER");
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, SENDING_USER);
     rteRecorder.onRecordingStop();
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(treeModel, times(4)).addComponent(argument.capture(),
         eq(treeNode));
-    assertThat(argument.getAllValues().get(2).getName()).isEqualTo("SENDING_USER");
+    assertThat(argument.getAllValues().get(2).getName()).isEqualTo(SENDING_USER);
   }
 
   @Test

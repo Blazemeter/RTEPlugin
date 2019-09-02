@@ -471,7 +471,8 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   private void setSampleName(String name) {
-    JTextComponentFixture field = frame.textBox(SAMPLE_NAME_FIELD);
+      JTextComponentFixture field = frame.textBox(SAMPLE_NAME_FIELD);
+    // target needed in order to effectively iterations with `listener` mock.
     field.target().setText(name);
   }
 
