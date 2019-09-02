@@ -240,7 +240,8 @@ public class Tn5250Client extends BaseProtocolClient {
     for (XI5250Field f : client.getFields()) {
       int fieldLinealPosition = getFieldLinealPosition(f, screenSize);
       if (fieldLinealPosition > textStartPos) {
-        ret.addSegment(textStartPos, screenText.substring(textStartPos, fieldLinealPosition));
+        ret.addSegment(textStartPos, screenText.substring(textStartPos, fieldLinealPosition)
+        );
       }
       ret.addField(fieldLinealPosition, f.getString());
       textStartPos = fieldLinealPosition + f.getString().length();
