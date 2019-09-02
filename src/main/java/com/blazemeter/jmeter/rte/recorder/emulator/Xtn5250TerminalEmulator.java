@@ -99,7 +99,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private JButton pasteButton = createIconButton("pasteButton", "paste.png");
   private JButton labelButton = createIconButton("labelButton", "inputByLabel.png");
   private JButton assertionButton = createIconButton("assertionButton", "assertion.png");
-  private JLabel sampleNameLabel = new JLabel("Insert sample name: ");
+  private JLabel sampleNameLabel = new JLabel("Sample name: ");
   private JTextField sampleNameField = SwingUtils
       .createComponent("sampleNameField", new JTextField());
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();

@@ -21,7 +21,7 @@ public abstract class InputTestElement extends AbstractTestElement implements Se
     We keep support for old property name to be backwards compatible with .jmx of previous plugin
     versions
      */
-    String val = getPropertyAsString(INPUT, null);
+    String val = getPropertyAsString(INPUT, "");
     return val == null ? getPropertyAsString("CoordInputRowGUI.input") : val;
   }
 
