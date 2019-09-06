@@ -61,7 +61,11 @@ public class Screen {
         Element pre = (Element) pres.item(i);
         String segmentText = pre.getTextContent().replace("\n", "");
         if ("true".equals(pre.getAttribute("contenteditable"))) {
-          ret.addField(linealPosition, segmentText, false);
+          if ("true".equals(pre.getAttribute("secretcontent"))) {
+            ret.addField(linealPosition, segmentText, true);
+          } else {
+            ret.addField(linealPosition, segmentText, false);
+          }
         } else {
           ret.addSegment(linealPosition, segmentText);
         }
@@ -184,6 +188,9 @@ public class Screen {
       Element pre = appendHtmlChild("pre", body, doc);
       if (segment.isEditable()) {
         pre.setAttribute("contenteditable", "true");
+      }
+      if (segment.isSecret()) {
+        pre.setAttribute("secretcontent", "true");
       }
       pre.setTextContent(segment.getWrappedText(size.width));
     }
