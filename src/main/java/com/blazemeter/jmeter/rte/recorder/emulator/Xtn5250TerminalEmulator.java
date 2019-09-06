@@ -18,6 +18,7 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -45,6 +46,8 @@ import org.slf4j.LoggerFactory;
 
 public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator {
 
+  public static final int SECRET_CREDENTIAL_ATTR = 39;
+  public static final int DEFAULT_ATTR = 32;
   private static final Map<KeyEventMap, AttentionKey> KEY_EVENTS =
       new HashMap<KeyEventMap, AttentionKey>() {
         {
@@ -89,7 +92,6 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_PAGE_UP), AttentionKey.PA3);
         }
       };
-
   private static final String TITLE = "Recorder";
   private static final Color BACKGROUND = Color.black;
   private static final int DEFAULT_FONT_SIZE = 14;
@@ -104,6 +106,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       .createComponent("sampleNameField", new JTextField());
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
+  private boolean credentialStatusVisibility = true;
   private boolean stopping;
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
@@ -120,14 +123,15 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     add(createToolsPanel(), BorderLayout.NORTH);
     add(xi5250Crt, BorderLayout.CENTER);
     add(statusPanel, BorderLayout.SOUTH);
-    addWindowListener(new WindowAdapter() {
 
+    addWindowListener(new WindowAdapter() {
       @Override
       public void windowOpened(WindowEvent e) {
         Dimension testSize = calculateCrtDefaultSize();
         xi5250Crt.setSize(testSize.width, testSize.height);
         pack();
         xi5250Crt.requestFocus();
+
       }
 
       @Override
@@ -141,10 +145,54 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       }
     });
     setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    statusPanel.getShowCredentials().addMouseListener(buildOnShowCredentials());
   }
 
   private static JButton createIconButton(String name, String iconResource) {
     return SwingUtils.createComponent(name, new ThemedIconButton(iconResource));
+  }
+
+  private MouseListener buildOnShowCredentials() {
+    return new MouseListener() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        credentialStatusVisibility = !credentialStatusVisibility;
+        String currentStatus = credentialStatusVisibility ? "hidden" : "visible";
+        LOG.info("Credentials are now {}", currentStatus);
+        statusPanel.updateShowCredentials(credentialStatusVisibility);
+        updateFieldAttribute();
+      }
+
+      @Override
+      public void mousePressed(MouseEvent e) {
+
+      }
+
+      @Override
+      public void mouseReleased(MouseEvent e) {
+
+      }
+
+      @Override
+      public void mouseEntered(MouseEvent e) {
+
+      }
+
+      @Override
+      public void mouseExited(MouseEvent e) {
+
+      }
+    };
+  }
+
+  private void updateFieldAttribute() {
+    for (XI5250Field field : xi5250Crt.getFields()) {
+      int attr = credentialStatusVisibility ? ((ScreenField) field).originalAttr : DEFAULT_ATTR;
+      xi5250Crt
+          .drawString("\u0001", field.getCol() - 1,
+              field.getRow(), attr);
+      field.init();
+    }
   }
 
   private JPanel createToolsPanel() {
@@ -154,7 +202,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     toolsPanel.setLayout(layout);
     JPanel sampleNamePanel = buildSampleNamePanel();
     JPanel fillPanel = new JPanel();
-    
+
     copyButton.setToolTipText("Copy");
     pasteButton.setToolTipText("Paste");
     labelButton.setToolTipText("Input by label");
@@ -254,20 +302,25 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     for (Screen.Segment s : screen.getSegments()) {
       Position startPosition = s.getStartPosition();
       if (s.isEditable()) {
-        XI5250Field xi5250Field = new XI5250Field(xi5250Crt, startPosition.getColumn() - 1,
-            startPosition.getRow() - 1,
-            s.getText().length(), 32);
+        int attr =
+            credentialStatusVisibility && s.isSecret() ? SECRET_CREDENTIAL_ATTR : DEFAULT_ATTR;
+        xi5250Crt
+            .drawString("\u0001", startPosition.getColumn() - 2,
+                startPosition.getRow() - 1, attr);
+        XI5250Field xi5250Field = new ScreenField(xi5250Crt, startPosition.getColumn() - 1,
+            startPosition.getRow() - 1, s.getText().length(), attr);
+
         xi5250Field.setString(s.getText());
         xi5250Field.resetMDT();
+
         xi5250Crt.addField(xi5250Field);
       } else {
         xi5250Crt
             .drawString(s.getText(), startPosition.getColumn() - 1,
-                startPosition.getRow() - 1);
+                startPosition.getRow() - 1, DEFAULT_ATTR);
       }
     }
     xi5250Crt.initAllFields();
-
     sampleNameField.setText(screenName);
   }
 
@@ -335,6 +388,16 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       lastNotNull--;
     }
     return str.substring(firstNotNull, lastNotNull + 1);
+  }
+
+  private static class ScreenField extends XI5250Field {
+
+    private int originalAttr;
+
+    private ScreenField(XI5250Crt aCrt, int aCol, int aRow, int aLen, int aAttr) {
+      super(aCrt, aCol, aRow, aLen, aAttr);
+      originalAttr = aAttr;
+    }
   }
 
   private static class KeyEventMap {
