@@ -61,7 +61,7 @@ public class Screen {
         Element pre = (Element) pres.item(i);
         String segmentText = pre.getTextContent().replace("\n", "");
         if ("true".equals(pre.getAttribute("contenteditable"))) {
-          ret.addField(linealPosition, segmentText);
+          ret.addField(linealPosition, segmentText, false);
         } else {
           ret.addSegment(linealPosition, segmentText);
         }
@@ -80,6 +80,10 @@ public class Screen {
     return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
   }
 
+  private Position buildPositionFromLinearPosition(int linealPosition) {
+    return new Position(linealPosition / size.width + 1, linealPosition % size.width + 1);
+  }
+
   public Dimension getSize() {
     return size;
   }
@@ -89,15 +93,13 @@ public class Screen {
   }
 
   public void addSegment(int linealPosition, String text) {
-    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, false, size));
+    segments.add(
+        new Segment(buildPositionFromLinearPosition(linealPosition), text, false, false, size));
   }
 
-  private Position buildPositionFromLinearPosition(int linealPosition) {
-    return new Position(linealPosition / size.width + 1, linealPosition % size.width + 1);
-  }
-
-  public void addField(int linealPosition, String text) {
-    segments.add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true, size));
+  public void addField(int linealPosition, String text, boolean isSecret) {
+    segments.add(
+        new Segment(buildPositionFromLinearPosition(linealPosition), text, true, isSecret, size));
   }
 
   public String getText() {
@@ -125,7 +127,7 @@ public class Screen {
 
   private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
     return new Segment(buildPositionFromLinearPosition(firstPosition),
-        buildBlankString(lastPosition - firstPosition), false, size);
+        buildBlankString(lastPosition - firstPosition), false, false, size);
   }
 
   private String buildBlankString(int length) {
@@ -224,21 +226,25 @@ public class Screen {
 
   public static class Segment {
 
-    private final String text;
     private final boolean editable;
+    private final boolean secret;
+    private final String text;
     private PositionRange positionRange;
 
-    public Segment(Position position, String text, boolean editable, Dimension screenSize) {
+    public Segment(Position position, String text, boolean editable, boolean secret,
+        Dimension screenSize) {
       this.text = text;
       this.editable = editable;
+      this.secret = secret;
       this.positionRange = new PositionRange(position,
           calculateEndPosition(screenSize.width, position));
     }
 
-    private Segment(PositionRange positionRange, String text, boolean editable) {
+    private Segment(PositionRange positionRange, String text, boolean editable, boolean secret) {
       this.positionRange = positionRange;
       this.text = text;
       this.editable = editable;
+      this.secret = secret;
     }
 
     public Position getStartPosition() {
@@ -259,6 +265,10 @@ public class Screen {
 
     public Position getEndPosition() {
       return positionRange.getEnd();
+    }
+
+    public boolean isSecret() {
+      return secret;
     }
 
     private Position calculateEndPosition(int width, Position startPosition) {
@@ -294,7 +304,7 @@ public class Screen {
     }
 
     private Segment withInvisibleCharsToSpaces() {
-      return new Segment(positionRange, convertInvisibleCharsToSpaces(text), editable);
+      return new Segment(positionRange, convertInvisibleCharsToSpaces(text), editable, secret);
     }
 
     @Override
@@ -309,7 +319,8 @@ public class Screen {
       Segment segment = (Segment) o;
       return positionRange.getStart().equals(((Segment) o).positionRange.getStart()) &&
           text.equals(segment.text) &&
-          editable == segment.editable;
+          editable == segment.editable &&
+          secret == segment.secret;
     }
 
     @Override
@@ -324,6 +335,7 @@ public class Screen {
           "End position=" + positionRange.getEnd() +
           ", text='" + text + '\'' +
           ", editable=" + editable +
+          ", secret=" + secret +
           '}';
     }
 

@@ -49,7 +49,7 @@ public class ScreenTest {
     String segmentText = "Name: ";
     screen.addSegment(0, segmentText);
     String fieldText = "TESTUSR";
-    screen.addField(segmentText.length(), fieldText);
+    screen.addField(segmentText.length(), fieldText, false);
     assertThat(screen.getText())
         .isEqualTo(buildExpectedString(segmentText + fieldText, SCREEN_WIDTH * 3, SCREEN_HEIGHT));
 
@@ -80,15 +80,19 @@ public class ScreenTest {
   public void shouldGetAddedFieldsAndSegmentsWhenGetSegments() {
     Screen screen = new Screen(new Dimension(SCREEN_WIDTH * 2, SCREEN_HEIGHT));
     screen.addSegment(0, "S1: ");
-    screen.addField(4, "F1");
+    screen.addField(4, "F1", false);
     screen.addSegment(SCREEN_WIDTH * 2, "S2: ");
-    screen.addField(SCREEN_WIDTH * 2 + 4, "F2");
+    screen.addField(SCREEN_WIDTH * 2 + 4, "F2", false);
 
     List<Segment> expectedSegments = new ArrayList<>();
-    expectedSegments.add(new Screen.Segment(new Position(1, 1), "S1: ", false, SCREEN_DIMENSION));
-    expectedSegments.add(new Screen.Segment(new Position(1, 5), "F1", true, SCREEN_DIMENSION));
-    expectedSegments.add(new Screen.Segment(new Position(2, 1), "S2: ", false, SCREEN_DIMENSION));
-    expectedSegments.add(new Screen.Segment(new Position(2, 5), "F2", true, SCREEN_DIMENSION));
+    expectedSegments
+        .add(new Screen.Segment(new Position(1, 1), "S1: ", false, false, SCREEN_DIMENSION));
+    expectedSegments
+        .add(new Screen.Segment(new Position(1, 5), "F1", true, false, SCREEN_DIMENSION));
+    expectedSegments
+        .add(new Screen.Segment(new Position(2, 1), "S2: ", false, false, SCREEN_DIMENSION));
+    expectedSegments
+        .add(new Screen.Segment(new Position(2, 5), "F2", true, false, SCREEN_DIMENSION));
 
     assertThat(screen.getSegments()).isEqualTo(expectedSegments);
   }
@@ -134,7 +138,7 @@ public class ScreenTest {
     Screen expectedScreen = new Screen(new Dimension(10, 2));
     String initialSegmentText = "  Welcome User: ";
     expectedScreen.addSegment(0, initialSegmentText);
-    expectedScreen.addField(initialSegmentText.length(), "USR ");
+    expectedScreen.addField(initialSegmentText.length(), "USR ", false);
     return expectedScreen;
   }
 

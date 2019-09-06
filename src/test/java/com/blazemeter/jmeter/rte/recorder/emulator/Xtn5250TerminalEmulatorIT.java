@@ -52,6 +52,7 @@ public class Xtn5250TerminalEmulatorIT {
   public static final String SAMPLE_NAME_FIELD = "sampleNameField";
   public static final String ASSERTION_TEST_LITERAL = "Assertion Test";
   public static final String CONNECTING_LITERAL = "CONNECTING";
+  public static final String DEFAULT_SAMPLE_NAME_INPUT_VALUE = "DEFAULT_INPUT_VALUE";
   private static final long PAUSE_TIMEOUT = 10000;
   private static final int COLUMNS = 80;
   private static final int ROWS = 24;
@@ -62,7 +63,6 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
   private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
   private static final String ASSERTION_BUTTON = "assertionButton";
-  public static final String DEFAULT_SAMPLE_NAME_INPUT_VALUE = "DEFAULT_INPUT_VALUE";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
@@ -78,7 +78,7 @@ public class Xtn5250TerminalEmulatorIT {
     screen.addSegment(segmentPosition,
         completeLine("*****************************************", screenSize.width));
     segmentPosition += screenSize.width;
-    screen.addField(segmentPosition, completeLine(text, screenSize.width));
+    screen.addField(segmentPosition, completeLine(text, screenSize.width), false);
     segmentPosition += screenSize.width;
     for (String lineText : Arrays
         .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
@@ -123,7 +123,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   private int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
-    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
+    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght), false);
     return linearPosition + fieldLenght;
   }
 
@@ -471,7 +471,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   private void setSampleName(String name) {
-      JTextComponentFixture field = frame.textBox(SAMPLE_NAME_FIELD);
+    JTextComponentFixture field = frame.textBox(SAMPLE_NAME_FIELD);
     // target needed in order to effectively iterations with `listener` mock.
     field.target().setText(name);
   }

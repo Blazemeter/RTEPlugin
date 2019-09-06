@@ -12,6 +12,7 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
@@ -28,9 +29,12 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.RteProtocolClientIT;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
@@ -45,6 +49,29 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Override
   protected TerminalType getDefaultTerminalType() {
     return new Tn3270Client().getDefaultTerminalType();
+  }
+
+  @Override
+  protected List<Segment> buildExpectedFields() {
+    return Arrays.asList(
+        new Segment(new Position(8, 20), buildBlankStr(8), true, true, SCREEN_SIZE),
+        new Segment(new Position(8, 71), buildBlankStr(8), true, true, SCREEN_SIZE),
+        new Segment(new Position(10, 20), "PROC394 ", true, false, SCREEN_SIZE),
+        new Segment(new Position(10, 71), buildBlankStr(8), true, false, SCREEN_SIZE),
+        new Segment(new Position(12, 20), "1000000" + buildBlankStr(33), true, false, SCREEN_SIZE),
+        new Segment(new Position(14, 20), "4096" + buildBlankStr(3), true, false, SCREEN_SIZE),
+        new Segment(new Position(16, 20), buildBlankStr(3), true, false, SCREEN_SIZE),
+        new Segment(new Position(18, 20), buildBlankStr(80), true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 11), " ", true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 27), " ", true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 44), " ", true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 62), " ", true, false, SCREEN_SIZE)
+    );
+
+  }
+
+  private String buildBlankStr(int spaces) {
+    return StringUtils.repeat(' ', spaces);
   }
 
   @Test
@@ -321,4 +348,16 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
   }
 
+  @Test
+  public void shouldValidateSecretFieldsOnScreenWhenBuildScreen() throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    sendUsernameWithSyncWait();
+
+    List<Segment> currentSegments = client.getScreen().getSegments().stream()
+        .filter(Segment::isEditable)
+        .collect(Collectors.toList());
+
+    assertThat(currentSegments).isEqualTo(buildExpectedFields());
+  }
 }
