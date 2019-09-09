@@ -62,9 +62,9 @@ public class Screen {
         String segmentText = pre.getTextContent().replace("\n", "");
         if ("true".equals(pre.getAttribute("contenteditable"))) {
           if ("true".equals(pre.getAttribute("secretcontent"))) {
-            ret.addField(linealPosition, segmentText, true);
+            ret.addSecretField(linealPosition, segmentText);
           } else {
-            ret.addField(linealPosition, segmentText, false);
+            ret.addField(linealPosition, segmentText);
           }
         } else {
           ret.addSegment(linealPosition, segmentText);
@@ -101,9 +101,14 @@ public class Screen {
         new Segment(buildPositionFromLinearPosition(linealPosition), text, false, false, size));
   }
 
-  public void addField(int linealPosition, String text, boolean isSecret) {
+  public void addField(int linealPosition, String text) {
     segments.add(
-        new Segment(buildPositionFromLinearPosition(linealPosition), text, true, isSecret, size));
+        new Segment(buildPositionFromLinearPosition(linealPosition), text, true, false, size));
+  }
+
+  public void addSecretField(int linealPosition, String text) {
+    segments
+        .add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true, true, size));
   }
 
   public String getText() {

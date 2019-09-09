@@ -15,6 +15,10 @@ import org.xmlunit.assertj.XmlAssert;
 
 public class ScreenTest {
 
+  private static final String S1_LITERAL = "S1";
+  private static final String F1_LITERAL = "F1";
+  private static final String S2_LITERAL = "S2";
+  private static final String F2_LITERAL = "F2";
   private final int SCREEN_WIDTH = 5;
   private final int SCREEN_HEIGHT = 2;
   private final String WHITESPACES_FILLED_ROW = StringUtils.repeat(' ', (SCREEN_WIDTH));
@@ -49,7 +53,7 @@ public class ScreenTest {
     String segmentText = "Name: ";
     screen.addSegment(0, segmentText);
     String fieldText = "TESTUSR";
-    screen.addField(segmentText.length(), fieldText, false);
+    screen.addField(segmentText.length(), fieldText);
     assertThat(screen.getText())
         .isEqualTo(buildExpectedString(segmentText + fieldText, SCREEN_WIDTH * 3, SCREEN_HEIGHT));
 
@@ -79,20 +83,22 @@ public class ScreenTest {
   @Test
   public void shouldGetAddedFieldsAndSegmentsWhenGetSegments() {
     Screen screen = new Screen(new Dimension(SCREEN_WIDTH * 2, SCREEN_HEIGHT));
-    screen.addSegment(0, "S1: ");
-    screen.addField(4, "F1", false);
-    screen.addSegment(SCREEN_WIDTH * 2, "S2: ");
-    screen.addField(SCREEN_WIDTH * 2 + 4, "F2", false);
+    screen.addSegment(0, S1_LITERAL + ": ");
+    screen.addField(4, F1_LITERAL);
+    screen.addSegment(SCREEN_WIDTH * 2, S2_LITERAL + ": ");
+    screen.addField(SCREEN_WIDTH * 2 + 4, F2_LITERAL);
 
     List<Segment> expectedSegments = new ArrayList<>();
     expectedSegments
-        .add(new Screen.Segment(new Position(1, 1), "S1: ", false, false, SCREEN_DIMENSION));
+        .add(new Screen.Segment(new Position(1, 1), S1_LITERAL + ": ", false, false,
+            SCREEN_DIMENSION));
     expectedSegments
-        .add(new Screen.Segment(new Position(1, 5), "F1", true, false, SCREEN_DIMENSION));
+        .add(new Screen.Segment(new Position(1, 5), F1_LITERAL, true, false, SCREEN_DIMENSION));
     expectedSegments
-        .add(new Screen.Segment(new Position(2, 1), "S2: ", false, false, SCREEN_DIMENSION));
+        .add(new Screen.Segment(new Position(2, 1), S2_LITERAL + ": ", false, false,
+            SCREEN_DIMENSION));
     expectedSegments
-        .add(new Screen.Segment(new Position(2, 5), "F2", true, false, SCREEN_DIMENSION));
+        .add(new Screen.Segment(new Position(2, 5), F2_LITERAL, true, false, SCREEN_DIMENSION));
 
     assertThat(screen.getSegments()).isEqualTo(expectedSegments);
   }
@@ -138,7 +144,7 @@ public class ScreenTest {
     Screen expectedScreen = new Screen(new Dimension(10, 2));
     String initialSegmentText = "  Welcome User: ";
     expectedScreen.addSegment(0, initialSegmentText);
-    expectedScreen.addField(initialSegmentText.length(), "USR ", false);
+    expectedScreen.addField(initialSegmentText.length(), "USR ");
     return expectedScreen;
   }
 

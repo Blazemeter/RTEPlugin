@@ -258,12 +258,12 @@ public class Tn3270Client extends BaseProtocolClient {
     }
     int segmentEndPosition = lastNonBlankPosition + 1;
     if (segmentEndPosition <= 0) {
-      ret.addField(0, screenText, false);
+      ret.addField(0, screenText);
     } else if (segmentEndPosition >= screenText.length()) {
       ret.addSegment(0, screenText);
     } else {
       ret.addSegment(0, screenText.substring(0, segmentEndPosition + 1));
-      ret.addField(segmentEndPosition + 1, screenText.substring(segmentEndPosition + 1), false);
+      ret.addField(segmentEndPosition + 1, screenText.substring(segmentEndPosition + 1));
     }
     return ret;
   }
@@ -280,7 +280,12 @@ public class Tn3270Client extends BaseProtocolClient {
       } else {
         ret.addSegment(linealPosition, " ");
         if (linealPosition + 1 < size.height * size.width) {
-          ret.addField(linealPosition + 1, text, f.isHidden());
+          if (f.isHidden()) {
+            ret.addSecretField(linealPosition + 1, text);
+          } else {
+            ret.addField(linealPosition + 1, text);
+          }
+
         }
       }
     }

@@ -243,7 +243,11 @@ public class Tn5250Client extends BaseProtocolClient {
         ret.addSegment(textStartPos, screenText.substring(textStartPos, fieldLinealPosition)
         );
       }
-      ret.addField(fieldLinealPosition, f.getString(), (SECRET_FIELD_MASK & f.getAttr()) != 0);
+      if ((SECRET_FIELD_MASK & f.getAttr()) != 0) {
+        ret.addSecretField(fieldLinealPosition, f.getString());
+      } else {
+        ret.addField(fieldLinealPosition, f.getString());
+      }
       textStartPos = fieldLinealPosition + f.getString().length();
     }
     if (textStartPos < screenText.length()) {

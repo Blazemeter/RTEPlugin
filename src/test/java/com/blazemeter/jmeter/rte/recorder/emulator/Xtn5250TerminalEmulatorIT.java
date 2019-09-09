@@ -78,7 +78,7 @@ public class Xtn5250TerminalEmulatorIT {
     screen.addSegment(segmentPosition,
         completeLine("*****************************************", screenSize.width));
     segmentPosition += screenSize.width;
-    screen.addField(segmentPosition, completeLine(text, screenSize.width), false);
+    screen.addField(segmentPosition, completeLine(text, screenSize.width));
     segmentPosition += screenSize.width;
     for (String lineText : Arrays
         .asList("TEXTO DE PRUEBA 1", "TEXTO DE PRUEBA 2", "TEXTO DE PRUEBA 3",
@@ -123,7 +123,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   private int addScreenField(Screen screen, int linearPosition, int fieldLenght) {
-    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght), false);
+    screen.addField(linearPosition, StringUtils.repeat(' ', fieldLenght));
     return linearPosition + fieldLenght;
   }
 

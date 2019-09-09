@@ -41,7 +41,7 @@ public class RteSampleResultBuilderTest {
 
   private static Screen buildScreen() {
     Screen screen = new Screen(SCREEN_SIZE);
-    screen.addField(0, SCREEN_TEXT, false);
+    screen.addField(0, SCREEN_TEXT);
     return screen;
   }
 
