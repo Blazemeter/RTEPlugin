@@ -188,11 +188,13 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private void updateFieldAttribute() {
     for (XI5250Field field : xi5250Crt.getFields()) {
       int attr = credentialStatusVisibility ? ((ScreenField) field).originalAttr : DEFAULT_ATTR;
-      xi5250Crt
-          .drawString("\u0001", field.getCol() - 1,
-              field.getRow(), attr);
+      updateFieldVisibility(field.getRow(), field.getCol(), attr);
       field.init();
     }
+  }
+
+  private void updateFieldVisibility(int row, int column, int attr) {
+    xi5250Crt.drawString("\u0001", column - 1, row, attr);
   }
 
   private JPanel createToolsPanel() {
@@ -300,15 +302,15 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     xi5250Crt.clear();
     xi5250Crt.removeFields();
     for (Screen.Segment s : screen.getSegments()) {
-      Position startPosition = s.getStartPosition();
+      int row = s.getStartPosition().getRow() - 1;
+      int column = s.getStartPosition().getColumn() - 1;
       if (s.isEditable()) {
         int attr =
             credentialStatusVisibility && s.isSecret() ? SECRET_CREDENTIAL_ATTR : DEFAULT_ATTR;
-        xi5250Crt
-            .drawString("\u0001", startPosition.getColumn() - 2,
-                startPosition.getRow() - 1, attr);
-        XI5250Field xi5250Field = new ScreenField(xi5250Crt, startPosition.getColumn() - 1,
-            startPosition.getRow() - 1, s.getText().length(), attr);
+        updateFieldVisibility(row, column, attr);
+
+        XI5250Field xi5250Field = new ScreenField(xi5250Crt, column,
+            row, s.getText().length(), attr);
 
         xi5250Field.setString(s.getText());
         xi5250Field.resetMDT();
@@ -316,8 +318,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         xi5250Crt.addField(xi5250Field);
       } else {
         xi5250Crt
-            .drawString(s.getText(), startPosition.getColumn() - 1,
-                startPosition.getRow() - 1, DEFAULT_ATTR);
+            .drawString(s.getText(), column,
+                row, DEFAULT_ATTR);
       }
     }
     xi5250Crt.initAllFields();

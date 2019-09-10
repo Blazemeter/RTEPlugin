@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.core.KeyPressInfo;
@@ -484,5 +487,14 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.setKeyboardLock(false);
     sendKey(KeyEvent.VK_ENTER, 0, 2, 1);
     assertThat(frame.textBox(SAMPLE_NAME_FIELD).text()).isEqualTo(DEFAULT_SAMPLE_NAME_INPUT_VALUE);
+  }
+
+  @Test
+  public void shouldSwitchCredentialVisibilityIconWhenClickIcon() {
+    setScreen("");
+    frame.label("showCredentials").click();
+    Icon actual = frame.label("showCredentials").target().getIcon();
+    ImageIcon expected = new ImageIcon("/light-theme/visible-credentials.png");
+    assertThat(((ImageIcon)actual).getImage().equals(expected.getImage()));     
   }
 }
