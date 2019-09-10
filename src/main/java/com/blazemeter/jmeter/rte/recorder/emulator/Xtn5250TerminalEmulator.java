@@ -46,8 +46,8 @@ import org.slf4j.LoggerFactory;
 
 public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator {
 
-  public static final int SECRET_CREDENTIAL_ATTR = 39;
-  public static final int DEFAULT_ATTR = 32;
+  private static final int SECRET_CREDENTIAL_ATTR = 39;
+  private static final int DEFAULT_ATTR = 32;
   private static final Map<KeyEventMap, AttentionKey> KEY_EVENTS =
       new HashMap<KeyEventMap, AttentionKey>() {
         {
@@ -106,7 +106,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       .createComponent("sampleNameField", new JTextField());
   private List<TerminalEmulatorListener> terminalEmulatorListeners = new ArrayList<>();
   private boolean locked = false;
-  private boolean credentialStatusVisibility = true;
+  private boolean shownCredentials = false;
   private boolean stopping;
   private StatusPanel statusPanel = new StatusPanel();
   private XI5250Crt xi5250Crt = new CustomXI5250Crt();
@@ -156,11 +156,10 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     return new MouseListener() {
       @Override
       public void mouseClicked(MouseEvent e) {
-        credentialStatusVisibility = !credentialStatusVisibility;
-        String currentStatus = credentialStatusVisibility ? "hidden" : "visible";
-        LOG.info("Credentials are now {}", currentStatus);
-        statusPanel.updateShowCredentials(credentialStatusVisibility);
-        updateFieldAttribute();
+        shownCredentials = !shownCredentials;
+        LOG.info("Credentials are now {}", shownCredentials ? "hidden" : "visible");
+        statusPanel.updateShowCredentials(shownCredentials);
+        updateFieldsVisibility();
       }
 
       @Override
@@ -185,15 +184,15 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     };
   }
 
-  private void updateFieldAttribute() {
+  private void updateFieldsVisibility() {
     for (XI5250Field field : xi5250Crt.getFields()) {
-      int attr = credentialStatusVisibility ? ((ScreenField) field).originalAttr : DEFAULT_ATTR;
-      updateFieldVisibility(field.getRow(), field.getCol(), attr);
+      int attr = !shownCredentials ? ((ScreenField) field).originalAttr : DEFAULT_ATTR;
+      updateFieldAttribute(field.getRow(), field.getCol(), attr);
       field.init();
     }
   }
 
-  private void updateFieldVisibility(int row, int column, int attr) {
+  private void updateFieldAttribute(int row, int column, int attr) {
     xi5250Crt.drawString("\u0001", column - 1, row, attr);
   }
 
@@ -306,8 +305,8 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       int column = s.getStartPosition().getColumn() - 1;
       if (s.isEditable()) {
         int attr =
-            credentialStatusVisibility && s.isSecret() ? SECRET_CREDENTIAL_ATTR : DEFAULT_ATTR;
-        updateFieldVisibility(row, column, attr);
+            !shownCredentials && s.isSecret() ? SECRET_CREDENTIAL_ATTR : DEFAULT_ATTR;
+        updateFieldAttribute(row, column, attr);
 
         XI5250Field xi5250Field = new ScreenField(xi5250Crt, column,
             row, s.getText().length(), attr);

@@ -46,7 +46,7 @@ import net.infordata.em.tn5250.XI5250EmulatorListener;
 
 public class Tn5250Client extends BaseProtocolClient {
 
-  public static final int SECRET_FIELD_MASK = 0x01;
+  private static final int SECRET_FIELD_MASK = 0x01;
   private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
       new TerminalType("IBM-3179-2", new Dimension(80, 24)),
       new TerminalType("IBM-3477-FC", new Dimension(132, 27))

@@ -14,8 +14,8 @@ public class StatusPanel extends JPanel {
 
   private static final String KEYBOARD_LOCKED_RESOURCE_NAME = "keyboard-locked.png";
   private static final String KEYBOARD_UNLOCKED_RESOURCE_NAME = "keyboard-unlocked.png";
-  private static final String VISIBLE_CREDENTIALS = "visible-credentials.png";
-  private static final String NOT_VISIBLE_CREDENTIALS = "not-visible-credentials.png";
+  private static final String VISIBLE_CREDENTIALS_ICON = "visible-credentials.png";
+  private static final String NOT_VISIBLE_CREDENTIAL_ICON = "not-visible-credentials.png";
   
   private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
   private JLabel positionLabel = SwingUtils
@@ -26,7 +26,7 @@ public class StatusPanel extends JPanel {
       .createComponent("keyboardLabel", new ThemedIconLabel(KEYBOARD_LOCKED_RESOURCE_NAME));
 
   private ThemedIconLabel showCredentials = SwingUtils
-      .createComponent("showCredentials", new ThemedIconLabel(NOT_VISIBLE_CREDENTIALS));
+      .createComponent("showCredentials", new ThemedIconLabel(NOT_VISIBLE_CREDENTIAL_ICON));
 
   private HelpFrame helpFrame;
 
@@ -96,7 +96,7 @@ public class StatusPanel extends JPanel {
 
   public void updateShowCredentials(boolean visible) {
     this.showCredentials.setIconResourceName(
-        visible ? NOT_VISIBLE_CREDENTIALS : VISIBLE_CREDENTIALS
+        visible ? NOT_VISIBLE_CREDENTIAL_ICON : VISIBLE_CREDENTIALS_ICON
     );
   }
 
