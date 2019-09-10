@@ -52,6 +52,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private static final long DEFAULT_WAIT_CONDITION_TIMEOUT_THRESHOLD_MILLIS = 10000;
   private static final String WAIT_CONDITION_TIMEOUT_THRESHOLD_MILLIS_PROPERTY
       = "waitConditionTimeoutThresholdMillis";
+  private transient JMeterTreeModel treeModel;
   private transient TerminalEmulator terminalEmulator;
   private transient Supplier<TerminalEmulator> terminalEmulatorSupplier;
   private transient RecordingTargetFinder finder;
@@ -67,26 +68,38 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient ExecutorService connectionExecutor;
 
   private transient Function<Protocol, RteProtocolClient> protocolFactory;
-  private transient JMeterTreeModel jMeterTreeModel;
   private transient RteProtocolClient terminalClient;
   private transient List<TestElement> responseAssertions = new ArrayList<>();
 
   public RTERecorder() {
-    this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(getJmeterTreeModel()),
-        getJmeterTreeModel(), Protocol::createProtocolClient);
+    this(Xtn5250TerminalEmulator::new, new RecordingTargetFinder(),
+        Protocol::createProtocolClient);
   }
 
   public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder,
-      JMeterTreeModel jMeterTreeModel, Function<Protocol,
-      RteProtocolClient> factory) {
+      Function<Protocol,
+          RteProtocolClient> factory) {
     terminalEmulatorSupplier = supplier;
     this.finder = finder;
-    this.jMeterTreeModel = jMeterTreeModel;
     this.protocolFactory = factory;
   }
 
-  private static JMeterTreeModel getJmeterTreeModel() {
-    return GuiPackage.getInstance().getTreeModel();
+  @VisibleForTesting
+  public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder,
+      Function<Protocol, RteProtocolClient> factory, JMeterTreeModel treeModel) {
+    this(supplier, finder, factory);
+    this.treeModel = treeModel;
+  }
+
+  private JMeterTreeModel getJmeterTreeModel() {
+    JMeterTreeModel model;
+    try {
+      model = GuiPackage.getInstance().getTreeModel();
+    } catch (NullPointerException e) {
+      // will throw nullPointerException during tests
+      return treeModel;
+    }
+    return model;
   }
 
   @Override
@@ -187,7 +200,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   public void onRecordingStart() {
     LOG.debug("Start recording");
     sampleCount = 0;
-    samplersTargetNode = finder.findTargetControllerNode();
+    samplersTargetNode = finder
+        .findTargetControllerNode(getJmeterTreeModel());
     addTestElementToTestPlan(buildRteConfigElement(), responseAssertions, samplersTargetNode);
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
     resultBuilder = buildSampleResultBuilder(Action.CONNECT);
@@ -244,6 +258,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   private void addTestElementToTestPlan(TestElement testElement, List<TestElement> children,
       JMeterTreeNode targetNode) {
+    JMeterTreeModel jMeterTreeModel = getJmeterTreeModel();
     try {
       JMeterUtils.runSafe(true, () -> {
         try {
@@ -263,7 +278,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private <T> void notifyChildren(Class<T> classFilter, Consumer<T> notificationMethod) {
-    JMeterTreeNode treeNode = jMeterTreeModel.getNodeOf(this);
+    JMeterTreeNode treeNode = getJmeterTreeModel().getNodeOf(this);
     if (treeNode != null) {
       Enumeration<?> kids = treeNode.children();
       while (kids.hasMoreElements()) {
@@ -369,7 +384,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     assertion.setAssumeSuccess(false);
     responseAssertions.add(assertion);
   }
-  
+
   private void recordPendingSample() {
     if (!resultBuilder.hasFailure()) {
       resultBuilder.withSuccessResponse(terminalClient);

@@ -66,6 +66,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
 
+  public static final String SEND_INPUT_1 = "bzm-RTE-SEND_INPUT-1";
+  public static final String SENDING_USER = "SENDING_USER";
   private static final String ASSERTION_NAME = "Assertion Test";
   private static final String SELECTED_TEXT = "selected text";
   private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
@@ -79,8 +81,6 @@ public class RTERecorderTest {
   private static final Position CURSOR_POSITION = new Position(2, 1);
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(CURSOR_POSITION, "testusr"));
-  public static final String SEND_INPUT_1 = "bzm-RTE-SEND_INPUT-1";
-  public static final String SENDING_USER = "SENDING_USER";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private TestElement testStateListener;
@@ -110,12 +110,12 @@ public class RTERecorderTest {
   @Before
   public void setup() throws IllegalUserActionException {
     setupTreeModel();
-    when(finder.findTargetControllerNode()).thenReturn(treeNode);
+    when(finder.findTargetControllerNode(treeModel)).thenReturn(treeNode);
     setupTerminalClient();
     when(treeModel.addComponent(any(), eq(treeNode))).thenReturn(samplerNode);
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> terminalEmulator;
-    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, treeModel,
-        p -> terminalClient);
+    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder,
+        p -> terminalClient, treeModel);
 
     setupRecorder();
   }
