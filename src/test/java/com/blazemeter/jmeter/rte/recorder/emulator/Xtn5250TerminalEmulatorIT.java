@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.core.KeyPressInfo;
@@ -52,6 +55,7 @@ public class Xtn5250TerminalEmulatorIT {
   public static final String SAMPLE_NAME_FIELD = "sampleNameField";
   public static final String ASSERTION_TEST_LITERAL = "Assertion Test";
   public static final String CONNECTING_LITERAL = "CONNECTING";
+  public static final String DEFAULT_SAMPLE_NAME_INPUT_VALUE = "DEFAULT_INPUT_VALUE";
   private static final long PAUSE_TIMEOUT = 10000;
   private static final int COLUMNS = 80;
   private static final int ROWS = 24;
@@ -62,7 +66,6 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String TEST_SCREEN_PRESS_KEY_ON_FIELD_FILE = "test-screen-press-key-on-field.txt";
   private static final String WAIT_FOR_TEXT_BUTTON = "waitForTextButton";
   private static final String ASSERTION_BUTTON = "assertionButton";
-  public static final String DEFAULT_SAMPLE_NAME_INPUT_VALUE = "DEFAULT_INPUT_VALUE";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
@@ -471,7 +474,7 @@ public class Xtn5250TerminalEmulatorIT {
   }
 
   private void setSampleName(String name) {
-      JTextComponentFixture field = frame.textBox(SAMPLE_NAME_FIELD);
+    JTextComponentFixture field = frame.textBox(SAMPLE_NAME_FIELD);
     // target needed in order to effectively iterations with `listener` mock.
     field.target().setText(name);
   }
@@ -484,5 +487,14 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.setKeyboardLock(false);
     sendKey(KeyEvent.VK_ENTER, 0, 2, 1);
     assertThat(frame.textBox(SAMPLE_NAME_FIELD).text()).isEqualTo(DEFAULT_SAMPLE_NAME_INPUT_VALUE);
+  }
+
+  @Test
+  public void shouldSwitchCredentialVisibilityIconWhenClickIcon() {
+    setScreen("");
+    frame.label("showCredentials").click();
+    Icon actual = frame.label("showCredentials").target().getIcon();
+    ImageIcon expected = new ImageIcon("/light-theme/visible-credentials.png");
+    assertThat(((ImageIcon)actual).getImage().equals(expected.getImage()));     
   }
 }

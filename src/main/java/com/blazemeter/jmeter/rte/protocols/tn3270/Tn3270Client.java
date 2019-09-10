@@ -280,7 +280,12 @@ public class Tn3270Client extends BaseProtocolClient {
       } else {
         ret.addSegment(linealPosition, " ");
         if (linealPosition + 1 < size.height * size.width) {
-          ret.addField(linealPosition + 1, text);
+          if (f.isHidden()) {
+            ret.addSecretField(linealPosition + 1, text);
+          } else {
+            ret.addField(linealPosition + 1, text);
+          }
+
         }
       }
     }
@@ -312,7 +317,7 @@ public class Tn3270Client extends BaseProtocolClient {
   public Set<AttentionKey> getSupportedAttentionKeys() {
     return AID_COMMANDS.keySet();
   }
-  
+
   @Override
   public boolean isAlarmOn() {
     return client.isAlarmOn();

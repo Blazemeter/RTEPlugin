@@ -12,6 +12,7 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
@@ -31,6 +32,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
@@ -49,6 +52,22 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   protected TerminalType getDefaultTerminalType() {
     return client.getTerminalTypeById("IBM-3477-FC");
   }
+
+  @Override
+  protected List<Segment> buildExpectedFields() {
+    return Arrays.asList(
+        new Segment(new Position(6, 53), buildBlankSpaces(), true, false, SCREEN_SIZE),
+        new Segment(new Position(7, 53), buildBlankSpaces(), true, true, SCREEN_SIZE),
+        new Segment(new Position(8, 53), buildBlankSpaces(), true, false, SCREEN_SIZE),
+        new Segment(new Position(9, 53), buildBlankSpaces(), true, false, SCREEN_SIZE),
+        new Segment(new Position(10, 53), buildBlankSpaces(), true, false, SCREEN_SIZE)
+    );
+  }
+
+  private String buildBlankSpaces() {
+    return StringUtils.repeat("\u0000", 10);
+  }
+
 
   @Test
   public void shouldGetWelcomeScreenWhenConnect() throws Exception {
@@ -298,5 +317,16 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     sendCredsByCoordWithSyncWait();
 
     verify(terminalEmulatorUpdater, never()).onTerminalStateChange();
+  }
+
+  @Test
+  public void shouldValidateSecretFieldsOnScreenWhenBuildScreen() throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    List<Segment> currentFields = client.getScreen().getSegments().stream()
+        .filter(Segment::isEditable)
+        .collect(
+            Collectors.toList());
+    assertThat(currentFields).isEqualTo(buildExpectedFields());
   }
 }

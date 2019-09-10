@@ -14,7 +14,9 @@ public class StatusPanel extends JPanel {
 
   private static final String KEYBOARD_LOCKED_RESOURCE_NAME = "keyboard-locked.png";
   private static final String KEYBOARD_UNLOCKED_RESOURCE_NAME = "keyboard-unlocked.png";
-
+  private static final String VISIBLE_CREDENTIALS_ICON = "visible-credentials.png";
+  private static final String NOT_VISIBLE_CREDENTIAL_ICON = "not-visible-credentials.png";
+  
   private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
   private JLabel positionLabel = SwingUtils
       .createComponent("positionLabel", new JLabel("row: 00 / column: 00"));
@@ -22,6 +24,9 @@ public class StatusPanel extends JPanel {
       .createComponent("alarmLabel", new AlarmLabel(executorService));
   private ThemedIconLabel keyboardLabel = SwingUtils
       .createComponent("keyboardLabel", new ThemedIconLabel(KEYBOARD_LOCKED_RESOURCE_NAME));
+
+  private ThemedIconLabel showCredentials = SwingUtils
+      .createComponent("showCredentials", new ThemedIconLabel(NOT_VISIBLE_CREDENTIAL_ICON));
 
   private HelpFrame helpFrame;
 
@@ -43,11 +48,13 @@ public class StatusPanel extends JPanel {
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
+        .addComponent(showCredentials)
         .addComponent(alarmLabel)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(positionLabel)
+        .addComponent(showCredentials)
         .addComponent(alarmLabel)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
@@ -87,8 +94,18 @@ public class StatusPanel extends JPanel {
     repaint();
   }
 
+  public void updateShowCredentials(boolean visible) {
+    this.showCredentials.setIconResourceName(
+        visible ? NOT_VISIBLE_CREDENTIAL_ICON : VISIBLE_CREDENTIALS_ICON
+    );
+  }
+
   public void soundAlarm() {
     alarmLabel.soundAlarm();
+  }
+
+  public JLabel getShowCredentials() {
+    return showCredentials;
   }
 
   public void setKeyboardStatus(boolean locked) {
@@ -102,5 +119,5 @@ public class StatusPanel extends JPanel {
       helpFrame.close();
     }
   }
-  
+
 }
