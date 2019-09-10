@@ -1,14 +1,9 @@
 package com.blazemeter.jmeter.rte.recorder;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyObject;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.apache.jmeter.exceptions.IllegalUserActionException;
 import org.apache.jmeter.gui.tree.JMeterTreeModel;
 import org.apache.jmeter.gui.tree.JMeterTreeNode;
@@ -92,7 +87,7 @@ public class RecordingTargetFinderTest {
 
   @Test(expected = IllegalStateException.class)
   public void shouldThrowIllegalStateExceptionWhenFindTargetControllerNodeWithNoThreadGroupsOrRecordingControllers() {
-    model =  new JMeterTreeModel();
+    model = new JMeterTreeModel();
     finder = new RecordingTargetFinder();
     finder.findTargetControllerNode(model);
   }

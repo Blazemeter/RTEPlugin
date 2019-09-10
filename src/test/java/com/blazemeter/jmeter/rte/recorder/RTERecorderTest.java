@@ -116,7 +116,6 @@ public class RTERecorderTest {
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> terminalEmulator;
     rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder,
         p -> terminalClient, treeModel);
-
     setupRecorder();
   }
 

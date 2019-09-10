@@ -52,7 +52,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private static final long DEFAULT_WAIT_CONDITION_TIMEOUT_THRESHOLD_MILLIS = 10000;
   private static final String WAIT_CONDITION_TIMEOUT_THRESHOLD_MILLIS_PROPERTY
       = "waitConditionTimeoutThresholdMillis";
-  private transient JMeterTreeModel treeModel;
+  private transient JMeterTreeModel treeModelMock;
   private transient TerminalEmulator terminalEmulator;
   private transient Supplier<TerminalEmulator> terminalEmulatorSupplier;
   private transient RecordingTargetFinder finder;
@@ -86,20 +86,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @VisibleForTesting
   public RTERecorder(Supplier<TerminalEmulator> supplier, RecordingTargetFinder finder,
-      Function<Protocol, RteProtocolClient> factory, JMeterTreeModel treeModel) {
+      Function<Protocol, RteProtocolClient> factory, JMeterTreeModel treeModelMock) {
     this(supplier, finder, factory);
-    this.treeModel = treeModel;
+    this.treeModelMock = treeModelMock;
   }
 
   private JMeterTreeModel getJmeterTreeModel() {
-    JMeterTreeModel model;
-    try {
-      model = GuiPackage.getInstance().getTreeModel();
-    } catch (NullPointerException e) {
-      // will throw nullPointerException during tests
-      return treeModel;
-    }
-    return model;
+    return treeModelMock != null ? treeModelMock : GuiPackage.getInstance().getTreeModel();
   }
 
   @Override
