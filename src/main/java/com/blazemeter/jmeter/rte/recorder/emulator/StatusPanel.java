@@ -96,7 +96,7 @@ public class StatusPanel extends JPanel {
 
   public void updateShowCredentials(boolean visible) {
     this.showCredentials.setIconResourceName(
-        visible ? NOT_VISIBLE_CREDENTIAL_ICON : VISIBLE_CREDENTIALS_ICON
+        visible ? VISIBLE_CREDENTIALS_ICON : NOT_VISIBLE_CREDENTIAL_ICON
     );
   }
 
