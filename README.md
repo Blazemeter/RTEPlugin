@@ -11,7 +11,7 @@ People who usually work with these IBM servers interact with them, basically, by
 ## Usage
 
 ### Using the plugin
-The plugin adds three different elements to JMeter:
+The plugin adds four different elements to JMeter:
 
 #### A Recording Controller (RTE-Recorder)
 ![alt text](docs/RecorderPanel.png "RTE Recorder") 
@@ -98,7 +98,9 @@ All the "waiters" use a stable timeout value (in milliseconds) which specifies t
 #### RTE-Extractor
 ![alt_text](docs/extractor.png)
 RTE-Extractor is a post-processor which the main purpose is to extract positions from response headers to be used later as a JMeter variable.
->Check [here](/docs/rte-extractor.md) for more information.   
+> Check [here](/docs/rte-extractor.md) for more information.   
+
+
 ### Example
 
 Suppose the user wants to automate the following workflow with an AS400 server (TN5250 system):

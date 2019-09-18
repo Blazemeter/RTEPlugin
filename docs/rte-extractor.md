@@ -13,9 +13,9 @@ The aim of the Extractor is to have the ability to look into response headers fo
 
 Additionally you are able to skip fields using the tab offset.
 
-#####Tab offset cases:
+<h5>Tab offset cases:</h5>
  - Case 1: Value equals to one, extractor will look for the closest field forward.
- - Case 2: Value bigger than one, extractor will look for the closets field forward and skip field as many times as indicated. E.g: with an offset of two, it will search for the next field and then skip that one to jump to the other one. 
+ - Case 2: Value bigger than one, extractor will look for the closets field forward and skip field as many times as indicated. E.g: with an offset of two, it will search for the next field and then, skip that one to finally get the next one. 
  - Case 3: Value equals to minus one, extractor will look for the closest field backwards.
  - Case 4: Value lower than minus one, same behaviour as **_case 2_** but backwards. E.g: offset equals to minus two, extractor will look for the nearest field backwards and then skip one.  
 
@@ -37,12 +37,13 @@ In the previous image we can visualize that the variable prefix **_position_** w
  
  
  ### Example of usage
- Let's put the extractor to work. In order to do that, we are going to select the option _Extract next field filed from position_ and we wil give a position from where to look.
+ 
+ Let's put the extractor to work. In order to do that, we are going to select the option _Extract next filed from position_ and we will give a position from where to search.
  
 In this example we will look for the next field from position (1,2). As we have seen in the response headers picture, there is a field in position (1,27) which will be our target. In order to accomplish that, we must specify **tab offset** to 1.
 
 Let's visualize all of this:
 
-![alterText](extractor-usage.gif)
+![alterText](extractor-usage.gift)
  > In this example we gave the extractor the beginning of a field (1,2), and as you could see, this one will search for the next field on the right, even when the given position is inside a field.
  
