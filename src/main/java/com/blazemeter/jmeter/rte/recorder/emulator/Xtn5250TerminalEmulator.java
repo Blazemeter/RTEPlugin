@@ -157,7 +157,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
       @Override
       public void mouseClicked(MouseEvent e) {
         shownCredentials = !shownCredentials;
-        LOG.info("Credentials are now {}", shownCredentials ? "hidden" : "visible");
+        LOG.info("Credentials are now {}", shownCredentials ? "visible" : "hidden");
         statusPanel.updateShowCredentials(shownCredentials);
         updateFieldsVisibility();
       }
