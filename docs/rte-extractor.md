@@ -1,17 +1,17 @@
 # RTE-Extractor
 ![alt_text](rte-extractor.png)
-**REMEMBER**: This Extractor will ease the development of future implementations. Therefore is not mandatory for scripts creation. However could be use it in particular cases. 
+**REMEMBER**: This Extractor will ease the development of future implementations. Therefore is not mandatory for script creation. However it can be used in particular cases. 
 
 The RTE Extractor is a component that must be embedded into a sampler.
 
 
-How to add a RTE-Extractor:
+<h5>How to add a RTE-Extractor:</h5>
 ![alt_text](extractor-component.gif)
 
 
 The aim of the Extractor is to have the ability to look into response headers for a Field Position (from a given position) and to set a JMeter Variable with the corresponding field position.
 
-Additionally you are able to skip fields using the tab offset.
+Additionally, you are able to skip fields using the tab offset.
 
 <h5>Tab offset cases:</h5>
  - Case 1: Value equals to one, extractor will look for the closest field forward.
@@ -36,7 +36,7 @@ In the previous image we can visualize that the variable prefix **_position_** w
  > You can check how to use JMeter variables in your tests over [here](https://jmeter.apache.org/usermanual/functions.html#top).
  
  
- ### Example of usage
+ <h3>Example of usage</h3>
  
  Let's put the extractor to work. In order to do that, we are going to select the option _Extract next filed from position_ and we will give a position from where to search.
  
@@ -44,6 +44,6 @@ In this example we will look for the next field from position (1,2). As we have 
 
 Let's visualize all of this:
 
-![alterText](extractor-usage.gift)
- > In this example we gave the extractor the beginning of a field (1,2), and as you could see, this one will search for the next field on the right, even when the given position is inside a field.
+![alterText](extractor-usage.gif)
+ > In this example we gave the extractor the beginning of a field (1,2), and as you could see, this one will search for the next field on the right, even when the given position is inside a field or outside of it.
  
