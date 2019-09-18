@@ -98,7 +98,7 @@ All the "waiters" use a stable timeout value (in milliseconds) which specifies t
 #### RTE-Extractor
 ![alt_text](docs/rte-extractor.png)
 
-RTE-Extractor is a post-processor which the main purpose is to extract positions from response headers to be used later as a JMeter variable.
+RTE-Extractor is a post-processor which its main purpose is to extract positions from response headers to be used later as a JMeter variable.
 > Check [here](/docs/rte-extractor.md) for more information.   
 
 
