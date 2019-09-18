@@ -95,6 +95,10 @@ The RTE Sampler fields are:
 All the "waiters" use a stable timeout value (in milliseconds) which specifies the time to wait for the emulator to remain at the desired state. The default value is 1000 milliseconds, but can be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The "Wait for silent" waiter is not affected by this setting since it has an explicit field for such purpose. 
 > Warning: both Stable Timeout and Silent Interval should be shorter than Timeout value, otherwise the sampler will always return a timeout error.
 
+#### RTE-Extractor
+![alt_text](docs/extractor.png)
+RTE-Extractor is a post-processor which the main purpose is to extract positions from response headers to be used later as a JMeter variable.
+>Check [here](/docs/rte-extractor.md) for more information.   
 ### Example
 
 Suppose the user wants to automate the following workflow with an AS400 server (TN5250 system):
