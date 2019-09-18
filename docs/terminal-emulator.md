@@ -18,7 +18,7 @@
 
 - If you click on the ![alter_text](../src/main/resources/dark-theme/help.png) icon in the emulator, a pop up window will be displayed with general help information on the emulator: shortcuts, explanation about indicators on the screen, etc.
 
-- As the label says, <label for="sampleName">Sample name:</label> <input id="sampleName" type="text" value="bmz-RTE-SEND_INPUT-1" size="23" background: transparent readonly> you can specify the name of the sample in current screen. 
+- **Sample name:**  As the label says,  you can specify the name of the sample in current screen. 
 
 ### Input By Label Usage
 
