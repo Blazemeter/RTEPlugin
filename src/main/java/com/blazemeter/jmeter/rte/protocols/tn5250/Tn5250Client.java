@@ -46,11 +46,11 @@ import net.infordata.em.tn5250.XI5250EmulatorListener;
 
 public class Tn5250Client extends BaseProtocolClient {
 
+  private static final int SECRET_FIELD_MASK = 0x01;
   private static final List<TerminalType> TERMINAL_TYPES = Arrays.asList(
       new TerminalType("IBM-3179-2", new Dimension(80, 24)),
       new TerminalType("IBM-3477-FC", new Dimension(132, 27))
   );
-
   private static final Map<AttentionKey, KeyEventMap> KEY_EVENTS =
       new EnumMap<AttentionKey, KeyEventMap>(
           AttentionKey.class) {
@@ -240,9 +240,14 @@ public class Tn5250Client extends BaseProtocolClient {
     for (XI5250Field f : client.getFields()) {
       int fieldLinealPosition = getFieldLinealPosition(f, screenSize);
       if (fieldLinealPosition > textStartPos) {
-        ret.addSegment(textStartPos, screenText.substring(textStartPos, fieldLinealPosition));
+        ret.addSegment(textStartPos, screenText.substring(textStartPos, fieldLinealPosition)
+        );
       }
-      ret.addField(fieldLinealPosition, f.getString());
+      if ((SECRET_FIELD_MASK & f.getAttr()) != 0) {
+        ret.addSecretField(fieldLinealPosition, f.getString());
+      } else {
+        ret.addField(fieldLinealPosition, f.getString());
+      }
       textStartPos = fieldLinealPosition + f.getString().length();
     }
     if (textStartPos < screenText.length()) {

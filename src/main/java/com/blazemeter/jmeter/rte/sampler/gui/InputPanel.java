@@ -151,10 +151,8 @@ public class InputPanel extends JPanel implements ActionListener {
     GuiUtils.stopTableEditing(table);
     Inputs inputs = new Inputs();
     inputs.clear();
-    for (InputTestElement input : tableModel) {
-      if (!StringUtils.isEmpty(input.getInput())) {
-        inputs.addInput(input);
-      }
+    for (InputTestElement input : tableModel) { 
+      inputs.addInput(input);
     }
     return inputs;
   }

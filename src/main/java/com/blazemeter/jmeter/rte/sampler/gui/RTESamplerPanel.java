@@ -3,8 +3,6 @@ package com.blazemeter.jmeter.rte.sampler.gui;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -29,14 +27,13 @@ public class RTESamplerPanel extends JPanel {
   private static final int INDEX_WIDTH = 30;
   private static final int TIME_WIDTH = 60;
   private static final String TIMEOUT_LABEL = "Timeout (millis): ";
-
+  private final JPanel requestPanel;
+  private final JPanel waitPanel;
   private ButtonGroup actionsGroup = new ButtonGroup();
   private Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
-  private final JPanel requestPanel;
   private InputPanel payloadPanel;
   private ButtonGroup attentionKeysGroup = new ButtonGroup();
   private Map<AttentionKey, JRadioButton> attentionKeys = new EnumMap<>(AttentionKey.class);
-  private final JPanel waitPanel;
   private JPanel waitSyncPanel;
   private JCheckBox waitSync = SwingUtils.createComponent("waitSync", new JCheckBox("Sync?"));
   private JTextField waitSyncTimeout = SwingUtils
@@ -245,17 +242,8 @@ public class RTESamplerPanel extends JPanel {
   }
 
   private void updateWait(JCheckBox waitCheck, JPanel panel, boolean checked) {
-    setEnabled(panel, checked);
+    SwingUtils.setEnabledRecursively(panel, checked);
     waitCheck.setEnabled(true);
-  }
-
-  private void setEnabled(Component component, boolean enabled) {
-    component.setEnabled(enabled);
-    if (component instanceof Container) {
-      for (Component child : ((Container) component).getComponents()) {
-        setEnabled(child, enabled);
-      }
-    }
   }
 
   private JPanel buildWaitCursorPanel() {

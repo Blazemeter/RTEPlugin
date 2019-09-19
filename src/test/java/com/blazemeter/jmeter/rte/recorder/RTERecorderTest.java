@@ -66,6 +66,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RTERecorderTest {
 
+  public static final String SEND_INPUT_1 = "bzm-RTE-SEND_INPUT-1";
+  public static final String SENDING_USER = "SENDING_USER";
   private static final String ASSERTION_NAME = "Assertion Test";
   private static final String SELECTED_TEXT = "selected text";
   private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
@@ -108,13 +110,12 @@ public class RTERecorderTest {
   @Before
   public void setup() throws IllegalUserActionException {
     setupTreeModel();
-    when(finder.findTargetControllerNode()).thenReturn(treeNode);
+    when(finder.findTargetControllerNode(treeModel)).thenReturn(treeNode);
     setupTerminalClient();
     when(treeModel.addComponent(any(), eq(treeNode))).thenReturn(samplerNode);
     Supplier<TerminalEmulator> terminalEmulatorSupplier = () -> terminalEmulator;
-    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder, treeModel,
-        p -> terminalClient);
-
+    rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder,
+        p -> terminalClient, treeModel);
     setupRecorder();
   }
 
@@ -213,7 +214,7 @@ public class RTERecorderTest {
   @Test
   public void shouldSetEmulatorScreenWhenTerminalStateChange() throws Exception {
     connect();
-    verify(terminalEmulator).setScreen(TEST_SCREEN);
+    verify(terminalEmulator).setScreen(TEST_SCREEN, SEND_INPUT_1);
   }
 
   @Test
@@ -243,7 +244,8 @@ public class RTERecorderTest {
     connect();
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
     verify((SampleListener) samplerListener).sampleOccurred(argument.capture());
-    assertSampleResult(buildConnectionErrorResult(connectionException), argument.getValue().getResult());
+    assertSampleResult(buildConnectionErrorResult(connectionException),
+        argument.getValue().getResult());
   }
 
   private SampleResult buildConnectionErrorResult(RteIOException connectionException) {
@@ -266,7 +268,7 @@ public class RTERecorderTest {
   @Test
   public void shouldSetEmulatorScreenWhenStart() throws Exception {
     connect();
-    verify(terminalEmulator).setScreen(TEST_SCREEN);
+    verify(terminalEmulator).setScreen(TEST_SCREEN, SEND_INPUT_1);
   }
 
   @Test
@@ -404,7 +406,7 @@ public class RTERecorderTest {
   @Test
   public void shouldLockEmulatorKeyboardWhenAttentionKey() throws Exception {
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     /*
      * The block of the Keyboard occurs 2 times:
      * At the beginning when the terminal setup (initTerminalEmulator)
@@ -417,14 +419,14 @@ public class RTERecorderTest {
   @Test
   public void shouldResetTerminalClientAlarmWhenAttentionKey() throws Exception {
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(terminalClient).resetAlarm();
   }
 
   @Test
   public void shouldNotifyPendingResultToChildrenWhenAttentionKey() throws Exception {
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
 
     ArgumentCaptor<SampleEvent> argument = ArgumentCaptor.forClass(SampleEvent.class);
     verify((SampleListener) samplerListener).sampleOccurred(argument.capture());
@@ -438,7 +440,7 @@ public class RTERecorderTest {
   @Test
   public void shouldAddSamplerToTargetControllerNodeWhenAttentionKey() throws Exception {
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     /*
      * There were two interactions with the Model
      * 1st: When the Recording Starts, a new Test Element is added
@@ -499,7 +501,7 @@ public class RTERecorderTest {
   @Test
   public void shouldRegisterRequestListenerWhenAttentionKey() throws Exception {
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     /*
      * The number of interactions with this clients is 2:
      * The first occur when the RTERecorder starts and one
@@ -515,7 +517,7 @@ public class RTERecorderTest {
   @Test
   public void shouldSendInputsAndAttentionKeyToTerminalClientWhenAttentionKey() throws Exception {
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(terminalClient).send(INPUTS, AttentionKey.ENTER);
   }
 
@@ -537,7 +539,7 @@ public class RTERecorderTest {
     setupExceptionOnAttentionKey(exception);
     rteRecorder.setRecordingStateListener(recorderListener);
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(recorderListener, timeout(TIMEOUT)).onRecordingException(exception);
   }
 
@@ -553,7 +555,7 @@ public class RTERecorderTest {
     doThrow(exception).when(terminalClient).send(any(), any());
     rteRecorder.setRecordingStateListener(recorderListener);
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(recorderListener, timeout(TIMEOUT)).onRecordingException(exception);
   }
 
@@ -566,7 +568,7 @@ public class RTERecorderTest {
       throws RteIOException, TimeoutException, InterruptedException {
     setupExceptionOnTerminalClientSend();
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(terminalEmulator).stop();
   }
 
@@ -575,7 +577,7 @@ public class RTERecorderTest {
       throws RteIOException, TimeoutException, InterruptedException {
     setupExceptionOnTerminalClientSend();
     connect();
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS);
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(terminalClient).disconnect();
   }
 
@@ -607,7 +609,7 @@ public class RTERecorderTest {
       throws Exception {
     connect();
     rteRecorder.onAssertionScreen(ASSERTION_NAME, SELECTED_TEXT);
-    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>());
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, new ArrayList<>(), "");
 
     rteRecorder.onRecordingStop();
 
@@ -629,6 +631,30 @@ public class RTERecorderTest {
     assertion.addTestString(SELECTED_TEXT);
     assertion.setAssumeSuccess(false);
     return assertion;
+  }
+
+  @Test
+  public void shouldAddSamplerToTargetControllerNodeWhenOnAttentionKey()
+      throws Exception {
+    connect();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, SENDING_USER);
+    rteRecorder.onRecordingStop();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    verify(treeModel, times(4)).addComponent(argument.capture(),
+        eq(treeNode));
+    assertThat(argument.getAllValues().get(2).getName()).isEqualTo(SENDING_USER);
+  }
+
+  @Test
+  public void shouldAddSamplerWithDefaultSampleNameWhenConnectAndDisconnect()
+      throws TimeoutException, InterruptedException, IllegalUserActionException {
+    connect();
+    rteRecorder.onRecordingStop();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    verify(treeModel, times(3)).addComponent(argument.capture(),
+        eq(treeNode));
+    softly.assertThat(argument.getAllValues().get(2).getName()).isEqualTo("bzm-RTE-DISCONNECT");
+    softly.assertThat(argument.getAllValues().get(1).getName()).isEqualTo("bzm-RTE-CONNECT");
   }
 }
 

@@ -8,17 +8,13 @@ import org.apache.jmeter.threads.AbstractThreadGroup;
 
 public class RecordingTargetFinder {
 
-  private final JMeterTreeModel treeModel;
-
-  public RecordingTargetFinder(JMeterTreeModel treeModel) {
-    this.treeModel = treeModel;
-  }
-
-  public JMeterTreeNode findTargetControllerNode() {
-    JMeterTreeNode targetNode = findFirstNodeOfType(RecordingController.class);
+  public JMeterTreeNode findTargetControllerNode(
+      JMeterTreeModel treeModel) {
+   
+    JMeterTreeNode targetNode = findFirstNodeOfType(RecordingController.class, treeModel);
 
     if (targetNode == null) {
-      targetNode = findFirstNodeOfType(AbstractThreadGroup.class);
+      targetNode = findFirstNodeOfType(AbstractThreadGroup.class, treeModel);
     }
     if (targetNode == null) {
       throw new IllegalStateException(
@@ -27,7 +23,8 @@ public class RecordingTargetFinder {
     return targetNode;
   }
 
-  private JMeterTreeNode findFirstNodeOfType(Class<?> type) {
+  private JMeterTreeNode findFirstNodeOfType(Class<?> type,
+      JMeterTreeModel treeModel) {
     List<JMeterTreeNode> nodes = treeModel.getNodesOfType(type);
     for (JMeterTreeNode node : nodes) {
       if (node.isEnabled()) {

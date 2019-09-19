@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
+import com.blazemeter.jmeter.rte.extractor.PositionRange;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.io.StringReader;
@@ -51,15 +52,20 @@ public class Screen {
       Element meta = (Element) head.getElementsByTagName("meta").item(0);
       String sizeStr = meta.getAttribute("content");
       int separatorIndex = sizeStr.indexOf('x');
-      Screen ret = new Screen(new Dimension(Integer.parseInt(sizeStr.substring(separatorIndex + 1)),
-          Integer.parseInt(sizeStr.substring(0, separatorIndex))));
+      Dimension screenSize = new Dimension(Integer.parseInt(sizeStr.substring(separatorIndex + 1)),
+          Integer.parseInt(sizeStr.substring(0, separatorIndex)));
+      Screen ret = new Screen(screenSize);
       NodeList pres = root.getElementsByTagName("pre");
       int linealPosition = 0;
       for (int i = 0; i < pres.getLength(); i++) {
         Element pre = (Element) pres.item(i);
         String segmentText = pre.getTextContent().replace("\n", "");
         if ("true".equals(pre.getAttribute("contenteditable"))) {
-          ret.addField(linealPosition, segmentText);
+          if ("true".equals(pre.getAttribute("secretcontent"))) {
+            ret.addSecretField(linealPosition, segmentText);
+          } else {
+            ret.addField(linealPosition, segmentText);
+          }
         } else {
           ret.addSegment(linealPosition, segmentText);
         }
@@ -78,6 +84,10 @@ public class Screen {
     return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
   }
 
+  private Position buildPositionFromLinearPosition(int linealPosition) {
+    return new Position(linealPosition / size.width + 1, linealPosition % size.width + 1);
+  }
+
   public Dimension getSize() {
     return size;
   }
@@ -87,28 +97,25 @@ public class Screen {
   }
 
   public void addSegment(int linealPosition, String text) {
-    segments.add(new Segment(buildRowFromLinealPosition(linealPosition),
-        buildColumnFromLinealPosition(linealPosition), text, false));
-  }
-
-  private int buildRowFromLinealPosition(int linealPosition) {
-    return linealPosition / size.width + 1;
-  }
-
-  private int buildColumnFromLinealPosition(int linealPosition) {
-    return linealPosition % size.width + 1;
+    segments.add(
+        new Segment(buildPositionFromLinearPosition(linealPosition), text, false, false, size));
   }
 
   public void addField(int linealPosition, String text) {
-    segments.add(new Segment(buildRowFromLinealPosition(linealPosition),
-        buildColumnFromLinealPosition(linealPosition), text, true));
+    segments.add(
+        new Segment(buildPositionFromLinearPosition(linealPosition), text, true, false, size));
+  }
+
+  public void addSecretField(int linealPosition, String text) {
+    segments
+        .add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true, true, size));
   }
 
   public String getText() {
     StringBuilder screen = new StringBuilder();
     int nextScreenPosition = 0;
     for (Segment segment : segments) {
-      int segmentPosition = buildLinealPosition(segment.getRow(), segment.getColumn());
+      int segmentPosition = buildLinealPosition(segment.getStartPosition());
       if (segmentPosition != nextScreenPosition) {
         Segment fillSegment = buildBlankSegmentForRange(nextScreenPosition, segmentPosition);
         screen.append(fillSegment.getWrappedText(size.width));
@@ -128,17 +135,16 @@ public class Screen {
   }
 
   private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
-    return new Segment(buildRowFromLinealPosition(firstPosition),
-              buildColumnFromLinealPosition(firstPosition),
-              buildBlankString(lastPosition - firstPosition), false);
+    return new Segment(buildPositionFromLinearPosition(firstPosition),
+        buildBlankString(lastPosition - firstPosition), false, false, size);
   }
 
   private String buildBlankString(int length) {
     return StringUtils.repeat(' ', length);
   }
 
-  private int buildLinealPosition(int row, int column) {
-    return size.width * (row - 1) + column - 1;
+  private int buildLinealPosition(Position position) {
+    return size.width * (position.getRow() - 1) + position.getColumn() - 1;
   }
 
   public Screen withInvisibleCharsToSpaces() {
@@ -188,6 +194,9 @@ public class Screen {
       if (segment.isEditable()) {
         pre.setAttribute("contenteditable", "true");
       }
+      if (segment.isSecret()) {
+        pre.setAttribute("secretcontent", "true");
+      }
       pre.setTextContent(segment.getWrappedText(size.width));
     }
   }
@@ -229,36 +238,62 @@ public class Screen {
 
   public static class Segment {
 
-    private final int row;
-    private final int column;
-    private final String text;
     private final boolean editable;
+    private final boolean secret;
+    private final String text;
+    private PositionRange positionRange;
 
-    public Segment(int row, int column, String text, boolean editable) {
+    public Segment(Position position, String text, boolean editable, boolean secret,
+        Dimension screenSize) {
       this.text = text;
-      this.row = row;
-      this.column = column;
       this.editable = editable;
+      this.secret = secret;
+      this.positionRange = new PositionRange(position,
+          calculateEndPosition(screenSize.width, position));
     }
 
-    public int getRow() {
-      return row;
+    private Segment(PositionRange positionRange, String text, boolean editable, boolean secret) {
+      this.positionRange = positionRange;
+      this.text = text;
+      this.editable = editable;
+      this.secret = secret;
     }
 
-    public int getColumn() {
-      return column;
+    public Position getStartPosition() {
+      return positionRange.getStart();
     }
 
     public String getText() {
       return text;
     }
 
+    public PositionRange getPositionRange() {
+      return positionRange;
+    }
+
     public boolean isEditable() {
       return editable;
     }
 
+    public Position getEndPosition() {
+      return positionRange.getEnd();
+    }
+
+    public boolean isSecret() {
+      return secret;
+    }
+
+    private Position calculateEndPosition(int width, Position startPosition) {
+      int relativeColumnPosition = startPosition.getColumn() + text.length();
+      return new Position(startPosition.getRow() + (relativeColumnPosition - 1) / width,
+          (relativeColumnPosition - 1) % width + 1);
+
+    }
+
     private String getWrappedText(int width) {
-      int offset = (column > 0 ? column : width) - 1;
+      int offset =
+          (positionRange.getStart().getColumn() > 0 ? positionRange.getStart().getColumn() : width)
+              - 1;
       int pos = 0;
       StringBuilder ret = new StringBuilder();
       while (offset + text.length() - pos >= width) {
@@ -281,7 +316,7 @@ public class Screen {
     }
 
     private Segment withInvisibleCharsToSpaces() {
-      return new Segment(row, column, convertInvisibleCharsToSpaces(text), editable);
+      return new Segment(positionRange, convertInvisibleCharsToSpaces(text), editable, secret);
     }
 
     @Override
@@ -294,24 +329,25 @@ public class Screen {
       }
 
       Segment segment = (Segment) o;
-      return row == segment.row &&
-          column == segment.column &&
+      return positionRange.getStart().equals(((Segment) o).positionRange.getStart()) &&
           text.equals(segment.text) &&
-          editable == segment.editable;
+          editable == segment.editable &&
+          secret == segment.secret;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(row, column, text);
+      return Objects.hash(positionRange.getStart(), text);
     }
 
     @Override
     public String toString() {
       return "Segment{" +
-          "row=" + row +
-          ", column=" + column +
+          "Start position=" + positionRange.getStart().toString() +
+          "End position=" + positionRange.getEnd() +
           ", text='" + text + '\'' +
           ", editable=" + editable +
+          ", secret=" + secret +
           '}';
     }
 
