@@ -48,14 +48,14 @@ public class StatusPanel extends JPanel {
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(positionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
-        .addComponent(showCredentials)
         .addComponent(alarmLabel)
+        .addComponent(showCredentials)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
     layout.setVerticalGroup(layout.createParallelGroup()
         .addComponent(positionLabel)
-        .addComponent(showCredentials)
         .addComponent(alarmLabel)
+        .addComponent(showCredentials)
         .addComponent(keyboardLabel)
         .addComponent(helpLabel));
   }
