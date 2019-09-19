@@ -45,5 +45,5 @@ In this example we will look for the next field from position (1,2). As we have 
 Let's visualize all of this:
 
 ![alterText](extractor-usage.gif)
- > In this example we gave the extractor the beginning of a field (1,2), and as you could see, this one will search for the next field on the right, even when the given position is inside a field or outside of it.
+ > In this example we gave the extractor the beginning of a field (1,2), and as you could see, it will search for the next field on the right, even when the given position is inside a field or outside of it.
  
