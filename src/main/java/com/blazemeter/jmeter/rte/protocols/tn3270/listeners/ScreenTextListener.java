@@ -10,6 +10,7 @@ import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenWatcher;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.BooleanSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,8 +18,8 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     KeyboardStatusListener, CursorMoveListener, ScreenChangeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(ScreenTextListener.class);
-
-  private boolean matched;
+  private boolean lastMatched;
+  private BooleanSupplier matched = () -> condition.matchesScreen(client.getScreen());
 
   public ScreenTextListener(TextWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
@@ -26,39 +27,41 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     client.addCursorMoveListener(this);
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
-    checkIfScreenMatchesCondition();
-    if (matched) {
+    if (matched.getAsBoolean()) {
       startStablePeriod();
+      lastMatched = true;
     }
   }
 
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
-    handleReceivedEvent("keyboardStatusChanged");
+    handleEvent("keyboardStatusChangedEvent");
   }
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    handleReceivedEvent("cursorMoved");
+    handleEvent("cursorMoved");
   }
 
   @Override
   public void screenChanged(ScreenWatcher screenWatcher) {
-    checkIfScreenMatchesCondition();
-    handleReceivedEvent("screenChanged");
+    handleEvent("screenWatcher");
   }
 
-  private void handleReceivedEvent(String event) {
-    if (matched) {
-      LOG.debug("Restart screen text stable period since received event {}", event);
-      startStablePeriod();
+  private synchronized void handleEvent(String event) {
+    if (lastMatched) {
+      if (matched.getAsBoolean()) {
+        startStablePeriod();
+        LOG.debug("Restart screen text stable period since received event {}", event);
+      } else {
+        endStablePeriod();
+        lastMatched = false;
+      }
+      return;
     }
-  }
-
-  private void checkIfScreenMatchesCondition() {
-    if (condition.matchesScreen(client.getScreen())) {
-      LOG.debug("Found matching text in screen, now waiting for silent period.");
-      matched = true;
+    if (matched.getAsBoolean()) {
+      startStablePeriod();
+      lastMatched = true;
     }
   }
 

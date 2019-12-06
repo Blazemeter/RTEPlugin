@@ -329,4 +329,9 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
             Collectors.toList());
     assertThat(currentFields).isEqualTo(buildExpectedFields());
   }
+  
+  @Test
+  public void shouldFailWhenMatchedScreenChangedBeforeStablePeriod() {
+    
+  }
 }
