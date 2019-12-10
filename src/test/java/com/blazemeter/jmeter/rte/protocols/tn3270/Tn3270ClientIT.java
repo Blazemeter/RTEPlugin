@@ -362,7 +362,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     assertThat(currentSegments).isEqualTo(buildExpectedFields());
   }
   
-  @Test
+  @Test(expected = TimeoutException.class)
   public void shouldFailWhenMatchedScreenChangedBeforeStablePeriod() throws Exception {
      loadFlow("login-whit-multiple-flash-screen.yml");
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE, getDefaultTerminalType(),

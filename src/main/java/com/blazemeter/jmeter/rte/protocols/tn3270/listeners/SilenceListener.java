@@ -55,4 +55,9 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
     client.removeScreenChangeListener(this);
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return false;
+  }
+
 }

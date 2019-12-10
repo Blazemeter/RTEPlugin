@@ -12,11 +12,12 @@ import java.util.concurrent.TimeoutException;
 public abstract class ConditionWaiter<T extends WaitCondition> implements ExceptionListener {
 
   protected final T condition;
-  private ExceptionHandler exceptionHandler;
   private final CountDownLatch lock = new CountDownLatch(1);
   private final ScheduledExecutorService stableTimeoutExecutor;
+  private ExceptionHandler exceptionHandler;
   private ScheduledFuture stableTimeoutTask;
   private boolean ended;
+  protected boolean conditionState;
 
   public ConditionWaiter(T condition, ScheduledExecutorService stableTimeoutExecutor,
       ExceptionHandler exceptionHandler) {
@@ -72,4 +73,16 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
     exceptionHandler.removeListener(this);
   }
 
+  protected void validateCondition() {
+    if (conditionState != getCurrentConditionState()) {
+      if (getCurrentConditionState()) {
+        startStablePeriod();
+        conditionState = true;
+      } else {
+        endStablePeriod();
+      }
+    }
+  }
+  
+  protected abstract boolean getCurrentConditionState();
 }

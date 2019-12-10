@@ -62,4 +62,8 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
     handleReceivedEvent(event);
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return false;
+  }
 }

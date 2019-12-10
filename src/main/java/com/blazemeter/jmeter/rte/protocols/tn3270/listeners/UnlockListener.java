@@ -50,4 +50,9 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
     client.removeKeyboardStatusListener(this);
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return client.isInputInhibited();
+  }
+
 }

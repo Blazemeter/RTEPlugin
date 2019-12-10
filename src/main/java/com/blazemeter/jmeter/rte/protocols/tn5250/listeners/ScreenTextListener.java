@@ -12,65 +12,51 @@ public class ScreenTextListener extends Tn5250ConditionWaiter<TextWaitCondition>
 
   private static final Logger LOG = LoggerFactory.getLogger(ScreenTextListener.class);
 
-  private boolean matched;
-
   public ScreenTextListener(TextWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-    checkIfScreenMatchesCondition();
-    if (matched) {
+    if (getCurrentConditionState()) {
       startStablePeriod();
     }
   }
 
   @Override
   public void connecting(XI5250EmulatorEvent event) {
-    handleReceivedEvent(event);
-  }
-
-  private void handleReceivedEvent(XI5250EmulatorEvent event) {
-    if (matched) {
-      LOG.debug("Restart silent stable period since received event {}", event);
-      startStablePeriod();
-    }
+    validateCondition();
   }
 
   @Override
   public void connected(XI5250EmulatorEvent event) {
-    handleReceivedEvent(event);
+    validateCondition();
   }
 
   @Override
   public void disconnected(XI5250EmulatorEvent event) {
-    handleReceivedEvent(event);
+    validateCondition();
   }
 
   @Override
   public void stateChanged(XI5250EmulatorEvent event) {
-    handleReceivedEvent(event);
+    validateCondition();
   }
 
   @Override
   public void newPanelReceived(XI5250EmulatorEvent event) {
-    checkIfScreenMatchesCondition();
-    handleReceivedEvent(event);
-  }
-
-  private void checkIfScreenMatchesCondition() {
-    if (condition.matchesScreen(client.getScreen())) {
-      LOG.debug("Found matching text in screen, now waiting for silent period.");
-      matched = true;
-    }
+    validateCondition();
   }
 
   @Override
   public void fieldsRemoved(XI5250EmulatorEvent event) {
-    handleReceivedEvent(event);
+    validateCondition();
   }
 
   @Override
   public void dataSended(XI5250EmulatorEvent event) {
-    handleReceivedEvent(event);
+    validateCondition();
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return condition.matchesScreen(client.getScreen());
+  }
 }

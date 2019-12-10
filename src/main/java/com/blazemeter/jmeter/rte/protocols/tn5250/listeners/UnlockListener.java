@@ -14,13 +14,11 @@ import org.slf4j.LoggerFactory;
 public class UnlockListener extends Tn5250ConditionWaiter<SyncWaitCondition> {
 
   private static final Logger LOG = LoggerFactory.getLogger(UnlockListener.class);
-  private boolean isInputInhibited;
 
   public UnlockListener(SyncWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-    isInputInhibited = client.isInputInhibited();
-    if (!isInputInhibited) {
+    if (getCurrentConditionState()) {
       LOG.debug("Start stable period since input is not inhibited");
       startStablePeriod();
     }
@@ -28,17 +26,13 @@ public class UnlockListener extends Tn5250ConditionWaiter<SyncWaitCondition> {
 
   @Override
   public synchronized void stateChanged(XI5250EmulatorEvent event) {
-    boolean wasInputInhibited = isInputInhibited;
-    isInputInhibited = client.isInputInhibited();
-    if (isInputInhibited != wasInputInhibited) {
-      if (isInputInhibited) {
-        LOG.debug("Cancel stable period since input has been inhibited");
-        endStablePeriod();
-      } else {
-        LOG.debug("Start stable period since input is no longer inhibited");
-        startStablePeriod();
-      }
-    }
+    validateCondition();
+   // LOG.debug("Cancel stable period since input has been inhibited");
+   // LOG.debug("Start stable period since input is no longer inhibited");
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return !client.isInputInhibited();
+  }
 }

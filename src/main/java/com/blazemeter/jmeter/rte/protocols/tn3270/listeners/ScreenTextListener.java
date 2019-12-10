@@ -10,7 +10,6 @@ import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenWatcher;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.BooleanSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +17,6 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     KeyboardStatusListener, CursorMoveListener, ScreenChangeListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(ScreenTextListener.class);
-  private boolean lastMatched;
-  private BooleanSupplier matched = () -> condition.matchesScreen(client.getScreen());
 
   public ScreenTextListener(TextWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
@@ -27,42 +24,27 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     client.addCursorMoveListener(this);
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
-    if (matched.getAsBoolean()) {
+    if (getCurrentConditionState()) {
       startStablePeriod();
-      lastMatched = true;
+      conditionState = true;
     }
   }
 
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
-    handleEvent("keyboardStatusChangedEvent");
+    validateCondition();
   }
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    handleEvent("cursorMoved");
+    validateCondition();
+
   }
 
   @Override
   public void screenChanged(ScreenWatcher screenWatcher) {
-    handleEvent("screenWatcher");
-  }
+    validateCondition();
 
-  private synchronized void handleEvent(String event) {
-    if (lastMatched) {
-      if (matched.getAsBoolean()) {
-        startStablePeriod();
-        LOG.debug("Restart screen text stable period since received event {}", event);
-      } else {
-        endStablePeriod();
-        lastMatched = false;
-      }
-      return;
-    }
-    if (matched.getAsBoolean()) {
-      startStablePeriod();
-      lastMatched = true;
-    }
   }
 
   @Override
@@ -71,6 +53,11 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     client.removeCursorMoveListener(this);
     client.removeKeyboardStatusListener(this);
     client.removeScreenChangeListener(this);
+  }
+
+  @Override
+  protected boolean getCurrentConditionState() {
+    return condition.matchesScreen(client.getScreen());
   }
 
 }
