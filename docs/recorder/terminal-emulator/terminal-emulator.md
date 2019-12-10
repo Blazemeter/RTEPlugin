@@ -9,7 +9,7 @@
      >[Here](#input-by-label-usage) is a small example of input by label usage.  
 - You can select a screen area to be used as wait for text, then press ![alt_text](/src/main/resources/dark-theme/waitForText.png) and a new *Text Wait Condition* will be added to your sampler.
      
-    >[Here](Wait-Conditions/wait-conditions-recording.md#text-wait-condition) is more information about wait for text, how it works and a little usage example.
+    >[Here](wait-conditions/wait-conditions-recording.md#text-wait-condition) is more information about wait for text, how it works and a little usage example.
 
 - You can press assertion button ![alt_text](/src/main/resources/dark-theme/assertion.png) when you want to make sure that a part of the screen has appeared in the screen. This assertion has the same behaviour as JMeter Assertions. To assert for a part of the screen you just have to select a part of the screen and press the button. An assertion will be added to corresponding sampler.
     >[Here](#recorder-screen-assertion-usage) is an example of usage.
