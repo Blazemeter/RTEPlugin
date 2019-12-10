@@ -8,7 +8,7 @@ To begin with the explication of how Wait Conditions works in RTE-Recorder, lets
 
 *Text wait*: It will wait until the text appears on the screen.
 
-[Here](../README.md#waiters-usage) there is more information about Wait Conditions in general.
+[Here](/README.md#waiters-usage) there is more information about Wait Conditions in general.
 
 
 ## Wait conditions recording resolution  
@@ -18,7 +18,7 @@ Wait conditions recording resolution is currently determined by the following 4 
  
  **Case 2**: Consider now that you have received multiple keyboards status changes, so the keyboard has been unlocked and locked few/many times but the difference between those locks and unlocks is greater than **Stable Period**, then the plugin will add a Silent Wait Condition alongside a warning stating this behavior and a possible workaround in case the recorded behavior is not the expected one.
  
-> [Here](../README.md#stable-period) for a description of stable period        
+> [Here](/README.md#stable-period) for a description of stable period        
  
  **Case 3**: In this case your keyboard state has been changed once or several times but now the difference between those status changes is lower than stable period and also the difference between last keyboard unlock and last event occurred (like attention keys, inputs, etc) is lower than Stable Period. Then a Sync Wait Condition will be added to that sampler.
  
