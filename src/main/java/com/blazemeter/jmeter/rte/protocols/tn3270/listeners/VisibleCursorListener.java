@@ -20,8 +20,9 @@ public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondi
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
     client.addCursorMoveListener(this);
     if (getCurrentConditionState()) {
-      LOG.debug("Cursor is in expected position, now waiting for it to remain for stable period");
+      LOG.debug(CursorWaitCondition.EXPECTED_CURSOR_POSITION);
       startStablePeriod();
+      conditionState.set(true);
     }
   }
 
@@ -31,14 +32,8 @@ public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondi
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    //change this for new implementation
-    if (condition.getPosition().equals(getCursorPosition())) {
-      LOG.debug("Cursor is in expected position, now waiting for it to remain for stable period");
-      startStablePeriod();
-    } else {
-      LOG.debug("Cursor is not in expected position, canceling any stable period");
-      endStablePeriod();
-    }
+    validateCondition(CursorWaitCondition.EXPECTED_CURSOR_POSITION,
+        CursorWaitCondition.NOT_EXPECTED_CURSOR_POSITION, "cursor moved");
   }
 
   @Override

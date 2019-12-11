@@ -64,7 +64,7 @@ public abstract class ConditionWaiterIT<T extends ConditionWaiter<?>> {
   }
 
   protected void startPeriodicEventGenerator(Runnable eventGenerator) {
-    eventGeneratorExecutor.scheduleAtFixedRate(eventGenerator, 500, 500, TimeUnit.MILLISECONDS);
+    eventGeneratorExecutor.scheduleAtFixedRate(eventGenerator, 100, 500, TimeUnit.MILLISECONDS);
   }
 
 

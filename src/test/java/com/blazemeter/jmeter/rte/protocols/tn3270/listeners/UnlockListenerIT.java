@@ -30,6 +30,7 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingUnlockStateChange() throws Exception {
+    when(client.isInputInhibited()).thenReturn(false);
     KeyboardStatusChangedEvent keyboardEvent = new KeyboardStatusChangedEvent(false, false, "");
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();

@@ -14,34 +14,23 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
 
   private static final Logger LOG = LoggerFactory.getLogger(
       UnlockListener.class);
-  private boolean isInputInhibited;
 
   public UnlockListener(SyncWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
     client.addKeyboardStatusListener(this);
-    isInputInhibited = client.isInputInhibited();
-    if (!isInputInhibited) {
-      LOG.debug("Start stable period since input is not inhibited");
+    if (getCurrentConditionState()) {
+      LOG.debug(SyncWaitCondition.INPUT_INHIBITED_LOG_MESSAGE);
       startStablePeriod();
+      conditionState.set(true);
     }
   }
 
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
     LOG.debug("keyboardStatusChanged {}", keyboardStatusChangedEvent.toString());
-
-    boolean wasInputInhibited = isInputInhibited;
-    isInputInhibited = keyboardStatusChangedEvent.keyboardLocked;
-    if (isInputInhibited != wasInputInhibited) {
-      if (isInputInhibited) {
-        LOG.debug("Cancel stable period since input has been inhibited");
-        endStablePeriod();
-      } else {
-        LOG.debug("Start stable period since input is no longer inhibited");
-        startStablePeriod();
-      }
-    }
+    validateCondition(SyncWaitCondition.INPUT_INHIBITED_LOG_MESSAGE,
+        SyncWaitCondition.NO_INPUT_INHIBITED_LOG_MESSAGE, "");
   }
 
   @Override
@@ -52,7 +41,7 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
 
   @Override
   protected boolean getCurrentConditionState() {
-    return client.isInputInhibited();
+    return !client.isInputInhibited();
   }
 
 }

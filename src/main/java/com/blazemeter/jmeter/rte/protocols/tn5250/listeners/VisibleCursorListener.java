@@ -19,24 +19,21 @@ public class VisibleCursorListener extends Tn5250ConditionWaiter<CursorWaitCondi
   public VisibleCursorListener(CursorWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-    if (condition.getPosition().equals(client.getCursorPosition().orElse(null))) {
-      LOG.debug("Cursor is in expected position, now waiting for it to remain for stable period");
+    if (getCurrentConditionState()) {
+      LOG.debug(CursorWaitCondition.EXPECTED_CURSOR_POSITION);
       startStablePeriod();
+      conditionState.set(true);
     }
   }
 
   @Override
   public synchronized void stateChanged(XI5250EmulatorEvent event) {
-    validateCondition();
-    //LOG.debug("Cursor is in expected position, now waiting for it to remain for stable period");
-    // LOG.debug("Cursor is not in expected position, canceling any stable period");
+    validateCondition(CursorWaitCondition.EXPECTED_CURSOR_POSITION,
+        CursorWaitCondition.NOT_EXPECTED_CURSOR_POSITION, event.toString());
   }
 
   @Override
   protected boolean getCurrentConditionState() {
-    if (client.getCursorPosition().isPresent()) {
-      return condition.getPosition().equals(client.getCursorPosition().get());
-    }
-    return false;
+    return condition.getPosition().equals(client.getCursorPosition().orElse(null));
   }
 }

@@ -8,6 +8,10 @@ import java.util.Objects;
  */
 public class CursorWaitCondition extends WaitCondition {
 
+  public static final String EXPECTED_CURSOR_POSITION =
+      "Cursor is in expected position, now waiting for it to remain for stable period";
+  public static final String NOT_EXPECTED_CURSOR_POSITION =
+      "Cursor is not in expected position, canceling any stable period";
   private final Position position;
 
   public CursorWaitCondition(Position position, long timeoutMillis, long stableTimeoutMillis) {

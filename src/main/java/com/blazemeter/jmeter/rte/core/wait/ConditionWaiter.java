@@ -8,16 +8,21 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ConditionWaiter<T extends WaitCondition> implements ExceptionListener {
 
+  private static final Logger LOG = LoggerFactory.getLogger(ConditionWaiter.class);
+
   protected final T condition;
+  protected AtomicBoolean conditionState = new AtomicBoolean(false);
   private final CountDownLatch lock = new CountDownLatch(1);
   private final ScheduledExecutorService stableTimeoutExecutor;
   private ExceptionHandler exceptionHandler;
   private ScheduledFuture stableTimeoutTask;
   private boolean ended;
-  protected boolean conditionState;
 
   public ConditionWaiter(T condition, ScheduledExecutorService stableTimeoutExecutor,
       ExceptionHandler exceptionHandler) {
@@ -73,16 +78,19 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
     exceptionHandler.removeListener(this);
   }
 
-  protected void validateCondition() {
-    if (conditionState != getCurrentConditionState()) {
+  protected void validateCondition(String log1, String log2, String event) {
+    //consider using method overload for the cases when there is no event.. like sync;
+    if (conditionState.get() != getCurrentConditionState()) {
+      conditionState.set(getCurrentConditionState());
       if (getCurrentConditionState()) {
+        LOG.debug(log1 + " {}", event);
         startStablePeriod();
-        conditionState = true;
       } else {
+        LOG.debug(log2 + " {}", event);
         endStablePeriod();
       }
     }
   }
-  
+
   protected abstract boolean getCurrentConditionState();
 }

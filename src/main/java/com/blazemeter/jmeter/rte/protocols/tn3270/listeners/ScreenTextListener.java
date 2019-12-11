@@ -25,26 +25,26 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
     if (getCurrentConditionState()) {
+      LOG.debug(TextWaitCondition.SCREEN_MATCHES_TEXT_LOG_MESSAGE);
       startStablePeriod();
-      conditionState = true;
+      conditionState.set(true);
     }
   }
 
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
-    validateCondition();
+    handleReceivedEvent(keyboardStatusChangedEvent.getClass().getSimpleName());
   }
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    validateCondition();
+    handleReceivedEvent("cursor moved");
 
   }
 
   @Override
   public void screenChanged(ScreenWatcher screenWatcher) {
-    validateCondition();
-
+    handleReceivedEvent(screenWatcher.getClass().getSimpleName());
   }
 
   @Override
@@ -60,4 +60,8 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
     return condition.matchesScreen(client.getScreen());
   }
 
+  private void handleReceivedEvent(String event) {
+    validateCondition(TextWaitCondition.RESTART_SCREEN_TEXT_WAIT_LOG_MESSAGE,
+        TextWaitCondition.SCREEN_DO_NOT_MATCHES_TEXT_LOG_MESSAGE, event);
+  }
 }

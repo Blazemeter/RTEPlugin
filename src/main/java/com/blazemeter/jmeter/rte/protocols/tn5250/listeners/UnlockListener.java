@@ -19,16 +19,16 @@ public class UnlockListener extends Tn5250ConditionWaiter<SyncWaitCondition> {
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
     if (getCurrentConditionState()) {
-      LOG.debug("Start stable period since input is not inhibited");
+      LOG.debug(SyncWaitCondition.INPUT_INHIBITED_LOG_MESSAGE);
       startStablePeriod();
+      conditionState.set(true);
     }
   }
 
   @Override
   public synchronized void stateChanged(XI5250EmulatorEvent event) {
-    validateCondition();
-   // LOG.debug("Cancel stable period since input has been inhibited");
-   // LOG.debug("Start stable period since input is no longer inhibited");
+    validateCondition(SyncWaitCondition.INPUT_INHIBITED_LOG_MESSAGE,
+        SyncWaitCondition.NO_INPUT_INHIBITED_LOG_MESSAGE, "");
   }
 
   @Override
