@@ -13,13 +13,7 @@ import org.slf4j.LoggerFactory;
  * {@link WaitCondition} to wait for certain text to be in terminal screen.
  */
 public class TextWaitCondition extends WaitCondition {
-
-  public static final String RESTART_SCREEN_TEXT_WAIT_LOG_MESSAGE =
-      "Restart screen text stable period since received event";
-  public static final String SCREEN_MATCHES_TEXT_LOG_MESSAGE =
-      "Found matching text in screen, now waiting for silent period";
-  public static final String SCREEN_DO_NOT_MATCHES_TEXT_LOG_MESSAGE = 
-      "Text does not match with current screen after event";
+  
   private static final Logger LOG = LoggerFactory.getLogger(TextWaitCondition.class);
   private final Pattern regex;
   private final PatternMatcher matcher;

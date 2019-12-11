@@ -5,21 +5,12 @@ import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ScreenTextListener extends Tn5250ConditionWaiter<TextWaitCondition> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ScreenTextListener.class);
-
+  
   public ScreenTextListener(TextWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-    if (getCurrentConditionState()) {
-      LOG.debug(TextWaitCondition.SCREEN_MATCHES_TEXT_LOG_MESSAGE);
-      startStablePeriod();
-      conditionState.set(true);
-    }
   }
 
   @Override
@@ -63,7 +54,6 @@ public class ScreenTextListener extends Tn5250ConditionWaiter<TextWaitCondition>
   }
 
   private void handleReceivedEvent(XI5250EmulatorEvent event) {
-    validateCondition(TextWaitCondition.RESTART_SCREEN_TEXT_WAIT_LOG_MESSAGE,
-        TextWaitCondition.SCREEN_DO_NOT_MATCHES_TEXT_LOG_MESSAGE, event.toString());
+    updateConditionState(event.toString());
   }
 }

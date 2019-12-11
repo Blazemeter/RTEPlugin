@@ -361,14 +361,15 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
     assertThat(currentSegments).isEqualTo(buildExpectedFields());
   }
-  
+
   @Test(expected = TimeoutException.class)
-  public void shouldFailWhenMatchedScreenChangedBeforeStablePeriod() throws Exception {
-     loadFlow("login-whit-multiple-flash-screen.yml");
+  public void shouldThrowTimeoutExceptionWhenMatchedScreenChangedBeforeStablePeriod()
+      throws Exception {
+    loadFlow("login-with-multiple-flash-screen.yml");
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
-     client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("AAAAA"),
-         JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1,1,24,80), 10000, 1000)));
-     System.out.println(client.getScreen().getText());
+    
+    client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("AAAAA"),
+        JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1, 1, 24, 80), 10000, 1000)));
   }
 }

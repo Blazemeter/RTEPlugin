@@ -15,36 +15,30 @@ import org.slf4j.LoggerFactory;
 
 public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> implements
     KeyboardStatusListener, CursorMoveListener, ScreenChangeListener {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
-
+  
   public SilenceListener(SilentWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
     client.addCursorMoveListener(this);
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
-    startStablePeriod();
   }
 
-  private void handleReceivedEvent(String event) {
-    LOG.debug("Restarting silent period since event received {}", event);
-    startStablePeriod();
-  }
+ 
 
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
-    handleReceivedEvent("keyboardStatusChanged");
+    updateConditionState("keyboardStatusChanged");
   }
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    handleReceivedEvent("cursorMoved");
+    updateConditionState("cursorMoved");
   }
 
   @Override
   public void screenChanged(ScreenWatcher screenWatcher) {
-    handleReceivedEvent("screenChanged");
+    updateConditionState("screenChanged");
   }
 
   @Override
@@ -57,7 +51,7 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
 
   @Override
   protected boolean getCurrentConditionState() {
-    return false;
+    return true;
   }
 
 }

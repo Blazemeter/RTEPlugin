@@ -8,7 +8,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +16,9 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
   private static final Logger LOG = LoggerFactory.getLogger(ConditionWaiter.class);
 
   protected final T condition;
-  protected AtomicBoolean conditionState = new AtomicBoolean(false);
   private final CountDownLatch lock = new CountDownLatch(1);
   private final ScheduledExecutorService stableTimeoutExecutor;
+  private boolean lastConditionState;
   private ExceptionHandler exceptionHandler;
   private ScheduledFuture stableTimeoutTask;
   private boolean ended;
@@ -30,9 +29,10 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
     this.stableTimeoutExecutor = stableTimeoutExecutor;
     this.exceptionHandler = exceptionHandler;
     exceptionHandler.addListener(this);
+    initialVerificationOfCondition();
   }
 
-  protected synchronized void startStablePeriod() {
+  private synchronized void startStablePeriod() {
     if (ended) {
       return;
     }
@@ -41,7 +41,7 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
         .schedule(lock::countDown, condition.getStableTimeoutMillis(), TimeUnit.MILLISECONDS);
   }
 
-  protected synchronized void endStablePeriod() {
+  private synchronized void endStablePeriod() {
     if (stableTimeoutTask != null) {
       stableTimeoutTask.cancel(false);
     }
@@ -78,19 +78,27 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
     exceptionHandler.removeListener(this);
   }
 
-  protected void validateCondition(String log1, String log2, String event) {
-    //consider using method overload for the cases when there is no event.. like sync;
-    if (conditionState.get() != getCurrentConditionState()) {
-      conditionState.set(getCurrentConditionState());
-      if (getCurrentConditionState()) {
-        LOG.debug(log1 + " {}", event);
+  protected void updateConditionState(String event) {
+    boolean currentConditionState = getCurrentConditionState();
+    if (lastConditionState != currentConditionState) {
+      lastConditionState = currentConditionState;
+      if (currentConditionState) {
+        LOG.debug("Stable period restarted because event {} arrived", event);
         startStablePeriod();
       } else {
-        LOG.debug(log2 + " {}", event);
+        LOG.debug("Stable period cancelled. Since {} arrived condition does not meet", event);
         endStablePeriod();
       }
     }
   }
 
   protected abstract boolean getCurrentConditionState();
+
+  private void initialVerificationOfCondition() {
+    if (getCurrentConditionState()) {
+      LOG.debug("Start stable period since condition was already met");
+      startStablePeriod();
+      lastConditionState = true;
+    }
+  }
 }

@@ -13,23 +13,15 @@ import org.slf4j.LoggerFactory;
  * for a given period of time.
  */
 public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
-
+  
   public SilenceListener(SilentWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-    startStablePeriod();
   }
 
   @Override
   public void connecting(XI5250EmulatorEvent event) {
     handleReceivedEvent(event);
-  }
-
-  private void handleReceivedEvent(XI5250EmulatorEvent event) {
-    LOG.debug("Restarting silent period since event received {}", event);
-    startStablePeriod();
   }
 
   @Override
@@ -64,6 +56,10 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
 
   @Override
   protected boolean getCurrentConditionState() {
-    return false;
+    return true;
+  }
+
+  private void handleReceivedEvent(XI5250EmulatorEvent event) {
+    updateConditionState(event.toString());
   }
 }
