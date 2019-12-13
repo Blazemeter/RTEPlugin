@@ -10,11 +10,12 @@ public abstract class Tn3270ConditionWaiter<T extends WaitCondition> extends
     ConditionWaiter<T> {
 
   protected Tn3270Client client;
-
+  
   public Tn3270ConditionWaiter(T condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, stableTimeoutExecutor, exceptionHandler);
     this.client = client;
+    initialVerificationOfCondition();
   }
 
 }

@@ -16,9 +16,9 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
   private static final Logger LOG = LoggerFactory.getLogger(ConditionWaiter.class);
 
   protected final T condition;
+  protected boolean lastConditionState;
   private final CountDownLatch lock = new CountDownLatch(1);
   private final ScheduledExecutorService stableTimeoutExecutor;
-  private boolean lastConditionState;
   private ExceptionHandler exceptionHandler;
   private ScheduledFuture stableTimeoutTask;
   private boolean ended;
@@ -29,7 +29,6 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
     this.stableTimeoutExecutor = stableTimeoutExecutor;
     this.exceptionHandler = exceptionHandler;
     exceptionHandler.addListener(this);
-    initialVerificationOfCondition();
   }
 
   private synchronized void startStablePeriod() {
@@ -94,7 +93,7 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
 
   protected abstract boolean getCurrentConditionState();
 
-  private void initialVerificationOfCondition() {
+  protected void initialVerificationOfCondition() {
     if (getCurrentConditionState()) {
       LOG.debug("Start stable period since condition was already met");
       startStablePeriod();

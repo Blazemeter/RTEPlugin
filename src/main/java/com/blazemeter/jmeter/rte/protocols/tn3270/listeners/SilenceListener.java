@@ -10,12 +10,10 @@ import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenWatcher;
 import java.util.concurrent.ScheduledExecutorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> implements
     KeyboardStatusListener, CursorMoveListener, ScreenChangeListener {
-  
+
   public SilenceListener(SilentWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
@@ -23,9 +21,7 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
   }
-
- 
-
+  
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
     updateConditionState("keyboardStatusChanged");
@@ -51,7 +47,7 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
 
   @Override
   protected boolean getCurrentConditionState() {
-    return true;
+    return !lastConditionState;
   }
 
 }
