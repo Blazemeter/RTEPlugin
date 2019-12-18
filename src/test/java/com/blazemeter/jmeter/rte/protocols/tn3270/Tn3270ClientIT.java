@@ -370,6 +370,6 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
         TIMEOUT_MILLIS);
     
     client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("AAAAA"),
-        JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1, 1, 24, 80), 10000, 1000)));
+        JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX, Position.UNSPECIFIED_INDEX), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 }

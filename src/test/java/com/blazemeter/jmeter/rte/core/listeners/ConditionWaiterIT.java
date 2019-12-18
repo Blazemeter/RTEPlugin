@@ -18,14 +18,13 @@ public abstract class ConditionWaiterIT<T extends ConditionWaiter<?>> {
 
   protected static final long TIMEOUT_MILLIS = 3000;
   protected static final long STABLE_MILLIS = 1000;
+  private static final int INITIAL_DELAY = 500;
 
   protected ScheduledExecutorService stableTimeoutExecutor;
-  private ScheduledExecutorService eventGeneratorExecutor;
-
   @Mock
   protected ExceptionHandler exceptionHandler;
-
   protected T listener;
+  private ScheduledExecutorService eventGeneratorExecutor;
 
   @Before
   public void setup() throws Exception {
@@ -40,11 +39,10 @@ public abstract class ConditionWaiterIT<T extends ConditionWaiter<?>> {
   @Test
   public void shouldUnblockAfterReceivingException() throws Exception {
     when(exceptionHandler.hasPendingError()).thenReturn(true);
-    long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
-    startSingleEventGenerator(unlockDelayMillis, buildOnExceptionEventGenerator());
+    startSingleEventGenerator(INITIAL_DELAY, buildOnExceptionEventGenerator());
     listener.await();
-    assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(unlockDelayMillis);
+    assertThat(waitTime.elapsed(TimeUnit.MILLISECONDS)).isGreaterThanOrEqualTo(INITIAL_DELAY);
   }
 
   private Runnable buildOnExceptionEventGenerator() {
@@ -64,7 +62,9 @@ public abstract class ConditionWaiterIT<T extends ConditionWaiter<?>> {
   }
 
   protected void startPeriodicEventGenerator(Runnable eventGenerator) {
-    eventGeneratorExecutor.scheduleAtFixedRate(eventGenerator, 100, 500, TimeUnit.MILLISECONDS);
+    eventGeneratorExecutor
+        .scheduleAtFixedRate(eventGenerator, INITIAL_DELAY, Long.divideUnsigned(STABLE_MILLIS, 2),
+            TimeUnit.MILLISECONDS);
   }
 
 
