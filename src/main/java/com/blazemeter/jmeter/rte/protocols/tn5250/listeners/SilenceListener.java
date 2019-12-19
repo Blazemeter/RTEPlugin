@@ -5,8 +5,6 @@ import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
 import java.util.concurrent.ScheduledExecutorService;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Tn5250ConditionWaiter} which allows waiting until the terminal does not receive events
@@ -14,22 +12,14 @@ import org.slf4j.LoggerFactory;
  */
 public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
-
   public SilenceListener(SilentWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-    startStablePeriod();
   }
 
   @Override
   public void connecting(XI5250EmulatorEvent event) {
     handleReceivedEvent(event);
-  }
-
-  private void handleReceivedEvent(XI5250EmulatorEvent event) {
-    LOG.debug("Restarting silent period since event received {}", event);
-    startStablePeriod();
   }
 
   @Override
@@ -62,4 +52,12 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
     handleReceivedEvent(event);
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return !lastConditionState;
+  }
+
+  private void handleReceivedEvent(XI5250EmulatorEvent event) {
+    updateConditionState(event.toString());
+  }
 }
