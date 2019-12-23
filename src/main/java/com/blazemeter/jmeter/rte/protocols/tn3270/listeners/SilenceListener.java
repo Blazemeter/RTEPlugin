@@ -24,16 +24,24 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
   
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
+    //we are updating over here because 
+    //silent does not really have a 
+    //condition. Then always when some event
+    //arrives we need to startStablePeriod again.
+    lastConditionState = false;
+    updateConditionState("screenChanged");
     updateConditionState("keyboardStatusChanged");
   }
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    updateConditionState("cursorMoved");
+    lastConditionState = false;
+    updateConditionState("screenChanged");
   }
 
   @Override
   public void screenChanged(ScreenWatcher screenWatcher) {
+    lastConditionState = false;
     updateConditionState("screenChanged");
   }
 
@@ -47,7 +55,7 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
 
   @Override
   protected boolean getCurrentConditionState() {
-    return !lastConditionState;
+    return true;
   }
 
 }
