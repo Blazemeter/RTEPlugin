@@ -21,13 +21,15 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
   }
-  
+
   @Override
   public void keyboardStatusChanged(KeyboardStatusChangedEvent keyboardStatusChangedEvent) {
-    //we are updating over here because 
-    //silent does not really have a 
-    //condition. Then always when some event
-    //arrives we need to startStablePeriod again.
+    /*
+      we are updating over here because 
+      silent does not really have a 
+      condition. Then always when some event
+      arrives we need to startStablePeriod again.
+    */
     lastConditionState = false;
     updateConditionState("screenChanged");
     updateConditionState("keyboardStatusChanged");
