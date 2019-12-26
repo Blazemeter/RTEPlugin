@@ -162,7 +162,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   public void setRow(String row) {
-    setProperty(ROW_PROPERTY, row, String.valueOf(1));
+    setProperty(ROW_PROPERTY, row, "1");
   }
 
   public String getColumn() {
@@ -170,7 +170,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   public void setColumn(String column) {
-    setProperty(COLUMN_PROPERTY, column, String.valueOf(1));
+    setProperty(COLUMN_PROPERTY, column, "1");
   }
 
   public String getOffset() {
@@ -178,7 +178,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   public void setOffset(String offset) {
-    setProperty(OFFSET_PROPERTY, offset, String.valueOf(0));
+    setProperty(OFFSET_PROPERTY, offset, "0");
   }
 
   public String getVariablePrefix() {
