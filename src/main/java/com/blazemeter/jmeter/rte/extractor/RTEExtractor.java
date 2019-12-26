@@ -26,7 +26,8 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   private static final String VARIABLE_PREFIX_PROPERTY = "RTEExtractor.variablePrefix";
   private static final String POSITION_TYPE_PROPERTY = "RTEExtractor.positionType";
   private static final PositionType DEFAULT_POSITION_TYPE = PositionType.CURSOR_POSITION;
-
+  private static final int UNSPECIFIED_COORDS = 1;
+  private static final int UNSPECIFIED_OFFSET = 0;
   private JMeterContext context;
 
   public RTEExtractor() {
@@ -101,7 +102,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   private int getOffsetAsInt() {
-    return Integer.parseInt(getOffset());
+    return getOffset().isEmpty() ? UNSPECIFIED_OFFSET : Integer.parseInt(getOffset());
   }
 
   private boolean isGivenFieldPositionValid(String requestHeaders) {
@@ -149,11 +150,11 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   private int getRowAsInt() {
-    return Integer.parseInt(getRow());
+    return getRow().isEmpty() ? UNSPECIFIED_COORDS : Integer.parseInt(getRow());
   }
 
   private int getColumnAsInt() {
-    return Integer.parseInt(getColumn());
+    return getColumn().isEmpty() ? UNSPECIFIED_COORDS : Integer.parseInt(getColumn());
   }
 
   public String getRow() {
@@ -161,7 +162,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   public void setRow(String row) {
-    setProperty(ROW_PROPERTY, row);
+    setProperty(ROW_PROPERTY, row, String.valueOf(1));
   }
 
   public String getColumn() {
@@ -169,7 +170,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   public void setColumn(String column) {
-    setProperty(COLUMN_PROPERTY, column);
+    setProperty(COLUMN_PROPERTY, column, String.valueOf(1));
   }
 
   public String getOffset() {
@@ -177,7 +178,7 @@ public class RTEExtractor extends AbstractScopedTestElement implements PostProce
   }
 
   public void setOffset(String offset) {
-    setProperty(OFFSET_PROPERTY, offset);
+    setProperty(OFFSET_PROPERTY, offset, String.valueOf(0));
   }
 
   public String getVariablePrefix() {
