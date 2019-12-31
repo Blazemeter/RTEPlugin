@@ -24,10 +24,10 @@
   </repositories>
 
   <scm>
-    <connection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git</connection>
-    <developerConnection>scm:git:git@gitlab.abstracta.us:BZ/jmeter-rte-plugin.git
+    <connection>scm:git:git@gitlab.abstracta.us:BZ-plugins/jmeter-rte-plugin.git</connection>
+    <developerConnection>scm:git:git@gitlab.abstracta.us:BZ-plugins/jmeter-rte-plugin.git
     </developerConnection>
-    <url>http://gitlab.abstracta.us/BZ/jmeter-rte-plugin</url>
+    <url>http://gitlab.abstracta.us/BZ-plugins/jmeter-rte-plugin</url>
   </scm>
 
   <dependencies>
