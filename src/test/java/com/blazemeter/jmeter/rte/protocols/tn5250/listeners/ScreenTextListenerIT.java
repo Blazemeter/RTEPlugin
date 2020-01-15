@@ -85,17 +85,8 @@ public class ScreenTextListenerIT extends Tn5250ConditionWaiterIT {
     listener.await();
   }
 
-  @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenReceivedExpectedScreenButKeepGettingStateChanges()
-      throws Exception {
-    setupScreenWithText(EXPECTED_SCREEN);
-    buildNewPanelGenerator().run();
-    startPeriodicEventGenerator(buildStateChangeGenerator());
-    listener.await();
-  }
-
-  @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenReceivedExpectedScreenButKeepGettingScreens()
+  @Test
+  public void shouldUnlockWhenReceivingMultipleExpectedScreen()
       throws Exception {
     setupScreenWithText(EXPECTED_SCREEN);
     startPeriodicEventGenerator(buildNewPanelGenerator());

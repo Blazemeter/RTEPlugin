@@ -3,10 +3,13 @@ package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A {@link Tn5250ConditionWaiter} which allows waiting until the terminal does not receive events
@@ -14,22 +17,24 @@ import org.slf4j.LoggerFactory;
  */
 public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
+  private static final List<String> EVENT_NAMES = getEventNames();
 
   public SilenceListener(SilentWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-    startStablePeriod();
+  }
+
+  private static List<String> getEventNames() {
+    Field[] declaredFields = XI5250EmulatorEvent.class.getDeclaredFields();
+    return Arrays.stream(declaredFields)
+        .filter(f -> Modifier.isStatic(f.getModifiers()) && Modifier.isPublic(f.getModifiers()))
+        .map(Field::getName)
+        .collect(Collectors.toList());
   }
 
   @Override
   public void connecting(XI5250EmulatorEvent event) {
     handleReceivedEvent(event);
-  }
-
-  private void handleReceivedEvent(XI5250EmulatorEvent event) {
-    LOG.debug("Restarting silent period since event received {}", event);
-    startStablePeriod();
   }
 
   @Override
@@ -62,4 +67,19 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
     handleReceivedEvent(event);
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return true;
+  }
+
+  private void handleReceivedEvent(XI5250EmulatorEvent event) {
+    /*
+      we are updating over here because 
+      silent does not really have a 
+      condition. Then always when some event
+      arrives we need to startStablePeriod again.
+    */
+    lastConditionState = false;
+    updateConditionState(EVENT_NAMES.get(event.getID()));
+  }
 }

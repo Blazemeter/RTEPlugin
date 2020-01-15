@@ -7,7 +7,7 @@ import java.util.Objects;
  * {@link WaitCondition} to wait for the cursor to be visible on the desired position.
  */
 public class CursorWaitCondition extends WaitCondition {
-
+  
   private final Position position;
 
   public CursorWaitCondition(Position position, long timeoutMillis, long stableTimeoutMillis) {

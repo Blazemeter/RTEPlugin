@@ -6,14 +6,14 @@
   <groupId>com.blazemeter.jmeter</groupId>
   <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>2.2</version>
+  <version>2.2.1</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <jmeter.version>3.1</jmeter.version>
+    <jmeter.version>3.2</jmeter.version>
   </properties>
 
   <repositories>
@@ -24,10 +24,10 @@
   </repositories>
 
   <scm>
-    <connection>scm:git:git@github.com:Blazemeter/RTEPlugin.git</connection>
-    <developerConnection>scm:git:git@github.com:Blazemeter/RTEPlugin.git
+    <connection>scm:git:git@gitlab.abstracta.us:BZ-plugins/jmeter-rte-plugin.git</connection>
+    <developerConnection>scm:git:git@gitlab.abstracta.us:BZ-plugins/jmeter-rte-plugin.git
     </developerConnection>
-    <url>https://github.com/Blazemeter/RTEPlugin</url>
+    <url>http://gitlab.abstracta.us/BZ-plugins/jmeter-rte-plugin</url>
   </scm>
 
   <dependencies>
@@ -35,12 +35,12 @@
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>xtn5250</artifactId>
-      <version>3.1</version>
+      <version>3.2</version>
     </dependency>
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>dm3270</artifactId>
-      <version>0.11.1-lib</version>
+      <version>0.12.1-lib</version>
     </dependency>
 
     <dependency>

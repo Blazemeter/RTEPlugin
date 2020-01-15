@@ -13,9 +13,8 @@ import org.slf4j.LoggerFactory;
  * {@link WaitCondition} to wait for certain text to be in terminal screen.
  */
 public class TextWaitCondition extends WaitCondition {
-
+  
   private static final Logger LOG = LoggerFactory.getLogger(TextWaitCondition.class);
-
   private final Pattern regex;
   private final PatternMatcher matcher;
   private final Area searchArea;

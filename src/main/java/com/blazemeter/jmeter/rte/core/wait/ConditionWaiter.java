@@ -8,13 +8,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class ConditionWaiter<T extends WaitCondition> implements ExceptionListener {
 
+  private static final Logger LOG = LoggerFactory.getLogger(ConditionWaiter.class);
+
   protected final T condition;
-  private ExceptionHandler exceptionHandler;
+  protected boolean lastConditionState;
   private final CountDownLatch lock = new CountDownLatch(1);
   private final ScheduledExecutorService stableTimeoutExecutor;
+  private ExceptionHandler exceptionHandler;
   private ScheduledFuture stableTimeoutTask;
   private boolean ended;
 
@@ -26,7 +31,7 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
     exceptionHandler.addListener(this);
   }
 
-  protected synchronized void startStablePeriod() {
+  private synchronized void startStablePeriod() {
     if (ended) {
       return;
     }
@@ -35,7 +40,7 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
         .schedule(lock::countDown, condition.getStableTimeoutMillis(), TimeUnit.MILLISECONDS);
   }
 
-  protected synchronized void endStablePeriod() {
+  private synchronized void endStablePeriod() {
     if (stableTimeoutTask != null) {
       stableTimeoutTask.cancel(false);
     }
@@ -72,4 +77,27 @@ public abstract class ConditionWaiter<T extends WaitCondition> implements Except
     exceptionHandler.removeListener(this);
   }
 
+  protected void updateConditionState(String event) {
+    boolean currentConditionState = getCurrentConditionState();
+    if (lastConditionState != currentConditionState) {
+      lastConditionState = currentConditionState;
+      if (currentConditionState) {
+        LOG.debug("Stable period restarted because event {} arrived", event);
+        startStablePeriod();
+      } else {
+        LOG.debug("Stable period cancelled. Since {} arrived condition does not meet", event);
+        endStablePeriod();
+      }
+    }
+  }
+
+  protected abstract boolean getCurrentConditionState();
+
+  protected void initialVerificationOfCondition() {
+    if (getCurrentConditionState()) {
+      LOG.debug("Start stable period since condition was already met");
+      startStablePeriod();
+      lastConditionState = true;
+    }
+  }
 }
