@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jmeter.util.JMeterUtils;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
@@ -328,5 +329,14 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
         .collect(
             Collectors.toList());
     assertThat(currentFields).isEqualTo(buildExpectedFields());
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void shouldFailWhenMatchedScreenChangedBeforeStablePeriod() throws Exception {
+    loadFlow("login-with-multiple-flash-screen.yml");
+    client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE, getDefaultTerminalType(),
+        TIMEOUT_MILLIS);
+    client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("Sign on"),
+        JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1,1,24,80), 10000, 1000)));
   }
 }

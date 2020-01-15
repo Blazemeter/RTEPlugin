@@ -10,13 +10,9 @@ import com.bytezone.dm3270.display.Field;
 import com.bytezone.dm3270.display.ScreenChangeListener;
 import com.bytezone.dm3270.display.ScreenWatcher;
 import java.util.concurrent.ScheduledExecutorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> implements
     KeyboardStatusListener, CursorMoveListener, ScreenChangeListener {
-
-  private static final Logger LOG = LoggerFactory.getLogger(SilenceListener.class);
 
   public SilenceListener(SilentWaitCondition condition, Tn3270Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
@@ -24,12 +20,6 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
     client.addCursorMoveListener(this);
     client.addKeyboardStatusListener(this);
     client.addScreenChangeListener(this);
-    startStablePeriod();
-  }
-
-  private void handleReceivedEvent(String event) {
-    LOG.debug("Restarting silent period since event received {}", event);
-    startStablePeriod();
   }
 
   @Override
@@ -39,7 +29,7 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    handleReceivedEvent("cursorMoved");
+    handleReceivedEvent("screenChanged");
   }
 
   @Override
@@ -55,4 +45,19 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
     client.removeScreenChangeListener(this);
   }
 
+  @Override
+  protected boolean getCurrentConditionState() {
+    return true;
+  }
+
+  private void handleReceivedEvent(String event) {
+    /*
+      we are updating over here because 
+      silent does not really have a 
+      condition. Then always when some event
+      arrives we need to startStablePeriod again.
+    */
+    lastConditionState = false;
+    updateConditionState(event);
+  }
 }

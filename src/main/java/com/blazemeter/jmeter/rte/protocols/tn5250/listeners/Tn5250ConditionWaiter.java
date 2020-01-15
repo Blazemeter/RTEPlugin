@@ -22,6 +22,7 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
     super(condition, stableTimeoutExecutor, exceptionHandler);
     client.addEmulatorListener(this);
     this.client = client;
+    initialVerificationOfCondition();
   }
 
   @Override

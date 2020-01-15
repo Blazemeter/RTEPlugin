@@ -85,4 +85,6 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   }
   
   protected abstract List<Segment> buildExpectedFields();
+  
+  
 }
