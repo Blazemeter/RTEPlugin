@@ -9,6 +9,7 @@ import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
+import com.blazemeter.jmeter.rte.core.TabulatorInput;
 import com.blazemeter.jmeter.rte.sampler.InputTestElement;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
 import com.blazemeter.jmeter.rte.sampler.gui.InputPanel.FieldPanel;
@@ -42,7 +43,7 @@ import org.junit.Test;
 
 public class InputPanelIT {
 
-  private static final long CHANGE_TIMEOUT_MILLIS = 10000;
+  private static final long CHANGE_TIMEOUT_MILLIS = 20000;
   private static final LabelInput USER_LABEL_INPUT = new LabelInput("User", "TESTUSR");
   private static final CoordInput PASS_COORD_INPUT = new CoordInput(new Position(1, 2), "TESTPSW");
   private static final CoordInput NAME_INPUT = new CoordInput(new Position(4, 2), "TESTNAME");
@@ -50,6 +51,7 @@ public class InputPanelIT {
   private static final String DELETE_BUTTON = "deleteButton";
   private static final String UP_BUTTON = "upButton";
   private static final String DOWN_BUTTON = "downButton";
+  private static final String TEST = "TEST";
 
   private FrameFixture frame;
   private InputPanel panel;
@@ -60,39 +62,16 @@ public class InputPanelIT {
     JMeterTestUtils.setupJmeterEnv();
   }
 
+  private static TabulatorInput TABULATOR_INPUT(int offset) {
+    return new TabulatorInput(offset, TEST);
+  }
+
   @Before
   public void setup() {
     panel = new InputPanel();
     frame = showInFrame(panel);
     inputTable = frame.table("table");
     inputTable.replaceCellWriter(new FieldWriter(frame.robot()));
-  }
-
-  private static class FieldWriter extends AbstractJTableCellWriter {
-
-    private final JTableTextComponentEditorCellWriter textComponentWriter;
-
-    private FieldWriter(Robot robot) {
-      super(robot);
-      textComponentWriter = new JTableTextComponentEditorCellWriter(robot);
-    }
-
-    @Override
-    public void startCellEditing(JTable table, int row, int column) {
-      Component editor = editorForCell(table, row, column);
-      if (editor instanceof JTextComponent) {
-        textComponentWriter.startCellEditing(table, row, column);
-      } else {
-        Point cellLocation = cellLocation(table, row, column, location());
-        robot.click(table, cellLocation);
-        waitForEditorActivation(table, row, column, FieldPanel.class);
-      }
-    }
-
-    @Override
-    public void enterValue(JTable table, int row, int column, String value) {
-    }
-
   }
 
   @After
@@ -107,9 +86,14 @@ public class InputPanelIT {
   }
 
   private void addFieldByLabel(int row, LabelInput input) {
-    frame.button("addLabelInputButton").click();
+    selectFromInputComboBox(0);
     awaitAddedRow(row);
     setInputRow(row, input, (panel, i) -> setTextField(panel, "fieldLabel", i.getLabel()));
+  }
+
+  private void selectFromInputComboBox(int type) {
+    frame.comboBox("comboType").selectItem(type);
+    frame.button("addButton").click();
   }
 
   private void awaitAddedRow(int row) {
@@ -183,7 +167,7 @@ public class InputPanelIT {
   }
 
   private void addFieldByCoord(int row, CoordInput input) {
-    frame.button("addCoordInputButton").click();
+    selectFromInputComboBox(2);
     awaitAddedRow(row);
     setInputRow(row, input, (panel, i) -> {
       Position position = i.getPosition();
@@ -305,16 +289,38 @@ public class InputPanelIT {
   }
 
   private void clickAddFromClipboard() {
-    frame.button("addFromClipboardButton").click();
+    selectFromInputComboBox(3);
   }
 
   @Test
   public void shouldAddInputsWhenCopyFromClipboard() {
     setTextToClipboard("TEST\nUser\tTESTUSR\n1\t2\tTESTPSW\n1\t4\tTESTNAME\tNAME");
     clickAddFromClipboard();
-    CoordInput test = new CoordInput(new Position(1, 1), "TEST");
+    TabulatorInput tabulatorInput = new TabulatorInput(0, TEST);
     CoordInput name = new CoordInput(new Position(1, 4), "TESTNAME");
-    assertInputs(test, USER_LABEL_INPUT, PASS_COORD_INPUT, name);
+    assertInputs(tabulatorInput, USER_LABEL_INPUT, PASS_COORD_INPUT, name);
+  }
+
+  @Test
+  public void shouldAddInputByTabAndInputByLabelWhenCopyFromClipboard() {
+    setTextToClipboard("<TAB*3>\tTEST\nUser\tTESTUSR\n");
+    clickAddFromClipboard();
+    assertInputs(TABULATOR_INPUT(3), USER_LABEL_INPUT);
+  }
+
+  @Test
+  public void shouldAddDefaultInputWhenNoTabsFoundInCopyFromClipboard() {
+    setTextToClipboard("TEST\n");
+    clickAddFromClipboard();
+    TabulatorInput tabulatorInput = new TabulatorInput(0, TEST);
+    assertInputs(tabulatorInput);
+  }
+
+  @Test
+  public void shouldAddTabInputWhenCopyFromClipboardInExtendedVersion() {
+    setTextToClipboard("<TAB><TAB><TAB>\tTEST");
+    clickAddFromClipboard();
+    assertInputs(TABULATOR_INPUT(3));
   }
 
   @Test
@@ -372,5 +378,44 @@ public class InputPanelIT {
     clickDeleteButton();
     waitButtonEnabled(DOWN_BUTTON, false);
   }
-  
+
+  @Test
+  public void shouldAddTabulatorInput() {
+    addFiledByTab(0, TABULATOR_INPUT(4));
+    assertInputs(TABULATOR_INPUT(4));
+  }
+
+  private void addFiledByTab(int row, TabulatorInput input) {
+    selectFromInputComboBox(1);
+    awaitAddedRow(row);
+    setInputRow(row, input,
+        (panel, i) -> setTextField(panel, "fieldTabulator", String.valueOf(i.getOffset())));
+  }
+
+  private static class FieldWriter extends AbstractJTableCellWriter {
+
+    private final JTableTextComponentEditorCellWriter textComponentWriter;
+
+    private FieldWriter(Robot robot) {
+      super(robot);
+      textComponentWriter = new JTableTextComponentEditorCellWriter(robot);
+    }
+
+    @Override
+    public void startCellEditing(JTable table, int row, int column) {
+      Component editor = editorForCell(table, row, column);
+      if (editor instanceof JTextComponent) {
+        textComponentWriter.startCellEditing(table, row, column);
+      } else {
+        Point cellLocation = cellLocation(table, row, column, location());
+        robot.click(table, cellLocation);
+        waitForEditorActivation(table, row, column, FieldPanel.class);
+      }
+    }
+
+    @Override
+    public void enterValue(JTable table, int row, int column, String value) {
+    }
+
+  }
 }

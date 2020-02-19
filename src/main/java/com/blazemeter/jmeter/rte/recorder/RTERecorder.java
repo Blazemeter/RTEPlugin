@@ -211,6 +211,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     executor.submit(() -> {
       try {
         synchronized (this) {
+         
           terminalClient
               .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
           resultBuilder.withConnectEndNow();
@@ -467,7 +468,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     if (recordingListener != null) {
       recordingListener.onRecordingException((Exception) e);
     }
-
+    
     resultBuilder.withFailure(e);
     recordPendingSample();
     synchronized (this) {

@@ -4,7 +4,12 @@ import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
 
@@ -23,6 +28,14 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
     client.addEmulatorListener(this);
     this.client = client;
     initialVerificationOfCondition();
+  }
+
+  protected static List<String> getEventNames() {
+    Field[] declaredFields = XI5250EmulatorEvent.class.getDeclaredFields();
+    return Arrays.stream(declaredFields)
+        .filter(f -> Modifier.isStatic(f.getModifiers()) && Modifier.isPublic(f.getModifiers()))
+        .map(Field::getName)
+        .collect(Collectors.toList());
   }
 
   @Override

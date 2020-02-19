@@ -14,7 +14,7 @@ ORIGINAL_VERSION=$(mvn -q -Dexec.executable="echo" -Dexec.args='${project.versio
 git checkout production && git reset --hard origin/production
 git merge master
 mvn versions:set -DremoveSnapshot
-/execute-on-vnc.sh mvn --batch-mode clean verify
+/execute-on-vnc.sh mvn --batch-mode clean verify -Prelease 
 mvn --batch-mode scm:checkin -Dmessage="[RELEASE][skip ci] Fix release version \${project.version}" -Dincludes=pom.xml
 mvn --batch-mode scm:check-local-modification -DpushChanges=false
 mvn --batch-mode scm:tag -Dtag="\${project.version}"

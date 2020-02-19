@@ -114,6 +114,19 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     this.protocolFactory = protocolFactory;
   }
 
+  public static long getStableTimeout() {
+    return JMeterUtils.getPropDefault(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
+  }
+
+  @VisibleForTesting
+  protected void setStableTimeout(Long timeoutMillis) {
+    if (timeoutMillis == null) {
+      JMeterUtils.getJMeterProperties().remove(CONFIG_STABLE_TIMEOUT);
+    } else {
+      JMeterUtils.setProperty(CONFIG_STABLE_TIMEOUT, String.valueOf(timeoutMillis));
+    }
+  }
+
   @Override
   public String getName() {
     return getPropertyAsString(TestElement.NAME);
@@ -166,19 +179,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   private long getLongProperty(String propertyName, long defaultValue) {
     long prop = getPropertyAsLong(propertyName);
     return prop == 0L ? defaultValue : prop;
-  }
-
-  public static long getStableTimeout() {
-    return JMeterUtils.getPropDefault(CONFIG_STABLE_TIMEOUT, DEFAULT_STABLE_TIMEOUT_MILLIS);
-  }
-
-  @VisibleForTesting
-  protected void setStableTimeout(Long timeoutMillis) {
-    if (timeoutMillis == null) {
-      JMeterUtils.getJMeterProperties().remove(CONFIG_STABLE_TIMEOUT);
-    } else {
-      JMeterUtils.setProperty(CONFIG_STABLE_TIMEOUT, String.valueOf(timeoutMillis));
-    }
   }
 
   private boolean isReuseConnections() {
@@ -438,14 +438,6 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     }
   }
 
-  public void setInputs(List<Input> inputs) {
-    Inputs testElement = new Inputs();
-    for (Input input : inputs) {
-      testElement.addInput(buildInputTestElement(input));
-    }
-    setPayload(testElement);
-  }
-
   private InputTestElement buildInputTestElement(Input input) {
     if (input instanceof CoordInput) {
       CoordInput coordInput = (CoordInput) input;
@@ -566,6 +558,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       inputs.add(c.toInput());
     }
     return inputs;
+  }
+
+  public void setInputs(List<Input> inputs) {
+    Inputs testElement = new Inputs();
+    for (Input input : inputs) {
+      testElement.addInput(buildInputTestElement(input));
+    }
+    setPayload(testElement);
   }
 
   public Inputs getInputsTestElement() {

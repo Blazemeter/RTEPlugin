@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.sampler;
 
 import static com.blazemeter.jmeter.rte.SampleResultAssertions.assertSampleResult;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -154,7 +155,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenSendThrowIllegalArgumentException() throws Exception {
     IllegalArgumentException e = new IllegalArgumentException();
     doThrow(e).when(client)
-        .send(any(), any());
+        .send(INPUTS, AttentionKey.ENTER);
     SampleResult expected = buildErrorResultBuilder(e)
         .withInputInhibitedRequest(true)
         .withInputs(INPUTS)
@@ -169,7 +170,8 @@ public class RTESamplerTest {
 
   private void truncateExceptionStacktrace(SampleResult result) {
     String response = result.getResponseDataAsString();
-    result.setResponseData(response.substring(0, response.indexOf('\n')), StandardCharsets.UTF_8.name());
+    result.setResponseData(response.substring(0, response.indexOf('\n')),
+        StandardCharsets.UTF_8.name());
   }
 
   @Test
@@ -219,7 +221,7 @@ public class RTESamplerTest {
       throws Exception {
     rteSampler.sample(null);
     verify(client)
-        .send(any(), eq(AttentionKey.ENTER));
+        .send(anyList(), eq(AttentionKey.ENTER));
   }
 
   @Test
@@ -228,7 +230,7 @@ public class RTESamplerTest {
     rteSampler.setAttentionKey(AttentionKey.F1);
     rteSampler.sample(null);
     verify(client)
-        .send(any(), eq(AttentionKey.F1));
+        .send(anyList(), eq(AttentionKey.F1));
   }
 
   @Test
@@ -236,7 +238,7 @@ public class RTESamplerTest {
     rteSampler.setAction(Action.CONNECT);
     rteSampler.sample(null);
     verify(client, never())
-        .send(any(), any());
+        .send(anyList(), any(AttentionKey.class));
   }
 
   @Test
