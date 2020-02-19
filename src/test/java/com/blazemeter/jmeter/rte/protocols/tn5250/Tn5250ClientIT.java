@@ -107,12 +107,6 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     client.connect(VIRTUAL_SERVER_HOST, 1, SSLType.NONE, getDefaultTerminalType(), TIMEOUT_MILLIS);
   }
 
-  @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenConnectAndServerIsTooSlow() throws Exception {
-    loadFlow("slow-welcome-screen.yml");
-    connectToVirtualService();
-  }
-
   @Test
   public void shouldGetUserMenuScreenWhenSendCredsByCoord() throws Exception {
     loadFlow("login.yml");

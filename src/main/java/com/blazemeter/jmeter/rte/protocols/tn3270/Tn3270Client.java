@@ -7,11 +7,13 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.TabulatorInput;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.exceptions.ScreenWithoutFieldException;
 import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -40,6 +42,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -178,6 +181,7 @@ public class Tn3270Client extends BaseProtocolClient {
       client.removeKeyboardStatusListener(listenerProxy);
       client.removeCursorMoveListener(listenerProxy);
     }
+
   }
 
   private void setFieldByCoord(CoordInput i) {
@@ -195,8 +199,18 @@ public class Tn3270Client extends BaseProtocolClient {
       setFieldByCoord((CoordInput) i);
     } else if (i instanceof LabelInput) {
       setFieldByLabel((LabelInput) i);
+    } else if (i instanceof TabulatorInput) {
+      setFieldByTabulator((TabulatorInput) i);
     } else {
       throw new IllegalArgumentException("Invalid input type: " + i.getClass());
+    }
+  }
+
+  private void setFieldByTabulator(TabulatorInput i) {
+    try {
+      client.setTabulatedInput(i.getInput(), i.getOffset());
+    } catch (NoSuchElementException e) {
+      throw new ScreenWithoutFieldException();
     }
   }
 
@@ -248,9 +262,8 @@ public class Tn3270Client extends BaseProtocolClient {
     }
   }
 
-  private Screen buildScreenFromText(String screenText) {
-    Dimension size = getScreenSize();
-    Screen ret = new Screen(size);
+  public Screen buildScreenFromText(String screenText) {
+    Screen ret = new Screen(getScreenSize());
     int lastNonBlankPosition = screenText.length() - 1;
     while (lastNonBlankPosition >= 0 && (screenText.charAt(lastNonBlankPosition) == ' '
         || screenText.charAt(lastNonBlankPosition) == '\u0000')) {

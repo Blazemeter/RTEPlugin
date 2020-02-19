@@ -40,7 +40,8 @@ public interface RteProtocolClient {
 
   void removeTerminalStateListener(TerminalStateListener terminalStateListener);
 
-  void send(List<Input> input, AttentionKey attentionKey) throws RteIOException;
+  void send(List<Input> input, AttentionKey attentionKey)
+      throws RteIOException;
 
   Screen getScreen();
 

@@ -3,12 +3,8 @@ package com.blazemeter.jmeter.rte.protocols.tn5250.listeners;
 import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250Client;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Collectors;
 import net.infordata.em.tn5250.XI5250EmulatorEvent;
 
 /**
@@ -22,14 +18,6 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
   public SilenceListener(SilentWaitCondition condition, Tn5250Client client,
       ScheduledExecutorService stableTimeoutExecutor, ExceptionHandler exceptionHandler) {
     super(condition, client, stableTimeoutExecutor, exceptionHandler);
-  }
-
-  private static List<String> getEventNames() {
-    Field[] declaredFields = XI5250EmulatorEvent.class.getDeclaredFields();
-    return Arrays.stream(declaredFields)
-        .filter(f -> Modifier.isStatic(f.getModifiers()) && Modifier.isPublic(f.getModifiers()))
-        .map(Field::getName)
-        .collect(Collectors.toList());
   }
 
   @Override
@@ -73,8 +61,7 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
   }
 
   private void handleReceivedEvent(XI5250EmulatorEvent event) {
-    /*
-      we are updating over here because 
+    /*we are updating over here because 
       silent does not really have a 
       condition. Then always when some event
       arrives we need to startStablePeriod again.

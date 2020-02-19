@@ -37,7 +37,8 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   }
 
   @Override
-  public void send(List<Input> input, AttentionKey attentionKey) throws RteIOException {
+  public void send(List<Input> input, AttentionKey attentionKey)
+      throws RteIOException {
     input.forEach(this::setField);
     sendAttentionKey(attentionKey);
     exceptionHandler.throwAnyPendingError();

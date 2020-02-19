@@ -53,7 +53,11 @@ package com.blazemeter.jmeter.rte {
         class LabelInput extends Input{
             String label
         }
-
+        
+        class TabulatorInput extends Input{
+            int offset
+        }
+        
         class Position {
             int row
             int column

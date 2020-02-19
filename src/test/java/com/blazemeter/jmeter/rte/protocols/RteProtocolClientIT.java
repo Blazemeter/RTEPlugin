@@ -6,8 +6,6 @@ import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
-import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250ClientIT;
-import com.bytezone.dm3270.TerminalClient;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import java.awt.Dimension;
@@ -27,13 +25,12 @@ import us.abstracta.wiresham.VirtualTcpService;
 
 public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(Tn5250ClientIT.class);
-  protected static final Dimension SCREEN_SIZE = new Dimension(80, 24); 
+  protected static final Dimension SCREEN_SIZE = new Dimension(80, 24);
   protected static final String VIRTUAL_SERVER_HOST = "localhost";
   protected static final int TIMEOUT_MILLIS = 5000;
   protected static final int STABLE_TIMEOUT_MILLIS = 2000;
   protected static final long SERVER_STOP_TIMEOUT = TimeUnit.SECONDS.toMillis(10);
-
+  private static final Logger LOG = LoggerFactory.getLogger(RteProtocolClientIT.class);
   protected VirtualTcpService server = new VirtualTcpService();
   protected T client;
 
@@ -42,7 +39,7 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
     server.setSslEnabled(false);
     server.start();
     client = buildClient();
-    
+
   }
 
   protected abstract T buildClient();
@@ -83,8 +80,8 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   protected Screen buildScreenFromHtmlFile(String fileName) throws IOException {
     return Screen.fromHtml(Resources.toString(findResource(fileName), Charsets.UTF_8));
   }
-  
+
   protected abstract List<Segment> buildExpectedFields();
-  
-  
+
+
 }

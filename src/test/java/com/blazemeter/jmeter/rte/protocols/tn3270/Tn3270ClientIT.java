@@ -132,12 +132,6 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
         TIMEOUT_MILLIS);
   }
 
-  @Test(expected = TimeoutException.class)
-  public void shouldThrowTimeoutExceptionWhenConnectAndServerIsTooSlow() throws Exception {
-    loadFlow("slow-welcome-screen.yml");
-    connectToVirtualService();
-  }
-
   @Test
   public void shouldGetUserMenuScreenWhenSendUsername() throws Exception {
     loadFlow("login.yml");
@@ -240,7 +234,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     client.send(buildUsernameField(), AttentionKey.ENTER);
     client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1,
-            1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            51), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)

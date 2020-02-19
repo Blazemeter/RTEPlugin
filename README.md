@@ -4,7 +4,7 @@
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing a recorder for automatic test plan creation, and config and sampler for protocol interactions.
 
-Nowadays the plugin supports **IBM protocol's TN5250 and TN3270** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/) and [dm3270](http://dmolony.github.io/) emulators with modifications ([xtn5250 fork](https://github.com/abstracta/xtn5250) and [dm3270 fork](https://github.com/abstracta/dm3270)) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
+Nowadays the plugin supports **IBM protocol's TN5250, TN3270 and VT420** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/), [dm3270](http://dmolony.github.io/) and [jvt220](https://github.com/jawi/jVT220) emulators with modifications [xtn5250 fork](https://github.com/abstracta/xtn5250), [dm3270 fork](https://github.com/abstracta/dm3270) and  [jvt220 fork](https://github.com/Blazemeter/jVT220) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
 
 People who usually work with these IBM servers interact with them, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes. The plugin provides a [recording controller](#a-recording-controller-rte-recorder), which allows the user to interact through a terminal emulator, recording every interaction (samplers) with the mainframe application. Additionally, the plugin allows for manual test plan creation, providing a config element for setting connection parameters and a sampler to set fields on screen and attention key to send to the mainframe application. Besides, the sampler allows to simulate the existing attention keys on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc.  
 
@@ -68,7 +68,7 @@ If more than one RTE Config element is used at the same level of the Test Plan, 
 
 #### Sampler (RTE Sampler)
 
-![alt text](docs/send-keys.png "RTE Sampler GUI")
+![alt text](docs/rte-sampler.png "RTE Sampler GUI")
 
 Connections are shared by RTE Samplers in same thread created by a thread group (different threads use separate connections). The RTE Sampler element checks if a connection exists to send the packets, if none exists, it uses the RTE Config data to establish a new one. Connections are automatically closed (unless Jmeter property `RTEConnectionConfig.reuseConnections=true` is specified in *jmeter.properties*) at the end of each thread iteration. 
 
@@ -83,7 +83,12 @@ The RTE Sampler fields are:
   - *Disconnect*. This option allows to explicitly close the connection to the terminal server. This allows to restart the emulator status by re connecting to the server en following samplers.
     > As previously stated, connections are (by default) automatically closed at the end of each thread iteration, so is not required to add a sampler with disconnect action at the end of each thread loop iteration.
 - *RTE Message*. When "Send keys" action is selected it is possible to specify fields to send and attention key to use:
-  - *Payload*. Contains a grid in which user can specify Coordinates (row and column) or Label (which precedes from a terminal screen label) of a field in the screen, and the value (string) to send in both cases. Rows and columns start from Row 1, Column 1 (are 1 indexed).
+  - *Payload*. Contains a grid where the user can add different types of input.
+    - Input by Tabulator: It will make as many tabulations as specified to the mainframe, before 
+    sending the _"value"_. It is useful to avoid using coordinates.
+    - Input by Label: It precedes from a terminal screen label. It will send to the mainframe application the already set value to a field which matches the selected label.
+    - Input by Coordinates (row and column):  It will send the text introduced in _"value"_ to the mainframe application at that position. 
+     > For more information about inputs and how they work in a normal flow, check this [examples](docs/recorder/terminal-emulator/terminal-emulator.md#Input By Label Usage).
   - *Attention Keys*. These buttons trigger the attention keys to be sent to the server on each sample. They all represent a key from a terminal's keyboard.
 - *Wait for*. When using "Connect" or "Send keys" action it is possible to wait for a specific condition. If this condition is not reached after a specific time (defined in *Timeout* value), the sampler returns timeout error. There are four defined waiters:
   - *Sync*. Waits for the system to return from X SYSTEM or Input Inhibited mode. Default value is checked, as it's recommended to always check that the system is not in Input Inhibited Mode after a sample (and before the next one) in order to get the correct screen in the sample result (and to ensure that the next sampler is executed from the desired screen). On the other hand, the sampler does an implicit "Wait for sync" each time it connects to a server, which means that if *Connect* mode is used, then it's not needed to check the *Wait for sync* function, unless you want to change the default timeout. 
@@ -124,7 +129,7 @@ The RTE Config element should specify the server url in *Server* field, and the 
 
 Finally, the second sampler should use "Send keys" action (the default option) and specify in Payload grid the position of the username on the screen, the label (in this case 'Password') and the values for both *user* and *password* fields. Besides, the attention key *ENTER* (the default one) should be selected to simulate the user pressing that key after filling the fields. Finally, an assert post processor should be added to check for the "Login Successful" message.
 
-![alt text](docs/send-keys.png "RTE Sampler 2") 
+![alt text](docs/rte-sampler.png "RTE Sampler 2") 
 
 #### Waiters usage
 As explained previously, the RTE Sampler has 4 types of waiters which work as synchronization functions, in order to ensure that the response shown by the sampler is the screen that the server wants to show. It's recommended to always have at least one waiter checked on each sampler.
