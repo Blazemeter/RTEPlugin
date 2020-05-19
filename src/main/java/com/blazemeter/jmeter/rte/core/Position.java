@@ -9,8 +9,8 @@ import java.util.regex.Pattern;
 public class Position {
 
   public static final int UNSPECIFIED_INDEX = 0;
+  public static final Position DEFAULT_POSITION = new Position(0, 0);
   private static final Pattern POSITION_PATTERN = Pattern.compile("^\\((\\d+),(\\d+)\\)$");
-
   private int row;
   private int column;
 
@@ -21,6 +21,13 @@ public class Position {
   public Position(int row, int column) {
     this.row = row;
     this.column = column;
+  }
+
+  public Position(Position other) {
+    if (other != null) {
+      this.row = other.getRow();
+      this.column = other.getColumn();
+    }
   }
 
   public static Position fromString(String text) {
@@ -74,5 +81,9 @@ public class Position {
     return Comparator.comparingInt(Position::getRow)
         .thenComparing(Position::getColumn)
         .compare(this, (Position) o);
+  }
+
+  public boolean isConsecutiveWith(Position other) {
+    return row == other.getRow() && column + 1 == other.getColumn();
   }
 }

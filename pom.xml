@@ -6,14 +6,14 @@
   <groupId>com.blazemeter.jmeter</groupId>
   <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>2.3</version>
+  <version>3.0</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <jmeter.version>3.1</jmeter.version>
+    <jmeter.version>3.2</jmeter.version>
   </properties>
 
   <repositories>
@@ -35,12 +35,17 @@
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>xtn5250</artifactId>
-      <version>3.2</version>
+      <version>3.2.1</version>
     </dependency>
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>dm3270</artifactId>
-      <version>0.12.1-lib</version>
+      <version>0.12.3-lib</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.blazemeter</groupId>
+      <artifactId>jVT220</artifactId>
+      <version>jvt220-v1.3</version>
     </dependency>
 
     <dependency>
@@ -230,7 +235,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270,pcap4j-core
+                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270,pcap4j-core,jVT220
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>

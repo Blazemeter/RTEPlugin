@@ -4,9 +4,9 @@ import com.blazemeter.jmeter.rte.sampler.CoordInputRowGUI;
 import com.blazemeter.jmeter.rte.sampler.InputTestElement;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
 import com.blazemeter.jmeter.rte.sampler.LabelInputRowGUI;
-import com.blazemeter.jmeter.rte.sampler.TabulatorInputParser;
+import com.blazemeter.jmeter.rte.sampler.NavigationInputRowGui;
+import com.blazemeter.jmeter.rte.sampler.NavigationType;
 import com.blazemeter.jmeter.rte.sampler.TabulatorInputRowGui;
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -16,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
@@ -51,6 +52,7 @@ public class InputPanel extends JPanel implements ActionListener {
   private static final Logger LOG = LoggerFactory.getLogger(InputPanel.class);
   private static final String ADD_ACTION_LABEL = "addInputByLabel";
   private static final String ADD_ACTION_POSITION = "addInputByPosition";
+  private static final String ADD_ACTION_NAVIGATION = "addInputByNavigation";
   private static final String ADD_ACTION = "addFromComboBox";
   private static final String DELETE_ACTION = "delete";
   private static final String UP_ACTION = "up";
@@ -59,9 +61,9 @@ public class InputPanel extends JPanel implements ActionListener {
   private static final String CLIPBOARD_ARG_DELIMITERS = "\t";
   private static final String INPUT_BY_LABEL = "Input by Label";
   private static final String INPUT_BY_POSITION = "Input by Position";
+  private static final String INPUT_BY_NAVIGATION = "Input by Navigation";
   private static final String FROM_CLIPBOARD = "From Clipboard";
-  private static final String TAB_OFFSET = "Input by Tabulator";
-  private static final String ADD_TABULATOR_OFFSET = "addTabulatorOffset";
+
   private InputTableModel tableModel;
   private JTable table;
   private JButton deleteButton;
@@ -70,9 +72,7 @@ public class InputPanel extends JPanel implements ActionListener {
   private JComboBox comboType;
 
   public InputPanel() {
-    setLayout(new BorderLayout());
-    add(makeMainPanel(), BorderLayout.CENTER);
-    add(makeButtonPanel(), BorderLayout.SOUTH);
+    initComponents();
     table.revalidate();
   }
 
@@ -81,6 +81,34 @@ public class InputPanel extends JPanel implements ActionListener {
     int first = table.rowAtPoint(vr.getLocation());
     vr.translate(0, vr.height);
     return table.rowAtPoint(vr.getLocation()) - first;
+  }
+
+  private void initComponents() {
+    GroupLayout layout = new GroupLayout(this);
+    layout.setAutoCreateGaps(true);
+    setLayout(layout);
+    Component mainPanel = makeMainPanel();
+    JPanel buttonPanel = makeButtonPanel();
+    JLabel warningLabel = warningLabel();
+
+    layout.setVerticalGroup(layout.createSequentialGroup()
+        .addComponent(mainPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(warningLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
+            Short.MAX_VALUE)
+        .addComponent(buttonPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE));
+
+    layout.setHorizontalGroup(layout.createParallelGroup()
+        .addComponent(mainPanel)
+        .addComponent(warningLabel)
+        .addComponent(buttonPanel));
+  }
+
+  private JLabel warningLabel() {
+    return SwingUtils
+        .createLabelWithWarningStyle("warningInputByLabel", "Warning: Input by Position and Input "
+            + "by Label are not supported for VT protocols");
   }
 
   private Component makeMainPanel() {
@@ -106,43 +134,37 @@ public class InputPanel extends JPanel implements ActionListener {
   }
 
   private JPanel makeButtonPanel() {
-
-    deleteButton = SwingUtils
-        .createComponent("deleteButton", new JButton(JMeterUtils.getResString("delete")));
-    deleteButton.setActionCommand(DELETE_ACTION);
-
-    upButton = SwingUtils.createComponent("upButton", new JButton(JMeterUtils.getResString("up")));
-    upButton.setActionCommand(UP_ACTION);
-
-    downButton = SwingUtils
-        .createComponent("downButton", new JButton(JMeterUtils.getResString("down")));
-    downButton.setActionCommand(DOWN_ACTION);
+    deleteButton = SwingUtils.createButton("deleteButton", "delete",
+        DELETE_ACTION, this);
+    upButton = SwingUtils.createButton("upButton", "up",
+        UP_ACTION, this);
+    downButton = SwingUtils.createButton("downButton", "down",
+        DOWN_ACTION, this);
+    JButton addButton = SwingUtils.createButton("addButton", "Add", ADD_ACTION, this);
 
     comboType = SwingUtils.createComponent("comboType", new JComboBox());
-    DefaultComboBoxModel model = new DefaultComboBoxModel();
-    model.addElement(INPUT_BY_LABEL);
-    model.addElement(TAB_OFFSET);
-    model.addElement(INPUT_BY_POSITION);
-    model.addElement(FROM_CLIPBOARD);
-    comboType.setModel(model);
 
-    JButton addButton = SwingUtils.createComponent("addButton", new JButton("Add"));
-    addButton.setActionCommand(ADD_ACTION);
+    comboType.setModel(getDefaultComboBoxModel());
+
     updateEnabledButtons();
 
     JPanel buttonPanel = SwingUtils.createComponent("buttonPanel", new JPanel());
     buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-
-    deleteButton.addActionListener(this);
-    upButton.addActionListener(this);
-    downButton.addActionListener(this);
-    addButton.addActionListener(this);
     buttonPanel.add(comboType);
     buttonPanel.add(addButton);
     buttonPanel.add(deleteButton);
     buttonPanel.add(upButton);
     buttonPanel.add(downButton);
     return buttonPanel;
+  }
+
+  private DefaultComboBoxModel getDefaultComboBoxModel() {
+    DefaultComboBoxModel model = new DefaultComboBoxModel();
+    model.addElement(INPUT_BY_LABEL);
+    model.addElement(INPUT_BY_NAVIGATION);
+    model.addElement(INPUT_BY_POSITION);
+    model.addElement(FROM_CLIPBOARD);
+    return model;
   }
 
   private void updateEnabledButtons() {
@@ -167,6 +189,18 @@ public class InputPanel extends JPanel implements ActionListener {
       tableModel.clearData();
       for (JMeterProperty jMeterProperty : i) {
         InputTestElement input = (InputTestElement) jMeterProperty.getObjectValue();
+        /* 
+          Backward compatibility with those TestPlans which still
+          using TabulatorInput instead of NavigationInput.
+          Here we are also migrating to new format (NavigationInputRowGui)
+         */
+        if (input instanceof TabulatorInputRowGui) {
+          NavigationInputRowGui navInput = new NavigationInputRowGui();
+          navInput.setType(NavigationType.TAB.getLabel());
+          navInput.setRepeated(((TabulatorInputRowGui) input).getOffset());
+          navInput.setInput(input.getInput());
+          input = navInput;
+        }
         tableModel.addRow(input);
       }
     }
@@ -189,8 +223,8 @@ public class InputPanel extends JPanel implements ActionListener {
           case FROM_CLIPBOARD:
             addFromClipboard();
             break;
-          case TAB_OFFSET:
-            addArgument(ADD_TABULATOR_OFFSET);
+          case INPUT_BY_NAVIGATION:
+            addArgument(ADD_ACTION_NAVIGATION);
             break;
           default:
             throw new UnsupportedOperationException(selectedType);
@@ -219,8 +253,8 @@ public class InputPanel extends JPanel implements ActionListener {
       tableModel.addRow(new CoordInputRowGUI());
     } else if (ADD_ACTION_LABEL.equals(type)) {
       tableModel.addRow(new LabelInputRowGUI());
-    } else if (ADD_TABULATOR_OFFSET.equals(type)) {
-      tableModel.addRow(new TabulatorInputRowGui());
+    } else if (ADD_ACTION_NAVIGATION.equals(type)) {
+      tableModel.addRow(new NavigationInputRowGui());
     }
 
     updateEnabledButtons();
@@ -276,28 +310,30 @@ public class InputPanel extends JPanel implements ActionListener {
       argument.setColumn(clipboardCols[1]);
       argument.setInput(clipboardCols[2]);
       return argument;
-    }
-
-    if (clipboardCols.length == 2) {
-      String argument = clipboardCols[0] + "\t" + clipboardCols[1];
+    } else {
+      String value = "";
+      if (clipboardCols.length == 2) {
+        value = clipboardCols[1];
+      }
       try {
-        LOG.info("Trying to build argument: '{}' as a Tabulator Input",
-            argument);
-        return TabulatorInputParser.parse(clipboardCols[0], clipboardCols[1]);
+        return NavigationInputRowGui.parse(clipboardCols[0], value);
       } catch (IllegalArgumentException e) {
+        if (value.isEmpty()) {
+          NavigationInputRowGui defaultArgument = new NavigationInputRowGui();
+          defaultArgument.setRepeated("0");
+          defaultArgument.setInput(clipboardCols[0]);
+          defaultArgument.setType(NavigationType.TAB.getLabel());
+          return defaultArgument;
+        }
         LOG.info(e.getMessage());
-        LOG.info("Building argument: '{}' as Input by Label", argument);
+        LOG.info("Building argument: '{}' as Input by Label",
+            clipboardCols[0] + " " + value);
         LabelInputRowGUI labelArgument = new LabelInputRowGUI();
         labelArgument.setLabel(clipboardCols[0]);
-        labelArgument.setInput(clipboardCols[1]);
+        labelArgument.setInput(value);
         return labelArgument;
       }
     }
-
-    TabulatorInputRowGui defaultArgument = new TabulatorInputRowGui();
-    defaultArgument.setOffset("0");
-    defaultArgument.setInput(clipboardCols[0]);
-    return defaultArgument;
 
   }
 
@@ -401,12 +437,19 @@ public class InputPanel extends JPanel implements ActionListener {
     private JTextField fieldRow = SwingUtils.createComponent("fieldRow", new JTextField());
     private JTextField fieldColumn = SwingUtils.createComponent("fieldColumn", new JTextField());
     private JTextField fieldLabel = SwingUtils.createComponent("fieldLabel", new JTextField());
-    private JTextField fieldTab = SwingUtils.createComponent("fieldTabulator", new JTextField());
+    private JTextField fieldNavigation = SwingUtils
+        .createComponent("fieldNavigation", new JTextField());
+    private JComboBox navigationCombo = SwingUtils.createComponent("navigationCombo",
+        new JComboBox());
+    private JLabel navigationLabel = SwingUtils.createComponent("navigationLabel", new JLabel(
+        "Repeat: "));
+    private DefaultComboBoxModel model = new DefaultComboBoxModel();
 
     private FieldPanel() {
       layout = new GroupLayout(this);
       layout.setAutoCreateGaps(true);
       setLayout(layout);
+      setupNavigationCombo();
     }
 
     private void updateFromField(InputTestElement value) {
@@ -415,8 +458,8 @@ public class InputPanel extends JPanel implements ActionListener {
         buildPanel((CoordInputRowGUI) value);
       } else if (value instanceof LabelInputRowGUI) {
         buildPanel((LabelInputRowGUI) value);
-      } else if (value instanceof TabulatorInputRowGui) {
-        buildPanel((TabulatorInputRowGui) value);
+      } else if (value instanceof NavigationInputRowGui) {
+        buildPanel((NavigationInputRowGui) value);
       }
     }
 
@@ -430,10 +473,11 @@ public class InputPanel extends JPanel implements ActionListener {
         LabelInputRowGUI input = (LabelInputRowGUI) value;
         input.setLabel(fieldLabel.getText());
       }
-      if (value instanceof TabulatorInputRowGui) {
-        TabulatorInputRowGui input = (TabulatorInputRowGui) value;
-        String offset = verifyOffsetIntegrity(fieldTab.getText());
-        input.setOffset(offset);
+      if (value instanceof NavigationInputRowGui) {
+        NavigationInputRowGui input = (NavigationInputRowGui) value;
+        String offset = verifyOffsetIntegrity(fieldNavigation.getText());
+        input.setRepeated(offset);
+        input.setType((String) navigationCombo.getSelectedItem());
       }
     }
 
@@ -474,15 +518,27 @@ public class InputPanel extends JPanel implements ActionListener {
           .addComponent(fieldLabel));
     }
 
-    private void buildPanel(TabulatorInputRowGui tabInputRowGui) {
-      label.setText("Tab offset");
-      fieldTab.setText(tabInputRowGui.getOffset());
+    private void buildPanel(NavigationInputRowGui navigationInputRowGui) {
+      label.setText("Navigation ");
+      fieldNavigation.setText(navigationInputRowGui.getRepeated());
+      navigationCombo.setSelectedItem(navigationInputRowGui.getTypeNavigation().getLabel());
       layout.setHorizontalGroup(layout.createSequentialGroup()
           .addComponent(label)
-          .addComponent(fieldTab));
+          .addComponent(navigationCombo)
+          .addComponent(navigationLabel)
+          .addComponent(fieldNavigation));
       layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
           .addComponent(label)
-          .addComponent(fieldTab));
+          .addComponent(navigationCombo)
+          .addComponent(navigationLabel)
+          .addComponent(fieldNavigation));
+    }
+
+    private void setupNavigationCombo() {
+      Arrays.stream(NavigationType.values())
+          .map(NavigationType::getLabel)
+          .forEach(model::addElement);
+      navigationCombo.setModel(model);
     }
 
   }

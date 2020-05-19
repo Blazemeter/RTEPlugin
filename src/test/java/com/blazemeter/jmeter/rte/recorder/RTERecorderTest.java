@@ -72,15 +72,20 @@ public class RTERecorderTest {
   private static final String SELECTED_TEXT = "selected text";
   private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
   private static final String SERVER = "localhost";
+  private static final RteIOException RTE_IO_EXCEPTION = new RteIOException(null, SERVER);
   private static final int PORT = 80;
-  private static final Protocol PROTOCOL = Protocol.TN5250;
-  private static final TerminalType TERMINAL_TYPE = PROTOCOL.createProtocolClient()
+  private static final Protocol TN5250_PROTOCOL = Protocol.TN5250;
+  private static final Protocol VT420_PROTOCOL = Protocol.VT420;
+  private static final TerminalType TN5250_TERMINAL_TYPE = TN5250_PROTOCOL.createProtocolClient()
+      .getDefaultTerminalType();
+  private static final TerminalType VT420_TERMINAL_TYPE = VT420_PROTOCOL.createProtocolClient()
       .getDefaultTerminalType();
   private static final SSLType SSL_TYPE = SSLType.NONE;
   private static final long TIMEOUT = 10000;
   private static final Position CURSOR_POSITION = new Position(2, 1);
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(CURSOR_POSITION, "testusr"));
+
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private TestElement testStateListener;
@@ -117,6 +122,7 @@ public class RTERecorderTest {
     rteRecorder = new RTERecorder(terminalEmulatorSupplier, finder,
         p -> terminalClient, treeModel);
     setupRecorder();
+    rteRecorder.setInputProvider(input -> input);
   }
 
   public void setupTreeModel() {
@@ -152,7 +158,7 @@ public class RTERecorderTest {
     rteRecorder.setConnectionTimeout(Long.toString(TIMEOUT));
     rteRecorder.setServer(SERVER);
     rteRecorder.setSSLType(SSL_TYPE);
-    rteRecorder.setTerminalType(TERMINAL_TYPE);
+    rteRecorder.setTerminalType(TN5250_TERMINAL_TYPE);
   }
 
   @Test
@@ -171,18 +177,19 @@ public class RTERecorderTest {
     connect();
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
     verify(treeModel).addComponent(argument.capture(), eq(treeNode));
-    assertThat(argument.getValue()).isEqualTo(buildExpectedConfig());
+    assertThat(argument.getValue())
+        .isEqualTo(buildExpectedConfig(TN5250_PROTOCOL, TN5250_TERMINAL_TYPE.getId()));
   }
 
-  private ConfigTestElement buildExpectedConfig() {
+  private ConfigTestElement buildExpectedConfig(Protocol protocol, String terminalTypeID) {
     ConfigTestElement expectedConfig = new ConfigTestElement();
     expectedConfig.setName("bzm-RTE-config");
     expectedConfig.setProperty(TestElement.GUI_CLASS, RTEConfigGui.class.getName());
     expectedConfig.setProperty(RTESampler.CONFIG_SERVER, SERVER);
     expectedConfig.setProperty(RTESampler.CONFIG_PORT, Integer.toString(PORT));
-    expectedConfig.setProperty(RTESampler.CONFIG_PROTOCOL, PROTOCOL.name());
+    expectedConfig.setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
     expectedConfig.setProperty(RTESampler.CONFIG_SSL_TYPE, SSL_TYPE.name());
-    expectedConfig.setProperty(RTESampler.CONFIG_TERMINAL_TYPE, TERMINAL_TYPE.getId());
+    expectedConfig.setProperty(RTESampler.CONFIG_TERMINAL_TYPE, terminalTypeID);
     expectedConfig.setProperty(RTESampler.CONFIG_CONNECTION_TIMEOUT, Long.toString(TIMEOUT));
     return expectedConfig;
   }
@@ -208,7 +215,7 @@ public class RTERecorderTest {
   @Test
   public void shouldConnectTerminalClientWhenStart() throws Exception {
     connect();
-    verify(terminalClient).connect(SERVER, PORT, SSL_TYPE, TERMINAL_TYPE, TIMEOUT);
+    verify(terminalClient).connect(SERVER, PORT, SSL_TYPE, TN5250_TERMINAL_TYPE, TIMEOUT);
   }
 
   @Test
@@ -218,7 +225,8 @@ public class RTERecorderTest {
   }
 
   @Test
-  public void shouldSetEmulatorKeyboardLockWhenTerminalStateChange() throws Exception {
+  public void shouldSetEmulatorKeyboardLockOrUnlockWhenTerminalStateChange() throws Exception {
+    when(terminalClient.isInputInhibited()).thenReturn(Optional.of(false));
     connect();
     verify(terminalEmulator).setKeyboardLock(false);
   }
@@ -238,7 +246,7 @@ public class RTERecorderTest {
   @Test
   public void shouldNotifyErrorResultToChildrenWhenStartWithFailingTerminalClientConnect()
       throws Exception {
-    RteIOException connectionException = new RteIOException(null, "localhost");
+    RteIOException connectionException = new RteIOException(null, SERVER);
     doThrow(connectionException).when(terminalClient)
         .connect(anyString(), anyInt(), any(), any(), anyLong());
     connect();
@@ -260,7 +268,7 @@ public class RTERecorderTest {
         .withLabel("bzm-RTE-" + action.name())
         .withProtocol(Protocol.TN5250)
         .withTerminalType(new TerminalType("IBM-3179-2", new Dimension(80, 24)))
-        .withServer("localhost")
+        .withServer(SERVER)
         .withPort(80)
         .withSslType(SSLType.NONE);
   }
@@ -279,6 +287,7 @@ public class RTERecorderTest {
 
   @Test
   public void shouldSetEmulatorKeyboardLockWhenStart() throws Exception {
+    when(terminalClient.isInputInhibited()).thenReturn(Optional.of(false));
     connect();
     verify(terminalEmulator).setKeyboardLock(false);
   }
@@ -293,7 +302,7 @@ public class RTERecorderTest {
   public void shouldAddConnectionSamplerWhenStartWithFailingTerminalClientConnect()
       throws Exception {
     doThrow(RteIOException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
-        TERMINAL_TYPE, TIMEOUT);
+        TN5250_TERMINAL_TYPE, TIMEOUT);
     connect();
     ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
 
@@ -334,7 +343,7 @@ public class RTERecorderTest {
   public void shouldDisconnectTerminalClientWhenStartWithFailingTerminalClientConnect()
       throws Exception {
     doThrow(RteIOException.class).when(terminalClient).connect(SERVER, PORT, SSL_TYPE,
-        TERMINAL_TYPE, TIMEOUT);
+        TN5250_TERMINAL_TYPE, TIMEOUT);
     connect();
     verify(terminalClient).disconnect();
   }
@@ -405,6 +414,7 @@ public class RTERecorderTest {
 
   @Test
   public void shouldLockEmulatorKeyboardWhenAttentionKey() throws Exception {
+    when(terminalClient.isInputInhibited()).thenReturn(Optional.of(true));
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     /*
@@ -490,7 +500,8 @@ public class RTERecorderTest {
      */
     verify(treeModel, times(3))
         .addComponent(argument.capture(), eq(treeNode));
-    assertThat(Arrays.asList(buildExpectedConfig(), buildExpectedConnectionSampler(),
+    assertThat(Arrays.asList(buildExpectedConfig(TN5250_PROTOCOL, TN5250_TERMINAL_TYPE.getId()),
+        buildExpectedConnectionSampler(),
         buildExpectedDisconnectionSampler())).isEqualTo(argument.getAllValues());
   }
 
@@ -518,7 +529,8 @@ public class RTERecorderTest {
   public void shouldSendInputsAndAttentionKeyToTerminalClientWhenAttentionKey() throws Exception {
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
-    verify(terminalClient).send(INPUTS, AttentionKey.ENTER);
+    verify(terminalClient)
+        .send(INPUTS, AttentionKey.ENTER, RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
   }
 
   @Test
@@ -544,29 +556,23 @@ public class RTERecorderTest {
   }
 
   private void setupExceptionOnAttentionKey(Exception exception) throws RteIOException {
-    doThrow(exception).when(terminalClient).send(any(), any());
+    doThrow(exception).when(terminalClient).send(any(), any(), anyLong());
   }
 
   @Test
   public void shouldNotifyRecordingStateListenerOfExceptionWhenOnAttentionKey()
       throws RteIOException, TimeoutException, InterruptedException {
-    setupExceptionOnTerminalClientSend();
-    RteIOException exception = new RteIOException(null, SERVER);
-    doThrow(exception).when(terminalClient).send(any(), any());
+    setupExceptionOnAttentionKey(RTE_IO_EXCEPTION);
     rteRecorder.setRecordingStateListener(recorderListener);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
-    verify(recorderListener, timeout(TIMEOUT)).onRecordingException(exception);
-  }
-
-  private void setupExceptionOnTerminalClientSend() throws RteIOException {
-    doThrow(new RteIOException(null, SERVER)).when(terminalClient).send(any(), any());
+    verify(recorderListener, timeout(TIMEOUT)).onRecordingException(RTE_IO_EXCEPTION);
   }
 
   @Test
   public void shouldStopEmulatorWhenExceptionOnAttentionKey()
       throws RteIOException, TimeoutException, InterruptedException {
-    setupExceptionOnTerminalClientSend();
+    setupExceptionOnAttentionKey(RTE_IO_EXCEPTION);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(terminalEmulator).stop();
@@ -575,7 +581,7 @@ public class RTERecorderTest {
   @Test
   public void shouldDisconnectWhenExceptionOnAttentionKey()
       throws RteIOException, TimeoutException, InterruptedException {
-    setupExceptionOnTerminalClientSend();
+    setupExceptionOnAttentionKey(RTE_IO_EXCEPTION);
     connect();
     rteRecorder.onAttentionKey(AttentionKey.ENTER, INPUTS, "");
     verify(terminalClient).disconnect();
@@ -656,5 +662,49 @@ public class RTERecorderTest {
     softly.assertThat(argument.getAllValues().get(2).getName()).isEqualTo("bzm-RTE-DISCONNECT");
     softly.assertThat(argument.getAllValues().get(1).getName()).isEqualTo("bzm-RTE-CONNECT");
   }
+
+  @Test
+  public void shouldAddRteConfigToTargetControllerNodeWhenStartUsingVt420() throws Exception {
+    connectToVT420Terminal();
+    VT420_PROTOCOL.createProtocolClient().getDefaultTerminalType();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    verify(treeModel).addComponent(argument.capture(), eq(treeNode));
+    assertThat(argument.getValue())
+        .isEqualTo(buildExpectedConfig(VT420_PROTOCOL, VT420_TERMINAL_TYPE.getId()));
+  }
+
+  private void connectToVT420Terminal() throws TimeoutException, InterruptedException {
+    rteRecorder.setProtocol(VT420_PROTOCOL);
+    rteRecorder.setTerminalType(VT420_TERMINAL_TYPE);
+    connect();
+  }
+
+  @Test
+  public void shouldAddConnectSamplerToTargetControllerNodeWhenStartUsingVt420() throws Exception {
+    connectToVT420Terminal();
+    rteRecorder.onAttentionKey(AttentionKey.ENTER, Collections.EMPTY_LIST, "Input");
+    VT420_PROTOCOL.createProtocolClient().getDefaultTerminalType();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    //Method called thrice due to addition of: Config and Connect samplers.
+    verify(treeModel, times(2)).addComponent(argument.capture(), eq(treeNode));
+
+    assertThat(argument.getValue())
+        .isEqualTo(buildExpectedConnectionSampler());
+  }
+
+  @Test
+  public void shouldAddDisconnectSamplerToTargetControllerNodeWhenStopUsingVt420()
+      throws Exception {
+    connectToVT420Terminal();
+    rteRecorder.onRecordingStop();
+    VT420_PROTOCOL.createProtocolClient().getDefaultTerminalType();
+    ArgumentCaptor<TestElement> argument = ArgumentCaptor.forClass(TestElement.class);
+    //Method called thrice due to addition of: Config, Connect and Disconnect samplers.
+    verify(treeModel, times(3)).addComponent(argument.capture(), eq(treeNode));
+
+    assertThat(argument.getValue())
+        .isEqualTo(buildExpectedDisconnectionSampler());
+  }
+
 }
 

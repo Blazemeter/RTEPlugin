@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.net.SocketFactory;
@@ -19,8 +20,9 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BaseProtocolClient implements RteProtocolClient {
 
+  protected static final ThreadFactory NAMED_THREAD_FACTORY = (runnable) -> new Thread(runnable,
+      "STABLE-TIMEOUT-EXECUTOR");
   private static final Logger LOG = LoggerFactory.getLogger(BaseProtocolClient.class);
-
   protected ExceptionHandler exceptionHandler;
   protected ScheduledExecutorService stableTimeoutExecutor;
 
@@ -37,25 +39,25 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   }
 
   @Override
-  public void send(List<Input> input, AttentionKey attentionKey)
+  public void send(List<Input> input, AttentionKey attentionKey, long echoTimeoutMillis)
       throws RteIOException {
-    input.forEach(this::setField);
+    input.forEach(i -> setField(i, echoTimeoutMillis));
     sendAttentionKey(attentionKey);
     exceptionHandler.throwAnyPendingError();
   }
 
-  protected abstract void setField(Input input);
+  protected abstract void setField(Input input, long echoTimeoutMillis);
 
   protected abstract void sendAttentionKey(AttentionKey attentionKey);
 
   @Override
   public void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException {
-    List<ConditionWaiter> listeners = waitConditions.stream()
+    List<ConditionWaiter<?>> listeners = waitConditions.stream()
         .map(this::buildWaiter)
         .collect(Collectors.toList());
     try {
-      for (ConditionWaiter listener : listeners) {
+      for (ConditionWaiter<?> listener : listeners) {
         listener.await();
       }
     } finally {
@@ -63,7 +65,7 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
     }
   }
 
-  protected abstract ConditionWaiter buildWaiter(WaitCondition waitCondition);
+  protected abstract ConditionWaiter<?> buildWaiter(WaitCondition waitCondition);
 
   @Override
   public void disconnect() throws RteIOException {

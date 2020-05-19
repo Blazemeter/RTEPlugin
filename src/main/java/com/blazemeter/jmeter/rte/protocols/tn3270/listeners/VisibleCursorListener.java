@@ -23,7 +23,7 @@ public class VisibleCursorListener extends Tn3270ConditionWaiter<CursorWaitCondi
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    updateConditionState("cursor moved");
+    updateConditionState(CURSOR_MOVED);
   }
 
   @Override

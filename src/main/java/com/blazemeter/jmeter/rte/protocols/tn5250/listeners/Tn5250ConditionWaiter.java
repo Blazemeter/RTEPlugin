@@ -31,8 +31,7 @@ public abstract class Tn5250ConditionWaiter<T extends WaitCondition> extends
   }
 
   protected static List<String> getEventNames() {
-    Field[] declaredFields = XI5250EmulatorEvent.class.getDeclaredFields();
-    return Arrays.stream(declaredFields)
+    return Arrays.stream(XI5250EmulatorEvent.class.getDeclaredFields())
         .filter(f -> Modifier.isStatic(f.getModifiers()) && Modifier.isPublic(f.getModifiers()))
         .map(Field::getName)
         .collect(Collectors.toList());

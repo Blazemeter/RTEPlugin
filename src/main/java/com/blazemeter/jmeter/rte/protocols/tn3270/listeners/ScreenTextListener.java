@@ -29,7 +29,7 @@ public class ScreenTextListener extends Tn3270ConditionWaiter<TextWaitCondition>
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    updateConditionState("cursor moved");
+    updateConditionState(CURSOR_MOVED);
 
   }
 

@@ -27,6 +27,7 @@ public class RTESamplerPanel extends JPanel {
   private static final int INDEX_WIDTH = 30;
   private static final int TIME_WIDTH = 60;
   private static final String TIMEOUT_LABEL = "Timeout (millis): ";
+  private static final int LABEL_TABULATION_SPACE = 50;
   private final JPanel requestPanel;
   private final JPanel waitPanel;
   private ButtonGroup actionsGroup = new ButtonGroup();
@@ -138,16 +139,23 @@ public class RTESamplerPanel extends JPanel {
     JPanel attentionKeysPanel = buildAttentionKeysPanel();
 
     JLabel warningLabel = SwingUtils
-        .createComponent("warningLabel", new JLabel("Warning: AttentionKey buttons ATTN, " +
-            "RESET, ROLL_UP and ROLL_DN are only supported for TN5250 protocol. " +
-            "AttentionKey buttons PA1, PA2 and PA3 are only supported for TN3270 protocol."));
-    warningLabel.setFont(new Font(null, Font.ITALIC, 11));
+        .createLabelWithWarningStyle("warningLabel", "Warning: AttentionKey buttons ATTN and " +
+            "RESET are only supported for TN5250 protocol. " +
+            "AttentionKey buttons PA1, PA2 and PA3 are only supported for TN3270 protocol.");
+    JLabel warningLabelContinuation = SwingUtils
+        .createLabelWithWarningStyle("warningLabelContinuation",
+            "ROLL_UP and ROLL_DN are supported for VT420 and TN5250 protocols. VT420"
+                + " also supports ENTER and all function keys.");
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(payloadLabel)
         .addComponent(payloadPanel)
         .addComponent(attentionKeysPanel)
-        .addComponent(warningLabel));
+        .addComponent(warningLabel)
+        .addGroup(layout.createSequentialGroup()
+            .addGap(LABEL_TABULATION_SPACE)
+            .addComponent(warningLabelContinuation)
+        ));
 
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(payloadLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
@@ -157,7 +165,9 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(attentionKeysPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE)
         .addComponent(warningLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE));
+            GroupLayout.PREFERRED_SIZE)
+        .addComponent(warningLabelContinuation, GroupLayout.PREFERRED_SIZE,
+            GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE));
 
     return panel;
   }

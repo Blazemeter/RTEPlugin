@@ -19,6 +19,10 @@ import org.junit.Test;
 
 public class StatusPanelIT {
 
+  public static final ImageIcon KEYBOARD_UNLOCKED_ICON = ThemedIcon
+      .fromResourceName("keyboard-unlocked.png");
+  public static final ImageIcon CURSOR_ICON = ThemedIcon.fromResourceName(
+      "cursor.png");
   private static final long HELP_FRAME_VISIBLE_TIMEOUT_MILLIS = 1000;
   private static final String POSITION_LABEL = "positionLabel";
   private static final String KEYBOARD_LABEL = "keyboardLabel";
@@ -27,9 +31,6 @@ public class StatusPanelIT {
   private static final String EXPECTED_POSITION_TEXT = "row: 66 / column: 66";
   private static final ImageIcon KEYBOARD_LOCKED_ICON = ThemedIcon
       .fromResourceName("keyboard-locked.png");
-  private static final ImageIcon KEYBOARD_UNLOCKED_ICON = ThemedIcon
-      .fromResourceName("keyboard-unlocked.png");
-
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 

@@ -30,7 +30,7 @@ public class UnlockListener extends Tn3270ConditionWaiter<SyncWaitCondition> imp
 
   @Override
   protected boolean getCurrentConditionState() {
-    return !client.isInputInhibited();
+    return !client.isInputInhibited().get();
   }
 
 }

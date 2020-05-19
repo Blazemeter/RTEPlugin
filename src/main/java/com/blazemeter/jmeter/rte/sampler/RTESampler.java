@@ -4,6 +4,7 @@ import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
@@ -98,8 +99,11 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   private static final String WAIT_TEXT_AREA_BOTTOM_PROPERTY = "RTESampler.waitTextAreaBottom";
   private static final String WAIT_TEXT_AREA_RIGHT_PROPERTY = "RTESampler.waitTextAreaRight";
   private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTextTimeout";
+  private static final String CONFIG_CHARACTER_TIMEOUT = "RTEConnectionConfig"
+      + ".characterTimeoutMillis";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
+  private static final long DEFAULT_CHARACTER_TIMEOUT_MILLIS = 60000;
   private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
       .withInitial(HashMap::new);
 
@@ -453,6 +457,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       ret.setLabel(labelInput.getLabel());
       ret.setInput(labelInput.getInput());
       return ret;
+    } else if (input instanceof NavigationInput) {
+      NavigationInput navInput = (NavigationInput) input;
+      NavigationInputRowGui ret = new NavigationInputRowGui();
+      ret.setRepeated(String.valueOf(navInput.getRepeat()));
+      ret.setInput(navInput.getInput());
+      ret.setType(navInput.getNavigationType().getLabel());
+      return ret;
     } else {
       throw new IllegalArgumentException("Unsupported input type " + input.getClass());
     }
@@ -486,10 +497,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
       try {
         if (getAction() == Action.SEND_INPUT) {
-          resultBuilder.withInputInhibitedRequest(client.isInputInhibited())
+          resultBuilder.withInputInhibitedRequest(client.isInputInhibited().orElse(false))
               .withAttentionKey(getAttentionKey())
               .withInputs(getInputs());
-          client.send(getInputs(), getAttentionKey());
+          client.send(getInputs(), getAttentionKey(), getCharacterTimeout());
         }
         List<WaitCondition> waiters = getWaitersList();
         if (!waiters.isEmpty()) {
@@ -515,6 +526,15 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
           .build();
     }
     return resultBuilder.build();
+  }
+
+  public static long getCharacterTimeout() {
+    return JMeterUtils.getPropDefault(CONFIG_CHARACTER_TIMEOUT, DEFAULT_CHARACTER_TIMEOUT_MILLIS);
+  }
+
+  @VisibleForTesting
+  public static void setCharacterTimeout(long timeoutMillis) {
+    JMeterUtils.setProperty(CONFIG_CHARACTER_TIMEOUT, "" + timeoutMillis);
   }
 
   private RteSampleResultBuilder buildSampleResultBuilder() {

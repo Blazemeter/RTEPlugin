@@ -30,6 +30,8 @@ public class RTEConfigPanel extends JPanel {
       buildTerminalTypesComboBoxModel(Protocol.TN5250);
   private static final DefaultComboBoxModel<TerminalType> TN3270_TERMINAL_TYPES =
       buildTerminalTypesComboBoxModel(Protocol.TN3270);
+  private static final DefaultComboBoxModel<TerminalType> VT420_TERMINAL_TYPES = 
+      buildTerminalTypesComboBoxModel(Protocol.VT420);
 
   private ButtonGroup sslTypeGroup = new ButtonGroup();
   private Map<SSLType, JRadioButton> sslTypeRadios = new EnumMap<>(SSLType.class);
@@ -148,6 +150,8 @@ public class RTEConfigPanel extends JPanel {
         terminalTypeComboBox.setModel(TN5250_TERMINAL_TYPES);
       } else if (protocolEnum.equals(Protocol.TN3270)) {
         terminalTypeComboBox.setModel(TN3270_TERMINAL_TYPES);
+      } else if (protocolEnum.equals(Protocol.VT420)) {
+        terminalTypeComboBox.setModel(VT420_TERMINAL_TYPES);
       }
       validate();
       repaint();

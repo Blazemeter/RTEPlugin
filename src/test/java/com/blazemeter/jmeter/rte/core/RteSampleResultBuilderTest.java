@@ -49,7 +49,7 @@ public class RteSampleResultBuilderTest {
   public void setUp() {
     when(client.getScreen()).thenReturn(SCREEN);
     when(client.isAlarmOn()).thenReturn(true);
-    when(client.isInputInhibited()).thenReturn(true);
+    when(client.isInputInhibited()).thenReturn(Optional.of(true));
     when(client.getCursorPosition()).thenReturn(Optional.of(CURSOR_POSITION));
   }
 

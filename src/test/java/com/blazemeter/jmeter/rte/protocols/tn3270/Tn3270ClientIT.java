@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.in;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -10,6 +11,7 @@ import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.Screen.Segment;
@@ -27,6 +29,7 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.RteProtocolClientIT;
+import com.blazemeter.jmeter.rte.sampler.NavigationType;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
@@ -41,6 +44,8 @@ import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
 
 public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
+
+  private static final String USERNAME = "testusr";
 
   @Override
   protected Tn3270Client buildClient() {
@@ -142,12 +147,12 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   private void sendUsernameWithSyncWait() throws Exception {
-    client.send(buildUsernameField(), AttentionKey.ENTER);
+    sendEnterAttentionKey(buildUsernameField());
     awaitSync();
   }
 
   private List<Input> buildUsernameField() {
-    return Collections.singletonList(new CoordInput(new Position(2, 1), "testusr"));
+    return Collections.singletonList(new CoordInput(new Position(2, 1), USERNAME));
   }
 
   @Test
@@ -165,7 +170,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   }
 
   private void sendPasswordByLabelWithSyncWait() throws Exception {
-    client.send(buildPasswordByLabel(), AttentionKey.ENTER);
+    client.send(buildPasswordByLabel(), AttentionKey.ENTER, 0);
     awaitSync();
   }
 
@@ -181,7 +186,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
         new LabelInput("Address", "address_Example_123"));
-    client.send(input, AttentionKey.ENTER);
+    client.send(input, AttentionKey.ENTER, 0);
     awaitSync();
   }
 
@@ -192,7 +197,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
         new CoordInput(new Position(81, 1), "TEST"));
-    client.send(input, AttentionKey.ENTER);
+    client.send(input, AttentionKey.ENTER, 0);
   }
 
   @Test(expected = RteIOException.class)
@@ -222,8 +227,12 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), AttentionKey.ENTER);
+    sendEnterAttentionKey(buildUsernameField());
     awaitSync();
+  }
+
+  private void sendEnterAttentionKey(List<Input> inputs) throws RteIOException {
+    client.send(inputs, AttentionKey.ENTER, 0);
   }
 
   @Test(expected = TimeoutException.class)
@@ -231,17 +240,17 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildUsernameField(), AttentionKey.ENTER);
+    sendEnterAttentionKey(buildUsernameField());
     client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1,
-            51), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+            50), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
 
   @Test(expected = TimeoutException.class)
   public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), AttentionKey.ENTER);
+    sendEnterAttentionKey(buildUsernameField());
     client.await(
         Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -251,7 +260,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildUsernameField(), AttentionKey.ENTER);
+    sendEnterAttentionKey(buildUsernameField());
     client.await(Collections
         .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
             new Perl5Matcher(),
@@ -285,7 +294,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
       throws Exception {
     loadFlow("login.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), AttentionKey.ROLL_UP);
+    client.send(buildUsernameField(), AttentionKey.ROLL_UP, 0);
   }
 
   @Test
@@ -307,8 +316,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldGetWelcomeScreenWhenLoginWithoutFields() throws Exception {
     loadFlow("login-without-fields.yml");
     connectExtendedProtocolClientToVirtualService();
-    client.send(Collections.singletonList(new CoordInput(new Position(20, 48), "testusr")),
-        AttentionKey.ENTER);
+    client.send(Collections.singletonList(new CoordInput(new Position(20, 48), USERNAME)),
+        AttentionKey.ENTER, 0);
     awaitSync();
     assertThat(client.getScreen().withInvisibleCharsToSpaces())
         .isEqualTo(buildScreenFromHtmlFile("login-without-fields-screen.html"));
@@ -362,8 +371,25 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login-with-multiple-flash-screen.yml");
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
-    
+
     client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("AAAAA"),
-        JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX, Position.UNSPECIFIED_INDEX), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+        JMeterUtils.getMatcher(),
+        Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX, Position.UNSPECIFIED_INDEX),
+        TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+  }
+
+  @Test
+  public void shouldGetUserMenuScreenWhenSendUserNameWithArrows() throws Exception {
+    loadFlow("login.yml");
+    connectToVirtualService();
+    List<Input> inputs = Arrays.asList(
+        new NavigationInput(1, NavigationType.DOWN, ""),
+        new NavigationInput(27, NavigationType.RIGHT, ""),
+        new NavigationInput(2, NavigationType.UP, ""),
+        new NavigationInput(1, NavigationType.LEFT, "testusr"));
+    sendEnterAttentionKey(inputs);
+    awaitSync();
+    assertThat(client.getScreen().withInvisibleCharsToSpaces())
+        .isEqualTo(buildScreenFromHtmlFile("user-menu-screen.html"));
   }
 }

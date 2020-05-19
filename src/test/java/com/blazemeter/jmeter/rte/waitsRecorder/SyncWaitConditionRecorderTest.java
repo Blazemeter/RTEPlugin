@@ -19,7 +19,8 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SyncWaitConditionRecorderTest {
-
+  private static final Optional<Boolean> FALSE = Optional.of(false);
+  private static final Optional<Boolean> TRUE = Optional.of(true);
   private final long STABLE_PERIOD_MILLIS = 1000L;
   private final long TIMEOUT_THRESHOLD_MILLIS = 10000L;
   private final static long  CLOCK_STEP_MILLIS = 400L;
@@ -34,7 +35,7 @@ public class SyncWaitConditionRecorderTest {
     when(clock.instant()).thenReturn(Instant.now());
     syncWaitRecorder = new SyncWaitRecorder(rteProtocolClientMock, TIMEOUT_THRESHOLD_MILLIS,
         STABLE_PERIOD_MILLIS, clock);
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(true, false, true, false);
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(TRUE, FALSE, TRUE, FALSE);
     startTime = clock.instant();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS),
         startTime.plusMillis(CLOCK_STEP_MILLIS * 2),
@@ -56,7 +57,7 @@ public class SyncWaitConditionRecorderTest {
   
   @Test
   public void shouldReturnEmptyIfIsLastInputInhibitedWhenStop() {
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false, true, false, true);
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(FALSE, TRUE, FALSE, TRUE);
     syncWaitRecorder.start();
     syncWaitRecorder.onTerminalStateChange();
     syncWaitRecorder.onTerminalStateChange();
@@ -65,7 +66,7 @@ public class SyncWaitConditionRecorderTest {
   
   @Test
   public void shouldGetExpectedIfIsNotFirstInputInhibitedWhenTerminalStateChangesOnce() {
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false, true, false);
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(FALSE, TRUE, FALSE);
     syncWaitRecorder.start();
     syncWaitRecorder.onTerminalStateChange();
     assertEquals(Optional.of(new SyncWaitCondition(
@@ -91,7 +92,7 @@ public class SyncWaitConditionRecorderTest {
   public void shouldGetWaitConditionIgnoringNonKeyboardStatusChangesWhenStop() {
     syncWaitRecorder.start();
     syncWaitRecorder.onTerminalStateChange();
-    when(rteProtocolClientMock.isInputInhibited()).thenReturn(false, true, false);
+    when(rteProtocolClientMock.isInputInhibited()).thenReturn(FALSE, TRUE, FALSE);
     syncWaitRecorder.onTerminalStateChange();
     when(clock.instant()).thenReturn(startTime.plusMillis(CLOCK_STEP_MILLIS * 4));
     syncWaitRecorder.onTerminalStateChange();

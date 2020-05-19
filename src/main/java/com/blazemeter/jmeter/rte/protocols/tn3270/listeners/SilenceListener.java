@@ -29,7 +29,7 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
 
   @Override
   public void cursorMoved(int i, int i1, Field field) {
-    handleReceivedEvent("cursorMoved");
+    handleReceivedEvent(CURSOR_MOVED);
   }
 
   @Override
@@ -51,7 +51,8 @@ public class SilenceListener extends Tn3270ConditionWaiter<SilentWaitCondition> 
   }
 
   private void handleReceivedEvent(String event) {
-    /*we are updating over here because 
+    /*
+      we are updating over here because 
       silent does not really have a 
       condition. Then always when some event
       arrives we need to startStablePeriod again.

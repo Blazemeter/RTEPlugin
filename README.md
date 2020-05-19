@@ -4,7 +4,7 @@
 
 This project implements a JMeter plugin to **support RTE (Remote Terminal Emulation) protocols** by providing a recorder for automatic test plan creation, and config and sampler for protocol interactions.
 
-Nowadays the plugin supports **IBM protocol's TN5250, TN3270 and VT420** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/), [dm3270](http://dmolony.github.io/) and [jvt220](https://github.com/jawi/jVT220) emulators with modifications [xtn5250 fork](https://github.com/abstracta/xtn5250), [dm3270 fork](https://github.com/abstracta/dm3270) and  [jvt220 fork](https://github.com/Blazemeter/jVT220) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
+Nowadays the plugin supports **IBM protocol's TN5250, TN3270 and VT420** by using embedded [xtn5250](https://sourceforge.net/projects/xtn5250/), [dm3270](http://dmolony.github.io/) and [jvt220](https://github.com/jawi/jVT220) emulators, with some modifications on [xtn5250 fork](https://github.com/abstracta/xtn5250), [dm3270 fork](https://github.com/abstracta/dm3270) and  [jvt220 fork](https://github.com/Blazemeter/jVT220) to better accommodate to the plugin usage (exception handling, logging, external dependencies, etc).
 
 People who usually work with these IBM servers interact with them, basically, by sending keystrokes from the terminal keyboard (or emulator) to fill forms or call processes. The plugin provides a [recording controller](#a-recording-controller-rte-recorder), which allows the user to interact through a terminal emulator, recording every interaction (samplers) with the mainframe application. Additionally, the plugin allows for manual test plan creation, providing a config element for setting connection parameters and a sampler to set fields on screen and attention key to send to the mainframe application. Besides, the sampler allows to simulate the existing attention keys on the terminal keyboard like ENTER, F1, F2, F3..., ATTN, CLEAR, etc.  
 
@@ -83,12 +83,28 @@ The RTE Sampler fields are:
   - *Disconnect*. This option allows to explicitly close the connection to the terminal server. This allows to restart the emulator status by re connecting to the server en following samplers.
     > As previously stated, connections are (by default) automatically closed at the end of each thread iteration, so is not required to add a sampler with disconnect action at the end of each thread loop iteration.
 - *RTE Message*. When "Send keys" action is selected it is possible to specify fields to send and attention key to use:
-  - *Payload*. Contains a grid where the user can add different types of input.
-    - Input by Tabulator: It will make as many tabulations as specified to the mainframe, before 
-    sending the _"value"_. It is useful to avoid using coordinates.
-    - Input by Label: It precedes from a terminal screen label. It will send to the mainframe application the already set value to a field which matches the selected label.
-    - Input by Coordinates (row and column):  It will send the text introduced in _"value"_ to the mainframe application at that position. 
-     > For more information about inputs and how they work in a normal flow, check this [examples](docs/recorder/terminal-emulator/terminal-emulator.md#Input By Label Usage).
+  - *Payload*. Contains a grid in which user can specify different types of inputs: 
+      - **Input by Coordinates:** (row and column) of a field in the screen. Rows and columns starting from [1,1] (are 1 indexed).
+      - **Input by Label:** It could be a word or a text preceded by a field on the terminal screen.
+      - **Input by Navigation:** As the name describes, this input is going to navigate before placing the input value (String). There are five types of navigation; the four arrow navigation keys, and the tabulator key. Also you can specify how many times to send the navigation key before the input value.        
+        > Regardless from the input type, all of them will send a value (String) to the mainframe application. 
+  - **Copy from Clipboard:** In order to make the input creation quicker, a string convention as been added. Remember to always make a tabulation between prefixes or inputs.
+    ```text
+    <TAB>	input
+    <UP*4>	input
+    <DOWN>	input
+    <RIGHT*2>	input
+    <LEFT><LEFT>	input
+    1	2	input
+    UserID	input
+    ```
+           
+    - ***\<TAB>:*** It will create an input by navigation with just one tabulator key before sending the input value.
+    - ***\<UP\*4>:*** It will create an up arrow navigation input, sending four times the up arrow before sending the input value.
+    - ***\<LEFT>\<LEFT>:*** It will create a left arrow navigation with a double repetition of the left key before sending the input value. Which is equivalent to *<LEFT\*2>*.
+    - ***1	2*** It will create a coordinate input with row 1 and column 2 with an input value equals to 'input' as we see in above representation.
+    - ***UserID*** This format will create a label input, with the label 'UserID' and the input value equals to 'input'. 
+  
   - *Attention Keys*. These buttons trigger the attention keys to be sent to the server on each sample. They all represent a key from a terminal's keyboard.
 - *Wait for*. When using "Connect" or "Send keys" action it is possible to wait for a specific condition. If this condition is not reached after a specific time (defined in *Timeout* value), the sampler returns timeout error. There are four defined waiters:
   - *Sync*. Waits for the system to return from X SYSTEM or Input Inhibited mode. Default value is checked, as it's recommended to always check that the system is not in Input Inhibited Mode after a sample (and before the next one) in order to get the correct screen in the sample result (and to ensure that the next sampler is executed from the desired screen). On the other hand, the sampler does an implicit "Wait for sync" each time it connects to a server, which means that if *Connect* mode is used, then it's not needed to check the *Wait for sync* function, unless you want to change the default timeout. 
@@ -100,10 +116,18 @@ The RTE Sampler fields are:
 All the "waiters" use a stable timeout value (in milliseconds) which specifies the time to wait for the emulator to remain at the desired state. The default value is 1000 milliseconds, but can be changed by adding the property `RTEConnectionConfig.stableTimeoutMillis=<time_in_millis>` in *jmeter.properties* file. The "Wait for silent" waiter is not affected by this setting since it has an explicit field for such purpose. 
 > Warning: both Stable Timeout and Silent Interval should be shorter than Timeout value, otherwise the sampler will always return a timeout error.
 
-#### RTE-Extractor
-![alt_text](docs/extractor/rte-extractor.png)
+##### Character timeout
+With the addition of the VT420 protocol, now we  also support its "character at time" behavior, which means that, every time we type a key, we have to wait for a response of the server to send the next one. 
+Therefore a character timeout comes to play. This period of time is the maximum amount in milliseconds to wait for a server response when sending a character. 
 
-RTE-Extractor is a post-processor which its main purpose is to extract positions from response headers to be used later as a JMeter variable.
+> Notice: If the time elapses, the user will experiment with a TimeoutException.
+
+The default value of this timeout is 60000 milliseconds, but can be changed by adding the property `RTEConnectionConfig.characterTimeoutMillis=<time_in_millis>` in *jmeter.properties* file.
+
+#### RTE-Position Extractor
+![alt_text](docs/extractor/rte-position-extractor.png)
+
+RTE-Position Extractor is a post-processor which its main purpose is to extract positions from response headers to be used later as a JMeter variable.
 > Check [here](/docs/extractor/rte-extractor.md) for more information.   
 
 
@@ -138,6 +162,50 @@ As explained previously, the RTE Sampler has 4 types of waiters which work as sy
 - *Wait for Cursor*: It's useful to use it, for example, in a step before a sampler that will put some text in a field. By using this waiter the user makes sure that the system has returned the control of the cursor.
 - *Wait for Silent*: The client is considered to be silent when the terminal does not receive any characters from the server so, by setting the proper silent interval, the user could ensure that the server has sent all the information available to the client before continue the execution.    
 - *Wait for Text*: This waiter could be useful to check for a specific message before continue the execution. For example, it could be used to wait for a message with the confirmation that a specific process ended correctly or to check if a search returned any result before continue. 
+
+## Tips
+
+#### How to extract a label from the screen.
+The RTE plugin does not have a functionality for itself to achieve this goal. Therefore, Regular Expression Extractor will be our solution.
+  
+Example of usage:
+
+  ![alter_text](docs/extractor/regex-extractor-date-screen.png)
+
+We have obtained the screen above from a sampler response. Suppose we want to extract the date which appears close to the right top corner  "**123456**".
+
+In order to capture the date value we have to add a Regular Expression Extractor embedded in **bzm-RTE-SEND_INPUT-1** sampler.
+
+A proper configuration in that case would be something like this: 
+  ![alter_text](docs/extractor/regex-extractor-label-config.png)
+  > If you want to understand how Regular Expression Extractor works, visit [this](https://guide.blazemeter.com/hc/en-us/articles/207421325-Using-RegEx-Regular-Expression-Extractor-with-JMeter-Using-RegEx-(Regular-Expression-Extractor)-with-JMeter) JMeter page. 
+
+
+#### How to extract a value on the screen from a given position.
+
+In order to get a value, we have to know the beginning of the value in coordinates and the length of the text to match.
+
+![alter_text](docs/extractor/regex-extractor-date-screen.png)
+
+For instance, suppose that we need to extract the date using positions. We already know the size of the screen, which is 24x80 (in this case).
+
+Using the emulator we have identify the beginning coordinates of the date value *(1,67)*. Also we know that the length of the text would be six characters.
+
+With all this information we have develop a regex to match that criteria:
+
+***^(.+\n){0}.{67}((.){6})(.\*\n){23}(.\*)$***
+  
+ - **(.+\n){0}**: The _0_ parameter is the row of the beginning coordinates (1) minus one.
+ - **.{67}**: The _67_ parameter is the column of the beginning coordinates.
+ - **((.){6})**: The _6_ parameter is the length of the text we want to match. Also this group is the important one, match group Nº2, which is the Template value in Regular Expression Extractor.
+ - **(.\*\n){23}(.\*)**: The _23_ parameter is the height of the screen (24) minus our position row (1). 
+
+Once we got the regex, our Regular Expression Extractor would be like this:
+
+![alter_text](docs/extractor/regex-extractor-position-config.png)
+  > If you want to understand how Regular Expression Extractor works, visit [this](https://guide.blazemeter.com/hc/en-us/articles/207421325-Using-RegEx-Regular-Expression-Extractor-with-JMeter-Using-RegEx-(Regular-Expression-Extractor)-with-JMeter) JMeter page. 
+
+
 
 
 ## Compatibility

@@ -5,9 +5,9 @@ import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
-import com.blazemeter.jmeter.rte.core.TabulatorInput;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
@@ -30,6 +30,7 @@ import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270TerminalStateListenerProxy;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
+import com.blazemeter.jmeter.rte.sampler.NavigationType;
 import com.bytezone.dm3270.TerminalClient;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
 import com.bytezone.dm3270.commands.AIDCommand;
@@ -48,6 +49,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
+import javax.naming.OperationNotSupportedException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +123,7 @@ public class Tn3270Client extends BaseProtocolClient {
   @Override
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
       long timeoutMillis) throws RteIOException, InterruptedException, TimeoutException {
-    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(NAMED_THREAD_FACTORY);
     Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
     client = new TerminalClient(termType.getModel(), termType.getScreenDimensions());
     client.setUsesExtended3270(termType.isExtended());
@@ -184,6 +186,19 @@ public class Tn3270Client extends BaseProtocolClient {
 
   }
 
+  @Override
+  protected void setField(Input i, long echoTimeoutMillis) {
+    if (i instanceof CoordInput) {
+      setFieldByCoord((CoordInput) i);
+    } else if (i instanceof LabelInput) {
+      setFieldByLabel((LabelInput) i);
+    } else if (i instanceof NavigationInput) {
+      setFieldByNavigationType((NavigationInput) i);
+    } else {
+      throw new IllegalArgumentException("Invalid input type: " + i.getClass());
+    }
+  }
+
   private void setFieldByCoord(CoordInput i) {
     try {
       client.setFieldTextByCoord(i.getPosition().getRow(),
@@ -193,32 +208,40 @@ public class Tn3270Client extends BaseProtocolClient {
     }
   }
 
-  @Override
-  protected void setField(Input i) {
-    if (i instanceof CoordInput) {
-      setFieldByCoord((CoordInput) i);
-    } else if (i instanceof LabelInput) {
-      setFieldByLabel((LabelInput) i);
-    } else if (i instanceof TabulatorInput) {
-      setFieldByTabulator((TabulatorInput) i);
-    } else {
-      throw new IllegalArgumentException("Invalid input type: " + i.getClass());
-    }
-  }
-
-  private void setFieldByTabulator(TabulatorInput i) {
-    try {
-      client.setTabulatedInput(i.getInput(), i.getOffset());
-    } catch (NoSuchElementException e) {
-      throw new ScreenWithoutFieldException();
-    }
-  }
-
   private void setFieldByLabel(LabelInput i) {
     try {
       client.setFieldTextByLabel(i.getLabel(), i.getInput());
     } catch (IllegalArgumentException e) {
       throw new InvalidFieldLabelException(i.getLabel(), e);
+    }
+  }
+
+  private void setFieldByNavigationType(NavigationInput i) {
+    if (i.getNavigationType().equals(NavigationType.TAB)) {
+      try {
+        client
+            .setTabulatedInput(i.getInput(), i.getRepeat());
+      } catch (NoSuchElementException | NoSuchFieldException e) {
+        throw new ScreenWithoutFieldException();
+      }
+    } else {
+      if (Arrays.asList(NavigationType.values()).contains(i.getNavigationType())) {
+        Position currentPos =
+            getCursorPosition().orElseThrow(() -> new NoSuchElementException("No position "
+                + "available"));
+
+        Position finalPosition = i
+            .calculateInputFinalPosition(currentPos,
+                new Dimension(client.getScreenDimensions().rows,
+                    client.getScreenDimensions().columns));
+        client
+            .setFieldTextByCoord(finalPosition.getRow(), finalPosition.getColumn(),
+                i.getInput());
+      } else {
+        exceptionHandler
+            .setPendingError(new OperationNotSupportedException(
+                "The navigation type \'" + i.getNavigationType() + "\' is not supported"));
+      }
     }
   }
 
@@ -233,7 +256,7 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
+  protected ConditionWaiter<?> buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
       return new UnlockListener((SyncWaitCondition) waitCondition, this, stableTimeoutExecutor,
           exceptionHandler);
@@ -262,7 +285,7 @@ public class Tn3270Client extends BaseProtocolClient {
     }
   }
 
-  public Screen buildScreenFromText(String screenText) {
+  private Screen buildScreenFromText(String screenText) {
     Screen ret = new Screen(getScreenSize());
     int lastNonBlankPosition = screenText.length() - 1;
     while (lastNonBlankPosition >= 0 && (screenText.charAt(lastNonBlankPosition) == ' '
@@ -311,8 +334,8 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   @Override
-  public boolean isInputInhibited() {
-    return client == null || client.isKeyboardLocked();
+  public Optional<Boolean> isInputInhibited() {
+    return Optional.of(client == null || client.isKeyboardLocked());
   }
 
   @Override

@@ -10,6 +10,7 @@ import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.Screen.Segment;
@@ -27,6 +28,7 @@ import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.RteProtocolClientIT;
+import com.blazemeter.jmeter.rte.sampler.NavigationType;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -96,8 +98,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
-    client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    waitSync();
     assertThat(client.getScreen().withInvisibleCharsToSpaces())
         .isEqualTo(buildLoginWelcomeScreen());
   }
@@ -120,7 +121,11 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   private void sendCredsByCoordWithSyncWait() throws Exception {
-    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER, 0);
+    waitSync();
+  }
+
+  private void waitSync() throws InterruptedException, TimeoutException, RteIOException {
     client.await(
         Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -140,9 +145,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   }
 
   private void sendCredsByLabelWithSyncWait() throws Exception {
-    client.send(buildCredsFieldsByLabel(), AttentionKey.ENTER);
-    client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    client.send(buildCredsFieldsByLabel(), AttentionKey.ENTER, 0);
+    waitSync();
   }
 
   private List<Input> buildCredsFieldsByLabel() {
@@ -158,7 +162,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
         new CoordInput(new Position(7, 1), TEST_USERNAME));
-    client.send(input, AttentionKey.ENTER);
+    client.send(input, AttentionKey.ENTER, 0);
   }
 
   @Test(expected = InvalidFieldLabelException.class)
@@ -168,7 +172,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     connectToVirtualService();
     List<Input> input = Collections.singletonList(
         new LabelInput("Usr", TEST_USERNAME));
-    client.send(input, AttentionKey.ENTER);
+    client.send(input, AttentionKey.ENTER, 0);
   }
 
   @Test
@@ -213,9 +217,8 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSyncWaitAndSlowResponse() throws Exception {
     loadFlow("slow-response.yml");
     connectToVirtualService();
-    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
-    client.await(
-        Collections.singletonList(new SyncWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER, 0);
+    waitSync();
   }
 
   @Test(expected = TimeoutException.class)
@@ -223,7 +226,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER, 0);
     client.await(Collections.singletonList(
         new CursorWaitCondition(new Position(1, 1), TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -232,7 +235,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   public void shouldThrowTimeoutExceptionWhenSilentWaitAndChattyServer() throws Exception {
     loadFlow("chatty-server.yml");
     connectToVirtualService();
-    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER, 0);
     client.await(
         Collections.singletonList(new SilentWaitCondition(TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
   }
@@ -242,7 +245,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.ENTER, 0);
     client.await(Collections
         .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
             new Perl5Matcher(),
@@ -276,7 +279,7 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
-    client.send(buildCredsFieldsByCoord(), AttentionKey.PA1);
+    client.send(buildCredsFieldsByCoord(), AttentionKey.PA1, 0);
   }
 
   @Test
@@ -332,5 +335,19 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
         TIMEOUT_MILLIS);
     client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("Sign on"),
         JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1,1,24,80), 10000, 1000)));
+  }
+
+  @Test
+  public void shouldGetUserMenuScreenWhenSendNavigationArrowInputs() throws Exception {
+    loadFlow("login.yml");
+    connectToVirtualService();
+    List<Input> inputs = Arrays.asList(
+        new NavigationInput(0, NavigationType.DOWN, "TESTUSR"),
+        new NavigationInput(160, NavigationType.RIGHT, ""),
+        new NavigationInput(1, NavigationType.UP, ""),
+        new NavigationInput(7, NavigationType.LEFT, "TESTPSW"));
+    client.send(inputs, AttentionKey.ENTER, 0);
+    waitSync();
+    assertThat(client.getScreen().withInvisibleCharsToSpaces()).isEqualTo(buildUserMenuScreen());
   }
 }

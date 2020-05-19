@@ -61,7 +61,8 @@ public class SilenceListener extends Tn5250ConditionWaiter<SilentWaitCondition> 
   }
 
   private void handleReceivedEvent(XI5250EmulatorEvent event) {
-    /*we are updating over here because 
+    /*
+      we are updating over here because 
       silent does not really have a 
       condition. Then always when some event
       arrives we need to startStablePeriod again.

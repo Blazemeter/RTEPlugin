@@ -40,12 +40,12 @@ public interface RteProtocolClient {
 
   void removeTerminalStateListener(TerminalStateListener terminalStateListener);
 
-  void send(List<Input> input, AttentionKey attentionKey)
+  void send(List<Input> input, AttentionKey attentionKey, long echoTimeoutMillis)
       throws RteIOException;
 
   Screen getScreen();
 
-  boolean isInputInhibited();
+  Optional<Boolean> isInputInhibited();
 
   Optional<Position> getCursorPosition();
 

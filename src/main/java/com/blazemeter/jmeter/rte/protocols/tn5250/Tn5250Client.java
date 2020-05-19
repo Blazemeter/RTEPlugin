@@ -5,9 +5,9 @@ import com.blazemeter.jmeter.rte.core.BaseProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
-import com.blazemeter.jmeter.rte.core.TabulatorInput;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
@@ -27,10 +27,10 @@ import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConnectionEndTerminalListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
-import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250ConditionWaiter;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250TerminalStateListenerProxy;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.VisibleCursorListener;
+import com.blazemeter.jmeter.rte.sampler.NavigationType;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.Arrays;
@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
+import javax.naming.OperationNotSupportedException;
 import net.infordata.em.TerminalClient;
 import net.infordata.em.crt5250.XI5250Field;
 import net.infordata.em.tn5250.XI5250EmulatorListener;
@@ -104,7 +105,7 @@ public class Tn5250Client extends BaseProtocolClient {
   @Override
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
       long timeoutMillis) throws RteIOException, TimeoutException, InterruptedException {
-    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor();
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(NAMED_THREAD_FACTORY);
     /*
      we need create terminalClient instance on connect instead of 
      constructor to avoid leaving keyboard thread running when 
@@ -145,24 +146,15 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  protected void setField(Input i) {
+  protected void setField(Input i, long echoTimeoutMillis) {
     if (i instanceof CoordInput) {
       setFieldByCoord((CoordInput) i);
     } else if (i instanceof LabelInput) {
       setFieldByLabel((LabelInput) i);
-    } else if (i instanceof TabulatorInput) {
-      setFieldByTabulator((TabulatorInput) i);
+    } else if (i instanceof NavigationInput) {
+      setFieldByNavigationType((NavigationInput) i);
     } else {
       throw new IllegalArgumentException("Invalid input type: " + i.getClass());
-    }
-  }
-
-  private void setFieldByTabulator(TabulatorInput i) {
-    try {
-      client
-          .setFieldTextByTabulator(i.getOffset(), i.getInput());
-    } catch (NoSuchElementException e) {
-      throw new ScreenWithoutFieldException();
     }
   }
 
@@ -183,6 +175,34 @@ public class Tn5250Client extends BaseProtocolClient {
     }
   }
 
+  private void setFieldByNavigationType(NavigationInput i) {
+    if (i.getNavigationType().equals(NavigationType.TAB)) {
+      try {
+        client
+            .setFieldTextByTabulator(i.getRepeat(), i.getInput());
+      } catch (NoSuchElementException e) {
+        throw new ScreenWithoutFieldException();
+      }
+    } else {
+      if (Arrays.asList(NavigationType.values()).contains(i.getNavigationType())) {
+        Position currentPos =
+            getCursorPosition().orElseThrow(() -> new NoSuchElementException("No position "
+                + "available"));
+
+        Position finalPosition = i
+            .calculateInputFinalPosition(currentPos,
+                new Dimension(client.getScreenDimensions()));
+        client
+            .setFieldTextByCoord(finalPosition.getRow(), finalPosition.getColumn(),
+                i.getInput());
+      } else {
+        exceptionHandler
+            .setPendingError(new OperationNotSupportedException(
+                "The navigation type \'" + i.getNavigationType() + "\' is not supported"));
+      }
+    }
+  }
+
   @Override
   protected void sendAttentionKey(AttentionKey attentionKey) {
     client.sendKeyEvent(getKeyEvent(attentionKey).specialKey, getKeyEvent(attentionKey).modifier);
@@ -200,25 +220,23 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  protected ConditionWaiter buildWaiter(WaitCondition waitCondition) {
-    Tn5250ConditionWaiter condition;
+  protected ConditionWaiter<?> buildWaiter(WaitCondition waitCondition) {
     if (waitCondition instanceof SyncWaitCondition) {
-      condition = new UnlockListener((SyncWaitCondition) waitCondition, this,
+      return new UnlockListener((SyncWaitCondition) waitCondition, this,
           stableTimeoutExecutor, exceptionHandler);
     } else if (waitCondition instanceof CursorWaitCondition) {
-      condition = new VisibleCursorListener((CursorWaitCondition) waitCondition,
+      return new VisibleCursorListener((CursorWaitCondition) waitCondition,
           this, stableTimeoutExecutor, exceptionHandler);
     } else if (waitCondition instanceof SilentWaitCondition) {
-      condition = new SilenceListener((SilentWaitCondition) waitCondition,
+      return new SilenceListener((SilentWaitCondition) waitCondition,
           this, stableTimeoutExecutor, exceptionHandler);
     } else if (waitCondition instanceof TextWaitCondition) {
-      condition = new ScreenTextListener((TextWaitCondition) waitCondition, this,
+      return new ScreenTextListener((TextWaitCondition) waitCondition, this,
           stableTimeoutExecutor, exceptionHandler);
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
     }
-    return condition;
   }
 
   @Override
@@ -275,8 +293,8 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   @Override
-  public boolean isInputInhibited() {
-    return client == null || client.isKeyboardLocked();
+  public Optional<Boolean> isInputInhibited() {
+    return Optional.of(client == null || client.isKeyboardLocked());
   }
 
   @Override

@@ -32,6 +32,13 @@ public class Screen {
     this.size = size;
   }
 
+  public Screen(Screen other) {
+    if (other != null) {
+      segments = new ArrayList<>(other.segments);
+      size = other.size;
+    }
+  }
+
   public static Screen valueOf(String screen) {
     int width = screen.indexOf('\n');
     int height = screen.length() / (width + 1);
@@ -42,6 +49,12 @@ public class Screen {
       pos += width;
     }
     return ret;
+  }
+
+  public static Screen buildScreenFromText(String screenText, Dimension screenSize) {
+    Screen scr = new Screen(screenSize);
+    scr.addSegment(0, screenText.replace("\n", ""));
+    return scr;
   }
 
   public static Screen fromHtml(String html) {

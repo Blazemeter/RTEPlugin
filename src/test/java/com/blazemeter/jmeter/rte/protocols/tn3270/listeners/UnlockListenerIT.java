@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.bytezone.dm3270.application.KeyboardStatusChangedEvent;
 import com.google.common.base.Stopwatch;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
@@ -13,10 +14,13 @@ import org.junit.Test;
 
 public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
 
+  private static final Optional<Boolean> FALSE = Optional.of(false);
+  private static final Optional<Boolean> TRUE = Optional.of(true);
+  
   @Override
   @Before
   public void setup() throws Exception {
-    when(client.isInputInhibited()).thenReturn(true);
+    when(client.isInputInhibited()).thenReturn(TRUE);
     super.setup();
   }
 
@@ -30,7 +34,7 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingUnlockStateChange() throws Exception {
-    when(client.isInputInhibited()).thenReturn(false);
+    when(client.isInputInhibited()).thenReturn(FALSE);
     KeyboardStatusChangedEvent keyboardEvent = new KeyboardStatusChangedEvent(false, false, "");
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
@@ -46,7 +50,7 @@ public class UnlockListenerIT extends Tn3270ConditionWaiterIT {
 
   @Test
   public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
-    when(client.isInputInhibited()).thenReturn(false);
+    when(client.isInputInhibited()).thenReturn(FALSE);
     Tn3270ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }

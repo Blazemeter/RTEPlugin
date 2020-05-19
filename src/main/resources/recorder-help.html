@@ -14,8 +14,9 @@
         <th style="border: none">Action</th>
         <th style="border: none">Keys</th>
     </tr>
-    <td>Move cursor position</td>
-    <td>Arrows</td>
+    <tr>
+        <td>Move cursor position</td>
+        <td>Arrows</td>
     </tr>
     <tr>
         <td>Backspace</td>
@@ -113,8 +114,14 @@
         </td>
     </tr>
     <tr>
+        <td><img src="{{resourcesPath}}/blocked-cursor.png"/></td>
+        <td>This icon is displayed to advertise the user when current protocol does not support mouse 
+          interactions.
+        </td>
+    </tr>
+    <tr>
         <td><img src="{{resourcesPath}}/inputByLabel.png"></td>
-        <td>Allow using a selected part of the screen as <a href="https://github.com/Blazemeter/RTEPlugin#sampler-rte-sampler">input by label</a></td>
+        <td>Allow using a selected part of the screen as <a href="https://github.com/Blazemeter/RTEPlugin#sampler-rte-sampler">input by label</a><br><font color="8C8C8C" size="-2">NOTE: Input by label will be disable for VT protocols</font></td>
     </tr>
     <tr>
         <td><img src="{{resourcesPath}}/waitForText.png"></td>

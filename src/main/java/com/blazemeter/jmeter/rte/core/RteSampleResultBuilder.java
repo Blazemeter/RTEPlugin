@@ -99,7 +99,7 @@ public class RteSampleResultBuilder {
   private void updateResponseFromClient(RteProtocolClient client) {
     cursorPosition = client.getCursorPosition().orElse(null);
     soundedAlarm = client.isAlarmOn();
-    inputInhibitedResponse = client.isInputInhibited();
+    inputInhibitedResponse = client.isInputInhibited().orElse(false);
     screen = client.getScreen();
   }
 

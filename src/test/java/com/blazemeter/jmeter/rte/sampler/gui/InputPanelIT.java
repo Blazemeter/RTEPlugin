@@ -8,10 +8,12 @@ import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
+import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.TabulatorInput;
 import com.blazemeter.jmeter.rte.sampler.InputTestElement;
 import com.blazemeter.jmeter.rte.sampler.Inputs;
+import com.blazemeter.jmeter.rte.sampler.NavigationInputRowGui;
+import com.blazemeter.jmeter.rte.sampler.NavigationType;
 import com.blazemeter.jmeter.rte.sampler.gui.InputPanel.FieldPanel;
 import java.awt.Component;
 import java.awt.Point;
@@ -34,7 +36,6 @@ import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JPanelFixture;
 import org.assertj.swing.fixture.JTableCellFixture;
 import org.assertj.swing.fixture.JTableFixture;
-import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
@@ -43,7 +44,7 @@ import org.junit.Test;
 
 public class InputPanelIT {
 
-  private static final long CHANGE_TIMEOUT_MILLIS = 20000;
+  private static final long CHANGE_TIMEOUT_MILLIS = 10000;
   private static final LabelInput USER_LABEL_INPUT = new LabelInput("User", "TESTUSR");
   private static final CoordInput PASS_COORD_INPUT = new CoordInput(new Position(1, 2), "TESTPSW");
   private static final CoordInput NAME_INPUT = new CoordInput(new Position(4, 2), "TESTNAME");
@@ -52,6 +53,7 @@ public class InputPanelIT {
   private static final String UP_BUTTON = "upButton";
   private static final String DOWN_BUTTON = "downButton";
   private static final String TEST = "TEST";
+  private static final String COMBO_TYPE = "comboType";
 
   private FrameFixture frame;
   private InputPanel panel;
@@ -62,8 +64,8 @@ public class InputPanelIT {
     JMeterTestUtils.setupJmeterEnv();
   }
 
-  private static TabulatorInput TABULATOR_INPUT(int offset) {
-    return new TabulatorInput(offset, TEST);
+  private static NavigationInput NAVIGATION_INPUT(int offset, NavigationType type) {
+    return new NavigationInput(offset, type, TEST);
   }
 
   @Before
@@ -86,13 +88,13 @@ public class InputPanelIT {
   }
 
   private void addFieldByLabel(int row, LabelInput input) {
-    selectFromInputComboBox(0);
+    frame.comboBox(COMBO_TYPE).selectItem(0);
+    clickAddButton();
     awaitAddedRow(row);
     setInputRow(row, input, (panel, i) -> setTextField(panel, "fieldLabel", i.getLabel()));
   }
 
-  private void selectFromInputComboBox(int type) {
-    frame.comboBox("comboType").selectItem(type);
+  private void clickAddButton() {
     frame.button("addButton").click();
   }
 
@@ -109,8 +111,7 @@ public class InputPanelIT {
 
   private <T extends Input> void setInputRow(int row, T input,
       BiConsumer<JPanelFixture, T> fieldSetter) {
-    JTableCellFixture fieldCell = inputTable
-        .cell(TableCell.row(row).column(0));
+    JTableCellFixture fieldCell = inputTable.cell(TableCell.row(row).column(0));
     fieldCell.startEditing();
     JPanelFixture fieldPanel = new JPanelFixture(frame.robot(), (FieldPanel) fieldCell.editor());
     fieldSetter.accept(fieldPanel, input);
@@ -123,9 +124,7 @@ public class InputPanelIT {
   }
 
   private void setTextField(JPanelFixture fieldPanel, String name, String text) {
-    JTextComponentFixture textField = fieldPanel.textBox(name);
-    frame.robot().click(textField.target());
-    textField.setText(text);
+    fieldPanel.textBox(name).setText(text);
   }
 
   private void assertInputs(Input... inputs) {
@@ -167,7 +166,8 @@ public class InputPanelIT {
   }
 
   private void addFieldByCoord(int row, CoordInput input) {
-    selectFromInputComboBox(2);
+    frame.comboBox(COMBO_TYPE).selectItem(2);
+    clickAddButton();
     awaitAddedRow(row);
     setInputRow(row, input, (panel, i) -> {
       Position position = i.getPosition();
@@ -289,38 +289,34 @@ public class InputPanelIT {
   }
 
   private void clickAddFromClipboard() {
-    selectFromInputComboBox(3);
+    frame.comboBox(COMBO_TYPE).selectItem(3);
+    clickAddButton();
   }
 
   @Test
   public void shouldAddInputsWhenCopyFromClipboard() {
-    setTextToClipboard("TEST\nUser\tTESTUSR\n1\t2\tTESTPSW\n1\t4\tTESTNAME\tNAME");
+    setTextToClipboard("TEST\n"
+        + "User\tTESTUSR\n"
+        + "1\t2\tTESTPSW\n"
+        + "1\t4\tTESTNAME\tNAME\n"
+        + "<TAB>\tTEST\n"
+        + "<UP><UP>\tTEST\n"
+        + "<DOWN*2>\tTEST\n"
+        + "<RIGHT><RIGHT><RIGHT>\tTEST\n"
+        + "<LEFT*10>\tTEST");
     clickAddFromClipboard();
-    TabulatorInput tabulatorInput = new TabulatorInput(0, TEST);
     CoordInput name = new CoordInput(new Position(1, 4), "TESTNAME");
-    assertInputs(tabulatorInput, USER_LABEL_INPUT, PASS_COORD_INPUT, name);
-  }
-
-  @Test
-  public void shouldAddInputByTabAndInputByLabelWhenCopyFromClipboard() {
-    setTextToClipboard("<TAB*3>\tTEST\nUser\tTESTUSR\n");
-    clickAddFromClipboard();
-    assertInputs(TABULATOR_INPUT(3), USER_LABEL_INPUT);
+    assertInputs(NAVIGATION_INPUT(0, NavigationType.TAB), USER_LABEL_INPUT, PASS_COORD_INPUT,
+        name, NAVIGATION_INPUT(1, NavigationType.TAB), NAVIGATION_INPUT(2, NavigationType.UP),
+        NAVIGATION_INPUT(2, NavigationType.DOWN), NAVIGATION_INPUT(3, NavigationType.RIGHT),
+        NAVIGATION_INPUT(10, NavigationType.LEFT));
   }
 
   @Test
   public void shouldAddDefaultInputWhenNoTabsFoundInCopyFromClipboard() {
     setTextToClipboard("TEST\n");
     clickAddFromClipboard();
-    TabulatorInput tabulatorInput = new TabulatorInput(0, TEST);
-    assertInputs(tabulatorInput);
-  }
-
-  @Test
-  public void shouldAddTabInputWhenCopyFromClipboardInExtendedVersion() {
-    setTextToClipboard("<TAB><TAB><TAB>\tTEST");
-    clickAddFromClipboard();
-    assertInputs(TABULATOR_INPUT(3));
+    assertInputs(NAVIGATION_INPUT(0, NavigationType.TAB));
   }
 
   @Test
@@ -380,16 +376,48 @@ public class InputPanelIT {
   }
 
   @Test
-  public void shouldAddTabulatorInput() {
-    addFiledByTab(0, TABULATOR_INPUT(4));
-    assertInputs(TABULATOR_INPUT(4));
+  public void shouldAddTabNavigationInput() {
+    addNavigationInput(0, NAVIGATION_INPUT(4, NavigationType.TAB));
+    assertInputs(NAVIGATION_INPUT(4, NavigationType.TAB));
   }
 
-  private void addFiledByTab(int row, TabulatorInput input) {
-    selectFromInputComboBox(1);
+  private void addNavigationInput(int row, NavigationInput input) {
+    frame.comboBox(COMBO_TYPE).selectItem(1);
+    clickAddButton();
     awaitAddedRow(row);
+    selectNavigationTypeInCombo(input.getNavigationType(), row);
     setInputRow(row, input,
-        (panel, i) -> setTextField(panel, "fieldTabulator", String.valueOf(i.getOffset())));
+        (panel, i) -> setTextField(panel, "fieldNavigation", String.valueOf(i.getRepeat())));
+    awaitAddedNavigationType(input.getNavigationType(), row);
+  }
+
+  private void awaitAddedNavigationType(NavigationType navigationType, int row) {
+    pause(new Condition("waiting for " + navigationType + " to be added in ") {
+      @Override
+      public boolean test() {
+        return ((NavigationInputRowGui) inputTable.target().getModel().getValueAt(row,
+            0)).getTypeNavigation().equals(navigationType);
+      }
+    });
+  }
+
+  private void selectNavigationTypeInCombo(
+      NavigationType navigationType, int row) {
+    JTableCellFixture fieldCell = inputTable.cell(TableCell.row(row).column(0));
+    fieldCell.startEditing();
+    JPanelFixture fieldPanel = new JPanelFixture(frame.robot(), (FieldPanel) fieldCell.editor());
+    fieldPanel.comboBox("navigationCombo").selectItem(navigationType.getLabel());
+    fieldCell.stopEditing();
+  }
+
+  @Test
+  public void shouldAddArrowNavigationInputs() {
+    addNavigationInput(0, NAVIGATION_INPUT(4, NavigationType.LEFT));
+    addNavigationInput(1, NAVIGATION_INPUT(3, NavigationType.UP));
+    addNavigationInput(2, NAVIGATION_INPUT(2, NavigationType.RIGHT));
+    addNavigationInput(3, NAVIGATION_INPUT(1, NavigationType.DOWN));
+    assertInputs(NAVIGATION_INPUT(4, NavigationType.LEFT), NAVIGATION_INPUT(3, NavigationType.UP)
+        , NAVIGATION_INPUT(2, NavigationType.RIGHT), NAVIGATION_INPUT(1, NavigationType.DOWN));
   }
 
   private static class FieldWriter extends AbstractJTableCellWriter {

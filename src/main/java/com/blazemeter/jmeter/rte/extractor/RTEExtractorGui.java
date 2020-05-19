@@ -20,7 +20,7 @@ public class RTEExtractorGui extends AbstractPostProcessorGui {
 
   @Override
   public String getStaticLabel() {
-    return "bzm - RTE Extractor";
+    return "bzm - RTE Position Extractor";
   }
 
   @Override

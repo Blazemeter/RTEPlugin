@@ -79,7 +79,7 @@ public class RTESamplerTest {
   @Before
   public void setup() {
     rteSampler = new RTESampler(p -> client);
-    when(client.isInputInhibited()).thenReturn(true);
+    when(client.isInputInhibited()).thenReturn(Optional.of(true));
     when(client.getScreen()).thenReturn(Screen.valueOf(TEST_SCREEN));
     when(client.resetAlarm()).thenReturn(false);
     when(client.getCursorPosition()).thenReturn(Optional.of(CURSOR_POSITION));
@@ -155,7 +155,7 @@ public class RTESamplerTest {
   public void shouldGetErrorSamplerResultWhenSendThrowIllegalArgumentException() throws Exception {
     IllegalArgumentException e = new IllegalArgumentException();
     doThrow(e).when(client)
-        .send(INPUTS, AttentionKey.ENTER);
+        .send(INPUTS, AttentionKey.ENTER, RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
     SampleResult expected = buildErrorResultBuilder(e)
         .withInputInhibitedRequest(true)
         .withInputs(INPUTS)
@@ -170,8 +170,7 @@ public class RTESamplerTest {
 
   private void truncateExceptionStacktrace(SampleResult result) {
     String response = result.getResponseDataAsString();
-    result.setResponseData(response.substring(0, response.indexOf('\n')),
-        StandardCharsets.UTF_8.name());
+    result.setResponseData(response.substring(0, response.indexOf('\n')), StandardCharsets.UTF_8.name());
   }
 
   @Test
@@ -221,7 +220,7 @@ public class RTESamplerTest {
       throws Exception {
     rteSampler.sample(null);
     verify(client)
-        .send(anyList(), eq(AttentionKey.ENTER));
+        .send(anyList(), eq(AttentionKey.ENTER), anyLong());
   }
 
   @Test
@@ -230,7 +229,7 @@ public class RTESamplerTest {
     rteSampler.setAttentionKey(AttentionKey.F1);
     rteSampler.sample(null);
     verify(client)
-        .send(anyList(), eq(AttentionKey.F1));
+        .send(anyList(), eq(AttentionKey.F1), anyLong());
   }
 
   @Test
@@ -238,7 +237,7 @@ public class RTESamplerTest {
     rteSampler.setAction(Action.CONNECT);
     rteSampler.sample(null);
     verify(client, never())
-        .send(anyList(), any(AttentionKey.class));
+        .send(anyList(), any(AttentionKey.class), anyLong());
   }
 
   @Test
@@ -512,7 +511,7 @@ public class RTESamplerTest {
     rteSampler.setAttentionKey(AttentionKey.ENTER);
     rteSampler.setInputs(INPUTS);
     rteSampler.sample(null);
-    verify(client).send(INPUTS, AttentionKey.ENTER);
+    verify(client).send(INPUTS, AttentionKey.ENTER, RTESampler.DEFAULT_CONNECTION_TIMEOUT_MILLIS);
   }
 
 }

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.google.common.base.Stopwatch;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Before;
@@ -14,10 +15,12 @@ import org.mockito.stubbing.Answer;
 
 public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
 
+  private static final Optional<Boolean> TRUE = Optional.of(true);
+  private static final Optional<Boolean> FALSE = Optional.of(false);
   @Override
   @Before
   public void setup() throws Exception {
-    when(client.isInputInhibited()).thenReturn(true);
+    when(client.isInputInhibited()).thenReturn(TRUE);
     super.setup();
   }
 
@@ -31,7 +34,7 @@ public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
 
   @Test
   public void shouldUnblockAfterReceivingUnlockStateChange() throws Exception {
-    when(client.isInputInhibited()).thenReturn(false);
+    when(client.isInputInhibited()).thenReturn(FALSE);
     long unlockDelayMillis = 500;
     Stopwatch waitTime = Stopwatch.createStarted();
     startSingleEventGenerator(unlockDelayMillis, buildStateChangeGenerator());
@@ -41,7 +44,7 @@ public class UnlockListenerIT extends Tn5250ConditionWaiterIT {
 
   @Test
   public void shouldUnblockWhenAlreadyNotInputInhibited() throws Exception {
-    when(client.isInputInhibited()).thenReturn(false);
+    when(client.isInputInhibited()).thenReturn(FALSE);
     Tn5250ConditionWaiter<?> listener = buildConditionWaiter();
     listener.await();
   }
