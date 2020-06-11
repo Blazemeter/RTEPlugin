@@ -279,6 +279,7 @@ public class CharacterBasedEmulator extends
         isAreaSelected = false;
       } else {
         statusPanel.blinkBlockedCursor();
+        this.requestFocus();
       }
     } else if (e.getID() == MouseEvent.MOUSE_PRESSED) {
       super.setIvMousePressed(true);

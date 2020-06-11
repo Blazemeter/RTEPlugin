@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.swing.timing.Pause.pause;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1008,5 +1009,14 @@ public class Xtn5250TerminalEmulatorIT {
     public String toString() {
       return value;
     }
+  }
+
+  @Test
+  public void shouldRecoverFocusOnScreenWhenClickingBackFromSampleNameField() throws Exception {
+    updateCharacterBasedWelcomeScreen();
+    setupInteractiveCharacterEmulator();
+    frame.textBox(SAMPLE_NAME_FIELD).click();
+    frame.robot().click(characterBasedEmulator);
+    assertTrue(characterBasedEmulator.isFocusOwner());
   }
 }
