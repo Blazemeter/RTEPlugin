@@ -85,8 +85,8 @@ The RTE Sampler fields are:
 - *RTE Message*. When "Send keys" action is selected it is possible to specify fields to send and attention key to use:
   - *Payload*. Contains a grid in which user can specify different types of inputs: 
       - **Input by Coordinates:** (row and column) of a field in the screen. Rows and columns starting from [1,1] (are 1 indexed).
-      - **Input by Label:** It could be a word or a text preceded by a field on the terminal screen.
-      - **Input by Navigation:** As the name describes, this input is going to navigate before placing the input value (String). There are five types of navigation; the four arrow navigation keys, and the tabulator key. Also you can specify how many times to send the navigation key before the input value.        
+      - **Input by Label:** It could be a word, or a text preceded by a field on the terminal screen.
+      - **Input by Navigation:** As the name describes, this input is going to navigate before placing the input value (String). There are five types of navigation; the four arrow navigation keys, and the tabulator key. Also, you can specify how many times to send the navigation key before the input value.        
         > Regardless from the input type, all of them will send a value (String) to the mainframe application. 
   - **Copy from Clipboard:** In order to make the input creation quicker, a string convention as been added. Remember to always make a tabulation between prefixes or inputs.
     ```text
@@ -104,7 +104,12 @@ The RTE Sampler fields are:
     - ***\<LEFT>\<LEFT>:*** It will create a left arrow navigation with a double repetition of the left key before sending the input value. Which is equivalent to *<LEFT\*2>*.
     - ***1	2*** It will create a coordinate input with row 1 and column 2 with an input value equals to 'input' as we see in above representation.
     - ***UserID*** This format will create a label input, with the label 'UserID' and the input value equals to 'input'. 
-  
+  - *Positioning cursor*
+    - It is possible to set the cursor position to a desired position. This could be useful to **send an attention key to a determined position**. In order to set the cursor position, we will need to add a Coordinate Input on our send-keys payload sampler. The Coordinate Input will have set the position where we want to set the cursor, and the value to be sent to the mainframe must be empty.
+    - Example of sending an Enter Attention Key at position (1, 27):
+        ![alt text](docs/send-attention-key-at-position.png)
+         > This functionality is supported for the recorder automatically. If cursor position is not on the default place (after typing on a field) and an Attention Key is triggered, the recorder will add the Coordinate Input to set the cursor position where the cursor was left while interacting with the emulator.
+       
   - *Attention Keys*. These buttons trigger the attention keys to be sent to the server on each sample. They all represent a key from a terminal's keyboard.
 - *Wait for*. When using "Connect" or "Send keys" action it is possible to wait for a specific condition. If this condition is not reached after a specific time (defined in *Timeout* value), the sampler returns timeout error. There are four defined waiters:
   - *Sync*. Waits for the system to return from X SYSTEM or Input Inhibited mode. Default value is checked, as it's recommended to always check that the system is not in Input Inhibited Mode after a sample (and before the next one) in order to get the correct screen in the sample result (and to ensure that the next sampler is executed from the desired screen). On the other hand, the sampler does an implicit "Wait for sync" each time it connects to a server, which means that if *Connect* mode is used, then it's not needed to check the *Wait for sync* function, unless you want to change the default timeout. 

@@ -5,6 +5,7 @@ import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.recorder.emulator.Xtn5250TerminalEmulator.ScreenField;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -187,7 +188,7 @@ public abstract class XI5250CrtBase<T extends RteProtocolClient> extends XI5250C
     this.supportedAttentionKeys = supportedAttentionKeys;
   }
 
-  public void setProtocolClient(T terminalClient) {
+  public <V extends T> void setProtocolClient(V terminalClient) {
     this.terminalClient = terminalClient;
   }
 
@@ -233,7 +234,7 @@ public abstract class XI5250CrtBase<T extends RteProtocolClient> extends XI5250C
     setCrtSize(screenSize.width, screenSize.height);
     clear();
     removeFields();
-    for (Screen.Segment s : screen.getSegments()) {
+    for (Segment s : screen.getSegments()) {
       int row = s.getStartPosition().getRow() - 1;
       int column = s.getStartPosition().getColumn() - 1;
       if (s.isEditable()) {

@@ -59,21 +59,20 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private transient JMeterTreeModel treeModelMock;
   private transient TerminalEmulator terminalEmulator;
   private transient Supplier<TerminalEmulator> terminalEmulatorSupplier;
-  private transient RecordingTargetFinder finder;
+  private final transient RecordingTargetFinder finder;
   private transient JMeterTreeNode samplersTargetNode;
   private transient RecordingStateListener recordingListener;
 
-  private transient String samplerName;
   private transient RteSampleResultBuilder resultBuilder;
   private transient RTESampler sampler;
-  private transient RequestListener requestListener;
+  private transient RequestListener<?> requestListener;
   private transient int sampleCount;
   private transient WaitConditionsRecorder waitConditionsRecorder;
   private transient ExecutorService connectionExecutor;
   private transient Function<List<Input>, List<Input>> inputProvider;
-  private transient Function<Protocol, RteProtocolClient> protocolFactory;
+  private final transient Function<Protocol, RteProtocolClient> protocolFactory;
   private transient RteProtocolClient terminalClient;
-  private transient List<TestElement> responseAssertions = new ArrayList<>();
+  private final transient List<TestElement> responseAssertions = new ArrayList<>();
 
   public RTERecorder() {
     this(new RecordingTargetFinder(),
@@ -207,8 +206,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
         .findTargetControllerNode(getJmeterTreeModel());
     addTestElementToTestPlan(buildRteConfigElement(), responseAssertions, samplersTargetNode);
     notifyChildren(TestStateListener.class, TestStateListener::testStarted);
-    resultBuilder = buildSampleResultBuilder(Action.CONNECT);
-    sampler = buildSampler(Action.CONNECT, null, null);
+    String sampleName = buildSampleName(Action.CONNECT);
+    resultBuilder = buildSampleResultBuilder(Action.CONNECT, sampleName);
+    sampler = buildSampler(Action.CONNECT, null, null, sampleName);
     terminalClient = protocolFactory.apply(getProtocol());
     TerminalType terminalType = getTerminalType();
     waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
@@ -241,9 +241,10 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   private void initTerminalEmulatorSupplier() {
     //verification done in order to not override the mock when testing
     if (terminalEmulatorSupplier.get() == null) {
-      inputProvider = inputs -> terminalClient instanceof CharacterBasedProtocolClient ? Collections
+      boolean isCharacterBased = terminalClient instanceof CharacterBasedProtocolClient;
+      inputProvider = inputs -> isCharacterBased ? Collections
           .emptyList() : inputs;
-      if (terminalClient instanceof CharacterBasedProtocolClient) {
+      if (isCharacterBased) {
         CharacterBasedEmulator characterBasedEmulator = new CharacterBasedEmulator();
         terminalEmulatorSupplier = () -> new Xtn5250TerminalEmulator(characterBasedEmulator);
         ((CharacterBasedProtocolClient) terminalClient)
@@ -315,9 +316,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     }
   }
 
-  private RteSampleResultBuilder buildSampleResultBuilder(Action action) {
+  private RteSampleResultBuilder buildSampleResultBuilder(Action action, String name) {
     RteSampleResultBuilder ret = new RteSampleResultBuilder()
-        .withLabel(getSampleName(action))
+        .withLabel(name)
         .withServer(getServer())
         .withPort(getPort())
         .withProtocol(getProtocol())
@@ -330,19 +331,12 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     return ret;
   }
 
-  private String getSampleName(Action action) {
-    return action == Action.SEND_INPUT ? samplerName : buildSampleName(action);
-  }
-
-  private String buildSampleName(Action action) {
-    return "bzm-RTE-" + action + (action == Action.SEND_INPUT ? "-" + (sampleCount + 1) : "");
-  }
-
-  private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey) {
+  private RTESampler buildSampler(Action action, List<Input> inputs, AttentionKey attentionKey,
+      String screenName) {
     RTESampler sampler = new RTESampler();
     sampler.setProperty(TestElement.GUI_CLASS, RTESamplerGui.class.getName());
     sampler.setProperty(TestElement.TEST_CLASS, RTESampler.class.getName());
-    sampler.setName(getSampleName(action));
+    sampler.setName(screenName);
     sampler.setAction(action);
     if (inputs != null) {
       sampler.setInputs(inputs);
@@ -362,6 +356,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     terminalEmulator.setSupportedAttentionKeys(terminalClient.getSupportedAttentionKeys());
     terminalEmulator.setProtocolClient(terminalClient);
     terminalEmulator.start();
+    terminalEmulator.setScreenName(sampler.getName());
     terminalClient.addTerminalStateListener(this);
 
     onTerminalStateChange();
@@ -374,14 +369,17 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onAttentionKey(AttentionKey attentionKey, List<Input> inputs, String screenName) {
-    samplerName = screenName;
     sampleCount++;
-    requestListener.stop();
     recordPendingSample();
+    requestListener.stop();
     terminalClient.resetAlarm();
-    resultBuilder = buildSendInputSampleResultBuilder(attentionKey, inputs);
+    String sampleName = buildSampleName(Action.SEND_INPUT);
+    terminalEmulator.setScreenName(sampleName);
+    resultBuilder = buildSendInputSampleResultBuilder(attentionKey, inputs, sampleName);
     registerRequestListenerFor();
-    sampler = buildSampler(Action.SEND_INPUT, inputs, attentionKey);
+    sampler = buildSampler(Action.SEND_INPUT, inputs, attentionKey, sampleName);
+    resultBuilder.withLabel(screenName);
+    sampler.setName(screenName);
     try {
       waitConditionsRecorder.start();
       terminalClient.send(inputProvider.apply(inputs), attentionKey,
@@ -425,10 +423,14 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
   }
 
   private RteSampleResultBuilder buildSendInputSampleResultBuilder(AttentionKey attentionKey,
-      List<Input> inputs) {
-    return buildSampleResultBuilder(Action.SEND_INPUT)
+      List<Input> inputs, String name) {
+    return buildSampleResultBuilder(Action.SEND_INPUT, name)
         .withInputs(inputs)
         .withAttentionKey(attentionKey);
+  }
+
+  private String buildSampleName(Action action) {
+    return "bzm-RTE-" + action + (action == Action.SEND_INPUT ? "-" + (sampleCount + 1) : "");
   }
 
   @Override
@@ -438,8 +440,9 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     synchronized (this) {
       if (terminalEmulator != null) {
         recordPendingSample();
-        resultBuilder = buildSampleResultBuilder(Action.DISCONNECT);
-        sampler = buildSampler(Action.DISCONNECT, null, null);
+        String sampleName = buildSampleName(Action.DISCONNECT);
+        resultBuilder = buildSampleResultBuilder(Action.DISCONNECT, sampleName);
+        sampler = buildSampler(Action.DISCONNECT, null, null, sampleName);
         terminalEmulator.stop();
         terminalEmulator = null;
         terminalEmulatorSupplier = () -> null;
@@ -478,8 +481,15 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onTerminalStateChange() {
-    samplerName = buildSampleName(Action.SEND_INPUT);
-    terminalEmulator.setScreen(terminalClient.getScreen(), samplerName);
+    /* 
+    Due to incorporation of VT protocol where the screen is changing constantly
+    without attention keys pressed, it is not possible to update screen name every time 
+    terminal state changed. Therefore, first screen sampler name is placed manually.
+    */
+    if (sampleCount == 0) {
+      terminalEmulator.setScreenName(buildSampleName(Action.SEND_INPUT));
+    }
+    terminalEmulator.setScreen(terminalClient.getScreen());
     terminalClient.getCursorPosition().ifPresent(cursorPosition -> terminalEmulator
         .setCursor(cursorPosition.getRow(), cursorPosition.getColumn()));
     if (terminalClient.isInputInhibited().isPresent()) {

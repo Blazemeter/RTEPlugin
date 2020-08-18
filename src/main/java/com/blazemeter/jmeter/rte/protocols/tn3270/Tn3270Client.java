@@ -200,6 +200,13 @@ public class Tn3270Client extends BaseProtocolClient {
   }
 
   private void setFieldByCoord(CoordInput i) {
+    if (i.getInput().isEmpty()) {
+      int linearPosition =
+          (i.getPosition().getRow() - 1) * getScreenSize()
+              .width + i.getPosition().getColumn() - 1;
+      client.setCursorPosition(linearPosition);
+      return;
+    }
     try {
       client.setFieldTextByCoord(i.getPosition().getRow(),
           i.getPosition().getColumn(), i.getInput());

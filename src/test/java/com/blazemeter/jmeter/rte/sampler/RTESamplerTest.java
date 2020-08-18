@@ -162,7 +162,8 @@ public class RTESamplerTest {
         .withAttentionKey(AttentionKey.ENTER)
         .build();
     SampleResult result = rteSampler.sample(null);
-    // stack traces won't match since they are obtained from different parts of code, so we just truncate them
+    // stack traces won't match since they are obtained from different parts of code, so we just 
+    // truncate them
     truncateExceptionStacktrace(result);
     truncateExceptionStacktrace(expected);
     assertSampleResult(result, expected);
@@ -170,7 +171,8 @@ public class RTESamplerTest {
 
   private void truncateExceptionStacktrace(SampleResult result) {
     String response = result.getResponseDataAsString();
-    result.setResponseData(response.substring(0, response.indexOf('\n')), StandardCharsets.UTF_8.name());
+    result.setResponseData(response.substring(0, response.indexOf('\n')),
+        StandardCharsets.UTF_8.name());
   }
 
   @Test

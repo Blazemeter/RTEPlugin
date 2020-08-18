@@ -31,7 +31,7 @@ public class CharacterBasedEmulator extends
   private static final Logger LOG = LoggerFactory.getLogger(CharacterBasedEmulator.class);
   private Position lastCursorPosition;
   private StringBuilder inputBuffer = new StringBuilder();
-  private List<Input> inputs = new ArrayList<>();
+  private final List<Input> inputs = new ArrayList<>();
   private int repetition;
   private Screen lastTerminalScreen;
   private boolean isAreaSelected;
@@ -113,8 +113,8 @@ public class CharacterBasedEmulator extends
 
     if (!sequencesInClipboard.isEmpty()) {
       String chunkAppearances = CharacterSequenceScaper.getSequenceChunkAppearancesIn(value);
-      JOptionPane.showMessageDialog(this, "Clipboard content \'" + String.join(", ",
-          sequencesInClipboard) + "\' is not "
+      JOptionPane.showMessageDialog(this, "Clipboard content '" + String.join(", ",
+          sequencesInClipboard) + "' is not "
               + "supported when pasting. \nAppearances of sequences near to: "
               + chunkAppearances, "Paste error",
           JOptionPane.INFORMATION_MESSAGE);
@@ -296,4 +296,5 @@ public class CharacterBasedEmulator extends
     }
     super.processMouseMotionEvent(e);
   }
+
 }

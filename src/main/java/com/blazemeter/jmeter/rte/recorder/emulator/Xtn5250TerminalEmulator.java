@@ -234,12 +234,16 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   }
 
   @Override
-  public void setScreen(Screen screen, String screenName) {
+  public void setScreen(Screen screen) {
     /*
     setScreen delegated to XI5250CrtBase in order to proper synchronize setScreen, 
     paintComponent and processKeyEvent methods.
     */
     xi5250Crt.setScreen(screen, shownCredentials);
+  }
+
+  @Override
+  public void setScreenName(String screenName) {
     sampleNameField.setText(screenName);
   }
 

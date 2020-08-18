@@ -34,9 +34,8 @@ public class CharacterSequenceScaper {
     for (String sequence : SEQUENCES.keySet()) {
       if (value.contains(sequence)) {
         int index = value.indexOf(sequence);
-        int chunkBegin = index - CHUNK_TEXT_SIZE >= 0 ? index - CHUNK_TEXT_SIZE : 0;
-        int chunkEnd = index + CHUNK_TEXT_SIZE <= value.length() ? index + CHUNK_TEXT_SIZE
-            : value.length();
+        int chunkBegin = Math.max(index - CHUNK_TEXT_SIZE, 0);
+        int chunkEnd = Math.min(index + CHUNK_TEXT_SIZE, value.length());
         String chunk = value.substring(chunkBegin, chunkEnd);
         sequenceLocation.append(chunkBegin == 0 ? "\n" : "\n...");
         sequenceLocation.append(chunk);

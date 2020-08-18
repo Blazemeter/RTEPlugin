@@ -13,7 +13,9 @@ public interface TerminalEmulator {
 
   void setCursor(int row, int col);
 
-  void setScreen(Screen screen, String screenName);
+  void setScreenName(String screenName);
+
+  void setScreen(Screen screen);
 
   void soundAlarm();
 

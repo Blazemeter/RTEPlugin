@@ -221,7 +221,7 @@ public class RTERecorderTest {
   @Test
   public void shouldSetEmulatorScreenWhenTerminalStateChange() throws Exception {
     connect();
-    verify(terminalEmulator).setScreen(TEST_SCREEN, SEND_INPUT_1);
+    verify(terminalEmulator).setScreen(TEST_SCREEN);
   }
 
   @Test
@@ -276,7 +276,7 @@ public class RTERecorderTest {
   @Test
   public void shouldSetEmulatorScreenWhenStart() throws Exception {
     connect();
-    verify(terminalEmulator).setScreen(TEST_SCREEN, SEND_INPUT_1);
+    verify(terminalEmulator).setScreen(TEST_SCREEN);
   }
 
   @Test

@@ -159,6 +159,10 @@ public class Tn5250Client extends BaseProtocolClient {
   }
 
   private void setFieldByCoord(CoordInput i) {
+    if (i.getInput().isEmpty()) {
+      client.setCursorPosition(i.getPosition().getRow() - 1, i.getPosition().getColumn() - 1);
+      return;
+    }
     try {
       client.setFieldTextByCoord(i.getPosition().getRow(),
           i.getPosition().getColumn(), i.getInput());

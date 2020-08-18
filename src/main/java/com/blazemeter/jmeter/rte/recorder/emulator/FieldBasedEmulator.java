@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.recorder.emulator;
 
+import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
 import com.blazemeter.jmeter.rte.core.NavigationInput;
@@ -40,13 +41,21 @@ public class FieldBasedEmulator extends XI5250CrtBase {
       fieldFromPos = getNextFieldFromPos(initialColumn, initialRow);
     }
     int initialField = getFields().indexOf(fieldFromPos);
+    //means screen is not constituted by fields
+    if (initialField == -1) {
+      fields.add(new CoordInput(new Position(getCursorRow() + 1, getCursorCol() + 1), ""));
+      labelMap.clear();
+      return fields;
+    }
     Iterator<XI5250Field> it = getFields().listIterator(initialField);
     int index = 0;
     int offset = 1;
+    Position lastFieldPosition = null;
     while (it.hasNext() && index < getFields().size()) {
       XI5250Field f = it.next();
       if (f.isMDTOn()) {
         Position fieldPosition = new Position(f.getRow() + 1, f.getCol() + 1);
+        lastFieldPosition = fieldPosition;
         String label = (String) labelMap.get(fieldPosition);
         String trimmedInput = trimNulls(f.getString());
         fields.add(label != null ? new LabelInput(label, trimmedInput)
@@ -61,8 +70,42 @@ public class FieldBasedEmulator extends XI5250CrtBase {
         it = getFields().iterator();
       }
     }
+
+    if (isNeededToUpdateCursorPosition(lastFieldPosition)) {
+      fields.add(new CoordInput(new Position(getCursorRow() + 1, getCursorCol() + 1), ""));
+    }
     labelMap.clear();
     return fields;
+  }
+
+  private boolean isNeededToUpdateCursorPosition(
+      Position lastFieldPosition) {
+    if (lastFieldPosition == null) {
+      return true;
+    }
+    XI5250Field lastModifiedField = getFieldFromPos(lastFieldPosition.getColumn() - 1,
+        lastFieldPosition.getRow() - 1);
+    int fieldWrittenTextLength = lastModifiedField.getTrimmedString().length();
+    if (new Position(lastModifiedField.getRow(),
+        lastModifiedField.getCol() + fieldWrittenTextLength)
+        .equals(new Position(getCursorRow(), getCursorCol()))) {
+      return false;
+    }
+    
+    XI5250Field nextField = getNextFieldAfterField(lastModifiedField);
+    Position currentCursorPosition = new Position(getCursorRow(), getCursorCol());
+    //when reaching the maximum length of a field while typing, emulator jumps to next field
+    return lastModifiedField.getLength() != fieldWrittenTextLength || !currentCursorPosition
+        .equals(new Position(nextField.getRow() + 1, nextField.getCol() + 1));
+  }
+
+  private XI5250Field getNextFieldAfterField(XI5250Field field) {
+    int index = getFields().indexOf(field);
+    if (++index < getFields().size()) {
+      return getFields().get(index);
+    } else {
+      return getField(0);
+    }
   }
 
   @Override
