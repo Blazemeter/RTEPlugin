@@ -61,7 +61,7 @@ public class NavigationInput extends Input {
 
   @Override
   public String getCsv() {
-    return "<" + navigationType + "*" + repeat + ">\t" + input;
+    return "<" + navigationType + "*" + repeat + ">," + input;
   }
 
   public int getRepeat() {

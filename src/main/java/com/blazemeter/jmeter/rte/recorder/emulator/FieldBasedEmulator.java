@@ -49,7 +49,7 @@ public class FieldBasedEmulator extends XI5250CrtBase {
     }
     Iterator<XI5250Field> it = getFields().listIterator(initialField);
     int index = 0;
-    int offset = 1;
+    int offset = 0;
     Position lastFieldPosition = null;
     while (it.hasNext() && index < getFields().size()) {
       XI5250Field f = it.next();
@@ -61,7 +61,7 @@ public class FieldBasedEmulator extends XI5250CrtBase {
         fields.add(label != null ? new LabelInput(label, trimmedInput)
             : new NavigationInput(f.equals(fieldFromPos) ? 0 : offset, NavigationType.TAB,
                 trimmedInput));
-        offset = 1;
+        offset = trimmedInput.trim().length() == f.getLength() ? 0 : 1;
       } else {
         offset++;
       }

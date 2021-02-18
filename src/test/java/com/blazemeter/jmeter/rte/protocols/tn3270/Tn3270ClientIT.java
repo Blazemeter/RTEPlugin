@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.rte.protocols.tn3270;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -37,10 +36,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.oro.text.regex.Perl5Compiler;
-import org.apache.oro.text.regex.Perl5Matcher;
 import org.junit.Test;
 
 public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
@@ -151,8 +149,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     awaitSync();
   }
 
-  private List<Input> buildUsernameField() {
-    return Collections.singletonList(new CoordInput(new Position(2, 1), USERNAME));
+  private Input buildUsernameField() {
+    return new CoordInput(new Position(2, 1), USERNAME);
   }
 
   @Test
@@ -231,8 +229,8 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     awaitSync();
   }
 
-  private void sendEnterAttentionKey(List<Input> inputs) throws RteIOException {
-    client.send(inputs, AttentionKey.ENTER, 0);
+  private void sendEnterAttentionKey(Input... inputs) throws RteIOException {
+    client.send(Arrays.asList(inputs), AttentionKey.ENTER, 0);
   }
 
   @Test(expected = TimeoutException.class)
@@ -261,13 +259,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadLoginFlow();
     connectToVirtualService();
     sendEnterAttentionKey(buildUsernameField());
-    client.await(Collections
-        .singletonList(new TextWaitCondition(new Perl5Compiler().compile("testing-wait-text"),
-            new Perl5Matcher(),
-            Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX,
-                Position.UNSPECIFIED_INDEX),
-            TIMEOUT_MILLIS,
-            STABLE_TIMEOUT_MILLIS)));
+    awaitText("testing-wait-text");
   }
 
   @Test
@@ -294,7 +286,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
       throws Exception {
     loadFlow("login.yml");
     connectToVirtualService();
-    client.send(buildUsernameField(), AttentionKey.ROLL_UP, 0);
+    client.send(Collections.singletonList(buildUsernameField()), AttentionKey.ROLL_UP, 0);
   }
 
   @Test
@@ -371,8 +363,12 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadFlow("login-with-multiple-flash-screen.yml");
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
+    awaitText("AAAAA");
+  }
 
-    client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("AAAAA"),
+  private void awaitText(String text)
+      throws InterruptedException, TimeoutException, RteIOException {
+    client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern(text),
         JMeterUtils.getMatcher(),
         Area.fromTopLeftBottomRight(1, 1, Position.UNSPECIFIED_INDEX, Position.UNSPECIFIED_INDEX),
         TIMEOUT_MILLIS, STABLE_TIMEOUT_MILLIS)));
@@ -382,14 +378,22 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldGetUserMenuScreenWhenSendUserNameWithArrows() throws Exception {
     loadFlow("login.yml");
     connectToVirtualService();
-    List<Input> inputs = Arrays.asList(
-        new NavigationInput(1, NavigationType.DOWN, ""),
+    sendEnterAttentionKey(new NavigationInput(1, NavigationType.DOWN, ""),
         new NavigationInput(27, NavigationType.RIGHT, ""),
         new NavigationInput(2, NavigationType.UP, ""),
         new NavigationInput(1, NavigationType.LEFT, "testusr"));
-    sendEnterAttentionKey(inputs);
     awaitSync();
     assertThat(client.getScreen().withInvisibleCharsToSpaces())
         .isEqualTo(buildScreenFromHtmlFile("user-menu-screen.html"));
+  }
+
+  @Test
+  public void shouldValidateTextOnScreeWhenScreenBuiltFromPlainTextAndFields() throws Exception {
+    loadFlow("login-mixed-fields-and-plain-text.yml");
+    connectExtendedProtocolClientToVirtualService();
+    sendEnterAttentionKey(new NavigationInput(0, NavigationType.TAB, "TESTUSR "),
+        new NavigationInput(1, NavigationType.TAB,
+            "TESTPSW" + IntStream.range(0, 35).mapToObj(i -> " ").collect(Collectors.joining())));
+    awaitText("Ready");
   }
 }
