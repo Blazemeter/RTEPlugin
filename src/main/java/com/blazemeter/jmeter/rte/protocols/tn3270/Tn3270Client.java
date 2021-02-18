@@ -49,8 +49,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import javax.naming.OperationNotSupportedException;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +62,7 @@ public class Tn3270Client extends BaseProtocolClient {
   private static final Map<AttentionKey, Byte> AID_COMMANDS = buildAIdCommandsKeysMapping();
 
   private TerminalClient client;
-  private Map<TerminalStateListener, Tn3270TerminalStateListenerProxy> listenersProxies =
+  private final Map<TerminalStateListener, Tn3270TerminalStateListenerProxy> listenersProxies =
       new ConcurrentHashMap<>();
 
   private static List<TerminalType> buildTerminalTypes() {
@@ -247,7 +247,7 @@ public class Tn3270Client extends BaseProtocolClient {
       } else {
         exceptionHandler
             .setPendingError(new OperationNotSupportedException(
-                "The navigation type \'" + i.getNavigationType() + "\' is not supported"));
+                "The navigation type '" + i.getNavigationType() + "' is not supported"));
       }
     }
   }
@@ -284,12 +284,41 @@ public class Tn3270Client extends BaseProtocolClient {
 
   @Override
   public Screen getScreen() {
-    // when sscp lu data screen or screens without explicit fields
-    if (client.getFields().isEmpty()) {
-      return buildScreenFromText(client.getScreenText().replace("\n", ""));
-    } else {
-      return buildScreenFromFields(client.getFields());
+    List<Field> fields = client.getFields();
+    Dimension size = getScreenSize();
+    Screen screen = new Screen(size);
+    String screenText = client.getScreenText().replace("\n", "");
+    if (fields.isEmpty()) {
+      return buildScreenFromText(screenText);
     }
+    int linealPosition = 0;
+    List<Field> unProtectedFields = fields.stream().filter(Field::isUnprotected)
+        .collect(Collectors.toList());
+    for (Field field : unProtectedFields) {
+      // FirstLocation is the first location of text not counting the position consumed by 
+      // field attributes. First location can be 0 when last empty field of screen.
+      if (field.getFirstLocation() != 0 && field.getFirstLocation() - 1 != linealPosition) {
+        String chunk = getChunkOfScreenFrom(screenText, linealPosition,
+            field.getFirstLocation() - 1);
+        screen.addSegment(linealPosition, chunk);
+        linealPosition += chunk.length();
+      }
+      screen.addSegment(linealPosition, " ");
+      if (!field.getText().isEmpty()) {
+        if (field.isHidden()) {
+          screen.addSecretField(linealPosition + 1, field.getText());
+        } else {
+          screen.addField(linealPosition + 1, field.getText());
+        }
+      }
+      linealPosition += field.getText().length() + 1;
+
+    }
+    if (linealPosition < size.width * size.height) {
+      String chunk = getChunkOfScreenFrom(screenText, linealPosition, size.height * size.width);
+      screen.addSegment(linealPosition, chunk);
+    }
+    return screen;
   }
 
   private Screen buildScreenFromText(String screenText) {
@@ -311,28 +340,13 @@ public class Tn3270Client extends BaseProtocolClient {
     return ret;
   }
 
-  private Screen buildScreenFromFields(List<Field> fields) {
-    Dimension size = getScreenSize();
-    Screen ret = new Screen(size);
-    for (Field f : fields) {
-      int linealPosition =
-          (f.getFirstLocation() != 0 ? f.getFirstLocation() : size.height * size.width) - 1;
-      String text = f.isVisible() ? f.getText() : StringUtils.repeat(' ', f.getDisplayLength());
-      if (f.isProtected()) {
-        ret.addSegment(linealPosition, " " + text);
-      } else {
-        ret.addSegment(linealPosition, " ");
-        if (linealPosition + 1 < size.height * size.width) {
-          if (f.isHidden()) {
-            ret.addSecretField(linealPosition + 1, text);
-          } else {
-            ret.addField(linealPosition + 1, text);
-          }
-
-        }
-      }
+  private String getChunkOfScreenFrom(String screen, int segmentBegin,
+      int segmentEnd) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = segmentBegin; i < segmentEnd; i++) {
+      sb.append(screen.charAt(i));
     }
-    return ret;
+    return sb.toString();
   }
 
   public Dimension getScreenSize() {

@@ -119,7 +119,6 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Mock
   private TerminalEmulatorListener listener;
-  private String samplerName;
 
   private static Screen buildScreen(String text, boolean withFields) {
     Dimension screenSize = new Dimension(80, 24);
@@ -315,8 +314,12 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKeyWithCursorUpdate(KeyEvent.VK_F1, 0, 2, 2);
     verify(listener, timeout(PAUSE_TIMEOUT)).onAttentionKey(AttentionKey.F1,
-        Collections.singletonList(new CoordInput(new Position(2,2), "")),
+        Collections.singletonList(buildCoordInput(2, 2)),
         "");
+  }
+
+  private static CoordInput buildCoordInput(int row, int col) {
+    return new CoordInput(new Position(row, col), "");
   }
 
   @Test
@@ -326,7 +329,7 @@ public class Xtn5250TerminalEmulatorIT {
     sendKeyWithCursorUpdate(KeyEvent.VK_CONTROL, KeyEvent.CTRL_MASK, 2, 2);
     verify(listener, timeout(PAUSE_TIMEOUT))
         .onAttentionKey(AttentionKey.RESET,
-            Collections.singletonList(new CoordInput(new Position(2, 2), "")), "");
+            Collections.singletonList(buildCoordInput(2, 2)), "");
   }
 
   @Test
@@ -433,7 +436,7 @@ public class Xtn5250TerminalEmulatorIT {
     sendKeyWithCursorUpdate(KeyEvent.VK_ENTER, 0, 2, 5);
     List<Input> inputs = new ArrayList<>();
     inputs.add(new LabelInput(CHUNK_OF_SCREEN, input));
-    inputs.add(new CoordInput(new Position(2, 5), ""));
+    inputs.add(buildCoordInput(2, 5));
     verify(listener).onAttentionKey(AttentionKey.ENTER, inputs, "");
   }
 
@@ -539,7 +542,7 @@ public class Xtn5250TerminalEmulatorIT {
     setSampleName(CONNECTING_LITERAL);
     sendKeyWithCursorUpdate(KeyEvent.VK_ENTER, 0, 2, 1);
     verify(listener).onAttentionKey(AttentionKey.ENTER,
-        Collections.singletonList(new CoordInput(new Position(2, 1), "")),
+        Collections.singletonList(buildCoordInput(2, 1)),
         CONNECTING_LITERAL);
   }
 
@@ -566,6 +569,19 @@ public class Xtn5250TerminalEmulatorIT {
     Icon actual = frame.label("showCredentials").target().getIcon();
     ImageIcon expected = new ImageIcon("/light-theme/visible-credentials.png");
     assertThat(((ImageIcon) actual).getImage().equals(expected.getImage()));
+  }
+
+  @Test
+  public void shouldSendTabInputWithoutRepetitionWhenCursorJumpsToNextField() throws Exception {
+    setScreenWithUserNameAndPasswordFields();
+    xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
+    sendNavigationKey(KeyEvent.VK_TAB, 0);
+    sendNavigationKey(KeyEvent.VK_T, 0);
+    sendNavigationKey(KeyEvent.VK_T, 0);
+    sendNavigationKey(KeyEvent.VK_ENTER, 0);
+    verify(listener).onAttentionKey(AttentionKey.ENTER,
+        Arrays.asList(new NavigationInput(0, NavigationType.TAB, "T"), new NavigationInput(0,
+            NavigationType.TAB, "T"), buildCoordInput(1, 14)), "");
   }
 
   @Test
@@ -635,7 +651,6 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     xtn5250TerminalEmulator.setScreenSize(COLUMNS, ROWS);
     xtn5250TerminalEmulator.setScreen(screen);
-    xtn5250TerminalEmulator.setScreenName(samplerName);
     characterBasedEmulator.setKeyboardStatus(true);
     characterBasedEmulator.screenChanged(screen.getText());
     if (interactive) {
@@ -998,7 +1013,7 @@ public class Xtn5250TerminalEmulatorIT {
     sendKeyWithCursorUpdate(KeyEvent.VK_Y, 0, 2, 18);
     assertThat(xtn5250TerminalEmulator.getInputs()).isEqualTo(Arrays.asList(new NavigationInput(0
             , NavigationType.TAB, "y"), new LabelInput("Insert Name", "t"),
-        new CoordInput(new Position(1, 14), "")));
+        buildCoordInput(1, 14)));
 
   }
 
@@ -1057,7 +1072,7 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKeyWithCursorUpdate(KeyEvent.VK_ENTER, 0, 2, 1);
     verify(listener).onAttentionKey(AttentionKey.ENTER,
-        Collections.singletonList(new CoordInput(new Position(2, 1), "")),
+        Collections.singletonList(buildCoordInput(2, 1)),
         "sample-name");
   }
 
@@ -1067,7 +1082,7 @@ public class Xtn5250TerminalEmulatorIT {
     xtn5250TerminalEmulator.addTerminalEmulatorListener(listener);
     sendKeyWithCursorUpdate(KeyEvent.VK_ENTER, 0, 2, 18);
     verify(listener).onAttentionKey(AttentionKey.ENTER,
-        Collections.singletonList(new CoordInput(new Position(2, 18), "")), "");
+        Collections.singletonList(buildCoordInput(2, 18)), "");
   }
-  
+
 }

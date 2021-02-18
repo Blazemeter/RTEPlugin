@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 
 import com.blazemeter.jmeter.rte.sampler.gui.SwingUtils;
 import com.blazemeter.jmeter.rte.sampler.gui.ThemedIconLabel;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.GroupLayout;
@@ -76,31 +77,14 @@ public class StatusPanel extends JPanel {
   }
 
   private MouseListener buildShowHelpOnMouseClickListener() {
-    return new MouseListener() {
+    return new MouseAdapter() {
       @Override
-      public void mouseClicked(MouseEvent mouseEvent) {
+      public void mouseClicked(MouseEvent e) {
         if (helpFrame == null) {
           helpFrame = new HelpFrame();
         }
         helpFrame.open();
       }
-
-      @Override
-      public void mousePressed(MouseEvent mouseEvent) {
-      }
-
-      @Override
-      public void mouseReleased(MouseEvent mouseEvent) {
-      }
-
-      @Override
-      public void mouseEntered(MouseEvent mouseEvent) {
-      }
-
-      @Override
-      public void mouseExited(MouseEvent mouseEvent) {
-      }
-
     };
   }
 
