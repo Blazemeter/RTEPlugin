@@ -41,6 +41,8 @@ public class RTESamplerPanelIT {
   private static final String WAIT_TEXT_AREA_TOP = "waitTextAreaTop";
   private static final String WAIT_TEXT_AREA_BOTTOM = "waitTextAreaBottom";
   private static final String WAIT_TEXT_AREA_RIGHT = "waitTextAreaRight";
+  private static final String WAIT_DISCONNECT = "waitDisconnect";
+  private static final String WAIT_DISCONNECT_TIMEOUT = "waitDisconnectTimeout";
   private static final long CHANGE_TIMEOUT_MILLIS = 10000;
 
   private FrameFixture frame;
@@ -119,7 +121,7 @@ public class RTESamplerPanelIT {
   @Test
   public void shouldEnableSyncWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_SYNC);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
+    List<AbstractJComponentFixture<?, ?, ?>> expected = new ArrayList<>();
     switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_SYNC_TIMEOUT));
     validateEnabled(true, expected);
@@ -128,7 +130,7 @@ public class RTESamplerPanelIT {
   @Test
   public void shouldEnableCursorWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_CURSOR);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
+    List<AbstractJComponentFixture<?, ?, ?>> expected = new ArrayList<>();
     switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_CURSOR_ROW));
     expected.add(frame.textBox(WAIT_CURSOR_COLUMN));
@@ -139,7 +141,7 @@ public class RTESamplerPanelIT {
   @Test
   public void shouldDisableCursorWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_CURSOR);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
+    List<AbstractJComponentFixture<?, ?, ?>> expected = new ArrayList<>();
     switchCheckboxTo(false, check);
     expected.add(frame.textBox(WAIT_CURSOR_ROW));
     expected.add(frame.textBox(WAIT_CURSOR_COLUMN));
@@ -150,7 +152,7 @@ public class RTESamplerPanelIT {
   @Test
   public void shouldEnableSilentWaitFieldsWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_SILENT);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
+    List<AbstractJComponentFixture<?, ?, ?>> expected = new ArrayList<>();
     switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_SILENT_TIME));
     expected.add(frame.textBox(WAIT_SILENT_TIMEOUT));
@@ -160,7 +162,7 @@ public class RTESamplerPanelIT {
   @Test
   public void shouldDisableSilentWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_SILENT);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
+    List<AbstractJComponentFixture<?, ?, ?>> expected = new ArrayList<>();
     switchCheckboxTo(false, check);
     expected.add(frame.textBox(WAIT_SILENT_TIME));
     expected.add(frame.textBox(WAIT_SILENT_TIMEOUT));
@@ -170,7 +172,7 @@ public class RTESamplerPanelIT {
   @Test
   public void shouldEnableTextWaitFieldWhenIsChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_TEXT);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
+    List<AbstractJComponentFixture<?, ?, ?>> expected = new ArrayList<>();
     switchCheckboxTo(true, check);
     expected.add(frame.textBox(WAIT_TEXT_REGEX));
     expected.add(frame.textBox(WAIT_TEXT_TIMEOUT));
@@ -184,7 +186,7 @@ public class RTESamplerPanelIT {
   @Test
   public void shouldDisableTextWaitFieldsWhenIsNotChecked() {
     JCheckBoxFixture check = frame.checkBox(WAIT_TEXT);
-    List<AbstractJComponentFixture> expected = new ArrayList<>();
+    List<AbstractJComponentFixture<?, ?, ?>> expected = new ArrayList<>();
     switchCheckboxTo(false, check);
     expected.add(frame.textBox(WAIT_TEXT_REGEX));
     expected.add(frame.textBox(WAIT_TEXT_TIMEOUT));
@@ -200,14 +202,27 @@ public class RTESamplerPanelIT {
     check.check(state);
   }
 
-  private void validateEnabled(boolean enable, List<AbstractJComponentFixture> components) {
+  private void validateEnabled(boolean enable,
+      List<AbstractJComponentFixture<?, ?, ?>> components) {
 
     pause(new Condition("Components are " + (enable ? "enabled" : "disabled")) {
       @Override
       public boolean test() {
         return components.stream()
-            .allMatch( c -> c.isEnabled() == enable);
+            .allMatch(c -> c.isEnabled() == enable);
       }
     }, timeout(CHANGE_TIMEOUT_MILLIS));
+  }
+  
+  @Test
+  public void shouldDisableDisconnectWaitTimeoutFieldWhenIsNotChecked() {
+    switchCheckboxTo(false, frame.checkBox(WAIT_DISCONNECT));
+    validateEnabled(false, Collections.singletonList(frame.textBox(WAIT_DISCONNECT_TIMEOUT)));
+  }
+
+  @Test
+  public void shouldEnableDisconnectWaitTimeoutFieldWhenIsChecked() {
+    switchCheckboxTo(true, frame.checkBox(WAIT_DISCONNECT));
+    validateEnabled(true, Collections.singletonList(frame.textBox(WAIT_DISCONNECT_TIMEOUT)));
   }
 }

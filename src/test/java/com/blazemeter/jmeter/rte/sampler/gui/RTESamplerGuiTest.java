@@ -53,6 +53,7 @@ public class RTESamplerGuiTest {
     final String waitTextAreaTop = "10";
     final String waitTextRegex = "regExp";
     final String waitTextTimeout = "11";
+    final String waitDisconnectTimeout = "12";
     when(panel.getAttentionKey()).thenReturn(attentionKey);
     when(panel.getAction()).thenReturn(Action.CONNECT);
     when(panel.getWaitSync()).thenReturn(true);
@@ -72,6 +73,8 @@ public class RTESamplerGuiTest {
     when(panel.getWaitTextRegex()).thenReturn(waitTextRegex);
     when(panel.getWaitTextTimeout()).thenReturn(waitTextTimeout);
     when(panel.getPayload()).thenReturn(null);
+    when(panel.getWaitDisconnectTimeout()).thenReturn(waitDisconnectTimeout);
+    when(panel.getWaitDisconnect()).thenReturn(true);
 
     samplerGui.modifyTestElement(testElement);
 
@@ -81,6 +84,7 @@ public class RTESamplerGuiTest {
     softly.assertThat(testElement.getWaitCursor()).as("WaitCursor").isEqualTo(true);
     softly.assertThat(testElement.getWaitSilent()).as("WaitSilent").isEqualTo(true);
     softly.assertThat(testElement.getWaitText()).as("WaitText").isEqualTo(true);
+    softly.assertThat(testElement.getWaitDisconnect()).as("WaitDisconnect").isEqualTo(true);
     softly.assertThat(testElement.getWaitSyncTimeout()).as("WaitSyncTimeout")
         .isEqualTo(waitSyncTimeout);
     softly.assertThat(testElement.getWaitCursorColumn()).as("WaitCursorColumn")
@@ -105,6 +109,8 @@ public class RTESamplerGuiTest {
         .isEqualTo(waitTextTimeout);
     softly.assertThat(testElement.getWaitTextRegex()).as("WaitTextRegex")
         .isEqualTo(waitTextRegex);
+    softly.assertThat(testElement.getWaitDisconnectTimeout()).as("WaitDisconnectTimeout")
+        .isEqualTo(waitDisconnectTimeout);
   }
 
 }

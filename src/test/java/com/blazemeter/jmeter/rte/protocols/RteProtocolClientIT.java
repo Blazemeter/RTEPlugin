@@ -1,9 +1,12 @@
 package com.blazemeter.jmeter.rte.protocols;
 
+import com.blazemeter.jmeter.rte.core.ServerDisconnectHandler;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.Screen.Segment;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.Tn5250ClientIT;
@@ -17,6 +20,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -35,12 +39,39 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   protected VirtualTcpService server = new VirtualTcpService();
   protected T client;
 
+  protected BooleanProvider isDisconnectionExpected = new BooleanProvider();
+
+  public static class BooleanProvider implements Supplier<Boolean> {
+
+    private boolean value;
+
+    public void update(boolean newValue) {
+      this.value = newValue;
+    }
+
+    @Override
+    public Boolean get() {
+      return value;
+    }
+  }
+
   @Before
   public void setup() throws Exception {
     server.setSslEnabled(false);
     server.start();
     client = buildClient();
+    client.setDisconnectionHandler(buildDisconnectionHandler());
+  }
 
+  private ServerDisconnectHandler buildDisconnectionHandler() {
+    return new ServerDisconnectHandler(this.isDisconnectionExpected.get()) {
+      @Override
+      public void onDisconnection(ExceptionHandler handler) {
+        if (!isDisconnectionExpected.get()) {
+          handler.setPendingError(new ConnectionClosedException());
+        }
+      }
+    };
   }
 
   protected abstract T buildClient();
@@ -81,8 +112,8 @@ public abstract class RteProtocolClientIT<T extends RteProtocolClient> {
   protected Screen buildScreenFromHtmlFile(String fileName) throws IOException {
     return Screen.fromHtml(Resources.toString(findResource(fileName), Charsets.UTF_8));
   }
-  
+
   protected abstract List<Segment> buildExpectedFields();
-  
-  
+
+
 }

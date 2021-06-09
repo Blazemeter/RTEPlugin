@@ -61,7 +61,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
   private boolean shownCredentials = false;
   private boolean stopping;
   private final StatusPanel statusPanel = new StatusPanel();
-  private final XI5250CrtBase xi5250Crt;
+  private XI5250CrtBase xi5250Crt;
 
   public Xtn5250TerminalEmulator(XI5250CrtBase xi5250Crt) {
     this.xi5250Crt = xi5250Crt;
@@ -210,9 +210,12 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
 
   @Override
   public void stop() {
-    stopping = true;
-    xi5250Crt.teardown();
-    dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+    if (!stopping) {
+      stopping = true;
+      xi5250Crt.teardown();
+      dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+      xi5250Crt = null;
+    }
   }
 
   @Override

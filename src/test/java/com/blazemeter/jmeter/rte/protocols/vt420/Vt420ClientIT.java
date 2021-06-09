@@ -1,12 +1,9 @@
 package com.blazemeter.jmeter.rte.protocols.vt420;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
-import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen.Segment;
@@ -17,6 +14,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
@@ -52,7 +50,6 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
       NavigationType.TAB, PASSWORD);
   private static final Position USER_ID_CURSOR_POSITION = new Position(12, 42);
   private static final Position WELCOME_SCREEN_CURSOR_POSITION = new Position(12, 27);
-  private static final String LOGIN_SUCCESS_SCREEN_HTML = "login-success-screen.html";
   private static final String ARROW_NAVIGATION_SCREEN_HTML = "arrow-navigation-screen.html";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
@@ -122,23 +119,27 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
   }
 
   @Test
-  public void shouldGetArrownavigationScreenWhenSendCorrectCredentialsByTabulator()
+  public void shouldGetArrowNavigationScreenWhenSendCorrectCredentialsByTabulator()
       throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     waitForCursorPosition(WELCOME_SCREEN_CURSOR_POSITION);
     sendEnterAttentionKey();
     waitForCursorPosition(USER_ID_CURSOR_POSITION);
-    sendCredentialsByTabulatorWithSilent();
+    sendCredentialsByTabulator();
+    awaitSync();
     assertThat(client.getScreen().withInvisibleCharsToSpaces())
         .isEqualTo(buildScreenFromHtmlFile(ARROW_NAVIGATION_SCREEN_HTML));
 
   }
 
-  private void sendCredentialsByTabulatorWithSilent()
-      throws RteIOException, TimeoutException, InterruptedException {
+  private void sendCredentialsByTabulator()
+      throws RteIOException {
     client.send(Arrays.asList(USER_ID_INPUT, DATA_INPUT, USER_PASSWORD_INPUT), AttentionKey.ENTER,
         TIMEOUT_MILLIS);
+  }
+
+  private void awaitSync() throws InterruptedException, TimeoutException, RteIOException {
     client.await(Collections.singletonList(new SyncWaitCondition(3000, STABLE_TIMEOUT_MILLIS)));
   }
 
@@ -227,14 +228,15 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
     waitForCursorPosition(WELCOME_SCREEN_CURSOR_POSITION);
     sendEnterAttentionKey();
     waitForCursorPosition(USER_ID_CURSOR_POSITION);
-    sendCredentialsByTabulatorWithSilent();
+    sendCredentialsByTabulator();
+    awaitSync();
     waitForCursorPosition(new Position(1, 54));
-    sendArrowMovementsScreenDataWithSilentWaitCondition();
+    sendArrowMovementsScreenDataWithSyncWaitCondition();
     assertThat(client.getScreen().withInvisibleCharsToSpaces())
         .isEqualTo(buildScreenFromHtmlFile("login-success-screen.html"));
   }
 
-  private void sendArrowMovementsScreenDataWithSilentWaitCondition()
+  private void sendArrowMovementsScreenDataWithSyncWaitCondition()
       throws RteIOException, TimeoutException, InterruptedException {
     client.send(Arrays.asList(
         new NavigationInput(1, NavigationType.DOWN, "00"),
@@ -261,7 +263,15 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
         .isEqualTo(buildScreenFromHtmlFile("user-welcome-screen.html"));
   }
 
-  private void awaitSync() throws InterruptedException, TimeoutException, RteIOException {
-    client.await(Collections.singletonList(new SyncWaitCondition(3000, STABLE_TIMEOUT_MILLIS)));
+  @Test
+  public void shouldWaitForDisconnectWhenServerDisconnects() throws Exception {
+    loadFlow("login-and-disconnect.yml");
+    connectToVirtualService();
+    waitForCursorPosition(WELCOME_SCREEN_CURSOR_POSITION);
+    sendEnterAttentionKey();
+    waitForCursorPosition(USER_ID_CURSOR_POSITION);
+    sendCredentialsByTabulator();
+    isDisconnectionExpected.update(true);
+    client.await(Collections.singletonList(new DisconnectWaitCondition(5000)));
   }
 }

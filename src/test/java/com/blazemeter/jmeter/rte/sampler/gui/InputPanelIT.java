@@ -88,9 +88,10 @@ public class InputPanelIT {
   }
 
   private void addFieldByLabel(int row, LabelInput input) {
+    int lastRawCount = inputTable.rowCount();
     frame.comboBox(COMBO_TYPE).selectItem(0);
     clickAddButton();
-    awaitAddedRow(row);
+    awaitAddedRow(lastRawCount, row);
     setInputRow(row, input, (panel, i) -> setTextField(panel, "fieldLabel", i.getLabel()));
   }
 
@@ -98,12 +99,12 @@ public class InputPanelIT {
     frame.button("addButton").click();
   }
 
-  private void awaitAddedRow(int row) {
-    pause(new Condition("row " + row + " added") {
+  private void awaitAddedRow(int lastRowCount, int row) {
+    pause(new Condition("row " + row + "to be added") {
 
       @Override
       public boolean test() {
-        return inputTable.rowCount() > row;
+        return inputTable.rowCount() > lastRowCount;
       }
 
     }, CHANGE_TIMEOUT_MILLIS);
@@ -166,9 +167,10 @@ public class InputPanelIT {
   }
 
   private void addFieldByCoord(int row, CoordInput input) {
+    int lastRowCount = inputTable.rowCount();
     frame.comboBox(COMBO_TYPE).selectItem(2);
     clickAddButton();
-    awaitAddedRow(row);
+    awaitAddedRow(lastRowCount, row);
     setInputRow(row, input, (panel, i) -> {
       Position position = i.getPosition();
       setTextField(panel, "fieldRow", String.valueOf(position.getRow()));
@@ -382,9 +384,10 @@ public class InputPanelIT {
   }
 
   private void addNavigationInput(int row, NavigationInput input) {
+    int lastRowCount = inputTable.rowCount();
     frame.comboBox(COMBO_TYPE).selectItem(1);
     clickAddButton();
-    awaitAddedRow(row);
+    awaitAddedRow(lastRowCount, row);
     selectNavigationTypeInCombo(input.getNavigationType(), row);
     setInputRow(row, input,
         (panel, i) -> setTextField(panel, "fieldNavigation", String.valueOf(i.getRepeat())));

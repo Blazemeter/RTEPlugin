@@ -8,17 +8,19 @@ import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
 import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
+import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.protocols.vt420.listeners.DisconnectListener;
 import com.blazemeter.jmeter.rte.protocols.vt420.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.vt420.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.vt420.listeners.UnlockListener;
@@ -42,10 +44,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import nl.lxtreme.jvt220.terminal.ExceptionListener;
+import nl.lxtreme.jvt220.terminal.ConnectionException;
+import nl.lxtreme.jvt220.terminal.ConnectionListener;
 import nl.lxtreme.jvt220.terminal.ScreenChangeListener;
 import nl.lxtreme.jvt220.terminal.TerminalClient;
-import org.apache.commons.net.telnet.InvalidTelnetOptionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -192,6 +194,9 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
       return new VisibleCursorListener((CursorWaitCondition) waitCondition, this,
           stableTimeoutExecutor,
           exceptionHandler);
+    } else if (waitCondition instanceof DisconnectWaitCondition) {
+      return new DisconnectListener((DisconnectWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, exceptionHandler);
     } else {
       throw new UnsupportedOperationException("Wait condition not supported yet.");
     }
@@ -221,7 +226,8 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(NAMED_THREAD_FACTORY);
     exceptionHandler = new ExceptionHandler(server);
     client.setSocketFactory(getSocketFactory(sslType, server));
-    client.setExceptionListener(new ExceptionListener() {
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
+    client.addConnectionListener(new ConnectionListener() {
       @Override
       public void onException(Throwable throwable) {
         exceptionHandler.setPendingError(throwable);
@@ -229,18 +235,29 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
 
       @Override
       public void onConnectionClosed() {
-        exceptionHandler.setPendingError(new ConnectionClosedException());
+        handleServerDisconnection();
+      }
+
+      @Override
+      public void onConnection() {
+        connectionEndWaiter.stop();
       }
     });
-
     listeners.forEach((stateListener, listenerProxy) -> client
         .addScreenChangeListener(listeners.get(stateListener)));
 
     try {
       client.connect(server, port, (int) timeoutMillis);
-    } catch (IOException | InvalidTelnetOptionException e) {
+      connectionEndWaiter.await();
+    } catch (ConnectionException e) {
       LOG.error("Connection error: ", e);
       throw new RteIOException(new Throwable("Connection error"), server);
+    } catch (InterruptedException e) {
+      exceptionHandler.setPendingError(e);
+      LOG.error("Connection to {} interrupted cause: ", server, e);
+    } catch (TimeoutException e) {
+      exceptionHandler.setPendingError(e);
+      LOG.error("Timeout connection exceeded ", e);
     }
 
     exceptionHandler.throwAnyPendingError();
@@ -312,5 +329,13 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
 
   public void setExceptionHandler(ExceptionHandler exceptionHandler) {
     this.exceptionHandler = exceptionHandler;
+  }
+
+  public void addConnectionListener(ConnectionListener connectionListener) {
+    client.addConnectionListener(connectionListener);
+  }
+
+  public void removeConnectionListener(ConnectionListener listener) {
+    client.removeConnectionListener(listener);
   }
 }

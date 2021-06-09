@@ -226,6 +226,16 @@ public class Screen {
     }
   }
 
+  public static String replaceTrailingSpacesByNull(String str) {
+    StringBuilder nulls = new StringBuilder();
+    int i = str.length() - 1;
+    while (i >= 0 && str.charAt(i) == ' ') {
+      nulls.append('\u0000');
+      i--;
+    }
+    return str.substring(0, i + 1) + nulls.toString();
+  }
+
   @Override
   public String toString() {
     return getHtml();

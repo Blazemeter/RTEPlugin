@@ -7,5 +7,9 @@ public class ConnectionClosedException extends SocketException {
   public ConnectionClosedException() {
     super("Connection closed by remote end");
   }
+  
+  public ConnectionClosedException(String cause) {
+    super(cause);
+  }
 
 }

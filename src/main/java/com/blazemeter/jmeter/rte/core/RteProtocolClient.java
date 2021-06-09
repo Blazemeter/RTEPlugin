@@ -56,4 +56,8 @@ public interface RteProtocolClient {
   void disconnect() throws RteIOException;
 
   Set<AttentionKey> getSupportedAttentionKeys();
+  
+  void setDisconnectionHandler(ServerDisconnectHandler serverDisconnectHandler);
+  
+  boolean isServerDisconnected();
 }
