@@ -65,6 +65,8 @@ public class RTESamplerGui extends AbstractSamplerGui {
       rteSamplerPanel.setWaitTextAreaBottom(sampler.getWaitTextAreaBottom());
       rteSamplerPanel.setWaitTextAreaRight(sampler.getWaitTextAreaRight());
       rteSamplerPanel.setWaitTextTimeout(sampler.getWaitTextTimeout());
+      rteSamplerPanel.setWaitDisconnect(sampler.getWaitDisconnect());
+      rteSamplerPanel.setWaitDisconnectTimeout(sampler.getWaitDisconnectTimeout());
     }
   }
 
@@ -102,6 +104,8 @@ public class RTESamplerGui extends AbstractSamplerGui {
       sampler.setWaitTextAreaLeft(rteSamplerPanel.getWaitTextAreaLeft());
       sampler.setWaitTextAreaBottom(rteSamplerPanel.getWaitTextAreaBottom());
       sampler.setWaitTextAreaRight(rteSamplerPanel.getWaitTextAreaRight());
+      sampler.setWaitDisconnect(rteSamplerPanel.getWaitDisconnect());
+      sampler.setWaitDisconnectTimeout(rteSamplerPanel.getWaitDisconnectTimeout());
     }
   }
 

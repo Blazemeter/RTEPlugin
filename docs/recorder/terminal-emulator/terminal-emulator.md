@@ -25,6 +25,11 @@
 
 - **Sample name:**  As the label says, you can specify the name of the sample in current screen. 
 
+**IMPORTANT** 
+
+If a disconnection from the server side occurs, <ins>*a disconnect wait condition will be added to the current sampler*</ins>.
+However if you consider that the disconnection is not expected, it means that the server has suffer an unexpected error and the connections had to be closed.
+
 ### Input By Label Usage
 
 ![alt_text](input-by-label-usage.gif)

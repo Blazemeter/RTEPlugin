@@ -9,7 +9,6 @@ import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
@@ -20,17 +19,20 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn3270.Tn3270TerminalType.DeviceModel;
+import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.DisconnectListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.Tn3270TerminalStateListenerProxy;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.UnlockListener;
 import com.blazemeter.jmeter.rte.protocols.tn3270.listeners.VisibleCursorListener;
 import com.blazemeter.jmeter.rte.sampler.NavigationType;
+import com.bytezone.dm3270.ConnectionListener;
 import com.bytezone.dm3270.TerminalClient;
 import com.bytezone.dm3270.application.KeyboardStatusListener;
 import com.bytezone.dm3270.commands.AIDCommand;
@@ -131,7 +133,7 @@ public class Tn3270Client extends BaseProtocolClient {
     client.setSocketFactory(getSocketFactory(sslType, server));
     ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
     exceptionHandler = new ExceptionHandler(server);
-    client.setConnectionListener(new com.bytezone.dm3270.ConnectionListener() {
+    addConnectionListener(new com.bytezone.dm3270.ConnectionListener() {
 
       @Override
       public void onConnection() {
@@ -146,7 +148,7 @@ public class Tn3270Client extends BaseProtocolClient {
 
       @Override
       public void onConnectionClosed() {
-        exceptionHandler.setPendingError(new ConnectionClosedException());
+        handleServerDisconnection();
       }
     });
     for (TerminalStateListener listener : listenersProxies.keySet()) {
@@ -276,6 +278,9 @@ public class Tn3270Client extends BaseProtocolClient {
     } else if (waitCondition instanceof TextWaitCondition) {
       return new ScreenTextListener((TextWaitCondition) waitCondition, this, stableTimeoutExecutor,
           exceptionHandler);
+    } else if (waitCondition instanceof DisconnectWaitCondition) {
+      return new DisconnectListener((DisconnectWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, exceptionHandler);
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
@@ -306,9 +311,10 @@ public class Tn3270Client extends BaseProtocolClient {
       screen.addSegment(linealPosition, " ");
       if (!field.getText().isEmpty()) {
         if (field.isHidden()) {
-          screen.addSecretField(linealPosition + 1, field.getText());
+          screen.addSecretField(linealPosition + 1,
+              Screen.replaceTrailingSpacesByNull(field.getText()));
         } else {
-          screen.addField(linealPosition + 1, field.getText());
+          screen.addField(linealPosition + 1, Screen.replaceTrailingSpacesByNull(field.getText()));
         }
       }
       linealPosition += field.getText().length() + 1;
@@ -404,6 +410,14 @@ public class Tn3270Client extends BaseProtocolClient {
     client.removeCursorMoveListener(listener);
   }
 
+  public void addConnectionListener(ConnectionListener connectionListener) {
+    client.addConnectionListener(connectionListener);
+  }
+
+  public void removeConnectionListener(ConnectionListener connectionListener) {
+    client.removeConnectionListener(connectionListener);
+  }
+
   @Override
   protected void doDisconnect() {
     stableTimeoutExecutor.shutdownNow();
@@ -413,6 +427,8 @@ public class Tn3270Client extends BaseProtocolClient {
     } catch (InterruptedException ex) {
       Thread.currentThread().interrupt();
       LOG.warn("Disconnection process was interrupted");
+    } finally {
+      client = null;
     }
   }
 

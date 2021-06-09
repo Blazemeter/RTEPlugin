@@ -9,7 +9,7 @@
 # Send your Terminal Type
 - !server {data: 00FFFA1801FFF0, delayMillis: 196}
 # terminal-type: IBM-3278-2-E
-- !client {data: FFFA180049424D2D333237382D322D45FFF0}
+- !client {data: FFFA180049424D2D333237382D32FFF0}
 # Do End of Record
 - !server {data: FFFD19, delayMillis: 197}
 # Will End of Record

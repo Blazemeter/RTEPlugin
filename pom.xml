@@ -6,7 +6,7 @@
   <groupId>com.blazemeter.jmeter</groupId>
   <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>3.1.1</version>
+  <version>3.2</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
 
   <properties>
@@ -35,17 +35,17 @@
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>xtn5250</artifactId>
-      <version>3.2.2</version>
+      <version>3.2.3</version>
     </dependency>
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>dm3270</artifactId>
-      <version>0.12.3-lib</version>
+      <version>0.13-lib</version>
     </dependency>
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>jVT220</artifactId>
-      <version>jvt220-v1.3</version>
+      <version>jvt220-v1.3.1</version>
     </dependency>
 
     <dependency>
@@ -53,12 +53,24 @@
       <artifactId>ApacheJMeter_core</artifactId>
       <version>${jmeter.version}</version>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-net</artifactId>
+          <groupId>commons-net</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.jmeter</groupId>
       <artifactId>ApacheJMeter_http</artifactId>
       <version>${jmeter.version}</version>
       <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>commons-net</artifactId>
+          <groupId>commons-net</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>

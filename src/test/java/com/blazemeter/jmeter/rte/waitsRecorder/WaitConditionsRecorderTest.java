@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.core.wait.Area;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
+import com.blazemeter.jmeter.rte.recorder.wait.DisconnectWaitRecorder;
 import com.blazemeter.jmeter.rte.recorder.wait.SilentWaitRecorder;
 import com.blazemeter.jmeter.rte.recorder.wait.SyncWaitRecorder;
 import com.blazemeter.jmeter.rte.recorder.wait.TextWaitRecorder;
@@ -37,6 +39,8 @@ public class WaitConditionsRecorderTest {
   private WaitConditionsRecorder waitConditionsRecorder;
   private Instant now;
   @Mock
+  private DisconnectWaitRecorder disconnectWaitRecorder;
+  @Mock
   private SilentWaitRecorder silentWaitRecorder;
   @Mock
   private SyncWaitRecorder syncWaitRecorder;
@@ -54,7 +58,7 @@ public class WaitConditionsRecorderTest {
   @Before
   public void setup() {
     waitConditionsRecorder = new WaitConditionsRecorder(silentWaitRecorder,
-        syncWaitRecorder, textWaitRecorder, STABLE_PERIOD_MILLIS);
+        syncWaitRecorder, textWaitRecorder, disconnectWaitRecorder, STABLE_PERIOD_MILLIS);
     now = Instant.now();
   }
 
@@ -101,5 +105,14 @@ public class WaitConditionsRecorderTest {
     expectedWaitConditions.add(SYNC_WAIT_CONDITION);
     expectedWaitConditions.add(TEXT_WAIT_CONDITION);
     assertEquals(expectedWaitConditions, waitConditions);
+  }
+
+  @Test
+  public void shouldReturnDisconnectWhenDisconnectArrives() {
+    final DisconnectWaitCondition DISCONNECT_WAIT_CONDITION = new DisconnectWaitCondition(
+        TIMEOUT_THRESHOLD_MILLIS);
+    when(disconnectWaitRecorder.buildWaitCondition())
+        .thenReturn(Optional.of(DISCONNECT_WAIT_CONDITION));
+    assertEquals(Collections.singletonList(DISCONNECT_WAIT_CONDITION), waitConditionsRecorder.stop());
   }
 }

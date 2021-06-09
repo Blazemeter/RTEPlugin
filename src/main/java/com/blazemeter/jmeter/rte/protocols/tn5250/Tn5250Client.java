@@ -9,7 +9,6 @@ import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.TerminalType;
-import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
@@ -20,11 +19,13 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.ConditionWaiter;
 import com.blazemeter.jmeter.rte.core.wait.ConnectionEndWaiter;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.WaitCondition;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ConnectionEndTerminalListener;
+import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.DisconnectListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.ScreenTextListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.SilenceListener;
 import com.blazemeter.jmeter.rte.protocols.tn5250.listeners.Tn5250TerminalStateListenerProxy;
@@ -127,7 +128,7 @@ public class Tn5250Client extends BaseProtocolClient {
 
       @Override
       public void onConnectionClosed() {
-        exceptionHandler.setPendingError(new ConnectionClosedException());
+        handleServerDisconnection();
       }
     });
     for (TerminalStateListener listener : listenersProxies.keySet()) {
@@ -237,6 +238,9 @@ public class Tn5250Client extends BaseProtocolClient {
     } else if (waitCondition instanceof TextWaitCondition) {
       return new ScreenTextListener((TextWaitCondition) waitCondition, this,
           stableTimeoutExecutor, exceptionHandler);
+    } else if (waitCondition instanceof DisconnectWaitCondition) {
+      return new DisconnectListener((DisconnectWaitCondition) waitCondition, this,
+          stableTimeoutExecutor, exceptionHandler);
     } else {
       throw new UnsupportedOperationException(
           "We still don't support " + waitCondition.getClass().getName() + " waiters");
@@ -280,9 +284,9 @@ public class Tn5250Client extends BaseProtocolClient {
         );
       }
       if ((SECRET_FIELD_MASK & f.getAttr()) != 0) {
-        ret.addSecretField(fieldLinealPosition, f.getString());
+        ret.addSecretField(fieldLinealPosition, Screen.replaceTrailingSpacesByNull(f.getString()));
       } else {
-        ret.addField(fieldLinealPosition, f.getString());
+        ret.addField(fieldLinealPosition, Screen.replaceTrailingSpacesByNull(f.getString()));
       }
       textStartPos = fieldLinealPosition + f.getString().length();
     }

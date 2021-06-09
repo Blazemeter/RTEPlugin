@@ -11,10 +11,11 @@ import java.util.Optional;
 
 public class WaitConditionsRecorder {
 
-  private SilentWaitRecorder silentWaitRecorder;
-  private SyncWaitRecorder syncWaitRecorder;
-  private TextWaitRecorder textWaitRecorder;
-  private long stablePeriodMillis;
+  private final SilentWaitRecorder silentWaitRecorder;
+  private final SyncWaitRecorder syncWaitRecorder;
+  private final TextWaitRecorder textWaitRecorder;
+  private final DisconnectWaitRecorder disconnectWaitRecorder;
+  private final long stablePeriodMillis;
 
   public WaitConditionsRecorder(RteProtocolClient rteProtocolClient,
       long timeoutThresholdMillis, long stablePeriodMillis) {
@@ -24,30 +25,40 @@ public class WaitConditionsRecorder {
         stablePeriodMillis);
     textWaitRecorder = new TextWaitRecorder(rteProtocolClient, timeoutThresholdMillis,
         stablePeriodMillis, stablePeriodMillis);
+    disconnectWaitRecorder = new DisconnectWaitRecorder(rteProtocolClient,
+        timeoutThresholdMillis, stablePeriodMillis);
     this.stablePeriodMillis = stablePeriodMillis;
   }
 
   @VisibleForTesting
   public WaitConditionsRecorder(SilentWaitRecorder silentWaitRecorder,
       SyncWaitRecorder syncWaitRecorder, TextWaitRecorder textWaitRecorder,
-      long stablePeriodMillis) {
+      DisconnectWaitRecorder disconnectWaitRecorder, long stablePeriodMillis) {
     this.silentWaitRecorder = silentWaitRecorder;
     this.syncWaitRecorder = syncWaitRecorder;
     this.textWaitRecorder = textWaitRecorder;
     this.stablePeriodMillis = stablePeriodMillis;
+    this.disconnectWaitRecorder = disconnectWaitRecorder; 
   }
 
   public void start() {
     syncWaitRecorder.start();
     silentWaitRecorder.start();
     textWaitRecorder.start();
+    disconnectWaitRecorder.start();
   }
 
   public List<WaitCondition> stop() {
     List<WaitCondition> waitConditions = new ArrayList<>();
+    Optional<WaitCondition> disconnectWaitCondition = disconnectWaitRecorder.buildWaitCondition();
+    if (disconnectWaitCondition.isPresent()) {
+      waitConditions.add(disconnectWaitCondition.get());
+      return waitConditions;
+    }
 
     Optional<WaitCondition> textWaitCondition = textWaitRecorder.buildWaitCondition();
     Optional<WaitCondition> syncWaitCondition = syncWaitRecorder.buildWaitCondition();
+    
     if (syncWaitCondition.isPresent()) {
       waitConditions.add(syncWaitCondition.get());
       Instant lastSyncInputInhibitedTime = syncWaitRecorder.getLastStatusChangeTime().orElse(null);

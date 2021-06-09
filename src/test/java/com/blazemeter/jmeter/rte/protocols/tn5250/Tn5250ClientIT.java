@@ -23,6 +23,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
@@ -334,20 +335,47 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.NONE, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
     client.await(Collections.singletonList(new TextWaitCondition(JMeterUtils.getPattern("Sign on"),
-        JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1,1,24,80), 10000, 1000)));
+        JMeterUtils.getMatcher(), Area.fromTopLeftBottomRight(1, 1, 24, 80), 10000, 1000)));
   }
 
   @Test
   public void shouldGetUserMenuScreenWhenSendNavigationArrowInputs() throws Exception {
     loadFlow("login.yml");
     connectToVirtualService();
-    List<Input> inputs = Arrays.asList(
-        new NavigationInput(0, NavigationType.DOWN, "TESTUSR"),
-        new NavigationInput(160, NavigationType.RIGHT, ""),
-        new NavigationInput(1, NavigationType.UP, ""),
-        new NavigationInput(7, NavigationType.LEFT, "TESTPSW"));
+    List<Input> inputs = buildLoginInputs();
     client.send(inputs, AttentionKey.ENTER, 0);
     waitSync();
     assertThat(client.getScreen().withInvisibleCharsToSpaces()).isEqualTo(buildUserMenuScreen());
   }
+
+  @Test
+  public void shouldWaitForDisconnectWhenServerDisconnects() throws Exception {
+    loadFlow("login-and-disconnect.yml");
+    connectToVirtualService();
+    List<Input> inputs = buildLoginInputs();
+    isDisconnectionExpected.update(true);
+    client.send(inputs, AttentionKey.ENTER, 0);
+    client.await(
+        Collections.singletonList(new DisconnectWaitCondition(TIMEOUT_MILLIS)));
+  }
+
+  private List<Input> buildLoginInputs() {
+    return Arrays.asList(
+        new NavigationInput(0, NavigationType.DOWN, "TESTUSR"),
+        new NavigationInput(160, NavigationType.RIGHT, ""),
+        new NavigationInput(1, NavigationType.UP, ""),
+        new NavigationInput(7, NavigationType.LEFT, "TESTPSW"));
+  }
+
+  @Test(expected = TimeoutException.class)
+  public void shouldThrowTimeoutExceptionWhenWaitForDisconnectAndServerNotDisconnect()
+      throws Exception {
+    loadFlow("login.yml");
+    connectToVirtualService();
+    List<Input> inputs = buildLoginInputs();
+    client.send(inputs, AttentionKey.ENTER, 0);
+    client.await(
+        Collections.singletonList(new DisconnectWaitCondition(TIMEOUT_MILLIS)));
+  }
+
 }

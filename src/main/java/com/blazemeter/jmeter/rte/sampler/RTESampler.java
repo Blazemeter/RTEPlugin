@@ -9,12 +9,16 @@ import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
+import com.blazemeter.jmeter.rte.core.ServerDisconnectHandler;
 import com.blazemeter.jmeter.rte.core.TerminalType;
+import com.blazemeter.jmeter.rte.core.exceptions.ConnectionClosedException;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
@@ -42,7 +46,8 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RTESampler extends AbstractSampler implements ThreadListener, LoopIterationListener {
+public class RTESampler extends AbstractSampler implements ThreadListener,
+    LoopIterationListener {
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.port";
   public static final String CONFIG_SERVER = "RTEConnectionConfig.server";
@@ -101,10 +106,13 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   private static final String WAIT_TEXT_TIMEOUT_PROPERTY = "RTESampler.waitTextTimeout";
   private static final String CONFIG_CHARACTER_TIMEOUT = "RTEConnectionConfig"
       + ".characterTimeoutMillis";
+  private static final String WAIT_DISCONNECT_PROPERTY = "RTESampler.waitDisconnect";
+  private static final String WAIT_DISCONNECT_TIMEOUT_PROPERTY = "RTESampler.waitDisconnectTimeout";
 
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static final long DEFAULT_CHARACTER_TIMEOUT_MILLIS = 60000;
-  private static ThreadLocal<Map<String, RteProtocolClient>> connections = ThreadLocal
+  private static final long DEFAULT_DISCONNECT_TIMEOUT_MILLIS = 10000;
+  private static final ThreadLocal<Map<String, RteProtocolClient>> CONNECTIONS = ThreadLocal
       .withInitial(HashMap::new);
 
   private final transient Function<Protocol, RteProtocolClient> protocolFactory;
@@ -405,6 +413,23 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return getLongProperty(WAIT_TEXT_TIMEOUT_PROPERTY, DEFAULT_WAIT_TEXT_TIMEOUT_MILLIS);
   }
 
+  public boolean getWaitDisconnect() {
+    return getPropertyAsBoolean(WAIT_DISCONNECT_PROPERTY, false);
+  }
+
+  public void setWaitDisconnect(boolean waitForDisconnect) {
+    setProperty(WAIT_DISCONNECT_PROPERTY, waitForDisconnect);
+  }
+
+  public String getWaitDisconnectTimeout() {
+    return getPropertyAsString(WAIT_DISCONNECT_TIMEOUT_PROPERTY,
+        "" + DEFAULT_DISCONNECT_TIMEOUT_MILLIS);
+  }
+
+  public void setWaitDisconnectTimeout(String timeout) {
+    setProperty(WAIT_DISCONNECT_TIMEOUT_PROPERTY, timeout);
+  }
+
   public void setWaitConditions(List<WaitCondition> waitConditions) {
     setWaitSync(false);
     for (WaitCondition waitCondition : waitConditions) {
@@ -437,6 +462,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       setWaitSilent(true);
       setWaitSilentTime(String.valueOf(condition.getStableTimeoutMillis()));
       setWaitSilentTimeout(String.valueOf(condition.getTimeoutMillis()));
+    } else if (condition instanceof DisconnectWaitCondition) {
+      setWaitDisconnect(true);
+      setWaitDisconnectTimeout(String.valueOf(condition.getTimeoutMillis()));
     } else {
       throw new IllegalArgumentException("Unsupported condition type " + condition.getClass());
     }
@@ -476,6 +504,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
     try {
       client = getClient();
+      configureWaitForDisconnect(client);
       if (getAction() == Action.DISCONNECT) {
         if (client != null) {
           disconnect(client);
@@ -528,6 +557,25 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     return resultBuilder.build();
   }
 
+  private void configureWaitForDisconnect(RteProtocolClient client) {
+    if (client == null) {
+      return;
+    }
+    boolean expectedDisconnection =
+        getWaitersList().stream().anyMatch(l -> l instanceof DisconnectWaitCondition);
+
+    ServerDisconnectHandler serverDisconnectHandler = new ServerDisconnectHandler(
+        expectedDisconnection) {
+      @Override
+      public void onDisconnection(ExceptionHandler exceptionHandler) {
+        if (!this.isExpectedDisconnection) {
+          exceptionHandler.setPendingError(new ConnectionClosedException());
+        }
+      }
+    };
+    client.setDisconnectionHandler(serverDisconnectHandler);
+  }
+
   public static long getCharacterTimeout() {
     return JMeterUtils.getPropDefault(CONFIG_CHARACTER_TIMEOUT, DEFAULT_CHARACTER_TIMEOUT_MILLIS);
   }
@@ -550,7 +598,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
 
   private RteProtocolClient getClient() {
     String clientId = buildConnectionId();
-    Map<String, RteProtocolClient> clients = connections.get();
+    Map<String, RteProtocolClient> clients = CONNECTIONS.get();
     return clients.get(clientId);
   }
 
@@ -559,7 +607,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private void disconnect(RteProtocolClient client) throws RteIOException {
-    connections.get().remove(buildConnectionId());
+    CONNECTIONS.get().remove(buildConnectionId());
     client.disconnect();
   }
 
@@ -567,7 +615,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
       throws RteIOException, InterruptedException, TimeoutException {
     RteProtocolClient client = protocolFactory.apply(getProtocol());
     client.connect(getServer(), getPort(), getSSLType(), getTerminalType(), getConnectionTimeout());
-    connections.get().put(buildConnectionId(), client);
+    CONNECTIONS.get().put(buildConnectionId(), client);
     return client;
   }
 
@@ -606,6 +654,9 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     if (getWaitText()) {
       waiters.add(buildTextWaitCondition());
     }
+    if (getWaitDisconnect()) {
+      waiters.add(new DisconnectWaitCondition(Long.parseLong(getWaitDisconnectTimeout())));
+    }
     waiters.sort(Comparator.comparing(WaitCondition::getTimeoutMillis));
     return waiters;
   }
@@ -636,14 +687,14 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
   }
 
   private void closeConnections() {
-    connections.get().values().forEach(c -> {
+    CONNECTIONS.get().values().forEach(c -> {
       try {
         c.disconnect();
       } catch (Exception e) {
         LOG.error("Problem while closing RTE connection", e);
       }
     });
-    connections.get().clear();
+    CONNECTIONS.get().clear();
   }
 
   @Override
@@ -664,5 +715,4 @@ public class RTESampler extends AbstractSampler implements ThreadListener, LoopI
     }
     return false;
   }
-
 }

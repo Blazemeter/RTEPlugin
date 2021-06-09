@@ -23,6 +23,7 @@ import com.blazemeter.jmeter.rte.core.ssl.SSLContextFactory;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
 import com.blazemeter.jmeter.rte.core.wait.Area;
 import com.blazemeter.jmeter.rte.core.wait.CursorWaitCondition;
+import com.blazemeter.jmeter.rte.core.wait.DisconnectWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SilentWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.SyncWaitCondition;
 import com.blazemeter.jmeter.rte.core.wait.TextWaitCondition;
@@ -36,7 +37,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.util.JMeterUtils;
 import org.junit.Test;
@@ -44,6 +44,7 @@ import org.junit.Test;
 public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
 
   private static final String USERNAME = "testusr";
+  private static final String TESTPSW_LITERAL = "TESTPSW";
 
   @Override
   protected Tn3270Client buildClient() {
@@ -58,24 +59,24 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Override
   protected List<Segment> buildExpectedFields() {
     return Arrays.asList(
-        new Segment(new Position(8, 20), buildBlankStr(8), true, true, SCREEN_SIZE),
-        new Segment(new Position(8, 71), buildBlankStr(8), true, true, SCREEN_SIZE),
-        new Segment(new Position(10, 20), "PROC394 ", true, false, SCREEN_SIZE),
-        new Segment(new Position(10, 71), buildBlankStr(8), true, false, SCREEN_SIZE),
-        new Segment(new Position(12, 20), "1000000" + buildBlankStr(33), true, false, SCREEN_SIZE),
-        new Segment(new Position(14, 20), "4096" + buildBlankStr(3), true, false, SCREEN_SIZE),
-        new Segment(new Position(16, 20), buildBlankStr(3), true, false, SCREEN_SIZE),
-        new Segment(new Position(18, 20), buildBlankStr(80), true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 11), " ", true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 27), " ", true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 44), " ", true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 62), " ", true, false, SCREEN_SIZE)
+        new Segment(new Position(8, 20), buildNullStr(8), true, true, SCREEN_SIZE),
+        new Segment(new Position(8, 71), buildNullStr(8), true, true, SCREEN_SIZE),
+        new Segment(new Position(10, 20), "PROC394\u0000", true, false, SCREEN_SIZE),
+        new Segment(new Position(10, 71), buildNullStr(8), true, false, SCREEN_SIZE),
+        new Segment(new Position(12, 20), "1000000" + buildNullStr(33), true, false, SCREEN_SIZE),
+        new Segment(new Position(14, 20), "4096" + buildNullStr(3), true, false, SCREEN_SIZE),
+        new Segment(new Position(16, 20), buildNullStr(3), true, false, SCREEN_SIZE),
+        new Segment(new Position(18, 20), buildNullStr(80), true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 11), "\u0000", true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 27), "\u0000", true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 44), "\u0000", true, false, SCREEN_SIZE),
+        new Segment(new Position(21, 62), "\u0000", true, false, SCREEN_SIZE)
     );
 
   }
 
-  private String buildBlankStr(int spaces) {
-    return StringUtils.repeat(' ', spaces);
+  private String buildNullStr(int nulls) {
+    return StringUtils.repeat('\u0000', nulls);
   }
 
   @Test
@@ -391,9 +392,21 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   public void shouldValidateTextOnScreeWhenScreenBuiltFromPlainTextAndFields() throws Exception {
     loadFlow("login-mixed-fields-and-plain-text.yml");
     connectExtendedProtocolClientToVirtualService();
-    sendEnterAttentionKey(new NavigationInput(0, NavigationType.TAB, "TESTUSR "),
-        new NavigationInput(1, NavigationType.TAB,
-            "TESTPSW" + IntStream.range(0, 35).mapToObj(i -> " ").collect(Collectors.joining())));
+    sendEnterAttentionKey(new NavigationInput(0, NavigationType.TAB, USERNAME.toUpperCase()),
+        new NavigationInput(1, NavigationType.TAB, TESTPSW_LITERAL));
     awaitText("Ready");
+  }
+
+  @Test
+  public void shouldWaitForDisconnectWhenServerDisconnects() throws Exception {
+    loadFlow("login-and-disconnect.yml");
+    connectExtendedProtocolClientToVirtualService();
+    sendEnterAttentionKey(new NavigationInput(0, NavigationType.TAB, USERNAME.toUpperCase()),
+        new NavigationInput(1, NavigationType.TAB, TESTPSW_LITERAL));
+    awaitText("Ready");
+    sendEnterAttentionKey(new NavigationInput(0, NavigationType.TAB, "LOGOFF"));
+    isDisconnectionExpected.update(true);
+    client.await(
+        Collections.singletonList(new DisconnectWaitCondition(TIMEOUT_MILLIS)));
   }
 }

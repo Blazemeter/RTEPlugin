@@ -3,11 +3,15 @@ package com.blazemeter.jmeter.rte.recorder;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CharacterBasedProtocolClient;
 import com.blazemeter.jmeter.rte.core.Input;
+import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.RteSampleResultBuilder;
+import com.blazemeter.jmeter.rte.core.Screen;
+import com.blazemeter.jmeter.rte.core.ServerDisconnectHandler;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.RteIOException;
+import com.blazemeter.jmeter.rte.core.listener.ExceptionHandler;
 import com.blazemeter.jmeter.rte.core.listener.RequestListener;
 import com.blazemeter.jmeter.rte.core.listener.TerminalStateListener;
 import com.blazemeter.jmeter.rte.core.ssl.SSLType;
@@ -22,10 +26,12 @@ import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.RTEConfigGui;
 import com.blazemeter.jmeter.rte.sampler.gui.RTESamplerGui;
 import com.helger.commons.annotation.VisibleForTesting;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +39,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import org.apache.jmeter.assertions.ResponseAssertion;
 import org.apache.jmeter.assertions.gui.AssertionGui;
 import org.apache.jmeter.config.ConfigTestElement;
@@ -210,6 +218,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     resultBuilder = buildSampleResultBuilder(Action.CONNECT, sampleName);
     sampler = buildSampler(Action.CONNECT, null, null, sampleName);
     terminalClient = protocolFactory.apply(getProtocol());
+    terminalClient.setDisconnectionHandler(buildDisconnectionHandler());
     TerminalType terminalType = getTerminalType();
     waitConditionsRecorder = new WaitConditionsRecorder(terminalClient,
         getTimeoutThresholdMillis(), RTESampler.getStableTimeout());
@@ -347,6 +356,27 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     return sampler;
   }
 
+  private ServerDisconnectHandler buildDisconnectionHandler() {
+    return new ServerDisconnectHandler(false) {
+      @Override
+      public void onDisconnection(ExceptionHandler exceptionHandler) {
+        this.isExpectedDisconnection = true;
+        JOptionPane.showMessageDialog((Component) terminalEmulator,
+            "Server has closed the connection, wait for\n "
+                + "disconnect is added in order to validate the intervention.");
+        if (terminalEmulator != null) {
+          recordPendingSample();
+          terminalEmulator.stop();
+          terminalEmulator = null;
+        }
+        terminalClient.removeTerminalStateListener(RTERecorder.this);
+        notifyChildren(TestStateListener.class, TestStateListener::testEnded);
+        terminalClient = null;
+        recordingListener.onRecordingStop();
+      }
+    };
+  }
+
   private void initTerminalEmulator(TerminalType terminalType) {
     terminalEmulator = terminalEmulatorSupplier.get();
     terminalEmulator.addTerminalEmulatorListener(this);
@@ -462,6 +492,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
         }
         terminalClient.removeTerminalStateListener(this);
         notifyChildren(TestStateListener.class, TestStateListener::testEnded);
+        terminalClient = null;
       }
     }
   }
@@ -481,21 +512,26 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onTerminalStateChange() {
-    /* 
+    SwingUtilities.invokeLater(() -> RTERecorder.this.updateTerminalEmulator(
+        terminalClient.getScreen(), terminalClient.getCursorPosition(),
+        terminalClient.isInputInhibited(), terminalClient.isAlarmOn()));
+  }
+
+  private void updateTerminalEmulator(Screen screen, Optional<Position> position,
+      Optional<Boolean> isInputInhibited, boolean isAlarmOn) {
+    /*
     Due to incorporation of VT protocol where the screen is changing constantly
-    without attention keys pressed, it is not possible to update screen name every time 
+    without attention keys pressed, it is not possible to update screen name every time
     terminal state changed. Therefore, first screen sampler name is placed manually.
     */
     if (sampleCount == 0) {
       terminalEmulator.setScreenName(buildSampleName(Action.SEND_INPUT));
     }
-    terminalEmulator.setScreen(terminalClient.getScreen());
-    terminalClient.getCursorPosition().ifPresent(cursorPosition -> terminalEmulator
+    terminalEmulator.setScreen(screen);
+    position.ifPresent(cursorPosition -> terminalEmulator
         .setCursor(cursorPosition.getRow(), cursorPosition.getColumn()));
-    if (terminalClient.isInputInhibited().isPresent()) {
-      terminalEmulator.setKeyboardLock(terminalClient.isInputInhibited().get());
-    }
-    if (terminalClient.isAlarmOn()) {
+    isInputInhibited.ifPresent(terminalEmulator::setKeyboardLock);
+    if (isAlarmOn) {
       terminalEmulator.soundAlarm();
     }
   }
@@ -531,6 +567,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
     try {
       terminalClient.disconnect();
+      terminalClient = null;
     } catch (RteIOException ex) {
       LOG.error("Problem while trying to shutdown connection", e);
     }

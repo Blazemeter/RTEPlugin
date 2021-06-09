@@ -85,6 +85,7 @@ public class RTERecorderTest {
   private static final Position CURSOR_POSITION = new Position(2, 1);
   private static final List<Input> INPUTS = Collections
       .singletonList(new CoordInput(CURSOR_POSITION, "testusr"));
+  private static final int SWING_INVOKE_LATER_TIMEOUT = 1000;
 
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
@@ -221,26 +222,27 @@ public class RTERecorderTest {
   @Test
   public void shouldSetEmulatorScreenWhenTerminalStateChange() throws Exception {
     connect();
-    verify(terminalEmulator).setScreen(TEST_SCREEN);
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).setScreen(TEST_SCREEN);
   }
 
   @Test
   public void shouldSetEmulatorKeyboardLockOrUnlockWhenTerminalStateChange() throws Exception {
     when(terminalClient.isInputInhibited()).thenReturn(Optional.of(false));
     connect();
-    verify(terminalEmulator).setKeyboardLock(false);
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).setKeyboardLock(true);
   }
 
   @Test
   public void shouldSoundEmulatorAlarmWhenTerminalStateChange() throws Exception {
     connect();
-    verify(terminalEmulator).soundAlarm();
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).soundAlarm();
   }
 
   @Test
   public void shouldSetEmulatorCursorWhenTerminalStateChange() throws Exception {
     connect();
-    verify(terminalEmulator).setCursor(CURSOR_POSITION.getRow(), CURSOR_POSITION.getColumn());
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).setCursor(CURSOR_POSITION.getRow(),
+        CURSOR_POSITION.getColumn());
   }
 
   @Test
@@ -276,26 +278,27 @@ public class RTERecorderTest {
   @Test
   public void shouldSetEmulatorScreenWhenStart() throws Exception {
     connect();
-    verify(terminalEmulator).setScreen(TEST_SCREEN);
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).setScreen(TEST_SCREEN);
   }
 
   @Test
   public void shouldSetEmulatorCursorWhenStart() throws Exception {
     connect();
-    verify(terminalEmulator).setCursor(CURSOR_POSITION.getRow(), CURSOR_POSITION.getColumn());
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).setCursor(CURSOR_POSITION.getRow(),
+        CURSOR_POSITION.getColumn());
   }
 
   @Test
   public void shouldSetEmulatorKeyboardLockWhenStart() throws Exception {
     when(terminalClient.isInputInhibited()).thenReturn(Optional.of(false));
     connect();
-    verify(terminalEmulator).setKeyboardLock(false);
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).setKeyboardLock(false);
   }
 
   @Test
   public void shouldSoundEmulatorAlarmWhenStart() throws Exception {
     connect();
-    verify(terminalEmulator).soundAlarm();
+    verify(terminalEmulator, timeout(SWING_INVOKE_LATER_TIMEOUT)).soundAlarm();
   }
 
   @Test

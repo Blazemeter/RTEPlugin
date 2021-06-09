@@ -25,6 +25,7 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   private static final Logger LOG = LoggerFactory.getLogger(BaseProtocolClient.class);
   protected ExceptionHandler exceptionHandler;
   protected ScheduledExecutorService stableTimeoutExecutor;
+  private ServerDisconnectHandler serverDisconnectHandler;
 
   protected SocketFactory getSocketFactory(SSLType sslType, String server) throws RteIOException {
     if (sslType != null && sslType != SSLType.NONE) {
@@ -41,6 +42,7 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
   @Override
   public void send(List<Input> input, AttentionKey attentionKey, long echoTimeoutMillis)
       throws RteIOException {
+    exceptionHandler.throwAnyPendingError();
     input.forEach(i -> setField(i, echoTimeoutMillis));
     sendAttentionKey(attentionKey);
     exceptionHandler.throwAnyPendingError();
@@ -86,4 +88,27 @@ public abstract class BaseProtocolClient implements RteProtocolClient {
 
   protected abstract void doDisconnect();
 
+  @Override
+  public void setDisconnectionHandler(ServerDisconnectHandler serverDisconnectHandler) {
+    this.serverDisconnectHandler = serverDisconnectHandler;
+  }
+
+  @Override
+  public boolean isServerDisconnected() {
+    if (serverDisconnectHandler != null) {
+      return serverDisconnectHandler.isExpectedDisconnection();
+    }
+    exceptionHandler
+        .setPendingError(new UnsupportedOperationException("No disconnection handler set"));
+    return false;
+  }
+
+  protected void handleServerDisconnection() {
+    if (serverDisconnectHandler != null) {
+      serverDisconnectHandler.onDisconnection(exceptionHandler);
+      return;
+    }
+    exceptionHandler
+        .setPendingError(new UnsupportedOperationException("No disconnection handler set"));
+  }
 }
