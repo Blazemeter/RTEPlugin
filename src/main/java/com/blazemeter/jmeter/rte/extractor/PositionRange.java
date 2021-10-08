@@ -42,6 +42,10 @@ public class PositionRange {
     return position.compare(start) >= 0 && position.compare(end) <= 0;
   }
 
+  public int getStartLinealPosition(int width) {
+    return width * (start.getRow() - 1) + start.getColumn() - 1;
+  }
+
   @Override
   public String toString() {
     return "[" + start + "-" + end + "]";

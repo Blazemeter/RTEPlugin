@@ -296,7 +296,10 @@ public class Tn3270Client extends BaseProtocolClient {
     if (fields.isEmpty()) {
       return buildScreenFromText(screenText);
     }
-    int linealPosition = 0;
+    Field lastField = fields.get(fields.size() - 1);
+    int linealPosition =
+        lastField.isCircular() ? (lastField.getFirstLocation() + lastField.getDisplayLength()) % (
+            size.width * size.height) : 0;
     List<Field> unProtectedFields = fields.stream().filter(Field::isUnprotected)
         .collect(Collectors.toList());
     for (Field field : unProtectedFields) {
@@ -309,14 +312,7 @@ public class Tn3270Client extends BaseProtocolClient {
         linealPosition += chunk.length();
       }
       screen.addSegment(linealPosition, " ");
-      if (!field.getText().isEmpty()) {
-        if (field.isHidden()) {
-          screen.addSecretField(linealPosition + 1,
-              Screen.replaceTrailingSpacesByNull(field.getText()));
-        } else {
-          screen.addField(linealPosition + 1, Screen.replaceTrailingSpacesByNull(field.getText()));
-        }
-      }
+      addFieldToScreen(screen, linealPosition, field);
       linealPosition += field.getText().length() + 1;
 
     }
@@ -325,6 +321,17 @@ public class Tn3270Client extends BaseProtocolClient {
       screen.addSegment(linealPosition, chunk);
     }
     return screen;
+  }
+
+  private void addFieldToScreen(Screen screen, int linealPosition, Field field) {
+    if (!field.getText().isEmpty()) {
+      if (field.isHidden()) {
+        screen.addSecretField(linealPosition + 1,
+            Screen.replaceTrailingSpacesByNull(field.getText()));
+      } else {
+        screen.addField(linealPosition + 1, Screen.replaceTrailingSpacesByNull(field.getText()));
+      }
+    }
   }
 
   private Screen buildScreenFromText(String screenText) {

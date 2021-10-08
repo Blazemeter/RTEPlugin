@@ -9,7 +9,7 @@
 # Connect XXXXXXXX
 - !server {data: FFFA28020449424D2D333237382D322D4501E7E7E7E7E7E7E7E7FFF0}
 # Functions Request Unknown + associate DEVICE-TYPE is reason
-- !client {data: FFFA28030700020405FFF0}
+- !client {data: FFFA280307000204FFF0}
 # Functions associate device-type is reason
 - !server {data: FFFA28030400020405FFF0}
 # SSCP_LU_DATA: welcome screen

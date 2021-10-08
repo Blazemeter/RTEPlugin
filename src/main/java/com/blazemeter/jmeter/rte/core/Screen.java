@@ -1,5 +1,6 @@
 package com.blazemeter.jmeter.rte.core;
 
+import com.blazemeter.jmeter.rte.core.Screen.Segment.SegmentBuilder;
 import com.blazemeter.jmeter.rte.extractor.PositionRange;
 import java.awt.Dimension;
 import java.io.IOException;
@@ -97,8 +98,8 @@ public class Screen {
     return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
   }
 
-  private Position buildPositionFromLinearPosition(int linealPosition) {
-    return new Position(linealPosition / size.width + 1, linealPosition % size.width + 1);
+  private static Position buildPositionFromLinearPosition(int linealPosition, int width) {
+    return new Position(linealPosition / width + 1, linealPosition % width + 1);
   }
 
   public Dimension getSize() {
@@ -111,24 +112,39 @@ public class Screen {
 
   public void addSegment(int linealPosition, String text) {
     segments.add(
-        new Segment(buildPositionFromLinearPosition(linealPosition), text, false, false, size));
+        getSegmentBuilder(linealPosition, text)
+            .build(size)
+    );
   }
 
+  private SegmentBuilder getSegmentBuilder(int linealPosition, String text) {
+    return new SegmentBuilder()
+        .withLinealPosition(linealPosition)
+        .withText(text);
+  }
+  
   public void addField(int linealPosition, String text) {
     segments.add(
-        new Segment(buildPositionFromLinearPosition(linealPosition), text, true, false, size));
+        getSegmentBuilder(linealPosition, text)
+            .withEditable()
+            .build(size)
+    );
   }
 
   public void addSecretField(int linealPosition, String text) {
-    segments
-        .add(new Segment(buildPositionFromLinearPosition(linealPosition), text, true, true, size));
+    segments.add(
+        getSegmentBuilder(linealPosition, text)
+            .withEditable()
+            .withSecret()
+            .build(size)
+    );
   }
 
   public String getText() {
     StringBuilder screen = new StringBuilder();
     int nextScreenPosition = 0;
     for (Segment segment : segments) {
-      int segmentPosition = buildLinealPosition(segment.getStartPosition());
+      int segmentPosition = buildLinealPosition(segment.getStartPosition(), size.width);
       if (segmentPosition != nextScreenPosition) {
         Segment fillSegment = buildBlankSegmentForRange(nextScreenPosition, segmentPosition);
         screen.append(fillSegment.getWrappedText(size.width));
@@ -148,16 +164,16 @@ public class Screen {
   }
 
   private Segment buildBlankSegmentForRange(int firstPosition, int lastPosition) {
-    return new Segment(buildPositionFromLinearPosition(firstPosition),
-        buildBlankString(lastPosition - firstPosition), false, false, size);
+    return getSegmentBuilder(firstPosition, buildBlankString(lastPosition - firstPosition))
+        .build(size);
   }
 
   private String buildBlankString(int length) {
     return StringUtils.repeat(' ', length);
   }
 
-  private int buildLinealPosition(Position position) {
-    return size.width * (position.getRow() - 1) + position.getColumn() - 1;
+  private static int buildLinealPosition(Position position, int width) {
+    return width * (position.getRow() - 1) + position.getColumn() - 1;
   }
 
   public Screen withInvisibleCharsToSpaces() {
@@ -264,16 +280,7 @@ public class Screen {
     private final boolean editable;
     private final boolean secret;
     private final String text;
-    private PositionRange positionRange;
-
-    public Segment(Position position, String text, boolean editable, boolean secret,
-        Dimension screenSize) {
-      this.text = text;
-      this.editable = editable;
-      this.secret = secret;
-      this.positionRange = new PositionRange(position,
-          calculateEndPosition(screenSize.width, position));
-    }
+    private final PositionRange positionRange;
 
     private Segment(PositionRange positionRange, String text, boolean editable, boolean secret) {
       this.positionRange = positionRange;
@@ -304,13 +311,6 @@ public class Screen {
 
     public boolean isSecret() {
       return secret;
-    }
-
-    private Position calculateEndPosition(int width, Position startPosition) {
-      int relativeColumnPosition = startPosition.getColumn() + text.length();
-      return new Position(startPosition.getRow() + (relativeColumnPosition - 1) / width,
-          (relativeColumnPosition - 1) % width + 1);
-
     }
 
     private String getWrappedText(int width) {
@@ -374,6 +374,61 @@ public class Screen {
           '}';
     }
 
+    public static class SegmentBuilder {
+
+      private boolean editable = false;
+      private boolean secret = false;
+      private String text;
+      private int firstLinealPosition;
+      private Position startPosition;
+
+      public SegmentBuilder withEditable() {
+        editable = true;
+        return this;
+      }
+
+      public SegmentBuilder withSecret() {
+        secret = true;
+        return this;
+      }
+
+      public SegmentBuilder withText(String text) {
+        this.text = text;
+        return this;
+      }
+
+      private SegmentBuilder withLinealPosition(int linealPosition) {
+        this.firstLinealPosition = linealPosition;
+        return this;
+      }
+
+      public SegmentBuilder withPosition(int row, int col) {
+        this.startPosition = new Position(row, col);
+        return this;
+      }
+
+      private Position calculateEndPosition(Dimension screenSize, Position startPosition) {
+        int startLinealPosition = buildLinealPosition(startPosition, screenSize.width);
+        int endLinealPosition = startLinealPosition + text.length();
+        int maxLinealPos = screenSize.width * screenSize.height;
+        //circular field use case
+        if (maxLinealPos < endLinealPosition) {
+          return buildPositionFromLinearPosition(Math.abs(endLinealPosition - maxLinealPos),
+              screenSize.width);
+        }
+        endLinealPosition = startPosition.getColumn() + text.length();
+        return new Position(startPosition.getRow() + (endLinealPosition - 1) / screenSize.width,
+            (endLinealPosition - 1) % screenSize.width + 1);
+      }
+
+      public Segment build(Dimension screenSize) {
+        startPosition = startPosition == null ? buildPositionFromLinearPosition(firstLinealPosition,
+            screenSize.width) : startPosition;
+        PositionRange positionRange = new PositionRange(startPosition,
+            calculateEndPosition(screenSize, startPosition));
+        return new Segment(positionRange, text, editable, secret);
+      }
+    }
   }
 
 }

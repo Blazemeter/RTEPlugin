@@ -274,4 +274,31 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
     isDisconnectionExpected.update(true);
     client.await(Collections.singletonList(new DisconnectWaitCondition(5000)));
   }
+
+  @Test
+  public void shouldReturnTrueWhenAlarmSounds() throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    assertThat(client.isAlarmOn()).isTrue();
+  }
+
+  @Test
+  public void shouldReturnFalseWhenAlarmDoesNotSound() throws Exception{
+    loadLoginFlow();
+    connectToVirtualService();
+    client.resetAlarm();
+    sendEnterAttentionKey();
+    awaitSync();
+    assertThat(client.isAlarmOn()).isFalse();
+  }
+
+  @Test
+  public void shouldVerifyAlarmStatusWhenResetAlarmIsUsed() throws Exception {
+    loadLoginFlow();
+    connectToVirtualService();
+    boolean alarmStatus = client.isAlarmOn();
+    client.resetAlarm();
+    assertThat(client.isAlarmOn()).isNotEqualTo(alarmStatus);
+  }
+
 }

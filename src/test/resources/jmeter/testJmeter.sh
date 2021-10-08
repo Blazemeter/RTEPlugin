@@ -8,7 +8,7 @@ DEFAULT_JVM_VERSION=8
 JVM_VERSION=${JVM_VERSION:-$DEFAULT_JVM_VERSION}
 
 ERROR=0
-[ "$JVM_VERSION" != "$DEFAULT_JVM_VERSION" ] && update-java-alternatives --set java-1.${JVM_VERSION}.0-openjdk-amd64
+[ "$JVM_VERSION" != "$DEFAULT_JVM_VERSION" ] && export JAVA_HOME=/usr/lib/jvm/java-${JVM_VERSION}-openjdk-amd64
 bzt testJMeter.yaml -o modules.jmeter.version=$JMETER_VERSION -o modules.jmeter.path=$JMETER_PATH || ERROR=$?
-[ "$JVM_VERSION" != "$DEFAULT_JVM_VERSION" ] && update-java-alternatives --set java-1.${DEFAULT_JVM_VERSION}.0-openjdk-amd64
+[ "$JVM_VERSION" != "$DEFAULT_JVM_VERSION" ] && export JAVA_HOME=/usr/lib/jvm/java-${DEFAULT_JVM_VERSION}-openjdk-amd64
 exit $ERROR

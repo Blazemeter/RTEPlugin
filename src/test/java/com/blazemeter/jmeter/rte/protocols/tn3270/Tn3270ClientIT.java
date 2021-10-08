@@ -14,6 +14,7 @@ import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.Screen.Segment;
+import com.blazemeter.jmeter.rte.core.Screen.Segment.SegmentBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
@@ -59,18 +60,31 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
   @Override
   protected List<Segment> buildExpectedFields() {
     return Arrays.asList(
-        new Segment(new Position(8, 20), buildNullStr(8), true, true, SCREEN_SIZE),
-        new Segment(new Position(8, 71), buildNullStr(8), true, true, SCREEN_SIZE),
-        new Segment(new Position(10, 20), "PROC394\u0000", true, false, SCREEN_SIZE),
-        new Segment(new Position(10, 71), buildNullStr(8), true, false, SCREEN_SIZE),
-        new Segment(new Position(12, 20), "1000000" + buildNullStr(33), true, false, SCREEN_SIZE),
-        new Segment(new Position(14, 20), "4096" + buildNullStr(3), true, false, SCREEN_SIZE),
-        new Segment(new Position(16, 20), buildNullStr(3), true, false, SCREEN_SIZE),
-        new Segment(new Position(18, 20), buildNullStr(80), true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 11), "\u0000", true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 27), "\u0000", true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 44), "\u0000", true, false, SCREEN_SIZE),
-        new Segment(new Position(21, 62), "\u0000", true, false, SCREEN_SIZE)
+        new SegmentBuilder().withPosition(8, 20).withText(buildNullStr(8)).withEditable()
+            .withSecret().build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(8, 71).withText(buildNullStr(8)).withEditable()
+            .withSecret().build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(10, 20).withText("PROC394\u0000").withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(10, 71).withText(buildNullStr(8)).withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(12, 20).withText("1000000" + buildNullStr(33))
+            .withEditable().build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(14, 20).withText("4096" + buildNullStr(3)).withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(16, 20).withText(buildNullStr(3)).withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(18, 20).withText(buildNullStr(80)).withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(21, 11).withText("\u0000").withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(21, 27).withText("\u0000").withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(21, 44).withText("\u0000").withEditable()
+            .build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(21, 62).withText("\u0000").withEditable()
+            .build(SCREEN_SIZE)
+
     );
 
   }

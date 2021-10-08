@@ -298,12 +298,12 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
 
   @Override
   public boolean isAlarmOn() {
-    return false;
+    return client.isAlarmOn();
   }
 
   @Override
   public boolean resetAlarm() {
-    return false;
+    return client.resetAlarm();
   }
 
   @Override

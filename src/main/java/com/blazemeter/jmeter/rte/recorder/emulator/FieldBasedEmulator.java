@@ -35,7 +35,7 @@ public class FieldBasedEmulator extends XI5250CrtBase {
 
   @Override
   protected List<Input> getInputFields() {
-    List<Input> fields = new ArrayList<>();
+    List<Input> inputs = new ArrayList<>();
     XI5250Field fieldFromPos = getFieldFromPos(initialColumn, initialRow);
     if (fieldFromPos == null) {
       fieldFromPos = getNextFieldFromPos(initialColumn, initialRow);
@@ -43,22 +43,25 @@ public class FieldBasedEmulator extends XI5250CrtBase {
     int initialField = getFields().indexOf(fieldFromPos);
     //means screen is not constituted by fields
     if (initialField == -1) {
-      fields.add(new CoordInput(new Position(getCursorRow() + 1, getCursorCol() + 1), ""));
+      inputs.add(new CoordInput(buildOneBasedPosition(getCursorRow(), getCursorCol()), ""));
       labelMap.clear();
-      return fields;
+      return inputs;
     }
-    Iterator<XI5250Field> it = getFields().listIterator(initialField);
+    List<XI5250Field> fields = new ArrayList<>(getFields());
+    processCircularFieldIfNeeded(fields, inputs);
+
+    Iterator<XI5250Field> it = fields.listIterator(initialField);
     int index = 0;
     int offset = 0;
     Position lastFieldPosition = null;
     while (it.hasNext() && index < getFields().size()) {
       XI5250Field f = it.next();
-      if (f.isMDTOn()) {
-        Position fieldPosition = new Position(f.getRow() + 1, f.getCol() + 1);
+      if (f.isMDTOn() && !isConstitutedByNulls(f.getString())) {
+        Position fieldPosition = buildOneBasedPosition(f.getRow(), f.getCol());
         lastFieldPosition = fieldPosition;
         String label = (String) labelMap.get(fieldPosition);
         String trimmedInput = trimNulls(f.getString());
-        fields.add(label != null ? new LabelInput(label, trimmedInput)
+        inputs.add(label != null ? new LabelInput(label, trimmedInput)
             : new NavigationInput(f.equals(fieldFromPos) ? 0 : offset, NavigationType.TAB,
                 trimmedInput));
         offset = trimmedInput.trim().length() == f.getLength() ? 0 : 1;
@@ -72,10 +75,47 @@ public class FieldBasedEmulator extends XI5250CrtBase {
     }
 
     if (isNeededToUpdateCursorPosition(lastFieldPosition)) {
-      fields.add(new CoordInput(new Position(getCursorRow() + 1, getCursorCol() + 1), ""));
+      inputs.add(new CoordInput(buildOneBasedPosition(getCursorRow(), getCursorCol()), ""));
     }
     labelMap.clear();
-    return fields;
+    return inputs;
+  }
+
+  private void processCircularFieldIfNeeded(List<XI5250Field> fields, List<Input> inputs) {
+    //This method is actually modifying fields and inputs by reference
+    if (fields.isEmpty()) {
+      return;
+    }
+    XI5250Field firstField = fields.get(0);
+    if (!(firstField instanceof XI5250CrtBase.CircularPartField)) {
+      return;
+    }
+    XI5250Field lastField = fields.get(fields.size() - 1);
+    if (!firstField.isMDTOn() && !lastField.isMDTOn()) {
+      return;
+    }
+
+    Position circularPositionBegin = buildOneBasedPosition(lastField.getRow(), lastField.getCol());
+    StringBuilder input = new StringBuilder();
+
+    if (lastField.isMDTOn() && firstField.isMDTOn()) {
+      input.append(lastField.getString())
+          .append(trimNulls(firstField.getString()));
+    } else if (firstField.isMDTOn()) {
+      input.append(trimNulls(firstField.getString()));
+    } else {
+      input.append(trimNulls(lastField.getString()));
+    }
+    String label = (String) labelMap.get(circularPositionBegin);
+    inputs.add(label != null ? new LabelInput(label, input.toString())
+        : new CoordInput(circularPositionBegin, input.toString()));
+    // We don't want to consume this fields later on. Since are already processed. 
+    fields.remove(firstField);
+    fields.remove(lastField);
+  }
+
+  private Position buildOneBasedPosition(int row, int col) {
+    return new Position(row + 1, col + 1);
   }
 
   private boolean isNeededToUpdateCursorPosition(
@@ -91,12 +131,12 @@ public class FieldBasedEmulator extends XI5250CrtBase {
         .equals(new Position(getCursorRow(), getCursorCol()))) {
       return false;
     }
-    
+
     XI5250Field nextField = getNextFieldAfterField(lastModifiedField);
     Position currentCursorPosition = new Position(getCursorRow(), getCursorCol());
     //when reaching the maximum length of a field while typing, emulator jumps to next field
     return lastModifiedField.getLength() != fieldWrittenTextLength || !currentCursorPosition
-        .equals(new Position(nextField.getRow() + 1, nextField.getCol() + 1));
+        .equals(buildOneBasedPosition(nextField.getRow(), nextField.getCol()));
   }
 
   private XI5250Field getNextFieldAfterField(XI5250Field field) {
@@ -115,10 +155,17 @@ public class FieldBasedEmulator extends XI5250CrtBase {
     this.setCursorPos(column, row);
   }
 
+  private boolean isConstitutedByNulls(String fieldText) {
+    return !fieldText.contains(" ") && fieldText.trim().isEmpty();
+  }
+
   private String trimNulls(String str) {
     if (str.isEmpty()) {
       return str;
+    } else if (str.trim().isEmpty()) {
+      return "";
     }
+
     int firstNotNull = 0;
     while (str.charAt(firstNotNull) == '\u0000') {
       firstNotNull++;

@@ -6,10 +6,13 @@ import static org.assertj.swing.timing.Pause.pause;
 
 import com.blazemeter.jmeter.rte.sampler.gui.ThemedIcon;
 import java.awt.Frame;
+import java.awt.Image;
 import java.awt.event.MouseEvent;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import org.assertj.core.api.JUnitSoftAssertions;
+import org.assertj.swing.core.MouseButton;
+import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
@@ -50,38 +53,32 @@ public class StatusPanelIT {
 
   @Test
   public void shouldChangeTheValuesOfThePositionLabelWhenUpdateCursorPosition() {
-    statusPanel.updateStatusBarCursorPosition(66, 66);
+    GuiActionRunner.execute(() -> statusPanel.updateStatusBarCursorPosition(66, 66));
     assertThat(frame.label(POSITION_LABEL).text()).isEqualTo(EXPECTED_POSITION_TEXT);
   }
 
   @Test
   public void shouldShowKeyboardLockedIconWhenKeyboardIsLocked() {
-    statusPanel.setKeyboardStatus(true);
-    JLabel keyboardLabel = frame.label(KEYBOARD_LABEL).target();
-    assertThat(((ImageIcon) keyboardLabel.getIcon()).getImage())
+    GuiActionRunner.execute(() -> statusPanel.setKeyboardStatus(true));
+    Image keyboardImage = GuiActionRunner.execute(
+        () -> ((ImageIcon) frame.label(KEYBOARD_LABEL).target().getIcon()).getImage());
+    assertThat(keyboardImage)
         .isEqualTo(KEYBOARD_LOCKED_ICON.getImage());
   }
 
   @Test
   public void shouldShowKeyboardUnlockedIconWhenKeyboardIsUnlocked() {
-    statusPanel.setKeyboardStatus(false);
-    JLabel keyboardLabel = frame.label(KEYBOARD_LABEL).target();
-    assertThat(((ImageIcon) keyboardLabel.getIcon()).getImage())
+    GuiActionRunner.execute(() -> statusPanel.setKeyboardStatus(false));
+    Image keyboardImage = GuiActionRunner.execute(
+        () -> ((ImageIcon) frame.label(KEYBOARD_LABEL).target().getIcon()).getImage());
+    assertThat(keyboardImage)
         .isEqualTo(KEYBOARD_UNLOCKED_ICON.getImage());
   }
 
   @Test
   public void shouldShowHelpFrameWhenClickInHelpIcon() {
-    JLabel helpLabel = frame.label(HELP_LABEL).target();
-    /* This is the correct way to test it
     frame.label(HELP_LABEL).click(MouseButton.LEFT_BUTTON);
-    But for a reason that I can't identify this is not working so, I develop this workaround */
-    helpLabel.getMouseListeners()[0].mouseClicked(
-        new MouseEvent(helpLabel, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), 0,
-            helpLabel.getHorizontalAlignment(),
-            helpLabel.getVerticalAlignment(), 1, false, MouseEvent.BUTTON1));
-
-    pause(new Condition("frame is visible") {
+    pause(new Condition("for help frame to be visible") {
 
       @Override
       public boolean test() {
