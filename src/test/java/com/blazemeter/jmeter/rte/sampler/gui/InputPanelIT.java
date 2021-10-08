@@ -32,6 +32,7 @@ import org.assertj.swing.core.Robot;
 import org.assertj.swing.data.TableCell;
 import org.assertj.swing.driver.AbstractJTableCellWriter;
 import org.assertj.swing.driver.JTableTextComponentEditorCellWriter;
+import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.assertj.swing.fixture.JPanelFixture;
 import org.assertj.swing.fixture.JTableCellFixture;
@@ -120,7 +121,7 @@ public class InputPanelIT {
     JTableCellFixture inputCell = inputTable.cell(TableCell.row(row).column(1));
     // Using this approach instead of inputCell.enterText() because is way faster
     inputCell.startEditing();
-    ((JTextComponent) inputCell.editor()).setText(input.getInput());
+    GuiActionRunner.execute(() -> (JTextComponent) inputCell.editor()).setText(input.getInput());
     inputCell.stopEditing();
   }
 

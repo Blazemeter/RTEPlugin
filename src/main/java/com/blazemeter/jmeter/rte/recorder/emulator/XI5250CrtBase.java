@@ -241,6 +241,10 @@ public abstract class XI5250CrtBase<T extends RteProtocolClient> extends XI5250C
         int attr =
             !isShowCredential && s.isSecret() ? SECRET_CREDENTIAL_ATTR : DEFAULT_ATTR;
         drawString("\u0001", column - 1, row, attr);
+        if (isCircularSegment(s)) {
+          processCircularField(s, screenSize, attr);
+          continue;
+        }
         XI5250Field xi5250Field = new ScreenField(this, column,
             row, s.getText().length(), attr);
 
@@ -254,6 +258,32 @@ public abstract class XI5250CrtBase<T extends RteProtocolClient> extends XI5250C
       }
     }
     this.initAllFields();
+  }
+
+  private boolean isCircularSegment(Segment s) {
+    return s.getStartPosition().compare(s.getEndPosition()) > 0;
+  }
+
+  private void processCircularField(Segment s, Dimension screenSize, int attr) {
+    int beginLinealPosition = s.getPositionRange().getStartLinealPosition(screenSize.width);
+    int endScreenFieldTextLength = screenSize.height * screenSize.width - beginLinealPosition;
+    String endScreenFieldText = s.getText().substring(0, endScreenFieldTextLength);
+    String startScreenFieldText = s.getText().substring(endScreenFieldTextLength);
+    int endScreenFieldRow = s.getStartPosition().getRow() - 1;
+    int endScreenFieldColumn = s.getStartPosition().getColumn() - 1;
+
+    XI5250Field endScreenField = new CircularPartField(this, endScreenFieldColumn,
+        endScreenFieldRow, endScreenFieldText.length(), attr);
+    endScreenField.setString(endScreenFieldText);
+    endScreenField.resetMDT();
+
+    XI5250Field startScreenField = new CircularPartField(this, 0,
+        0, startScreenFieldText.length(), attr);
+    startScreenField.setString(startScreenFieldText);
+    startScreenField.resetMDT();
+
+    addField(endScreenField);
+    addField(startScreenField);
   }
 
   protected static class KeyEventMap {
@@ -289,5 +319,13 @@ public abstract class XI5250CrtBase<T extends RteProtocolClient> extends XI5250C
 
   public void setPasteEnableConsumer(Consumer<Boolean> pasteConsumer) {
     this.pasteConsumer = pasteConsumer;
+  }
+
+  public static class CircularPartField extends ScreenField {
+
+    private CircularPartField(XI5250Crt aCrt, int aCol, int aRow, int aLen, int aAttr) {
+      super(aCrt, aCol, aRow, aLen, aAttr);
+    }
+
   }
 }

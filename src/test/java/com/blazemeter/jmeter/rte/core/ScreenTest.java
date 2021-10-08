@@ -8,6 +8,7 @@ import com.google.common.io.Resources;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -88,17 +89,28 @@ public class ScreenTest {
     screen.addSegment(SCREEN_WIDTH * 2, S2_LITERAL + ": ");
     screen.addField(SCREEN_WIDTH * 2 + 4, F2_LITERAL);
 
-    List<Segment> expectedSegments = new ArrayList<>();
-    expectedSegments
-        .add(new Screen.Segment(new Position(1, 1), S1_LITERAL + ": ", false, false,
-            SCREEN_DIMENSION));
-    expectedSegments
-        .add(new Screen.Segment(new Position(1, 5), F1_LITERAL, true, false, SCREEN_DIMENSION));
-    expectedSegments
-        .add(new Screen.Segment(new Position(2, 1), S2_LITERAL + ": ", false, false,
-            SCREEN_DIMENSION));
-    expectedSegments
-        .add(new Screen.Segment(new Position(2, 5), F2_LITERAL, true, false, SCREEN_DIMENSION));
+    List<Segment> expectedSegments = new ArrayList<>(
+        Arrays.asList(
+            new Segment.SegmentBuilder()
+                .withPosition(1, 1)
+                .withText(S1_LITERAL + ": ")
+                .build(SCREEN_DIMENSION),
+            new Segment.SegmentBuilder()
+                .withPosition(1, 5)
+                .withText(F1_LITERAL)
+                .withEditable()
+                .build(SCREEN_DIMENSION),
+            new Segment.SegmentBuilder()
+                .withPosition(2, 1)
+                .withText(S2_LITERAL + ": ")
+                .build(SCREEN_DIMENSION),
+            new Segment.SegmentBuilder()
+                .withPosition(2, 5)
+                .withText(F2_LITERAL)
+                .withEditable()
+                .build(SCREEN_DIMENSION)
+        )
+    );
 
     assertThat(screen.getSegments()).isEqualTo(expectedSegments);
   }

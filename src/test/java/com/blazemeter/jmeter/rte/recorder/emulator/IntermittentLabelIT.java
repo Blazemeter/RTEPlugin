@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import org.assertj.core.api.JUnitSoftAssertions;
+import org.assertj.swing.edt.GuiActionRunner;
 import org.assertj.swing.fixture.FrameFixture;
 import org.junit.After;
 import org.junit.Before;
@@ -73,19 +74,19 @@ public class IntermittentLabelIT {
         .asList(false, true, false, true, false, true, false, true, false, true, false, true,
             false, false);
     List<Boolean> result = new ArrayList<>();
-    result.add(alarmLabel.isVisible());
-    alarmLabel.blink();
+    result.add(GuiActionRunner.execute(() -> alarmLabel.isVisible()));
+    GuiActionRunner.execute(() -> alarmLabel.blink());
     for (int i = 0; i < 2; i++) {
-      executorService.tick();
-      result.add(alarmLabel.isVisible());
+      GuiActionRunner.execute(() -> executorService.tick());
+      result.add(GuiActionRunner.execute(() -> alarmLabel.isVisible()));
     }
-    alarmLabel.blink();
+    GuiActionRunner.execute(() -> alarmLabel.blink());
     for (int i = 0; i < 10; i++) {
-      executorService.tick();
-      result.add(alarmLabel.isVisible());
+      GuiActionRunner.execute(() -> executorService.tick());
+      result.add(GuiActionRunner.execute(() -> alarmLabel.isVisible()));
     }
-    executorService.tick();
-    result.add(alarmLabel.isVisible());
+    GuiActionRunner.execute(() -> executorService.tick());
+    result.add(GuiActionRunner.execute(() -> alarmLabel.isVisible()));
     assertThat(result).isEqualTo(expected);
   }
 

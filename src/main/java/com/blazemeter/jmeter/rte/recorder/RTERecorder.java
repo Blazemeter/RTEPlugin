@@ -512,9 +512,13 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
 
   @Override
   public void onTerminalStateChange() {
+    //Save object states beforehand to avoid race condition
+    Screen screen = terminalClient.getScreen();
+    Optional<Position> cursorPosition = terminalClient.getCursorPosition();
+    Optional<Boolean> isInputInhibited = terminalClient.isInputInhibited();
+    boolean alarmOn = terminalClient.isAlarmOn();
     SwingUtilities.invokeLater(() -> RTERecorder.this.updateTerminalEmulator(
-        terminalClient.getScreen(), terminalClient.getCursorPosition(),
-        terminalClient.isInputInhibited(), terminalClient.isAlarmOn()));
+        screen, cursorPosition, isInputInhibited, alarmOn));
   }
 
   private void updateTerminalEmulator(Screen screen, Optional<Position> position,

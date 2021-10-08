@@ -14,6 +14,7 @@ import com.blazemeter.jmeter.rte.core.NavigationInput;
 import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.core.Screen.Segment;
+import com.blazemeter.jmeter.rte.core.Screen.Segment.SegmentBuilder;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldLabelException;
 import com.blazemeter.jmeter.rte.core.exceptions.InvalidFieldPositionException;
@@ -60,11 +61,16 @@ public class Tn5250ClientIT extends RteProtocolClientIT<Tn5250Client> {
   @Override
   protected List<Segment> buildExpectedFields() {
     return Arrays.asList(
-        new Segment(new Position(6, 53), buildBlankSpaces(), true, false, SCREEN_SIZE),
-        new Segment(new Position(7, 53), buildBlankSpaces(), true, true, SCREEN_SIZE),
-        new Segment(new Position(8, 53), buildBlankSpaces(), true, false, SCREEN_SIZE),
-        new Segment(new Position(9, 53), buildBlankSpaces(), true, false, SCREEN_SIZE),
-        new Segment(new Position(10, 53), buildBlankSpaces(), true, false, SCREEN_SIZE)
+        new SegmentBuilder().withPosition(6, 53).withText(buildBlankSpaces())
+            .withEditable().build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(7, 53).withText(buildBlankSpaces())
+            .withEditable().withSecret().build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(8, 53).withText(buildBlankSpaces())
+            .withEditable().build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(9, 53).withText(buildBlankSpaces())
+            .withEditable().build(SCREEN_SIZE),
+        new SegmentBuilder().withPosition(10, 53).withText(buildBlankSpaces())
+            .withEditable().build(SCREEN_SIZE)
     );
   }
 
