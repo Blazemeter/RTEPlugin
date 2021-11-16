@@ -11,7 +11,7 @@ People who usually work with these IBM servers interact with them, basically, by
 ## Usage
 
 ### Using it as a Maven dependency 
-To use the emulator as Maven dependency include in `pom.xml`:
+If you use Maven, just include the following dependency in `pom.xml`:
 
 ```xml
   <dependency>
