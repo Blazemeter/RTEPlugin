@@ -18,6 +18,15 @@
     </license>
   </licenses>
 
+  <developers>
+    <developer>
+      <name>Blazemeter</name>
+      <email>ops@blazemeter.com</email>
+      <organization>Blazemeter</organization>
+      <organizationUrl>https://blazemeter.com/</organizationUrl>
+    </developer>
+  </developers>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -369,26 +378,27 @@
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-enforcer-plugin</artifactId>
-            <version>3.0.0-M3</version>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.0.1</version>
             <executions>
               <execution>
-                <id>enforce-no-snapshots</id>
+                <id>attach-sources</id>
                 <goals>
-                  <goal>enforce</goal>
+                  <goal>jar</goal>
                 </goals>
-                <configuration>
-                  <rules>
-                    <requireReleaseDeps>
-                      <message>No Snapshots Allowed!</message>
-                      <excludes>
-                        <exclude>org.apache.maven:maven-core</exclude>
-                        <exclude>org.apache.maven.plugins:*</exclude>
-                      </excludes>
-                    </requireReleaseDeps>
-                  </rules>
-                  <fail>true</fail>
-                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
               </execution>
             </executions>
           </plugin>
