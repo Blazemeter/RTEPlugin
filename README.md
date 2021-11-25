@@ -10,6 +10,18 @@ People who usually work with these IBM servers interact with them, basically, by
 
 ## Usage
 
+### Using it as a Maven dependency 
+If you use Maven, just include the following dependency in `pom.xml`:
+
+```xml
+  <dependency>
+      <groupId>com.blazemeter.jmeter</groupId>
+      <artifactId>jmeter-bm-rte</artifac>
+      <packaging>jar</packaging>
+      <version>3.2.1</version>
+  </dependency>
+```
+  
 ### Using the plugin
 The plugin adds four different elements to JMeter:
 
