@@ -8,6 +8,15 @@
   <packaging>jar</packaging>
   <version>3.2.1</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
+  <description>JMeter plugin to support RTE (Remote Terminal Emulation) protocols</description>
+  <url>https://github.com/Blazemeter/RTEPlugin</url>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
