@@ -18,7 +18,7 @@ To use it as a maven dependency, just add this in your `pom.xml`:
       <groupId>com.blazemeter</groupId>
       <artifactId>jmeter-bzm-rte</artifac>
       <packaging>jar</packaging>
-      <version>3.2.1</version>
+      <version>3.2.2</version>
   </dependency>
 ```
   

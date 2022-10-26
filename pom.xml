@@ -6,7 +6,7 @@
   <groupId>com.blazemeter</groupId>
   <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>3.2.1</version>
+  <version>3.2.2</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
   <description>JMeter plugin to support RTE (Remote Terminal Emulation) protocols</description>
   <url>https://github.com/Blazemeter/RTEPlugin</url>
@@ -65,7 +65,7 @@
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>dm3270</artifactId>
-      <version>0.14-lib</version>
+      <version>0.15-lib</version>
     </dependency>
     <dependency>
       <groupId>com.github.blazemeter</groupId>
