@@ -149,17 +149,20 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
     assertionButton.setToolTipText("Assertion");
     layout.setHorizontalGroup(layout.createSequentialGroup()
         .addComponent(copyButton)
+        .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(pasteButton)
+        .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(labelButton)
+        .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(waitForTextButton)
+        .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(assertionButton)
         .addPreferredGap(ComponentPlacement.RELATED)
         .addComponent(fillPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
         .addGroup(layout.createParallelGroup()
             .addComponent(sampleNamePanel)
-        )
-    );
+        ));
     layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
         .addComponent(sampleNamePanel, Alignment.CENTER)
         .addComponent(copyButton)
@@ -168,7 +171,7 @@ public class Xtn5250TerminalEmulator extends JFrame implements TerminalEmulator 
         .addComponent(waitForTextButton)
         .addComponent(assertionButton)
         .addComponent(fillPanel)
-    );
+        .addComponent(fillPanel));
     return toolsPanel;
   }
 

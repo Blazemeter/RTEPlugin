@@ -4,9 +4,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.swing.timing.Pause.pause;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
@@ -14,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.blazemeter.jmeter.rte.JMeterTestUtils;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CharacterBasedProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
@@ -24,6 +23,7 @@ import com.blazemeter.jmeter.rte.core.Position;
 import com.blazemeter.jmeter.rte.core.RteProtocolClient;
 import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.sampler.NavigationType;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import com.blazemeter.jmeter.rte.sampler.gui.ThemedIcon;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
@@ -56,6 +56,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jmeter.util.JMeterUtils;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.core.KeyPressInfo;
 import org.assertj.swing.driver.JComponentDriver;
@@ -69,6 +70,7 @@ import org.assertj.swing.fixture.JTextComponentFixture;
 import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -105,7 +107,8 @@ public class Xtn5250TerminalEmulatorIT {
   private static final String KEYBOARD_LABEL = "keyboardLabel";
   private static final Position FIRST_VT_POS = new Position(11, 41);
   private static final Position SECOND_VT_POS = new Position(11, 42);
-
+  private static final String WAIT_RESPONSE_AT_CHAR_SENT_PROPERTY = "RTESampler"
+      + ".waitResponseCharSent";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
   private Xtn5250TerminalEmulator xtn5250TerminalEmulator;
@@ -120,6 +123,11 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Mock
   private TerminalEmulatorListener listener;
+
+  @BeforeClass
+  public static void setupClass() {
+    JMeterTestUtils.setupJmeterEnv();
+  }
 
   private static Screen buildScreen(String text, boolean withFields) {
     Dimension screenSize = new Dimension(80, 24);
@@ -677,7 +685,7 @@ public class Xtn5250TerminalEmulatorIT {
     doAnswer(invocation -> {
       characterBasedEmulator.screenChanged(screen.getText());
       return null;
-    }).when(characterBasedProtocolClient).send(anyString());
+    }).when(characterBasedProtocolClient).send(anyList(), anyLong());
   }
 
   private void updateCharacterBasedWelcomeScreen(String... inputs) {
@@ -802,7 +810,7 @@ public class Xtn5250TerminalEmulatorIT {
     setupInteractiveCharacterEmulator();
     xtn5250TerminalEmulator.setKeyboardLock(true);
     sendKeyWithCursorUpdate(KeyEvent.VK_Y, 0, 11, 42);
-    verify(characterBasedProtocolClient, never()).send(anyString());
+    verify(characterBasedProtocolClient, never()).send(anyList(), anyLong());
   }
 
   @Test
@@ -863,6 +871,7 @@ public class Xtn5250TerminalEmulatorIT {
 
   @Test
   public void shouldCloseWindowWhenWaitingForServerAnswer() {
+    JMeterUtils.setProperty(WAIT_RESPONSE_AT_CHAR_SENT_PROPERTY, "true");
     updateCharacterBasedWelcomeScreen();
     setupManualCharacterEmulator();
     setLockWhenInputSent();
@@ -870,7 +879,7 @@ public class Xtn5250TerminalEmulatorIT {
     setupWindowListener(isClosed);
     sendKeyWithCursorUpdate(KeyEvent.VK_0, 0, 1, 1);
     sendKeyWithCursorUpdate(KeyEvent.VK_F, 0, 1, 1);
-    verify(characterBasedProtocolClient, times(1)).send(anyString());
+    verify(characterBasedProtocolClient, times(1)).send(anyList(), anyLong());
     frame.close();
     assertThat(isClosed);
   }
@@ -887,7 +896,7 @@ public class Xtn5250TerminalEmulatorIT {
 
   private void setLockWhenInputSent() {
     doAnswer(new AnswersWithDelay(PAUSE_TIMEOUT, null))
-        .when(characterBasedProtocolClient).send(anyString());
+        .when(characterBasedProtocolClient).send(anyList(), anyLong());
   }
 
   private void setupManualCharacterEmulator() {

@@ -3,29 +3,11 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.blazemeter</groupId>
+  <groupId>com.blazemeter.jmeter</groupId>
   <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>3.2.2</version>
+  <version>3.3</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
-  <description>JMeter plugin to support RTE (Remote Terminal Emulation) protocols</description>
-  <url>https://github.com/Blazemeter/RTEPlugin</url>
-
-  <licenses>
-    <license>
-      <name>The Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-    </license>
-  </licenses>
-
-  <developers>
-    <developer>
-      <name>Blazemeter</name>
-      <email>ops@blazemeter.com</email>
-      <organization>Blazemeter</organization>
-      <organizationUrl>https://blazemeter.com/</organizationUrl>
-    </developer>
-  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -48,13 +30,6 @@
     <url>http://gitlab.abstracta.us/BZ-plugins/jmeter-rte-plugin</url>
   </scm>
 
-  <distributionManagement>
-    <snapshotRepository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <dependencies>
   
     <dependency>
@@ -65,7 +40,7 @@
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>dm3270</artifactId>
-      <version>0.15-lib</version>
+      <version>0.14-lib</version>
     </dependency>
     <dependency>
       <groupId>com.github.blazemeter</groupId>
@@ -126,7 +101,7 @@
     <dependency>
       <groupId>us.abstracta</groupId>
       <artifactId>wiresham</artifactId>
-      <version>0.4.3</version>
+      <version>0.6</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -378,59 +353,28 @@
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>3.0.1</version>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <version>3.0.0-M3</version>
             <executions>
               <execution>
-                <id>attach-sources</id>
+                <id>enforce-no-snapshots</id>
                 <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>3.0.1</version>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.6</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <goals>
-                  <goal>sign</goal>
+                  <goal>enforce</goal>
                 </goals>
                 <configuration>
-                  <gpgArguments>
-                    <arg>--pinentry-mode</arg>
-                    <arg>loopback</arg>
-                  </gpgArguments>
+                  <rules>
+                    <requireReleaseDeps>
+                      <message>No Snapshots Allowed!</message>
+                      <excludes>
+                        <exclude>org.apache.maven:maven-core</exclude>
+                        <exclude>org.apache.maven.plugins:*</exclude>
+                      </excludes>
+                    </requireReleaseDeps>
+                  </rules>
+                  <fail>true</fail>
                 </configuration>
               </execution>
             </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>1.6.8</version>
-            <extensions>true</extensions>
-            <configuration>
-              <serverId>ossrh</serverId>
-              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-              <autoReleaseAfterClose>true</autoReleaseAfterClose>
-            </configuration>
           </plugin>
         </plugins>
       </build>

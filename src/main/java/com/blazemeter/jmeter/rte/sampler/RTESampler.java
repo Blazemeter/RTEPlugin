@@ -108,7 +108,8 @@ public class RTESampler extends AbstractSampler implements ThreadListener,
       + ".characterTimeoutMillis";
   private static final String WAIT_DISCONNECT_PROPERTY = "RTESampler.waitDisconnect";
   private static final String WAIT_DISCONNECT_TIMEOUT_PROPERTY = "RTESampler.waitDisconnectTimeout";
-
+  private static final String WAIT_RESPONSE_AT_CHAR_SENT_PROPERTY = "RTESampler"
+      + ".waitResponseCharSent";
   private static final Logger LOG = LoggerFactory.getLogger(RTESampler.class);
   private static final long DEFAULT_CHARACTER_TIMEOUT_MILLIS = 60000;
   private static final long DEFAULT_DISCONNECT_TIMEOUT_MILLIS = 10000;
@@ -578,6 +579,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener,
 
   public static long getCharacterTimeout() {
     return JMeterUtils.getPropDefault(CONFIG_CHARACTER_TIMEOUT, DEFAULT_CHARACTER_TIMEOUT_MILLIS);
+  }
+
+  public static boolean isWaitResponseCharSent() {
+    return JMeterUtils.getPropDefault(WAIT_RESPONSE_AT_CHAR_SENT_PROPERTY, false);
   }
 
   @VisibleForTesting
