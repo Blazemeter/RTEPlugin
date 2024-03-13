@@ -433,17 +433,19 @@ public class InputPanel extends JPanel implements ActionListener {
   protected static class FieldPanel extends JPanel {
 
     private final GroupLayout layout;
-    private JLabel label = new JLabel();
-    private JTextField fieldRow = SwingUtils.createComponent("fieldRow", new JTextField());
-    private JTextField fieldColumn = SwingUtils.createComponent("fieldColumn", new JTextField());
-    private JTextField fieldLabel = SwingUtils.createComponent("fieldLabel", new JTextField());
-    private JTextField fieldNavigation = SwingUtils
+    private final JLabel label = new JLabel();
+    private final JTextField fieldRow = SwingUtils.createComponent("fieldRow", new JTextField());
+    private final JTextField fieldColumn = SwingUtils.createComponent("fieldColumn",
+        new JTextField());
+    private final JTextField fieldLabel = SwingUtils.createComponent("fieldLabel",
+        new JTextField());
+    private final JTextField fieldNavigation = SwingUtils
         .createComponent("fieldNavigation", new JTextField());
-    private JComboBox navigationCombo = SwingUtils.createComponent("navigationCombo",
+    private final JComboBox navigationCombo = SwingUtils.createComponent("navigationCombo",
         new JComboBox());
-    private JLabel navigationLabel = SwingUtils.createComponent("navigationLabel", new JLabel(
+    private final JLabel navigationLabel = SwingUtils.createComponent("navigationLabel", new JLabel(
         "Repeat: "));
-    private DefaultComboBoxModel model = new DefaultComboBoxModel();
+    private final DefaultComboBoxModel model = new DefaultComboBoxModel();
 
     private FieldPanel() {
       layout = new GroupLayout(this);
@@ -579,7 +581,7 @@ public class InputPanel extends JPanel implements ActionListener {
 
   private class InputTableModel extends DefaultTableModel implements Iterable<InputTestElement> {
 
-    private transient ArrayList<InputTestElement> inputs;
+    private final transient ArrayList<InputTestElement> inputs;
 
     private InputTableModel(Object[] header) {
       super(header, 0);

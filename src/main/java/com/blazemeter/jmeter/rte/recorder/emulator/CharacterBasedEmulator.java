@@ -5,10 +5,9 @@ import com.blazemeter.jmeter.rte.core.CharacterBasedProtocolClient;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.NavigationInput.NavigationInputBuilder;
 import com.blazemeter.jmeter.rte.core.Position;
-import com.blazemeter.jmeter.rte.core.Screen;
 import com.blazemeter.jmeter.rte.protocols.vt420.Vt420Client;
 import com.blazemeter.jmeter.rte.sampler.NavigationType;
-import java.awt.Dimension;
+import com.blazemeter.jmeter.rte.sampler.RTESampler;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -17,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.swing.JOptionPane;
@@ -33,9 +33,7 @@ public class CharacterBasedEmulator extends
   private StringBuilder inputBuffer = new StringBuilder();
   private final List<Input> inputs = new ArrayList<>();
   private int repetition;
-  private Screen lastTerminalScreen;
   private boolean isAreaSelected;
-  private Screen currentScreen;
   private SwingWorker<Object, Object> currentSwingWorker;
   private int pastingCharactersCount = 0;
   private int pastedCharactersCount = 0;
@@ -56,7 +54,7 @@ public class CharacterBasedEmulator extends
           copyPaste = false;
           return;
         }
-        lockEmulator(true);
+        lockEmulator(RTESampler.isWaitResponseCharSent());
         currentSwingWorker = buildSwingWorker(e);
         currentSwingWorker.execute();
       } else if (attentionKey != null) {
@@ -64,7 +62,6 @@ public class CharacterBasedEmulator extends
           lockEmulator(true);
           lastCursorPosition = getCursorPosition();
           processAttentionKey(e, attentionKey);
-          lastTerminalScreen = new Screen(currentScreen);
         } else {
           showUserMessage(attentionKey + " not supported for current protocol");
           e.consume();
@@ -114,7 +111,7 @@ public class CharacterBasedEmulator extends
     if (!sequencesInClipboard.isEmpty()) {
       String chunkAppearances = CharacterSequenceScaper.getSequenceChunkAppearancesIn(value);
       JOptionPane.showMessageDialog(this, "Clipboard content '" + String.join(", ",
-          sequencesInClipboard) + "' is not "
+              sequencesInClipboard) + "' is not "
               + "supported when pasting. \nAppearances of sequences near to: "
               + chunkAppearances, "Paste error",
           JOptionPane.INFORMATION_MESSAGE);
@@ -153,29 +150,24 @@ public class CharacterBasedEmulator extends
   }
 
   private void recordInput(String value) {
-    Position cursorPosition = getCursorPosition();
-    terminalClient.send(value);
-    if (validInput(cursorPosition)) {
-      Optional<NavigationType> navigationKey = Arrays.stream(NavigationType.values())
-          .filter(v -> Vt420Client.NAVIGATION_KEYS.get(v).equals(value))
-          .findFirst();
-      if (navigationKey.isPresent()) {
-        buildNavigationInput(navigationKey.get());
+    terminalClient.send(Collections.singletonList(value), RTESampler.getCharacterTimeout());
+    Optional<NavigationType> navigationKey = Arrays.stream(NavigationType.values())
+        .filter(v -> Vt420Client.NAVIGATION_KEYS.get(v).equals(value))
+        .findFirst();
+    if (navigationKey.isPresent()) {
+      buildNavigationInput(navigationKey.get());
+    } else {
+      if (lastCursorPosition == null || lastCursorPosition.isConsecutiveWith(getCursorPosition())
+          || lastCursorPosition.equals(
+          getCursorPosition())) {
+        inputBuffer.append(value);
       } else {
-        if (lastCursorPosition == null
-            || lastCursorPosition.isConsecutiveWith(cursorPosition)
-            || inputBuffer.length() == 0) {
-          inputBuffer.append(value);
-        } else {
-          buildDefaultInputWhenNoNavigationType();
-          insertCurrentInput();
-          currentInput.withNavigationType(NavigationType.TAB);
-          inputBuffer.append(value);
-        }
+        buildDefaultInputWhenNoNavigationType();
+        insertCurrentInput();
+        inputBuffer.append(value);
       }
+      lastCursorPosition = new Position(getCursorPosition());
     }
-    lastCursorPosition = new Position(cursorPosition);
-    lastTerminalScreen = new Screen(currentScreen);
   }
 
   private void buildNavigationInput(NavigationType type) {
@@ -203,19 +195,7 @@ public class CharacterBasedEmulator extends
     currentInput = new NavigationInputBuilder();
     inputBuffer = new StringBuilder();
     repetition = 0;
-  }
-
-  private boolean validInput(Position positionBeforeSend) {
-    if (currentScreen.equals(lastTerminalScreen) && getCursorPosition()
-        .equals(lastCursorPosition)) {
-      if (!positionBeforeSend.equals(lastCursorPosition)) {
-        //in order to notice a difference when moving backwards like: LEFT
-        lastCursorPosition = positionBeforeSend;
-        return true;
-      }
-      return false;
-    }
-    return true;
+    lastCursorPosition = null;
   }
 
   private Position getCursorPosition() {
@@ -238,15 +218,12 @@ public class CharacterBasedEmulator extends
       case KeyEvent.VK_SPACE:
         return " ";
       default:
-        return (KeyEvent.getKeyModifiersText(e.getModifiers()).isEmpty())
-            ? KeyEvent.getKeyText(keyCode).toLowerCase()
-            : KeyEvent.getKeyText(keyCode);
+        return String.valueOf(e.getKeyChar());
     }
   }
 
   @Override
   public synchronized void screenChanged(String s) {
-    currentScreen = Screen.buildScreenFromText(s, new Dimension(80, 24));
     if (pastingCharactersCount == 0) {
       lockEmulator(false);
     } else if (++pastedCharactersCount == pastingCharactersCount) {
@@ -262,9 +239,6 @@ public class CharacterBasedEmulator extends
 
   @Override
   public synchronized void teardown() {
-    lastTerminalScreen = null;
-    lastCursorPosition = null;
-    currentScreen = null;
     terminalClient.removeScreenChangeListener(this);
     if (currentSwingWorker != null) {
       currentSwingWorker.cancel(true);

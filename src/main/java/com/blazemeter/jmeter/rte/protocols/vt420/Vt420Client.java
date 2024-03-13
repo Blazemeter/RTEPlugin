@@ -162,7 +162,7 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
     IntStream.range(0, navigationInput.getRepeat())
         .forEach(e -> input.add(NAVIGATION_KEYS.get(navigationInput.getNavigationType())));
     input.addAll(textToList(navigationInput.getInput()));
-    sendCharacterByOneAtATime(input, echoTimeoutMillis);
+    send(input, echoTimeoutMillis);
   }
 
   protected void sendAttentionKey(AttentionKey attentionKey) {
@@ -322,9 +322,16 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
   }
 
   @Override
-  public void send(String character) {
-    sendCharacterByOneAtATime(Collections.singletonList(character),
-        RTESampler.getCharacterTimeout());
+  public void send(List<String> input, long echoTimeoutMillis) {
+    if (!RTESampler.isWaitResponseCharSent()) {
+      try {
+        client.sendTextByCurrentCursorPosition(String.join("", input));
+      } catch (IOException e) {
+        exceptionHandler.setPendingError(e);
+      }
+      return;
+    }
+    sendCharacterByOneAtATime(input, echoTimeoutMillis);
   }
 
   public void setExceptionHandler(ExceptionHandler exceptionHandler) {

@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import javax.net.ssl.SSLContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.util.JMeterUtils;
 import org.junit.Test;
@@ -115,7 +116,7 @@ public class Tn3270ClientIT extends RteProtocolClientIT<Tn3270Client> {
     loadLoginFlow();
     SSLContextFactory.setKeyStore(findResource("/.keystore").getFile());
     SSLContextFactory.setKeyStorePassword("changeit");
-    server.setSslEnabled(true);
+    server.setSslContext(SSLContext.getDefault());
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS);

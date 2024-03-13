@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+
+import javax.net.ssl.SSLContext;
+import org.apache.jmeter.util.JMeterUtils;
 import org.apache.oro.text.regex.Perl5Compiler;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.assertj.core.api.JUnitSoftAssertions;
@@ -51,6 +54,8 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
   private static final Position USER_ID_CURSOR_POSITION = new Position(12, 42);
   private static final Position WELCOME_SCREEN_CURSOR_POSITION = new Position(12, 27);
   private static final String ARROW_NAVIGATION_SCREEN_HTML = "arrow-navigation-screen.html";
+  private static final String WAIT_RESPONSE_AT_CHAR_SENT_PROPERTY = "RTESampler"
+          + ".waitResponseCharSent";
   @Rule
   public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
@@ -211,12 +216,13 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
 
   @Test(expected = RteIOException.class)
   public void shouldThrowTimeoutExceptionWhenNoScreenChangesAndSendText() throws Exception {
+    JMeterUtils.setProperty(WAIT_RESPONSE_AT_CHAR_SENT_PROPERTY, "true");
     loadLoginFlow();
     connectToVirtualService();
     ExceptionHandler exceptionHandler = new ExceptionHandler("");
     client.setExceptionHandler(exceptionHandler);
     waitForCursorPosition(WELCOME_SCREEN_CURSOR_POSITION);
-    client.send("E");
+    client.send(Collections.singletonList("E"), RTESampler.getCharacterTimeout());
     exceptionHandler.throwAnyPendingError();
   }
 
@@ -239,10 +245,10 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
   private void sendArrowMovementsScreenDataWithSyncWaitCondition()
       throws RteIOException, TimeoutException, InterruptedException {
     client.send(Arrays.asList(
-        new NavigationInput(1, NavigationType.DOWN, "00"),
-        new NavigationInput(2, NavigationType.LEFT, "dev"),
-        new NavigationInput(1, NavigationType.UP, "test"),
-        new NavigationInput(1, NavigationType.RIGHT, "root")),
+            new NavigationInput(1, NavigationType.DOWN, "00"),
+            new NavigationInput(2, NavigationType.LEFT, "dev"),
+            new NavigationInput(1, NavigationType.UP, "test"),
+            new NavigationInput(1, NavigationType.RIGHT, "root")),
         AttentionKey.ENTER,
         TIMEOUT_MILLIS);
     awaitSync();
@@ -254,7 +260,7 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
     loadLoginFlow();
     SSLContextFactory.setKeyStore(findResource("/.keystore").getFile());
     SSLContextFactory.setKeyStorePassword("changeit");
-    server.setSslEnabled(true);
+    server.setSslContext(SSLContext.getDefault());
     server.start();
     client.connect(VIRTUAL_SERVER_HOST, server.getPort(), SSLType.TLS, getDefaultTerminalType(),
         TIMEOUT_MILLIS);
@@ -283,7 +289,7 @@ public class Vt420ClientIT extends RteProtocolClientIT<Vt420Client> {
   }
 
   @Test
-  public void shouldReturnFalseWhenAlarmDoesNotSound() throws Exception{
+  public void shouldReturnFalseWhenAlarmDoesNotSound() throws Exception {
     loadLoginFlow();
     connectToVirtualService();
     client.resetAlarm();
