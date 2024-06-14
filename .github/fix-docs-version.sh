@@ -17,5 +17,5 @@ update_file_versions ${VERSION} README.md
 git add README.md
 git config --local user.email "$(git log --format='%ae' HEAD^!)"
 git config --local user.name "$(git log --format='%an' HEAD^!)"
-git commit -m "[skip ci] Updated README version"
-git push origin HEAD:master
+git add -A
+git diff-index --quiet HEAD || git commit -m "[skip ci] Updated README version" & git push origin HEAD:master
