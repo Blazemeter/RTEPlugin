@@ -105,6 +105,53 @@ public class Tn5250Client extends BaseProtocolClient {
 
   @Override
   public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+                      long timeoutMillis, String devName)
+          throws RteIOException, InterruptedException, TimeoutException {
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(NAMED_THREAD_FACTORY);
+    /*
+     we need create terminalClient instance on connect instead of
+     constructor to avoid leaving keyboard thread running when
+     instance of this class is created for getting supported terminal types in JMeter
+    */
+    client = new TerminalClient();
+    client.setConnectionTimeoutMillis((int) timeoutMillis);
+    client.setTerminalType(terminalType.getId());
+    client.setSocketFactory(getSocketFactory(sslType, server));
+    //if (("".equals(devName))) {
+    client.setTelnetEnv("\u0003DEVNAME\u0001" + devName);
+    //}
+    exceptionHandler = new ExceptionHandler(server);
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
+    client.setExceptionHandler(new net.infordata.em.ExceptionHandler() {
+
+      @Override
+      public void onException(Throwable e) {
+        exceptionHandler.setPendingError(e);
+        connectionEndWaiter.stop();
+      }
+
+      @Override
+      public void onConnectionClosed() {
+        handleServerDisconnection();
+      }
+    });
+    for (TerminalStateListener listener : listenersProxies.keySet()) {
+      addListener(listener);
+    }
+    ConnectionEndTerminalListener connectionEndListener = new ConnectionEndTerminalListener(
+            connectionEndWaiter);
+    client.addEmulatorListener(connectionEndListener);
+    try {
+      client.connect(server, port);
+      connectionEndWaiter.await();
+      exceptionHandler.throwAnyPendingError();
+    } finally {
+      client.removeEmulatorListener(connectionEndListener);
+    }
+  }
+
+  @Override
+  public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
       long timeoutMillis) throws RteIOException, TimeoutException, InterruptedException {
     stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(NAMED_THREAD_FACTORY);
     /*

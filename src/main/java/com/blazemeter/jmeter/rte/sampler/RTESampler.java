@@ -51,6 +51,7 @@ public class RTESampler extends AbstractSampler implements ThreadListener,
 
   public static final String CONFIG_PORT = "RTEConnectionConfig.port";
   public static final String CONFIG_SERVER = "RTEConnectionConfig.server";
+  public static final String CONFIG_DEVNAME = "RTEConnectionConfig.devName";
   public static final String CONFIG_PROTOCOL = "RTEConnectionConfig.protocol";
   public static final String CONFIG_SSL_TYPE = "RTEConnectionConfig.sslType";
   public static final String CONFIG_CONNECTION_TIMEOUT = "RTEConnectionConfig.connectTimeout";
@@ -158,6 +159,10 @@ public class RTESampler extends AbstractSampler implements ThreadListener,
 
   private String getServer() {
     return getPropertyAsString(CONFIG_SERVER);
+  }
+
+  private String getDevName() {
+    return getPropertyAsString(CONFIG_DEVNAME);
   }
 
   private int getPort() {

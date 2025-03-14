@@ -264,6 +264,51 @@ public class Vt420Client extends BaseProtocolClient implements CharacterBasedPro
   }
 
   @Override
+  public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+                      long timeoutMillis, String devName)
+          throws RteIOException, InterruptedException, TimeoutException {
+    client = new TerminalClient(terminalType.getScreenSize(), terminalType.getId());
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(NAMED_THREAD_FACTORY);
+    exceptionHandler = new ExceptionHandler(server);
+    client.setSocketFactory(getSocketFactory(sslType, server));
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
+    client.addConnectionListener(new ConnectionListener() {
+      @Override
+      public void onException(Throwable throwable) {
+        exceptionHandler.setPendingError(throwable);
+      }
+
+      @Override
+      public void onConnectionClosed() {
+        handleServerDisconnection();
+      }
+
+      @Override
+      public void onConnection() {
+        connectionEndWaiter.stop();
+      }
+    });
+    listeners.forEach((stateListener, listenerProxy) -> client
+            .addScreenChangeListener(listeners.get(stateListener)));
+
+    try {
+      client.connect(server, port, (int) timeoutMillis);
+      connectionEndWaiter.await();
+    } catch (ConnectionException e) {
+      LOG.error("Connection error: ", e);
+      throw new RteIOException(new Throwable("Connection error"), server);
+    } catch (InterruptedException e) {
+      exceptionHandler.setPendingError(e);
+      LOG.error("Connection to {} interrupted cause: ", server, e);
+    } catch (TimeoutException e) {
+      exceptionHandler.setPendingError(e);
+      LOG.error("Timeout connection exceeded ", e);
+    }
+
+    exceptionHandler.throwAnyPendingError();
+  }
+
+  @Override
   public void addTerminalStateListener(TerminalStateListener terminalStateListener) {
     Vt420TerminalStateListenerProxy listenerProxy = new Vt420TerminalStateListenerProxy(
         terminalStateListener);

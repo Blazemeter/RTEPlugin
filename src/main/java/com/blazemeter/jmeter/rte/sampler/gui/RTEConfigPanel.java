@@ -37,12 +37,15 @@ public class RTEConfigPanel extends JPanel {
   private Map<SSLType, JRadioButton> sslTypeRadios = new EnumMap<>(SSLType.class);
 
   private JTextField serverField = SwingUtils.createComponent("serverField", new JTextField());
+
+  private JTextField devNameField = SwingUtils.createComponent("devName", new JTextField());
   private JTextField portField = SwingUtils.createComponent("portField", new JTextField());
   private JComboBox<Protocol> protocolComboBox;
   private JComboBox<TerminalType> terminalTypeComboBox = SwingUtils
       .createComponent("terminalTypeComboBox", new JComboBox<>(TN5250_TERMINAL_TYPES));
   private JTextField connectionTimeout = SwingUtils
       .createComponent("connectionTimeout", new JTextField());
+  private JPanel devNamePanel;
 
   public RTEConfigPanel() {
     GroupLayout layout = new GroupLayout(this);
@@ -58,6 +61,8 @@ public class RTEConfigPanel extends JPanel {
         .addComponent(connectionPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
             GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(ComponentPlacement.RELATED));
+
+    devNamePanel.setVisible(true);
   }
 
   private JPanel buildConnectionPanel() {
@@ -68,6 +73,7 @@ public class RTEConfigPanel extends JPanel {
     panel.setLayout(layout);
 
     JLabel serverLabel = SwingUtils.createComponent("serverLabel", new JLabel("Server: "));
+    //JLabel devNameLabel = SwingUtils.createComponent("devNameLabel", new JLabel("devName: "));
     JLabel portLabel = SwingUtils.createComponent("portLabel", new JLabel("Port: "));
     JLabel protocolLabel = SwingUtils.createComponent("protocolLabel", new JLabel("Protocol: "));
     protocolComboBox = buildProtocolComboBox();
@@ -75,6 +81,7 @@ public class RTEConfigPanel extends JPanel {
         .createComponent("terminalTypeLabel", new JLabel("Terminal Type:"));
     JPanel sslPanel = buildSslPanel();
     JPanel timeOutPanel = buildTimeoutPanel();
+    devNamePanel = buildDevNamePanel();
     layout.setHorizontalGroup(layout.createParallelGroup(Alignment.LEADING)
         .addGroup(layout.createSequentialGroup()
             .addComponent(serverLabel)
@@ -100,14 +107,17 @@ public class RTEConfigPanel extends JPanel {
                 layout.createSequentialGroup()
                 .addPreferredGap(ComponentPlacement.RELATED)
                 .addComponent(connectionTimeout, GroupLayout.PREFERRED_SIZE, 150,
-                GroupLayout.PREFERRED_SIZE))
+                GroupLayout.PREFERRED_SIZE)
         .addComponent(sslPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
+            GroupLayout.PREFERRED_SIZE))
         .addGroup(
-            layout.createSequentialGroup()
-            .addComponent(timeOutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-                          GroupLayout.PREFERRED_SIZE)
-        .addPreferredGap(ComponentPlacement.RELATED)));
+                layout.createSequentialGroup()
+                .addComponent(timeOutPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+                GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addComponent(devNamePanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
+                    GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(ComponentPlacement.RELATED)));
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
             .addComponent(serverLabel)
@@ -133,7 +143,8 @@ public class RTEConfigPanel extends JPanel {
         .addComponent(sslPanel)
             .addPreferredGap(ComponentPlacement.RELATED)
             .addGroup(layout.createParallelGroup(Alignment.BASELINE)
-                  .addComponent(timeOutPanel)
+                    .addComponent(timeOutPanel)
+                    .addComponent(devNamePanel)
             ));
     return panel;
   }
@@ -148,11 +159,16 @@ public class RTEConfigPanel extends JPanel {
       Protocol protocolEnum = (Protocol) e.getItem();
       if (protocolEnum.equals(Protocol.TN5250)) {
         terminalTypeComboBox.setModel(TN5250_TERMINAL_TYPES);
+        devNamePanel.setVisible(true);
       } else if (protocolEnum.equals(Protocol.TN3270)) {
         terminalTypeComboBox.setModel(TN3270_TERMINAL_TYPES);
+        devNamePanel.setVisible(false);
       } else if (protocolEnum.equals(Protocol.VT420)) {
         terminalTypeComboBox.setModel(VT420_TERMINAL_TYPES);
+        devNamePanel.setVisible(false);
       }
+      devNamePanel.revalidate();
+      devNamePanel.repaint();
       validate();
       repaint();
     });
@@ -205,12 +221,43 @@ public class RTEConfigPanel extends JPanel {
     return panel;
   }
 
+  private JPanel buildDevNamePanel() {
+    JPanel panel = SwingUtils.createComponent("devName", new JPanel());
+    panel
+            .setBorder(BorderFactory.createTitledBorder("Workstation ID"));
+    GroupLayout layout = new GroupLayout(panel);
+    layout.setAutoCreateContainerGaps(true);
+    panel.setLayout(layout);
+
+    JLabel devNameLabel = SwingUtils.createComponent("devNameLabel",
+            new JLabel("devName: "));
+
+    layout.setHorizontalGroup(layout.createSequentialGroup()
+            .addComponent(devNameLabel)
+            .addPreferredGap(ComponentPlacement.RELATED)
+            .addComponent(devNameField, GroupLayout.PREFERRED_SIZE, 150,
+                    GroupLayout.PREFERRED_SIZE));
+    layout.setVerticalGroup(layout.createParallelGroup(Alignment.BASELINE)
+            .addComponent(devNameLabel)
+            .addComponent(devNameField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE,
+                    GroupLayout.PREFERRED_SIZE));
+    return panel;
+  }
+
   public String getServer() {
     return serverField.getText();
   }
 
+  public String getDevName() {
+    return devNameField.getText();
+  }
+
   public void setServer(String serverAddressParam) {
     serverField.setText(serverAddressParam);
+  }
+
+  public void setDevName(String devNameParam) {
+    devNameField.setText(devNameParam);
   }
 
   public String getPort() {

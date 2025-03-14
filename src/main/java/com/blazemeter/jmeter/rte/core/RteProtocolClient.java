@@ -33,6 +33,10 @@ public interface RteProtocolClient {
   void connect(String server, int port, SSLType sslType, TerminalType terminalType,
       long timeoutMillis) throws RteIOException, InterruptedException, TimeoutException;
 
+  void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+               long timeoutMillis, String devName) throws RteIOException,
+          InterruptedException, TimeoutException;
+
   void await(List<WaitCondition> waitConditions)
       throws InterruptedException, TimeoutException, RteIOException;
 

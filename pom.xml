@@ -35,7 +35,7 @@
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>xtn5250</artifactId>
-      <version>3.2.4</version>
+      <version>3.2.5-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.github.blazemeter</groupId>

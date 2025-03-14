@@ -120,6 +120,14 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     setProperty(RTESampler.CONFIG_SERVER, server);
   }
 
+  public String getDevName() {
+    return getPropertyAsString(RTESampler.CONFIG_DEVNAME);
+  }
+
+  public void setDevName(String devName) {
+    setProperty(RTESampler.CONFIG_DEVNAME, devName);
+  }
+
   public int getPort() {
     return getPropertyAsInt(RTESampler.CONFIG_PORT, RTESampler.DEFAULT_PORT);
   }
@@ -233,7 +241,8 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
       try {
         synchronized (this) {
           terminalClient
-              .connect(getServer(), getPort(), getSSLType(), terminalType, getConnectionTimeout());
+              .connect(getServer(), getPort(), getSSLType(), terminalType,
+                      getConnectionTimeout(),  getDevName());
           resultBuilder.withConnectEndNow();
           initTerminalEmulatorSupplier();
           initTerminalEmulator(terminalType);
@@ -278,6 +287,7 @@ public class RTERecorder extends GenericController implements TerminalEmulatorLi
     configTestElement.setProperty(TestElement.GUI_CLASS, RTEConfigGui.class.getName());
     configTestElement.setProperty(RTESampler.CONFIG_PORT, String.valueOf(getPort()));
     configTestElement.setProperty(RTESampler.CONFIG_SERVER, getServer());
+    configTestElement.setProperty(RTESampler.CONFIG_DEVNAME, getDevName());
     configTestElement.setProperty(RTESampler.CONFIG_PROTOCOL,
         getProtocol().name());
     configTestElement.setProperty(RTESampler.CONFIG_TERMINAL_TYPE,
