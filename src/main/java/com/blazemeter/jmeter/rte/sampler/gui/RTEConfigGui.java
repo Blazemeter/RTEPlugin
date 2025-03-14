@@ -47,6 +47,8 @@ public class RTEConfigGui extends AbstractConfigGui {
       ConfigTestElement configTestElement = (ConfigTestElement) element;
       rteConfigPanelConfigPanel
           .setServer(configTestElement.getPropertyAsString(RTESampler.CONFIG_SERVER));
+      rteConfigPanelConfigPanel
+          .setDevName(configTestElement.getPropertyAsString(RTESampler.CONFIG_DEVNAME));
       rteConfigPanelConfigPanel.setPort(
           configTestElement.getPropertyAsString(RTESampler.CONFIG_PORT,
               String.valueOf(RTESampler.DEFAULT_PORT)));
@@ -82,6 +84,8 @@ public class RTEConfigGui extends AbstractConfigGui {
       ConfigTestElement configTestElement = (ConfigTestElement) te;
       configTestElement
           .setProperty(RTESampler.CONFIG_SERVER, rteConfigPanelConfigPanel.getServer());
+      configTestElement
+              .setProperty(RTESampler.CONFIG_DEVNAME, rteConfigPanelConfigPanel.getDevName());
       configTestElement.setProperty(RTESampler.CONFIG_PORT, rteConfigPanelConfigPanel.getPort());
       configTestElement
           .setProperty(RTESampler.CONFIG_PROTOCOL, rteConfigPanelConfigPanel.getProtocol().name());

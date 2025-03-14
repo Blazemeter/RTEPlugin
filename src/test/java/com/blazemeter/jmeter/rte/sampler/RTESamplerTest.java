@@ -91,6 +91,7 @@ public class RTESamplerTest {
 
   private void buildDefaultRTEConfig() {
     configTestElement.setProperty(RTESampler.CONFIG_SERVER, "server");
+    configTestElement.setProperty(RTESampler.CONFIG_DEVNAME, "devName");
     configTestElement.setProperty(RTESampler.CONFIG_PORT, 23);
     configTestElement
         .setProperty(RTESampler.CONFIG_TERMINAL_TYPE, RTESampler.DEFAULT_TERMINAL_TYPE.getId());

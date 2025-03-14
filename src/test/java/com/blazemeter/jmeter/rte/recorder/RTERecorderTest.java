@@ -72,6 +72,7 @@ public class RTERecorderTest {
   private static final String SELECTED_TEXT = "selected text";
   private static final Screen TEST_SCREEN = Screen.valueOf("test\n");
   private static final String SERVER = "localhost";
+  private static final String DEVNAME = "";
   private static final RteIOException RTE_IO_EXCEPTION = new RteIOException(null, SERVER);
   private static final int PORT = 80;
   private static final Protocol TN5250_PROTOCOL = Protocol.TN5250;
@@ -187,6 +188,7 @@ public class RTERecorderTest {
     expectedConfig.setName("bzm-RTE-config");
     expectedConfig.setProperty(TestElement.GUI_CLASS, RTEConfigGui.class.getName());
     expectedConfig.setProperty(RTESampler.CONFIG_SERVER, SERVER);
+    expectedConfig.setProperty(RTESampler.CONFIG_DEVNAME, DEVNAME);
     expectedConfig.setProperty(RTESampler.CONFIG_PORT, Integer.toString(PORT));
     expectedConfig.setProperty(RTESampler.CONFIG_PROTOCOL, protocol.name());
     expectedConfig.setProperty(RTESampler.CONFIG_SSL_TYPE, SSL_TYPE.name());

@@ -159,6 +159,44 @@ public class Tn3270Client extends BaseProtocolClient {
     exceptionHandler.throwAnyPendingError();
   }
 
+  @Override
+  public void connect(String server, int port, SSLType sslType, TerminalType terminalType,
+                      long timeoutMillis, String devName)
+          throws RteIOException, InterruptedException, TimeoutException {
+    stableTimeoutExecutor = Executors.newSingleThreadScheduledExecutor(NAMED_THREAD_FACTORY);
+    Tn3270TerminalType termType = (Tn3270TerminalType) terminalType;
+    client = new TerminalClient(termType.getModel(), termType.getScreenDimensions());
+    client.setUsesExtended3270(termType.isExtended());
+    client.setConnectionTimeoutMillis((int) timeoutMillis);
+    client.setSocketFactory(getSocketFactory(sslType, server));
+    ConnectionEndWaiter connectionEndWaiter = new ConnectionEndWaiter(timeoutMillis);
+    exceptionHandler = new ExceptionHandler(server);
+    addConnectionListener(new com.bytezone.dm3270.ConnectionListener() {
+
+      @Override
+      public void onConnection() {
+        connectionEndWaiter.stop();
+      }
+
+      @Override
+      public void onException(Exception e) {
+        exceptionHandler.setPendingError(e);
+        connectionEndWaiter.stop();
+      }
+
+      @Override
+      public void onConnectionClosed() {
+        handleServerDisconnection();
+      }
+    });
+    for (TerminalStateListener listener : listenersProxies.keySet()) {
+      addListener(listener);
+    }
+    client.connect(server, port);
+    connectionEndWaiter.await();
+    exceptionHandler.throwAnyPendingError();
+  }
+
   private void addListener(TerminalStateListener listener) {
     Tn3270TerminalStateListenerProxy listenerProxy = listenersProxies.get(listener);
     client.addScreenChangeListener(listenerProxy);
