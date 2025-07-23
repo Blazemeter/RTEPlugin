@@ -1,8 +1,10 @@
 package com.blazemeter.jmeter.rte.sampler.gui;
 
+import com.blazemeter.jmeter.commons.BlazemeterLabsLogo;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import com.blazemeter.jmeter.rte.sampler.RTESampler;
+import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -28,8 +30,8 @@ public class RTESamplerPanel extends JPanel {
   private static final int TIME_WIDTH = 60;
   private static final String TIMEOUT_LABEL = "Timeout (millis): ";
   private static final int LABEL_TABULATION_SPACE = 50;
-  private final JPanel requestPanel;
-  private final JPanel waitPanel;
+  private JPanel requestPanel;
+  private JPanel waitPanel;
   private final ButtonGroup actionsGroup = new ButtonGroup();
   private final Map<Action, JRadioButton> actions = new EnumMap<>(Action.class);
   private InputPanel payloadPanel;
@@ -76,14 +78,25 @@ public class RTESamplerPanel extends JPanel {
   private JPanel waitDisconnectPanel;
 
   public RTESamplerPanel() {
-    GroupLayout layout = new GroupLayout(this);
+    setLayout(new BorderLayout());
+
+    JPanel contentPanel = createContentPanel();
+    BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo(
+        "https://github.com/Blazemeter/RTEPlugin");
+
+    add(contentPanel, BorderLayout.CENTER);
+    add(blazemeterLabsLogo, BorderLayout.SOUTH);
+  }
+
+  private JPanel createContentPanel() {
+    JPanel contentPanel = new JPanel();
+    GroupLayout layout = new GroupLayout(contentPanel);
     layout.setAutoCreateGaps(true);
-    this.setLayout(layout);
+    contentPanel.setLayout(layout);
 
     JPanel modePanel = buildModePanel();
     requestPanel = buildRequestPanel();
     waitPanel = buildWaitsPanel();
-    BlazemeterLabsLogo blazemeterLabsLogo = new BlazemeterLabsLogo();
 
     layout.setHorizontalGroup(layout.createParallelGroup()
         .addComponent(modePanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
@@ -91,8 +104,6 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(requestPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE)
         .addComponent(waitPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
-            Short.MAX_VALUE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE,
             Short.MAX_VALUE));
     layout.setVerticalGroup(layout.createSequentialGroup()
         .addComponent(modePanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
@@ -100,9 +111,9 @@ public class RTESamplerPanel extends JPanel {
         .addComponent(requestPanel)
         .addComponent(waitPanel, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
             GroupLayout.PREFERRED_SIZE)
-        .addComponent(blazemeterLabsLogo, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE,
-            GroupLayout.PREFERRED_SIZE)
     );
+
+    return contentPanel;
   }
 
   private JPanel buildModePanel() {

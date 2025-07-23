@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.rte.extractor;
 
 import static org.assertj.swing.fixture.Containers.showInFrame;
 
+import com.blazemeter.jmeter.rte.SwingTestRunner;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.assertj.swing.fixture.FrameFixture;
 import org.junit.After;
@@ -11,7 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SwingTestRunner.class)
 public class RTEExtractorPanelIT {
 
   public static final String NEXT_FIELD_POSITION = "nextFieldPosition";

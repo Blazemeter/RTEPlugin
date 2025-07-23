@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 
+import com.blazemeter.jmeter.rte.SwingTestRunner;
 import com.blazemeter.jmeter.rte.sampler.gui.ThemedIcon;
 import java.awt.Frame;
 import java.awt.Image;
@@ -19,7 +20,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(SwingTestRunner.class)
 public class StatusPanelIT {
 
   public static final ImageIcon KEYBOARD_UNLOCKED_ICON = ThemedIcon

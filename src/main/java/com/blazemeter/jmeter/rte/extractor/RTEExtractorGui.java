@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.extractor;
 
-import com.blazemeter.jmeter.rte.sampler.gui.BlazemeterLabsLogo;
+import com.blazemeter.jmeter.commons.BlazemeterLabsLogo;
 import java.awt.BorderLayout;
 import org.apache.jmeter.processor.gui.AbstractPostProcessorGui;
 import org.apache.jmeter.testelement.TestElement;
@@ -15,7 +15,8 @@ public class RTEExtractorGui extends AbstractPostProcessorGui {
     setBorder(makeBorder());
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(extractorPanel, BorderLayout.CENTER);
-    add(new BlazemeterLabsLogo(), BorderLayout.AFTER_LAST_LINE);
+    add(new BlazemeterLabsLogo("https://github.com/Blazemeter/RTEPlugin"),
+        BorderLayout.AFTER_LAST_LINE);
   }
 
   @Override

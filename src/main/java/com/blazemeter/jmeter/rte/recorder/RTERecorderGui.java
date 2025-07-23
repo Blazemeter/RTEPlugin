@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.rte.recorder;
 
-import com.blazemeter.jmeter.rte.sampler.gui.BlazemeterLabsLogo;
+import com.blazemeter.jmeter.commons.BlazemeterLabsLogo;
 import com.helger.commons.annotation.VisibleForTesting;
 import java.awt.BorderLayout;
 import java.util.Collection;
@@ -27,7 +27,8 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     setBorder(makeBorder());
     add(makeTitlePanel(), BorderLayout.NORTH);
     add(recordingPanel, BorderLayout.CENTER);
-    add(new BlazemeterLabsLogo(), BorderLayout.AFTER_LAST_LINE);
+    add(new BlazemeterLabsLogo("https://github.com/Blazemeter/RTEPlugin"),
+        BorderLayout.AFTER_LAST_LINE);
 
     String jMeterBinDirPath = getJMeterBinDirPath();
 
@@ -51,11 +52,11 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
         .getPath();
 
     /*
-    * This is done to obtain and remove the initial `/` from the path.
-    * i.e: In Windows the path would be something like `/C:`,
-    * so we check if the char at position 3 is ':' and if
-    * so, we remove the initial '/'.
-    */
+     * This is done to obtain and remove the initial `/` from the path.
+     * i.e: In Windows the path would be something like `/C:`,
+     * so we check if the char at position 3 is ':' and if
+     * so, we remove the initial '/'.
+     */
     char middleChar = rtePluginPath.charAt(2);
     if (middleChar == ':') {
       rtePluginPath = rtePluginPath.substring(1);
