@@ -15,7 +15,6 @@ jobs:
         id: publish-plugin
         uses: abstracta/jmeter-plugin-publish-action@main
         with:
-          upstream-repository: https://github.com/Abstracta/jmeter-plugins.git 
           forked-repository: https://github.com/Abstracta/jmeter-plugins.git
           plugin-artifact-name: jmeter-bzm-rte
           plugin-id: bzm-rte
