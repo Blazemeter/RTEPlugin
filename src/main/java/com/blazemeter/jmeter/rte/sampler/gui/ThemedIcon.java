@@ -20,7 +20,15 @@ public class ThemedIcon {
   }
 
   public static String getResourcePath() {
-    return ThemedIcon.class.getResource(getThemePath()).toString();
+    // ThemedIcon.class.getResource use a relative to classLoader and can return
+    // resources from others jars that match the pattern to find
+    // The safe way is using the find of the resource of the class and get the jar path
+    // to generate the correct path to the resource file
+    String jarPath =
+        ThemedIcon.class.getResource(
+            '/' + ThemedIcon.class.getName().replace('.', '/') +
+                ".class").toString().split("!")[0];
+    return jarPath + "!" + getThemePath();
   }
 
 }

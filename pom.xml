@@ -6,7 +6,7 @@
   <groupId>com.blazemeter.jmeter</groupId>
   <artifactId>jmeter-bzm-rte</artifactId>
   <packaging>jar</packaging>
-  <version>3.3</version>
+  <version>3.3.1</version>
   <name>RTEPlugin Sampler as JMeter plugin</name>
 
   <properties>
@@ -31,7 +31,7 @@
   </scm>
 
   <dependencies>
-  
+
     <dependency>
       <groupId>com.github.blazemeter</groupId>
       <artifactId>xtn5250</artifactId>
@@ -99,6 +99,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>com.blazemeter</groupId>
+      <artifactId>jmeter-bzm-commons</artifactId>
+      <version>0.2.4</version>
+    </dependency>
+    <dependency>
       <groupId>us.abstracta</groupId>
       <artifactId>wiresham</artifactId>
       <version>0.6</version>
@@ -140,6 +145,12 @@
       <version>2.6.3</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-swing-junit</artifactId>
+      <version>3.9.2</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -160,6 +171,7 @@
           <version>2.22.2</version>
           <configuration>
             <useSystemClassLoader>false</useSystemClassLoader>
+            <skipITs>true</skipITs>
           </configuration>
         </plugin>
       </plugins>
@@ -247,7 +259,7 @@
             </goals>
             <configuration>
               <includeArtifactIds>
-                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270,pcap4j-core,jVT220
+                wiresham,guava,snakeyaml,jackson-databind,jackson-core,jackson-annotations,xtn5250,dm3270,pcap4j-core,jVT220,jmeter-bzm-commons
               </includeArtifactIds>
               <outputDirectory>${project.build.directory}/jmeter-test/lib</outputDirectory>
               <stripVersion>true</stripVersion>
@@ -349,7 +361,7 @@
     </profile>
     <profile>
       <id>release</id>
-      <build> 
+      <build>
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>

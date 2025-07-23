@@ -5,6 +5,7 @@ import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
+import com.blazemeter.jmeter.rte.SwingTestRunner;
 import com.blazemeter.jmeter.rte.sampler.Action;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +21,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(SwingTestRunner.class)
 public class RTESamplerPanelIT {
 
   private static final String REQUEST_PANEL = "requestPanel";
@@ -213,7 +216,7 @@ public class RTESamplerPanelIT {
       }
     }, timeout(CHANGE_TIMEOUT_MILLIS));
   }
-  
+
   @Test
   public void shouldDisableDisconnectWaitTimeoutFieldWhenIsNotChecked() {
     switchCheckboxTo(false, frame.checkBox(WAIT_DISCONNECT));

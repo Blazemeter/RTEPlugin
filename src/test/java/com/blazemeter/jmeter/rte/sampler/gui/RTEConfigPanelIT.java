@@ -4,6 +4,7 @@ import static org.assertj.swing.fixture.Containers.showInFrame;
 import static org.assertj.swing.timing.Pause.pause;
 
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
+import com.blazemeter.jmeter.rte.SwingTestRunner;
 import com.blazemeter.jmeter.rte.core.Protocol;
 import com.blazemeter.jmeter.rte.core.TerminalType;
 import java.util.ArrayList;
@@ -15,7 +16,9 @@ import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(SwingTestRunner.class)
 public class RTEConfigPanelIT {
 
   private FrameFixture frame;

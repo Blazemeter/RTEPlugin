@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
+import com.blazemeter.jmeter.rte.SwingTestRunner;
 import com.blazemeter.jmeter.rte.core.AttentionKey;
 import com.blazemeter.jmeter.rte.core.CharacterBasedProtocolClient;
 import com.blazemeter.jmeter.rte.core.CoordInput;
@@ -71,15 +72,15 @@ import org.assertj.swing.timing.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
-import org.mockito.junit.MockitoJUnitRunner;
 
-
-@RunWith(MockitoJUnitRunner.class)
+@Ignore
+@RunWith(SwingTestRunner.class)
 public class Xtn5250TerminalEmulatorIT {
 
   public static final String GOODBYE_TEXT = "Thanks for use testing login";

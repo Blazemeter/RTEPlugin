@@ -5,6 +5,7 @@ import static org.assertj.swing.timing.Pause.pause;
 import static org.assertj.swing.timing.Timeout.timeout;
 
 import com.blazemeter.jmeter.rte.JMeterTestUtils;
+import com.blazemeter.jmeter.rte.SwingTestRunner;
 import com.blazemeter.jmeter.rte.core.CoordInput;
 import com.blazemeter.jmeter.rte.core.Input;
 import com.blazemeter.jmeter.rte.core.LabelInput;
@@ -42,7 +43,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(SwingTestRunner.class)
 public class InputPanelIT {
 
   private static final long CHANGE_TIMEOUT_MILLIS = 10000;

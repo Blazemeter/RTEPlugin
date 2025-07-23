@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.rte.recorder.emulator;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.swing.fixture.Containers.showInFrame;
 
+import com.blazemeter.jmeter.rte.SwingTestRunner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +25,7 @@ import org.mockito.junit.MockitoJUnitRunner;
    Xtn5250TerminalEmulator.
 */
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SwingTestRunner.class)
 public class IntermittentLabelIT {
 
   @Rule
