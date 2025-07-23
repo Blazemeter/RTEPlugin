@@ -9,4 +9,4 @@ set -eo pipefail
 
 echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --batch --import
 echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --batch --import-ownertrust
-mvn --batch-mode deploy -Prelease -DskipTests --settings .github/settings.xml
+mvn --batch-mode deploy -P maven-central-deploy -DskipTests --settings .github/settings.xml
