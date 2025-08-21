@@ -94,6 +94,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
       recorder = (RTERecorder) te;
       recorder.setRecordingStateListener(recordingPanel);
       recorder.setServer(recordingPanel.getServer());
+      recorder.setDevName(recordingPanel.getDevName());
       recorder.setPort(recordingPanel.getPort());
       recorder.setProtocol(recordingPanel.getProtocol());
       recorder.setTerminalType(recordingPanel.getTerminalType());
@@ -109,6 +110,7 @@ public class RTERecorderGui extends LogicControllerGui implements JMeterGUICompo
     if (element instanceof RTERecorder) {
       RTERecorder recorder = (RTERecorder) element;
       recordingPanel.setServer(recorder.getServer());
+      recordingPanel.setDevName(recorder.getDevName());
       recordingPanel.setPort(String.valueOf(recorder.getPort()));
       recordingPanel.setProtocol(recorder.getProtocol());
       recordingPanel.setTerminalType(recorder.getTerminalType());

@@ -44,12 +44,14 @@ public class RTEConfigGuiTest {
   @Test
   public void shouldSetTheTestElementFromThePanelWhenModifyTestElement() {
     final String server = "Server";
+    final String devName = "devName";
     final String port = "80";
     final Protocol protocol = Protocol.TN5250;
     final TerminalType terminalType = protocol.createProtocolClient().getDefaultTerminalType();
     final SSLType sslType = SSLType.NONE;
     final String timeout = "10000";
     when(panel.getServer()).thenReturn(server);
+    when(panel.getDevName()).thenReturn(devName);
     when(panel.getPort()).thenReturn(port);
     when(panel.getProtocol()).thenReturn(protocol);
     when(panel.getSSLType()).thenReturn(sslType);
@@ -58,6 +60,8 @@ public class RTEConfigGuiTest {
     configGui.modifyTestElement(testElement);
     softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_SERVER))
         .as(RTESampler.CONFIG_SERVER).isEqualTo(server);
+    softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_DEVNAME))
+            .as(RTESampler.CONFIG_DEVNAME).isEqualTo(devName);
     softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_PORT))
         .as(RTESampler.CONFIG_PORT).isEqualTo(port);
     softly.assertThat(testElement.getPropertyAsString(RTESampler.CONFIG_PROTOCOL))

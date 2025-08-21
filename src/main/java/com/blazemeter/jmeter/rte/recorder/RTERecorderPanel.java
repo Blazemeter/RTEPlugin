@@ -126,8 +126,16 @@ public class RTERecorderPanel extends JPanel implements ActionListener, Recordin
     return configPanel.getServer();
   }
 
+  public String getDevName() {
+    return configPanel.getDevName();
+  }
+
   public void setServer(String server) {
     configPanel.setServer(server);
+  }
+
+  public void setDevName(String devName) {
+    configPanel.setDevName(devName);
   }
 
   public String getPort() {
