@@ -52,9 +52,11 @@ public abstract class XI5250CrtBase<T extends RteProtocolClient> extends XI5250C
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_F9), AttentionKey.F21);
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_F10), AttentionKey.F22);
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_F11), AttentionKey.F23);
-          put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_F12), AttentionKey.F24);
+          //put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_F12), AttentionKey.F24);
           put(new KeyEventMap(0, KeyEvent.VK_ENTER), AttentionKey.ENTER);
           put(new KeyEventMap(0, KeyEvent.VK_ESCAPE), AttentionKey.ATTN);
+          //KK remapped SHIFT+F12 to CLEAR
+          put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_F12), AttentionKey.CLEAR);
           put(new KeyEventMap(KeyEvent.META_MASK, KeyEvent.VK_F4), AttentionKey.CLEAR);
           put(new KeyEventMap(0, KeyEvent.VK_PAUSE), AttentionKey.CLEAR);
           put(new KeyEventMap(KeyEvent.SHIFT_MASK, KeyEvent.VK_ESCAPE), AttentionKey.SYSRQ);
